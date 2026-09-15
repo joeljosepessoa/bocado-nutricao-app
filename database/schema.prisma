@@ -53,8 +53,10 @@ model Professional {
   id                     String  @id
   professionalRegister   String? @map("professional_register")
 
-  user    User     @relation(fields: [id], references: [id])
-  clients Client[]
+  user        User                 @relation(fields: [id], references: [id])
+  clients     Client[]
+  evaluations PhysicalEvaluation[]
+  auditLogs   EvaluationAuditLog[]
 
   @@map("professionals")
 }
@@ -77,9 +79,220 @@ model Client {
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at")
 
-  user         User         @relation(fields: [id], references: [id])
-  professional Professional @relation(fields: [professionalId], references: [id])
+  user         User                 @relation(fields: [id], references: [id])
+  professional Professional         @relation(fields: [professionalId], references: [id])
+  evaluations  PhysicalEvaluation[]
+  auditLogs    EvaluationAuditLog[]
 
   @@index([professionalId, status])
   @@map("clients")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 4 — Avaliação física
+// ---------------------------------------------------------------------------
+
+enum EvaluationBiologicalSex {
+  male
+  female
+}
+
+enum BodyFatSource {
+  skinfolds
+  bioimpedance
+  manual
+}
+
+enum BioimpedanceOrigin {
+  manual
+  device_confirmed // reservado para a Fase 10 (BLE) — não usado nesta fase
+}
+
+enum PhotoAngle {
+  front
+  side_right
+  back
+  side_left
+}
+
+enum EvaluationAuditAction {
+  created
+  read
+  updated
+  listed
+  compared
+  photo_uploaded
+  photo_read
+  photo_deleted
+}
+
+model Protocol {
+  id                     String    @id @default(uuid())
+  code                   String    @unique
+  name                   String
+  description            String    @db.Text
+  requiredSkinfoldSites  String[]  @map("required_skinfold_sites")
+  sexSpecific            Boolean   @default(false) @map("sex_specific")
+  version                Int
+  supersededByProtocolId String?   @map("superseded_by_protocol_id")
+  createdAt              DateTime  @default(now()) @map("created_at")
+
+  supersededBy Protocol?  @relation("ProtocolVersion", fields: [supersededByProtocolId], references: [id])
+  supersedes   Protocol[] @relation("ProtocolVersion")
+  evaluations  PhysicalEvaluation[]
+
+  @@map("protocols")
+}
+
+model PhysicalEvaluation {
+  id                          String                   @id @default(uuid())
+  clientId                    String                   @map("client_id")
+  professionalId              String                   @map("professional_id")
+  evaluatedAt                 DateTime                 @map("evaluated_at")
+  ageAtEvaluation              Int?                     @map("age_at_evaluation")
+  biologicalSexForCalculation EvaluationBiologicalSex? @map("biological_sex_for_calculation")
+  heightCm                    Float                    @map("height_cm")
+  weightKg                    Float?                   @map("weight_kg")
+  protocolId                  String?                  @map("protocol_id")
+  bloodPressureSystolic       Int?                     @map("blood_pressure_systolic")
+  bloodPressureDiastolic      Int?                     @map("blood_pressure_diastolic")
+  heartRate                   Int?                     @map("heart_rate")
+  glucose                     Float?
+  notes                       String?                  @db.Text
+  releasedToClientAt          DateTime?                @map("released_to_client_at")
+  createdAt                   DateTime                 @default(now()) @map("created_at")
+  updatedAt                   DateTime                 @default(now()) @updatedAt @map("updated_at")
+
+  client       Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  professional Professional  @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  protocol     Protocol?     @relation(fields: [protocolId], references: [id])
+
+  measurements      Measurements?
+  skinfolds         Skinfolds?
+  bioimpedance      Bioimpedance?
+  calculatedMetrics CalculatedMetrics?
+  photos            BodyPhoto[]
+  auditLogs         EvaluationAuditLog[]
+
+  @@index([clientId, evaluatedAt])
+  @@index([professionalId])
+  @@map("physical_evaluations")
+}
+
+model Measurements {
+  id             String  @id @default(uuid())
+  evaluationId   String  @unique @map("evaluation_id")
+  chestCm        Float?  @map("chest_cm")
+  waistCm        Float?  @map("waist_cm")
+  abdomenCm      Float?  @map("abdomen_cm")
+  hipCm          Float?  @map("hip_cm")
+  armRightCm     Float?  @map("arm_right_cm")
+  armLeftCm      Float?  @map("arm_left_cm")
+  forearmRightCm Float?  @map("forearm_right_cm")
+  forearmLeftCm  Float?  @map("forearm_left_cm")
+  thighRightCm   Float?  @map("thigh_right_cm")
+  thighLeftCm    Float?  @map("thigh_left_cm")
+  calfRightCm    Float?  @map("calf_right_cm")
+  calfLeftCm     Float?  @map("calf_left_cm")
+  wristCm        Float?  @map("wrist_cm")
+  femurBicondylarCm Float? @map("femur_bicondylar_cm")
+
+  evaluation PhysicalEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Restrict)
+
+  @@map("measurements")
+}
+
+model Skinfolds {
+  id             String  @id @default(uuid())
+  evaluationId   String  @unique @map("evaluation_id")
+  chestMm        Float?  @map("chest_mm")
+  axillaryMidMm  Float?  @map("axillary_mid_mm")
+  subscapularMm  Float?  @map("subscapular_mm")
+  bicepsMm       Float?  @map("biceps_mm")
+  tricepsMm      Float?  @map("triceps_mm")
+  abdominalMm    Float?  @map("abdominal_mm")
+  suprailiacMm   Float?  @map("suprailiac_mm")
+  thighMm        Float?  @map("thigh_mm")
+  calfMm         Float?  @map("calf_mm")
+
+  evaluation PhysicalEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Restrict)
+
+  @@map("skinfolds")
+}
+
+model Bioimpedance {
+  id                     String             @id @default(uuid())
+  evaluationId           String             @unique @map("evaluation_id")
+  origin                 BioimpedanceOrigin
+  recordedAt             DateTime           @default(now()) @map("recorded_at")
+  weightKg               Float?             @map("weight_kg")
+  bodyFatPercent         Float?             @map("body_fat_percent")
+  fatMassKg              Float?             @map("fat_mass_kg")
+  leanMassKg             Float?             @map("lean_mass_kg")
+  skeletalMuscleMassKg   Float?             @map("skeletal_muscle_mass_kg")
+  muscleMassKg           Float?             @map("muscle_mass_kg")
+  bodyWaterPercent       Float?             @map("body_water_percent")
+  visceralFatLevel       Float?             @map("visceral_fat_level")
+  basalMetabolicRateKcal Float?             @map("basal_metabolic_rate_kcal")
+  bodyAgeYears           Int?               @map("body_age_years")
+  boneMassKg             Float?             @map("bone_mass_kg")
+  segmentalData          Json?              @map("segmental_data")
+  impedanceData          Json?              @map("impedance_data")
+
+  evaluation PhysicalEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Restrict)
+
+  @@map("bioimpedance")
+}
+
+model CalculatedMetrics {
+  id                   String         @id @default(uuid())
+  evaluationId         String         @unique @map("evaluation_id")
+  bmi                  Float?
+  bmiClassification    String?        @map("bmi_classification")
+  waistHipRatio        Float?         @map("waist_hip_ratio")
+  bodyFatPercent       Float?         @map("body_fat_percent")
+  bodyFatPercentSource BodyFatSource? @map("body_fat_percent_source")
+  fatMassKg            Float?         @map("fat_mass_kg")
+  leanMassKg           Float?         @map("lean_mass_kg")
+  protocolVersionUsed  String?        @map("protocol_version_used")
+  calculatedAt         DateTime       @default(now()) @map("calculated_at")
+
+  evaluation PhysicalEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Restrict)
+
+  @@map("calculated_metrics")
+}
+
+model BodyPhoto {
+  id                       String     @id @default(uuid())
+  evaluationId             String     @map("evaluation_id")
+  angle                    PhotoAngle
+  storageKey               String     @map("storage_key")
+  contentType              String     @map("content_type")
+  sizeBytes                Int        @map("size_bytes")
+  uploadedByProfessionalId String     @map("uploaded_by_professional_id")
+  capturedAt               DateTime?  @map("captured_at")
+  createdAt                DateTime   @default(now()) @map("created_at")
+
+  evaluation PhysicalEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Restrict)
+
+  @@index([evaluationId])
+  @@map("body_photos")
+}
+
+model EvaluationAuditLog {
+  id             String                @id @default(uuid())
+  professionalId String                @map("professional_id")
+  clientId       String                @map("client_id")
+  evaluationId   String?               @map("evaluation_id")
+  action         EvaluationAuditAction
+  ipAddress      String?               @map("ip_address")
+  createdAt      DateTime              @default(now()) @map("created_at")
+
+  professional Professional        @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  client       Client              @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  evaluation   PhysicalEvaluation? @relation(fields: [evaluationId], references: [id], onDelete: SetNull)
+
+  @@index([evaluationId])
+  @@index([professionalId, createdAt])
+  @@map("evaluation_audit_logs")
 }

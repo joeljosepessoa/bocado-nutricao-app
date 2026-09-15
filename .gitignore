@@ -8,3 +8,4 @@ build/
 .expo/
 .turbo/
 coverage/
+/storage/

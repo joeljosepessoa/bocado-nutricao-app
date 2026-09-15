@@ -1,0 +1,458 @@
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BioimpedanceOrigin, BodyFatSource, EvaluationAuditAction, PhotoAngle } from '@prisma/client';
+import { PrismaService } from '../common/prisma/prisma.service';
+import { CalculationService } from './calculation.service';
+import { AuditLogService } from './audit-log.service';
+import { StorageService } from '../storage/storage.service';
+import { CreateEvaluationDto } from './dto/create-evaluation.dto';
+import { UpdateEvaluationDto } from './dto/update-evaluation.dto';
+
+const EVALUATION_DETAIL_INCLUDE = {
+  measurements: true,
+  skinfolds: true,
+  bioimpedance: true,
+  calculatedMetrics: true,
+  protocol: true,
+  photos: { select: { id: true, angle: true, contentType: true, capturedAt: true, createdAt: true } },
+} as const;
+
+const EVALUATION_LIST_SELECT = {
+  id: true,
+  evaluatedAt: true,
+  weightKg: true,
+  createdAt: true,
+  calculatedMetrics: { select: { bmi: true, bodyFatPercent: true, bodyFatPercentSource: true } },
+} as const;
+
+const ALLOWED_PHOTO_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_PHOTO_SIZE_BYTES = 10 * 1024 * 1024;
+
+function calculateAge(birthDate: Date, atDate: Date): number {
+  let age = atDate.getFullYear() - birthDate.getFullYear();
+  const monthDiff = atDate.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && atDate.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
+
+export interface RequestMeta {
+  ipAddress?: string;
+}
+
+@Injectable()
+export class PhysicalEvaluationsService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly calculation: CalculationService,
+    private readonly auditLog: AuditLogService,
+    private readonly storage: StorageService,
+  ) {}
+
+  private async assertOwnedClient(professionalId: string, clientId: string) {
+    const client = await this.prisma.client.findFirst({ where: { id: clientId, professionalId } });
+    if (!client) {
+      throw new NotFoundException('Cliente não encontrado.');
+    }
+    return client;
+  }
+
+  private async assertOwnedEvaluation(professionalId: string, clientId: string, evaluationId: string) {
+    await this.assertOwnedClient(professionalId, clientId);
+    const evaluation = await this.prisma.physicalEvaluation.findFirst({
+      where: { id: evaluationId, clientId },
+    });
+    if (!evaluation) {
+      throw new NotFoundException('Avaliação não encontrada.');
+    }
+    return evaluation;
+  }
+
+  async create(professionalId: string, clientId: string, dto: CreateEvaluationDto, meta: RequestMeta = {}) {
+    const client = await this.assertOwnedClient(professionalId, clientId);
+
+    const evaluatedAt = dto.evaluatedAt ? new Date(dto.evaluatedAt) : new Date();
+
+    let ageAtEvaluation = dto.ageAtEvaluation;
+    if (ageAtEvaluation == null && client.birthDate) {
+      ageAtEvaluation = calculateAge(client.birthDate, evaluatedAt);
+    }
+
+    let protocolId: string | undefined;
+    if (dto.protocolCode) {
+      const protocol = await this.prisma.protocol.findUnique({ where: { code: dto.protocolCode } });
+      if (!protocol) {
+        throw new BadRequestException(`Protocolo "${dto.protocolCode}" não encontrado.`);
+      }
+      protocolId = protocol.id;
+    }
+
+    const evaluation = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.physicalEvaluation.create({
+        data: {
+          clientId,
+          professionalId,
+          evaluatedAt,
+          ageAtEvaluation,
+          biologicalSexForCalculation: dto.biologicalSexForCalculation,
+          heightCm: dto.heightCm,
+          weightKg: dto.weightKg,
+          protocolId,
+          bloodPressureSystolic: dto.bloodPressureSystolic,
+          bloodPressureDiastolic: dto.bloodPressureDiastolic,
+          heartRate: dto.heartRate,
+          glucose: dto.glucose,
+          notes: dto.notes,
+        },
+      });
+
+      if (dto.measurements) {
+        await tx.measurements.create({ data: { evaluationId: created.id, ...dto.measurements } });
+      }
+      if (dto.skinfolds) {
+        await tx.skinfolds.create({ data: { evaluationId: created.id, ...dto.skinfolds } });
+      }
+      if (dto.bioimpedance) {
+        await tx.bioimpedance.create({
+          data: { evaluationId: created.id, origin: BioimpedanceOrigin.manual, ...dto.bioimpedance },
+        });
+      }
+
+      return created;
+    });
+
+    await this.recalculateMetrics(evaluation.id);
+    await this.auditLog.record({
+      professionalId,
+      clientId,
+      evaluationId: evaluation.id,
+      action: EvaluationAuditAction.created,
+      ipAddress: meta.ipAddress,
+    });
+
+    return this.findOne(professionalId, clientId, evaluation.id, meta, false);
+  }
+
+  async list(professionalId: string, clientId: string, page = 1, pageSize = 20, meta: RequestMeta = {}) {
+    await this.assertOwnedClient(professionalId, clientId);
+    const safePage = page > 0 ? page : 1;
+    const safePageSize = pageSize > 0 ? pageSize : 20;
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.physicalEvaluation.findMany({
+        where: { clientId },
+        select: EVALUATION_LIST_SELECT,
+        orderBy: { evaluatedAt: 'desc' },
+        skip: (safePage - 1) * safePageSize,
+        take: safePageSize,
+      }),
+      this.prisma.physicalEvaluation.count({ where: { clientId } }),
+    ]);
+
+    await this.auditLog.record({
+      professionalId,
+      clientId,
+      action: EvaluationAuditAction.listed,
+      ipAddress: meta.ipAddress,
+    });
+
+    return { items, total, page: safePage, pageSize: safePageSize };
+  }
+
+  async findOne(
+    professionalId: string,
+    clientId: string,
+    evaluationId: string,
+    meta: RequestMeta = {},
+    audit = true,
+  ) {
+    await this.assertOwnedClient(professionalId, clientId);
+    const evaluation = await this.prisma.physicalEvaluation.findFirst({
+      where: { id: evaluationId, clientId },
+      include: EVALUATION_DETAIL_INCLUDE,
+    });
+    if (!evaluation) {
+      throw new NotFoundException('Avaliação não encontrada.');
+    }
+
+    if (audit) {
+      await this.auditLog.record({
+        professionalId,
+        clientId,
+        evaluationId,
+        action: EvaluationAuditAction.read,
+        ipAddress: meta.ipAddress,
+      });
+    }
+
+    return evaluation;
+  }
+
+  async update(
+    professionalId: string,
+    clientId: string,
+    evaluationId: string,
+    dto: UpdateEvaluationDto,
+    meta: RequestMeta = {},
+  ) {
+    await this.assertOwnedEvaluation(professionalId, clientId, evaluationId);
+
+    let protocolId: string | null | undefined;
+    if (dto.protocolCode !== undefined) {
+      const protocol = await this.prisma.protocol.findUnique({ where: { code: dto.protocolCode } });
+      if (!protocol) {
+        throw new BadRequestException(`Protocolo "${dto.protocolCode}" não encontrado.`);
+      }
+      protocolId = protocol.id;
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.physicalEvaluation.update({
+        where: { id: evaluationId },
+        data: {
+          evaluatedAt: dto.evaluatedAt ? new Date(dto.evaluatedAt) : undefined,
+          ageAtEvaluation: dto.ageAtEvaluation,
+          biologicalSexForCalculation: dto.biologicalSexForCalculation,
+          heightCm: dto.heightCm,
+          weightKg: dto.weightKg,
+          protocolId,
+          bloodPressureSystolic: dto.bloodPressureSystolic,
+          bloodPressureDiastolic: dto.bloodPressureDiastolic,
+          heartRate: dto.heartRate,
+          glucose: dto.glucose,
+          notes: dto.notes,
+        },
+      });
+
+      if (dto.measurements) {
+        await tx.measurements.upsert({
+          where: { evaluationId },
+          create: { evaluationId, ...dto.measurements },
+          update: { ...dto.measurements },
+        });
+      }
+      if (dto.skinfolds) {
+        await tx.skinfolds.upsert({
+          where: { evaluationId },
+          create: { evaluationId, ...dto.skinfolds },
+          update: { ...dto.skinfolds },
+        });
+      }
+      if (dto.bioimpedance) {
+        await tx.bioimpedance.upsert({
+          where: { evaluationId },
+          create: { evaluationId, origin: BioimpedanceOrigin.manual, ...dto.bioimpedance },
+          update: { origin: BioimpedanceOrigin.manual, ...dto.bioimpedance },
+        });
+      }
+    });
+
+    await this.recalculateMetrics(evaluationId);
+    await this.auditLog.record({
+      professionalId,
+      clientId,
+      evaluationId,
+      action: EvaluationAuditAction.updated,
+      ipAddress: meta.ipAddress,
+    });
+
+    return this.findOne(professionalId, clientId, evaluationId, meta, false);
+  }
+
+  async compare(professionalId: string, clientId: string, fromId: string, toId: string, meta: RequestMeta = {}) {
+    const [from, to] = await Promise.all([
+      this.findOne(professionalId, clientId, fromId, meta, false),
+      this.findOne(professionalId, clientId, toId, meta, false),
+    ]);
+
+    const numericDelta = (a: number | null | undefined, b: number | null | undefined) =>
+      a == null || b == null ? null : Math.round((b - a) * 100) / 100;
+
+    const deltas = {
+      weightKg: numericDelta(from.weightKg, to.weightKg),
+      bmi: numericDelta(from.calculatedMetrics?.bmi, to.calculatedMetrics?.bmi),
+      bodyFatPercent: numericDelta(from.calculatedMetrics?.bodyFatPercent, to.calculatedMetrics?.bodyFatPercent),
+      fatMassKg: numericDelta(from.calculatedMetrics?.fatMassKg, to.calculatedMetrics?.fatMassKg),
+      leanMassKg: numericDelta(from.calculatedMetrics?.leanMassKg, to.calculatedMetrics?.leanMassKg),
+      waistCm: numericDelta(from.measurements?.waistCm, to.measurements?.waistCm),
+      hipCm: numericDelta(from.measurements?.hipCm, to.measurements?.hipCm),
+    };
+
+    await this.auditLog.record({
+      professionalId,
+      clientId,
+      evaluationId: fromId,
+      action: EvaluationAuditAction.compared,
+      ipAddress: meta.ipAddress,
+    });
+    await this.auditLog.record({
+      professionalId,
+      clientId,
+      evaluationId: toId,
+      action: EvaluationAuditAction.compared,
+      ipAddress: meta.ipAddress,
+    });
+
+    return { from, to, deltas };
+  }
+
+  async uploadPhoto(
+    professionalId: string,
+    clientId: string,
+    evaluationId: string,
+    angle: PhotoAngle,
+    file: { buffer: Buffer; mimetype: string; size: number },
+    meta: RequestMeta = {},
+  ) {
+    await this.assertOwnedEvaluation(professionalId, clientId, evaluationId);
+
+    if (!ALLOWED_PHOTO_CONTENT_TYPES.includes(file.mimetype)) {
+      throw new BadRequestException('Formato de imagem não suportado. Use JPEG, PNG ou WEBP.');
+    }
+    if (file.size > MAX_PHOTO_SIZE_BYTES) {
+      throw new BadRequestException('Arquivo maior que o limite de 10MB.');
+    }
+
+    const { storageKey, sizeBytes } = await this.storage.save(file.buffer, file.mimetype);
+
+    const photo = await this.prisma.bodyPhoto.create({
+      data: {
+        evaluationId,
+        angle,
+        storageKey,
+        contentType: file.mimetype,
+        sizeBytes,
+        uploadedByProfessionalId: professionalId,
+      },
+    });
+
+    await this.auditLog.record({
+      professionalId,
+      clientId,
+      evaluationId,
+      action: EvaluationAuditAction.photo_uploaded,
+      ipAddress: meta.ipAddress,
+    });
+
+    return { id: photo.id, angle: photo.angle };
+  }
+
+  async getPhotoSignedUrl(
+    professionalId: string,
+    clientId: string,
+    evaluationId: string,
+    photoId: string,
+    meta: RequestMeta = {},
+  ) {
+    await this.assertOwnedEvaluation(professionalId, clientId, evaluationId);
+    const photo = await this.prisma.bodyPhoto.findFirst({ where: { id: photoId, evaluationId } });
+    if (!photo) {
+      throw new NotFoundException('Foto não encontrada.');
+    }
+
+    const signed = this.storage.getSignedUrl(photo.storageKey, photo.contentType);
+
+    await this.auditLog.record({
+      professionalId,
+      clientId,
+      evaluationId,
+      action: EvaluationAuditAction.photo_read,
+      ipAddress: meta.ipAddress,
+    });
+
+    return signed;
+  }
+
+  async deletePhoto(
+    professionalId: string,
+    clientId: string,
+    evaluationId: string,
+    photoId: string,
+    meta: RequestMeta = {},
+  ) {
+    await this.assertOwnedEvaluation(professionalId, clientId, evaluationId);
+    const photo = await this.prisma.bodyPhoto.findFirst({ where: { id: photoId, evaluationId } });
+    if (!photo) {
+      throw new NotFoundException('Foto não encontrada.');
+    }
+
+    await this.storage.delete(photo.storageKey);
+    await this.prisma.bodyPhoto.delete({ where: { id: photoId } });
+
+    await this.auditLog.record({
+      professionalId,
+      clientId,
+      evaluationId,
+      action: EvaluationAuditAction.photo_deleted,
+      ipAddress: meta.ipAddress,
+    });
+  }
+
+  private async recalculateMetrics(evaluationId: string): Promise<void> {
+    const evaluation = await this.prisma.physicalEvaluation.findUniqueOrThrow({
+      where: { id: evaluationId },
+      include: { measurements: true, skinfolds: true, bioimpedance: true, protocol: true },
+    });
+
+    const bmiResult = this.calculation.computeBmi(evaluation.weightKg, evaluation.heightCm);
+    const waistHipRatio = this.calculation.computeWaistHipRatio(
+      evaluation.measurements?.waistCm,
+      evaluation.measurements?.hipCm,
+    );
+
+    let bodyFatPercent: number | null = null;
+    let bodyFatPercentSource: BodyFatSource | null = null;
+    let protocolVersionUsed: string | null = null;
+
+    if (evaluation.skinfolds && evaluation.protocol?.code === 'jackson_pollock_7') {
+      const percent = this.calculation.computeJacksonPollock7Percent(
+        evaluation.skinfolds,
+        evaluation.biologicalSexForCalculation,
+        evaluation.ageAtEvaluation,
+      );
+      if (percent != null) {
+        bodyFatPercent = percent;
+        bodyFatPercentSource = BodyFatSource.skinfolds;
+        protocolVersionUsed = `${evaluation.protocol.code}@v${evaluation.protocol.version}`;
+      }
+    }
+
+    if (bodyFatPercent == null && evaluation.bioimpedance?.bodyFatPercent != null) {
+      bodyFatPercent = evaluation.bioimpedance.bodyFatPercent;
+      bodyFatPercentSource = BodyFatSource.bioimpedance;
+    }
+
+    let fatMassKg: number | null = null;
+    let leanMassKg: number | null = null;
+    if (bodyFatPercent != null && evaluation.weightKg != null) {
+      fatMassKg = Math.round(evaluation.weightKg * (bodyFatPercent / 100) * 100) / 100;
+      leanMassKg = Math.round((evaluation.weightKg - fatMassKg) * 100) / 100;
+    }
+
+    await this.prisma.calculatedMetrics.upsert({
+      where: { evaluationId },
+      create: {
+        evaluationId,
+        bmi: bmiResult?.bmi,
+        bmiClassification: bmiResult?.classification,
+        waistHipRatio,
+        bodyFatPercent,
+        bodyFatPercentSource,
+        fatMassKg,
+        leanMassKg,
+        protocolVersionUsed,
+      },
+      update: {
+        bmi: bmiResult?.bmi ?? null,
+        bmiClassification: bmiResult?.classification ?? null,
+        waistHipRatio,
+        bodyFatPercent,
+        bodyFatPercentSource,
+        fatMassKg,
+        leanMassKg,
+        protocolVersionUsed,
+        calculatedAt: new Date(),
+      },
+    });
+  }
+}

@@ -10,6 +10,8 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ProfessionalsModule } from './professionals/professionals.module';
 import { ClientsModule } from './clients/clients.module';
+import { PhysicalEvaluationsModule } from './physical-evaluations/physical-evaluations.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { ClientsModule } from './clients/clients.module';
     UsersModule,
     ProfessionalsModule,
     ClientsModule,
+    PhysicalEvaluationsModule,
+    StorageModule,
   ],
   controllers: [AppController],
   providers: [
