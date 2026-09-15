@@ -241,22 +241,47 @@ describe('Aplicativo do cliente (e2e)', () => {
     expect(resWorkout.body.workout).toBeNull();
   });
 
-  // 8. Evolução restrita — só avaliações liberadas, e nunca dado técnico
-  it('GET /client/evolution só mostra avaliações liberadas pelo profissional, com indicadores restritos', async () => {
+  // 8. Evolução restrita — só avaliações liberadas; backend filtra na query, nunca só na UI
+  it('GET /client/evolution: avaliação não liberada não aparece; liberada aparece com composição/medidas, nunca dado técnico (Fase 8)', async () => {
     const professional = await registerProfessional(app);
     const { client, temporaryPassword } = await createClient(app, professional.accessToken);
 
     const evaluation = await request(app.getHttpServer())
       .post(`/clients/${client.id}/evaluations`)
       .set('Authorization', `Bearer ${professional.accessToken}`)
-      .send({ heightCm: 178, weightKg: 80 })
+      .send({
+        heightCm: 178,
+        weightKg: 80,
+        protocolCode: 'jackson_pollock_7',
+        biologicalSexForCalculation: 'male',
+        ageAtEvaluation: 30,
+        bloodPressureSystolic: 120,
+        bloodPressureDiastolic: 80,
+        heartRate: 70,
+        glucose: 90,
+        notes: 'Nota clínica confidencial',
+        measurements: { waistCm: 85, hipCm: 100, chestCm: 100, armRightCm: 32 },
+        skinfolds: {
+          chestMm: 8,
+          axillaryMidMm: 10,
+          tricepsMm: 9,
+          subscapularMm: 12,
+          abdominalMm: 15,
+          suprailiacMm: 11,
+          thighMm: 14,
+        },
+        bioimpedance: { muscleMassKg: 32, bodyWaterPercent: 55, visceralFatLevel: 8, boneMassKg: 3.1 },
+      })
       .expect(201);
 
     const session = await login(app, client.user.email, temporaryPassword);
     const auth = { Authorization: `Bearer ${session.accessToken}` };
 
+    // 5. Cliente com avaliação NÃO liberada: nada aparece — backend filtra na
+    // query (releasedToClientAt), não é só escondido na UI.
     const beforeRelease = await request(app.getHttpServer()).get('/client/evolution').set(auth).expect(200);
     expect(beforeRelease.body.total).toBe(0);
+    expect(beforeRelease.body.items).toEqual([]);
 
     await request(app.getHttpServer())
       .patch(`/clients/${client.id}/evaluations/${evaluation.body.id}/release`)
@@ -264,11 +289,91 @@ describe('Aplicativo do cliente (e2e)', () => {
       .send({ released: true })
       .expect(200);
 
+    // 6. Cliente com avaliação liberada: composição + medidas aparecem
     const afterRelease = await request(app.getHttpServer()).get('/client/evolution').set(auth).expect(200);
     expect(afterRelease.body.total).toBe(1);
-    expect(afterRelease.body.items[0].id).toBe(evaluation.body.id);
-    expect(afterRelease.body.items[0]).not.toHaveProperty('skinfolds');
-    expect(afterRelease.body.items[0]).not.toHaveProperty('notes');
+    const item = afterRelease.body.items[0];
+    expect(item.id).toBe(evaluation.body.id);
+    expect(item.weightKg).toBe(80);
+    expect(item.bmiClassification).toBe('sobrepeso');
+    expect(item.measurements).toEqual(
+      expect.objectContaining({ waistCm: 85, hipCm: 100, chestCm: 100, armRightCm: 32 }),
+    );
+    expect(item.composition).toEqual(
+      expect.objectContaining({ muscleMassKg: 32, bodyWaterPercent: 55, visceralFatLevel: 8, boneMassKg: 3.1 }),
+    );
+
+    // 11. Nenhum campo técnico/clínico proibido, em nenhum nível do payload
+    const keys = Object.keys(item);
+    expect(keys).not.toContain('skinfolds');
+    expect(keys).not.toContain('notes');
+    expect(keys).not.toContain('protocol');
+    expect(keys).not.toContain('bloodPressureSystolic');
+    expect(keys).not.toContain('bloodPressureDiastolic');
+    expect(keys).not.toContain('heartRate');
+    expect(keys).not.toContain('glucose');
+    expect(keys).not.toContain('bodyFatPercentSource');
+    const compositionKeys = Object.keys(item.composition);
+    expect(compositionKeys).not.toContain('origin');
+    expect(compositionKeys).not.toContain('segmentalData');
+    expect(compositionKeys).not.toContain('impedanceData');
+    expect(compositionKeys).not.toContain('recordedAt');
+  });
+
+  // Retirar liberação some da evolução já apresentada, não só de novas leituras
+  it('retirar a liberação (release: false) faz a avaliação sumir de /client/evolution na leitura seguinte', async () => {
+    const professional = await registerProfessional(app);
+    const { client, temporaryPassword } = await createClient(app, professional.accessToken);
+    const evaluation = await request(app.getHttpServer())
+      .post(`/clients/${client.id}/evaluations`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .send({ heightCm: 178, weightKg: 80 })
+      .expect(201);
+    await request(app.getHttpServer())
+      .patch(`/clients/${client.id}/evaluations/${evaluation.body.id}/release`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .send({ released: true })
+      .expect(200);
+
+    const session = await login(app, client.user.email, temporaryPassword);
+    const auth = { Authorization: `Bearer ${session.accessToken}` };
+    const released = await request(app.getHttpServer()).get('/client/evolution').set(auth).expect(200);
+    expect(released.body.total).toBe(1);
+
+    await request(app.getHttpServer())
+      .patch(`/clients/${client.id}/evaluations/${evaluation.body.id}/release`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .send({ released: false })
+      .expect(200);
+
+    const revoked = await request(app.getHttpServer()).get('/client/evolution').set(auth).expect(200);
+    expect(revoked.body.total).toBe(0);
+  });
+
+  // 7. Isolamento entre clientes, estendido à evolução
+  it('cliente A não vê a evolução de cliente B, mesmo com avaliação liberada', async () => {
+    const professional = await registerProfessional(app);
+    const clientA = await createClient(app, professional.accessToken);
+    const clientB = await createClient(app, professional.accessToken);
+
+    const evaluationB = await request(app.getHttpServer())
+      .post(`/clients/${clientB.client.id}/evaluations`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .send({ heightCm: 165, weightKg: 60 })
+      .expect(201);
+    await request(app.getHttpServer())
+      .patch(`/clients/${clientB.client.id}/evaluations/${evaluationB.body.id}/release`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .send({ released: true })
+      .expect(200);
+
+    const sessionA = await login(app, clientA.client.user.email, clientA.temporaryPassword);
+    const resA = await request(app.getHttpServer())
+      .get('/client/evolution')
+      .set('Authorization', `Bearer ${sessionA.accessToken}`)
+      .expect(200);
+    expect(resA.body.total).toBe(0);
+    expect(resA.body.items).toEqual([]);
   });
 
   // 9. Relatórios — stub, sem entidade Report

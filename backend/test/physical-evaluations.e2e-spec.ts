@@ -298,6 +298,162 @@ describe('Avaliação física (e2e)', () => {
     expect(res.body.deltas.waistCm).toBeNull();
   });
 
+  // 10b. Comparação estendida (Fase 8) — aditiva, sem quebrar os campos da Fase 4
+  it('compare (Fase 8): deltas ganham medidas/dobras/bioimpedância + deltasPercent, sem alterar os campos antigos', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+    const first = await createEvaluation(app, professional.accessToken, client.id, {
+      weightKg: 80,
+      protocolCode: 'jackson_pollock_7',
+      biologicalSexForCalculation: 'male',
+      ageAtEvaluation: 30,
+      measurements: { waistCm: 90, hipCm: 100, chestCm: 100, armRightCm: 32 },
+      skinfolds: FULL_JP7_SKINFOLDS,
+      bioimpedance: { muscleMassKg: 32, bodyWaterPercent: 54, visceralFatLevel: 9, boneMassKg: 3 },
+    });
+    const second = await createEvaluation(app, professional.accessToken, client.id, {
+      weightKg: 76,
+      protocolCode: 'jackson_pollock_7',
+      biologicalSexForCalculation: 'male',
+      ageAtEvaluation: 30,
+      measurements: { waistCm: 86, hipCm: 100, chestCm: 102, armRightCm: 33 },
+      skinfolds: { ...FULL_JP7_SKINFOLDS, chestMm: 6, tricepsMm: 7 },
+      bioimpedance: { muscleMassKg: 34, bodyWaterPercent: 55, visceralFatLevel: 8, boneMassKg: 3.1 },
+    });
+
+    const res = await request(app.getHttpServer())
+      .get(`/clients/${client.id}/evaluations/compare?from=${first.id}&to=${second.id}`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .expect(200);
+
+    // campos da Fase 4 — mesmo formato/valores de sempre
+    expect(res.body.deltas.weightKg).toBeCloseTo(-4, 5);
+    expect(res.body.deltas.waistCm).toBeCloseTo(-4, 5);
+    expect(res.body.deltas.hipCm).toBeCloseTo(0, 5);
+
+    // novos campos aditivos
+    expect(res.body.deltas.chestCm).toBeCloseTo(2, 5);
+    expect(res.body.deltas.armRightCm).toBeCloseTo(1, 5);
+    expect(res.body.deltas.muscleMassKg).toBeCloseTo(2, 5);
+    expect(res.body.deltas.bodyWaterPercent).toBeCloseTo(1, 5);
+    expect(res.body.deltas.visceralFatLevel).toBeCloseTo(-1, 5);
+    expect(typeof res.body.deltas.skinfoldSumMm).toBe('number');
+
+    expect(res.body.deltasPercent.weightKg).toBeCloseTo(-5, 1);
+    expect(res.body.deltasPercent.waistCm).toBeCloseTo(-4.44, 1);
+
+    expect(res.body.bodyFatSourceChanged).toBe(false);
+  });
+
+  it('compare: percentual vem null quando a base é 0 (nunca Infinity)', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+    const first = await createEvaluation(app, professional.accessToken, client.id, {
+      bioimpedance: { visceralFatLevel: 0 },
+    });
+    const second = await createEvaluation(app, professional.accessToken, client.id, {
+      bioimpedance: { visceralFatLevel: 5 },
+    });
+
+    const res = await request(app.getHttpServer())
+      .get(`/clients/${client.id}/evaluations/compare?from=${first.id}&to=${second.id}`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .expect(200);
+
+    expect(res.body.deltas.visceralFatLevel).toBe(5);
+    expect(res.body.deltasPercent.visceralFatLevel).toBeNull();
+  });
+
+  // 10c. Série de evolução (Fase 8)
+  it('evolution: retorna a série cronológica ascendente para o gráfico do profissional', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+    const first = await createEvaluation(app, professional.accessToken, client.id, { weightKg: 82 });
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const second = await createEvaluation(app, professional.accessToken, client.id, { weightKg: 79 });
+
+    const res = await request(app.getHttpServer())
+      .get(`/clients/${client.id}/evaluations/evolution`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .expect(200);
+
+    expect(res.body).toHaveLength(2);
+    expect(res.body[0].id).toBe(first.id);
+    expect(res.body[1].id).toBe(second.id);
+    expect(res.body[0].weightKg).toBe(82);
+    expect(res.body[1].weightKg).toBe(79);
+    const dates = res.body.map((p: { evaluatedAt: string }) => new Date(p.evaluatedAt).getTime());
+    expect(dates).toEqual([...dates].sort((a, b) => a - b));
+  });
+
+  it('evolution: soma de dobras usa exatamente os sítios exigidos pelo protocolo daquela avaliação', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+    await createEvaluation(app, professional.accessToken, client.id, {
+      protocolCode: 'jackson_pollock_7',
+      biologicalSexForCalculation: 'male',
+      ageAtEvaluation: 30,
+      skinfolds: FULL_JP7_SKINFOLDS,
+    });
+
+    const res = await request(app.getHttpServer())
+      .get(`/clients/${client.id}/evaluations/evolution`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .expect(200);
+
+    const expectedSum = Object.values(FULL_JP7_SKINFOLDS).reduce((a, b) => a + b, 0);
+    expect(res.body[0].skinfoldSumMm).toBeCloseTo(expectedSum, 5);
+    expect(res.body[0].protocolCode).toBe('jackson_pollock_7');
+  });
+
+  it('evolution: sem protocolo, ou com dobra exigida faltando, soma vem null (nunca parcial)', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+    await createEvaluation(app, professional.accessToken, client.id, {
+      protocolCode: 'jackson_pollock_7',
+      biologicalSexForCalculation: 'male',
+      ageAtEvaluation: 30,
+      skinfolds: { chestMm: 8, tricepsMm: 9 }, // faltam 5 das 7 dobras exigidas
+    });
+
+    const res = await request(app.getHttpServer())
+      .get(`/clients/${client.id}/evaluations/evolution`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .expect(200);
+
+    expect(res.body[0].skinfoldSumMm).toBeNull();
+  });
+
+  it('evolution: cliente sem nenhuma avaliação retorna array vazio, não 404', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+
+    const res = await request(app.getHttpServer())
+      .get(`/clients/${client.id}/evaluations/evolution`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .expect(200);
+
+    expect(res.body).toEqual([]);
+  });
+
+  it('evolution: isolamento — profissional B não acessa a série de cliente de A; cliente autenticado recebe 403', async () => {
+    const professionalA = await registerProfessional(app);
+    const professionalB = await registerProfessional(app);
+    const { client, temporaryPassword } = await createClient(app, professionalA.accessToken);
+    await createEvaluation(app, professionalA.accessToken, client.id);
+
+    await request(app.getHttpServer())
+      .get(`/clients/${client.id}/evaluations/evolution`)
+      .set('Authorization', `Bearer ${professionalB.accessToken}`)
+      .expect(404);
+
+    const clientSession = await login(app, client.user.email, temporaryPassword);
+    await request(app.getHttpServer())
+      .get(`/clients/${client.id}/evaluations/evolution`)
+      .set('Authorization', `Bearer ${clientSession.accessToken}`)
+      .expect(403);
+  });
+
   // 11. Permissões
   it('evaluationId válido mas de outro cliente/profissional retorna 404', async () => {
     const professionalA = await registerProfessional(app);

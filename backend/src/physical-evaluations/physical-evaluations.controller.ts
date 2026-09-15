@@ -75,6 +75,12 @@ export class PhysicalEvaluationsController {
     return this.evaluationsService.compare(user.id, clientId, from, to, meta(req));
   }
 
+  // Precisa vir antes de `:id` — rota estática, mesma regra do `compare` acima.
+  @Get('evolution')
+  getEvolutionSeries(@CurrentUser() user: AuthenticatedUser, @Param('clientId') clientId: string) {
+    return this.evaluationsService.getEvolutionSeries(user.id, clientId);
+  }
+
   @Get(':id')
   findOne(
     @CurrentUser() user: AuthenticatedUser,

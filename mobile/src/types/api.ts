@@ -113,13 +113,50 @@ export interface CreateExecutionLogInput {
   sets: ExecutionSetInput[];
 }
 
+export interface EvolutionMeasurements {
+  chestCm: number | null;
+  waistCm: number | null;
+  abdomenCm: number | null;
+  hipCm: number | null;
+  armRightCm: number | null;
+  armLeftCm: number | null;
+  forearmRightCm: number | null;
+  forearmLeftCm: number | null;
+  thighRightCm: number | null;
+  thighLeftCm: number | null;
+  calfRightCm: number | null;
+  calfLeftCm: number | null;
+  wristCm: number | null;
+  femurBicondylarCm: number | null;
+}
+
+export interface EvolutionComposition {
+  muscleMassKg: number | null;
+  skeletalMuscleMassKg: number | null;
+  bodyWaterPercent: number | null;
+  visceralFatLevel: number | null;
+  boneMassKg: number | null;
+  basalMetabolicRateKcal: number | null;
+  bodyAgeYears: number | null;
+}
+
+/**
+ * Espelha PhysicalEvaluationClientSummaryDto (backend) — allowlist fechado
+ * da Fase 8, Decisão 2. Nunca ganha um campo aqui sem o backend já expor,
+ * porque este tipo é só o formato do que a API manda, não uma promessa
+ * própria do app.
+ */
 export interface EvolutionEntry {
   id: string;
   evaluatedAt: string;
   weightKg: number | null;
+  bmi: number | null;
   bmiClassification: string | null;
   bodyFatPercent: number | null;
+  fatMassKg: number | null;
   leanMassKg: number | null;
+  measurements: EvolutionMeasurements | null;
+  composition: EvolutionComposition | null;
 }
 
 export interface PaginatedResult<T> {

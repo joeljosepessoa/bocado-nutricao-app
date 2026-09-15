@@ -8,6 +8,7 @@ import { CreateEvaluationDto } from './dto/create-evaluation.dto';
 import { UpdateEvaluationDto } from './dto/update-evaluation.dto';
 import { UpdateEvaluationReleaseDto } from './dto/update-evaluation-release.dto';
 import { PhysicalEvaluationClientSummaryDto } from './dto/physical-evaluation-client-summary.dto';
+import { computeSkinfoldSumMm, EvolutionPointDto } from './dto/evolution-point.dto';
 
 const EVALUATION_DETAIL_INCLUDE = {
   measurements: true,
@@ -25,6 +26,88 @@ const EVALUATION_LIST_SELECT = {
   createdAt: true,
   calculatedMetrics: { select: { bmi: true, bodyFatPercent: true, bodyFatPercentSource: true } },
 } as const;
+
+const MEASUREMENTS_SELECT = {
+  chestCm: true,
+  waistCm: true,
+  abdomenCm: true,
+  hipCm: true,
+  armRightCm: true,
+  armLeftCm: true,
+  forearmRightCm: true,
+  forearmLeftCm: true,
+  thighRightCm: true,
+  thighLeftCm: true,
+  calfRightCm: true,
+  calfLeftCm: true,
+  wristCm: true,
+  femurBicondylarCm: true,
+} as const;
+
+const BIOIMPEDANCE_RESULT_SELECT = {
+  origin: true,
+  muscleMassKg: true,
+  skeletalMuscleMassKg: true,
+  bodyWaterPercent: true,
+  visceralFatLevel: true,
+  boneMassKg: true,
+  basalMetabolicRateKcal: true,
+  bodyAgeYears: true,
+} as const;
+
+/**
+ * Fase 8, Decisão 2: o que o cliente pode ver de uma avaliação liberada —
+ * composição corporal (resultados) + circunferências. Nunca dobras,
+ * protocolo, pressão, glicemia, notas, nem os campos brutos de
+ * bioimpedância (`origin`, `recordedAt`, `impedanceData`, `segmentalData`).
+ */
+const CLIENT_EVOLUTION_SELECT = {
+  id: true,
+  evaluatedAt: true,
+  weightKg: true,
+  calculatedMetrics: {
+    select: { bmi: true, bmiClassification: true, bodyFatPercent: true, fatMassKg: true, leanMassKg: true },
+  },
+  measurements: { select: MEASUREMENTS_SELECT },
+  bioimpedance: {
+    select: {
+      muscleMassKg: true,
+      skeletalMuscleMassKg: true,
+      bodyWaterPercent: true,
+      visceralFatLevel: true,
+      boneMassKg: true,
+      basalMetabolicRateKcal: true,
+      bodyAgeYears: true,
+    },
+  },
+} as const;
+
+const EVOLUTION_SERIES_SELECT = {
+  id: true,
+  evaluatedAt: true,
+  releasedToClientAt: true,
+  weightKg: true,
+  calculatedMetrics: {
+    select: {
+      bmi: true,
+      bmiClassification: true,
+      bodyFatPercent: true,
+      bodyFatPercentSource: true,
+      fatMassKg: true,
+      leanMassKg: true,
+    },
+  },
+  measurements: { select: MEASUREMENTS_SELECT },
+  skinfolds: true,
+  protocol: { select: { code: true, version: true, requiredSkinfoldSites: true } },
+  bioimpedance: { select: BIOIMPEDANCE_RESULT_SELECT },
+} as const;
+
+// Teto de segurança para a série não-paginada do profissional — bem acima
+// do volume real esperado por cliente (Fase 8, Seção 15 do desenho:
+// dezenas de avaliações, não milhares); protege a consulta sem precisar
+// de paginação para um gráfico, que precisa da série inteira de uma vez.
+const MAX_EVOLUTION_SERIES_POINTS = 500;
 
 const ALLOWED_PHOTO_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_PHOTO_SIZE_BYTES = 10 * 1024 * 1024;
@@ -270,7 +353,18 @@ export class PhysicalEvaluationsService {
     const numericDelta = (a: number | null | undefined, b: number | null | undefined) =>
       a == null || b == null ? null : Math.round((b - a) * 100) / 100;
 
-    const deltas = {
+    // % de variação sobre o valor de origem; base 0 não tem variação
+    // percentual definida (não é ausência de dado, é divisão por zero).
+    const percentDelta = (a: number | null | undefined, b: number | null | undefined) =>
+      a == null || b == null || a === 0 ? null : Math.round(((b - a) / a) * 1000) / 10;
+
+    const fromSkinfoldSumMm = computeSkinfoldSumMm(from.protocol?.requiredSkinfoldSites, from.skinfolds);
+    const toSkinfoldSumMm = computeSkinfoldSumMm(to.protocol?.requiredSkinfoldSites, to.skinfolds);
+
+    // Fase 8: campos originais da Fase 4 preservados nome-a-nome (formato
+    // já coberto por teste e2e existente); tudo abaixo do comentário é
+    // aditivo.
+    const deltaFields = {
       weightKg: numericDelta(from.weightKg, to.weightKg),
       bmi: numericDelta(from.calculatedMetrics?.bmi, to.calculatedMetrics?.bmi),
       bodyFatPercent: numericDelta(from.calculatedMetrics?.bodyFatPercent, to.calculatedMetrics?.bodyFatPercent),
@@ -278,7 +372,65 @@ export class PhysicalEvaluationsService {
       leanMassKg: numericDelta(from.calculatedMetrics?.leanMassKg, to.calculatedMetrics?.leanMassKg),
       waistCm: numericDelta(from.measurements?.waistCm, to.measurements?.waistCm),
       hipCm: numericDelta(from.measurements?.hipCm, to.measurements?.hipCm),
+
+      // --- Fase 8 ---
+      chestCm: numericDelta(from.measurements?.chestCm, to.measurements?.chestCm),
+      abdomenCm: numericDelta(from.measurements?.abdomenCm, to.measurements?.abdomenCm),
+      armRightCm: numericDelta(from.measurements?.armRightCm, to.measurements?.armRightCm),
+      armLeftCm: numericDelta(from.measurements?.armLeftCm, to.measurements?.armLeftCm),
+      forearmRightCm: numericDelta(from.measurements?.forearmRightCm, to.measurements?.forearmRightCm),
+      forearmLeftCm: numericDelta(from.measurements?.forearmLeftCm, to.measurements?.forearmLeftCm),
+      thighRightCm: numericDelta(from.measurements?.thighRightCm, to.measurements?.thighRightCm),
+      thighLeftCm: numericDelta(from.measurements?.thighLeftCm, to.measurements?.thighLeftCm),
+      calfRightCm: numericDelta(from.measurements?.calfRightCm, to.measurements?.calfRightCm),
+      calfLeftCm: numericDelta(from.measurements?.calfLeftCm, to.measurements?.calfLeftCm),
+      wristCm: numericDelta(from.measurements?.wristCm, to.measurements?.wristCm),
+      femurBicondylarCm: numericDelta(from.measurements?.femurBicondylarCm, to.measurements?.femurBicondylarCm),
+      skinfoldSumMm: numericDelta(fromSkinfoldSumMm, toSkinfoldSumMm),
+      muscleMassKg: numericDelta(from.bioimpedance?.muscleMassKg, to.bioimpedance?.muscleMassKg),
+      bodyWaterPercent: numericDelta(from.bioimpedance?.bodyWaterPercent, to.bioimpedance?.bodyWaterPercent),
+      visceralFatLevel: numericDelta(from.bioimpedance?.visceralFatLevel, to.bioimpedance?.visceralFatLevel),
+      boneMassKg: numericDelta(from.bioimpedance?.boneMassKg, to.bioimpedance?.boneMassKg),
+      basalMetabolicRateKcal: numericDelta(
+        from.bioimpedance?.basalMetabolicRateKcal,
+        to.bioimpedance?.basalMetabolicRateKcal,
+      ),
     };
+
+    const deltasPercent = {
+      weightKg: percentDelta(from.weightKg, to.weightKg),
+      bmi: percentDelta(from.calculatedMetrics?.bmi, to.calculatedMetrics?.bmi),
+      bodyFatPercent: percentDelta(from.calculatedMetrics?.bodyFatPercent, to.calculatedMetrics?.bodyFatPercent),
+      fatMassKg: percentDelta(from.calculatedMetrics?.fatMassKg, to.calculatedMetrics?.fatMassKg),
+      leanMassKg: percentDelta(from.calculatedMetrics?.leanMassKg, to.calculatedMetrics?.leanMassKg),
+      waistCm: percentDelta(from.measurements?.waistCm, to.measurements?.waistCm),
+      hipCm: percentDelta(from.measurements?.hipCm, to.measurements?.hipCm),
+      chestCm: percentDelta(from.measurements?.chestCm, to.measurements?.chestCm),
+      abdomenCm: percentDelta(from.measurements?.abdomenCm, to.measurements?.abdomenCm),
+      armRightCm: percentDelta(from.measurements?.armRightCm, to.measurements?.armRightCm),
+      armLeftCm: percentDelta(from.measurements?.armLeftCm, to.measurements?.armLeftCm),
+      forearmRightCm: percentDelta(from.measurements?.forearmRightCm, to.measurements?.forearmRightCm),
+      forearmLeftCm: percentDelta(from.measurements?.forearmLeftCm, to.measurements?.forearmLeftCm),
+      thighRightCm: percentDelta(from.measurements?.thighRightCm, to.measurements?.thighRightCm),
+      thighLeftCm: percentDelta(from.measurements?.thighLeftCm, to.measurements?.thighLeftCm),
+      calfRightCm: percentDelta(from.measurements?.calfRightCm, to.measurements?.calfRightCm),
+      calfLeftCm: percentDelta(from.measurements?.calfLeftCm, to.measurements?.calfLeftCm),
+      wristCm: percentDelta(from.measurements?.wristCm, to.measurements?.wristCm),
+      femurBicondylarCm: percentDelta(from.measurements?.femurBicondylarCm, to.measurements?.femurBicondylarCm),
+      skinfoldSumMm: percentDelta(fromSkinfoldSumMm, toSkinfoldSumMm),
+      muscleMassKg: percentDelta(from.bioimpedance?.muscleMassKg, to.bioimpedance?.muscleMassKg),
+      bodyWaterPercent: percentDelta(from.bioimpedance?.bodyWaterPercent, to.bioimpedance?.bodyWaterPercent),
+      visceralFatLevel: percentDelta(from.bioimpedance?.visceralFatLevel, to.bioimpedance?.visceralFatLevel),
+      boneMassKg: percentDelta(from.bioimpedance?.boneMassKg, to.bioimpedance?.boneMassKg),
+      basalMetabolicRateKcal: percentDelta(
+        from.bioimpedance?.basalMetabolicRateKcal,
+        to.bioimpedance?.basalMetabolicRateKcal,
+      ),
+    };
+
+    const fromSource = from.calculatedMetrics?.bodyFatPercentSource ?? null;
+    const toSource = to.calculatedMetrics?.bodyFatPercentSource ?? null;
+    const bodyFatSourceChanged = fromSource != null && toSource != null && fromSource !== toSource;
 
     await this.auditLog.record({
       professionalId,
@@ -295,7 +447,7 @@ export class PhysicalEvaluationsService {
       ipAddress: meta.ipAddress,
     });
 
-    return { from, to, deltas };
+    return { from, to, deltas: deltaFields, deltasPercent, bodyFatSourceChanged };
   }
 
   async uploadPhoto(
@@ -424,7 +576,7 @@ export class PhysicalEvaluationsService {
     const [items, total] = await this.prisma.$transaction([
       this.prisma.physicalEvaluation.findMany({
         where: { clientId, releasedToClientAt: { not: null } },
-        select: { id: true, evaluatedAt: true, weightKg: true, calculatedMetrics: { select: { bmiClassification: true, bodyFatPercent: true, leanMassKg: true } } },
+        select: CLIENT_EVOLUTION_SELECT,
         orderBy: { evaluatedAt: 'desc' },
         skip: (safePage - 1) * safePageSize,
         take: safePageSize,
@@ -438,6 +590,25 @@ export class PhysicalEvaluationsService {
       page: safePage,
       pageSize: safePageSize,
     };
+  }
+
+  /**
+   * Série cronológica leve para os gráficos de evolução do profissional —
+   * uma consulta só, sem N+1, sem incluir fotos/notas/protocolo por
+   * extenso que os gráficos não usam. Ordenada ascendente (mais antiga
+   * primeiro) porque é assim que um gráfico de linha do tempo é desenhado.
+   */
+  async getEvolutionSeries(professionalId: string, clientId: string): Promise<EvolutionPointDto[]> {
+    await this.assertOwnedClient(professionalId, clientId);
+
+    const evaluations = await this.prisma.physicalEvaluation.findMany({
+      where: { clientId },
+      select: EVOLUTION_SERIES_SELECT,
+      orderBy: { evaluatedAt: 'asc' },
+      take: MAX_EVOLUTION_SERIES_POINTS,
+    });
+
+    return evaluations.map((evaluation) => EvolutionPointDto.fromEvaluation(evaluation));
   }
 
   private async recalculateMetrics(evaluationId: string): Promise<void> {
