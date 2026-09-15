@@ -53,10 +53,15 @@ model Professional {
   id                     String  @id
   professionalRegister   String? @map("professional_register")
 
-  user        User                 @relation(fields: [id], references: [id])
-  clients     Client[]
-  evaluations PhysicalEvaluation[]
-  auditLogs   EvaluationAuditLog[]
+  user             User                 @relation(fields: [id], references: [id])
+  clients          Client[]
+  evaluations      PhysicalEvaluation[]
+  auditLogs        EvaluationAuditLog[]
+  createdFoods       Food[]               @relation("FoodCreatedBy")
+  privateFoods       Food[]               @relation("FoodOwner")
+  foodSubstitutions  FoodSubstitution[]
+  diets              Diet[]
+  dietAuditLogs      DietAuditLog[]
 
   @@map("professionals")
 }
@@ -79,10 +84,12 @@ model Client {
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at")
 
-  user         User                 @relation(fields: [id], references: [id])
-  professional Professional         @relation(fields: [professionalId], references: [id])
-  evaluations  PhysicalEvaluation[]
-  auditLogs    EvaluationAuditLog[]
+  user          User                 @relation(fields: [id], references: [id])
+  professional  Professional         @relation(fields: [professionalId], references: [id])
+  evaluations   PhysicalEvaluation[]
+  auditLogs     EvaluationAuditLog[]
+  diets         Diet[]
+  dietAuditLogs DietAuditLog[]
 
   @@index([professionalId, status])
   @@map("clients")
@@ -295,4 +302,217 @@ model EvaluationAuditLog {
   @@index([evaluationId])
   @@index([professionalId, createdAt])
   @@map("evaluation_audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 5 — Dieta
+// ---------------------------------------------------------------------------
+
+enum FoodScope {
+  global
+  private
+}
+
+enum DietStatus {
+  active
+  archived
+}
+
+enum DietVersionStatus {
+  draft
+  published
+  superseded
+}
+
+enum NutritionUnit {
+  g
+  ml
+  unit
+  tablespoon
+  teaspoon
+  cup
+  slice
+}
+
+enum DietAuditAction {
+  created
+  updated
+  version_created
+  version_updated
+  published
+  archived
+  meal_added
+  meal_updated
+  meal_removed
+  food_added
+  food_updated
+  food_removed
+  read
+  listed
+}
+
+model Food {
+  id                     String    @id @default(uuid())
+  name                   String
+  scope                  FoodScope @default(global)
+  ownerProfessionalId    String?   @map("owner_professional_id") // só quando scope = private
+  baseUnit               NutritionUnit @map("base_unit") // g ou ml, validado no DTO
+  kcalPer100             Float     @map("kcal_per_100")
+  proteinGPer100         Float     @map("protein_g_per_100")
+  carbGPer100            Float     @map("carb_g_per_100")
+  fatGPer100             Float     @map("fat_g_per_100")
+  fiberGPer100           Float?    @map("fiber_g_per_100")
+  source                 String    @default("manual")
+  createdByProfessionalId String   @map("created_by_professional_id")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  owner     Professional? @relation("FoodOwner", fields: [ownerProfessionalId], references: [id], onDelete: Restrict)
+  createdBy Professional  @relation("FoodCreatedBy", fields: [createdByProfessionalId], references: [id], onDelete: Restrict)
+
+  unitConversions            FoodUnitConversion[]
+  mealFoods                  MealFood[]
+  substitutionsAsOriginal    FoodSubstitution[]   @relation("OriginalFood")
+  substitutionsAsSubstitute  FoodSubstitution[]   @relation("SubstituteFood")
+
+  @@index([name])
+  @@index([scope, ownerProfessionalId])
+  @@map("foods")
+}
+
+model FoodUnitConversion {
+  id              String        @id @default(uuid())
+  foodId          String        @map("food_id")
+  unit            NutritionUnit
+  gramsEquivalent Float         @map("grams_equivalent")
+
+  food Food @relation(fields: [foodId], references: [id], onDelete: Restrict)
+
+  @@unique([foodId, unit])
+  @@map("food_unit_conversions")
+}
+
+model FoodSubstitution {
+  id                      String        @id @default(uuid())
+  originalFoodId          String        @map("original_food_id")
+  substituteFoodId        String        @map("substitute_food_id")
+  substituteQuantity      Float         @map("substitute_quantity")
+  substituteUnit          NutritionUnit @map("substitute_unit")
+  substituteKcal          Float?        @map("substitute_kcal")
+  substituteProteinG      Float?        @map("substitute_protein_g")
+  substituteCarbG         Float?        @map("substitute_carb_g")
+  substituteFatG          Float?        @map("substitute_fat_g")
+  notes                   String?
+  createdByProfessionalId String        @map("created_by_professional_id")
+  createdAt               DateTime      @default(now()) @map("created_at")
+
+  originalFood    Food         @relation("OriginalFood", fields: [originalFoodId], references: [id], onDelete: Restrict)
+  substituteFood  Food         @relation("SubstituteFood", fields: [substituteFoodId], references: [id], onDelete: Restrict)
+  createdBy       Professional @relation(fields: [createdByProfessionalId], references: [id], onDelete: Restrict)
+
+  @@index([originalFoodId])
+  @@map("food_substitutions")
+}
+
+model Diet {
+  id             String     @id @default(uuid())
+  clientId       String     @map("client_id")
+  professionalId String     @map("professional_id")
+  status         DietStatus @default(active)
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @default(now()) @updatedAt @map("updated_at")
+
+  client       Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  professional Professional  @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  versions     DietVersion[]
+  auditLogs    DietAuditLog[]
+
+  @@index([clientId])
+  @@index([professionalId])
+  @@map("diets")
+}
+
+model DietVersion {
+  id                      String             @id @default(uuid())
+  dietId                  String             @map("diet_id")
+  versionNumber           Int                @map("version_number")
+  status                  DietVersionStatus  @default(draft)
+  startDate               DateTime?          @map("start_date")
+  endDate                 DateTime?          @map("end_date")
+  notes                   String?            @db.Text
+  objective               String?
+  targetCalories          Float?             @map("target_calories")
+  targetProteinG          Float?             @map("target_protein_g")
+  targetCarbG             Float?             @map("target_carb_g")
+  targetFatG              Float?             @map("target_fat_g")
+  createdByProfessionalId String             @map("created_by_professional_id")
+  publishedAt             DateTime?          @map("published_at")
+  supersededAt            DateTime?          @map("superseded_at")
+  createdAt               DateTime           @default(now()) @map("created_at")
+  updatedAt               DateTime           @default(now()) @updatedAt @map("updated_at")
+
+  diet      Diet           @relation(fields: [dietId], references: [id], onDelete: Restrict)
+  meals     Meal[]
+  auditLogs DietAuditLog[]
+
+  @@unique([dietId, versionNumber])
+  @@index([dietId, status])
+  @@map("diet_versions")
+}
+
+model Meal {
+  id            String   @id @default(uuid())
+  dietVersionId String   @map("diet_version_id")
+  name          String
+  order         Int
+  time          String?
+  notes         String?
+
+  dietVersion DietVersion @relation(fields: [dietVersionId], references: [id], onDelete: Restrict)
+  foods       MealFood[]
+
+  @@index([dietVersionId, order])
+  @@map("meals")
+}
+
+model MealFood {
+  id              String        @id @default(uuid())
+  mealId          String        @map("meal_id")
+  foodId          String        @map("food_id")
+  order           Int
+  quantity        Float
+  unit            NutritionUnit
+  gramsEquivalent Float?        @map("grams_equivalent")
+  kcal            Float?
+  proteinG        Float?        @map("protein_g")
+  carbG           Float?        @map("carb_g")
+  fatG            Float?        @map("fat_g")
+  fiberG          Float?        @map("fiber_g")
+  notes           String?
+
+  meal Meal @relation(fields: [mealId], references: [id], onDelete: Restrict)
+  food Food @relation(fields: [foodId], references: [id], onDelete: Restrict)
+
+  @@index([mealId, order])
+  @@map("meal_foods")
+}
+
+model DietAuditLog {
+  id             String           @id @default(uuid())
+  professionalId String           @map("professional_id")
+  clientId       String           @map("client_id")
+  dietId         String           @map("diet_id")
+  dietVersionId  String?          @map("diet_version_id")
+  action         DietAuditAction
+  ipAddress      String?          @map("ip_address")
+  createdAt      DateTime         @default(now()) @map("created_at")
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  diet         Diet         @relation(fields: [dietId], references: [id], onDelete: Restrict)
+  dietVersion  DietVersion? @relation(fields: [dietVersionId], references: [id], onDelete: SetNull)
+
+  @@index([dietId, createdAt])
+  @@index([professionalId, createdAt])
+  @@map("diet_audit_logs")
 }

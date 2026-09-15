@@ -12,6 +12,8 @@ import { ProfessionalsModule } from './professionals/professionals.module';
 import { ClientsModule } from './clients/clients.module';
 import { PhysicalEvaluationsModule } from './physical-evaluations/physical-evaluations.module';
 import { StorageModule } from './storage/storage.module';
+import { FoodsModule } from './foods/foods.module';
+import { DietsModule } from './diets/diets.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { StorageModule } from './storage/storage.module';
     ClientsModule,
     PhysicalEvaluationsModule,
     StorageModule,
+    FoodsModule,
+    DietsModule,
   ],
   controllers: [AppController],
   providers: [

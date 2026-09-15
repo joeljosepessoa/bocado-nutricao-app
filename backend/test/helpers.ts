@@ -44,3 +44,30 @@ export async function login(app: INestApplication, email: string, password: stri
     .expect(200);
   return res.body;
 }
+
+export async function createFood(app: INestApplication, accessToken: string, overrides: Record<string, unknown> = {}) {
+  const payload = {
+    name: (overrides.name as string) ?? `Alimento ${uniqueEmail('food')}`,
+    baseUnit: 'g',
+    kcalPer100: 100,
+    proteinGPer100: 10,
+    carbGPer100: 10,
+    fatGPer100: 2,
+    ...overrides,
+  };
+  const res = await request(app.getHttpServer())
+    .post('/foods')
+    .set('Authorization', `Bearer ${accessToken}`)
+    .send(payload)
+    .expect(201);
+  return res.body;
+}
+
+export async function createDiet(app: INestApplication, accessToken: string, clientId: string, overrides: Record<string, unknown> = {}) {
+  const res = await request(app.getHttpServer())
+    .post(`/clients/${clientId}/diets`)
+    .set('Authorization', `Bearer ${accessToken}`)
+    .send(overrides)
+    .expect(201);
+  return res.body;
+}
