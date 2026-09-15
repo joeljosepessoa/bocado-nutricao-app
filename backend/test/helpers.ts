@@ -18,10 +18,13 @@ export async function registerProfessional(app: INestApplication, overrides: Par
   return { ...res.body, password: payload.password };
 }
 
-export async function createClient(app: INestApplication, professionalAccessToken: string, overrides: Partial<Record<'email' | 'fullName', string>> = {}) {
+export async function createClient(app: INestApplication, professionalAccessToken: string, overrides: Partial<Record<'email' | 'fullName' | 'phone' | 'gender' | 'birthDate', string>> = {}) {
   const payload = {
     email: overrides.email ?? uniqueEmail('client'),
     fullName: overrides.fullName ?? 'Cliente de Teste',
+    ...(overrides.phone ? { phone: overrides.phone } : {}),
+    ...(overrides.gender ? { gender: overrides.gender } : {}),
+    ...(overrides.birthDate ? { birthDate: overrides.birthDate } : {}),
   };
   const res = await request(app.getHttpServer())
     .post('/professionals/me/clients')

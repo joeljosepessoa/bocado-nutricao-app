@@ -11,4 +11,12 @@ export class CreateClientDto {
   @IsOptional()
   @IsISO8601()
   birthDate?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  gender?: string;
 }

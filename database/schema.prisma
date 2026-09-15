@@ -59,13 +59,27 @@ model Professional {
   @@map("professionals")
 }
 
+enum ClientStatus {
+  active
+  inactive
+  archived
+}
+
 model Client {
-  id             String   @id
-  professionalId String   @map("professional_id")
-  birthDate      DateTime? @map("birth_date")
+  id             String       @id
+  professionalId String       @map("professional_id")
+  birthDate      DateTime?    @map("birth_date")
+  phone          String?
+  gender         String?
+  notes          String?      @db.Text
+  status         ClientStatus @default(active)
+  archivedAt     DateTime?    @map("archived_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at")
 
   user         User         @relation(fields: [id], references: [id])
   professional Professional @relation(fields: [professionalId], references: [id])
 
+  @@index([professionalId, status])
   @@map("clients")
 }

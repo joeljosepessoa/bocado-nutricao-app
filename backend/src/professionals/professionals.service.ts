@@ -49,6 +49,8 @@ export class ProfessionalsService {
           id: user.id,
           professionalId,
           birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
+          phone: dto.phone,
+          gender: dto.gender,
         },
         include: { user: { select: { id: true, email: true, fullName: true } } },
       });
