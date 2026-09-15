@@ -71,3 +71,26 @@ export async function createDiet(app: INestApplication, accessToken: string, cli
     .expect(201);
   return res.body;
 }
+
+export async function createExercise(app: INestApplication, accessToken: string, overrides: Record<string, unknown> = {}) {
+  const payload = {
+    name: (overrides.name as string) ?? `Exercício ${uniqueEmail('exercise')}`,
+    type: 'strength',
+    ...overrides,
+  };
+  const res = await request(app.getHttpServer())
+    .post('/exercises')
+    .set('Authorization', `Bearer ${accessToken}`)
+    .send(payload)
+    .expect(201);
+  return res.body;
+}
+
+export async function createWorkout(app: INestApplication, accessToken: string, clientId: string, overrides: Record<string, unknown> = {}) {
+  const res = await request(app.getHttpServer())
+    .post(`/clients/${clientId}/workouts`)
+    .set('Authorization', `Bearer ${accessToken}`)
+    .send(overrides)
+    .expect(201);
+  return res.body;
+}

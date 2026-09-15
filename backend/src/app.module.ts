@@ -14,6 +14,8 @@ import { PhysicalEvaluationsModule } from './physical-evaluations/physical-evalu
 import { StorageModule } from './storage/storage.module';
 import { FoodsModule } from './foods/foods.module';
 import { DietsModule } from './diets/diets.module';
+import { ExercisesModule } from './exercises/exercises.module';
+import { WorkoutsModule } from './workouts/workouts.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { DietsModule } from './diets/diets.module';
     StorageModule,
     FoodsModule,
     DietsModule,
+    ExercisesModule,
+    WorkoutsModule,
   ],
   controllers: [AppController],
   providers: [

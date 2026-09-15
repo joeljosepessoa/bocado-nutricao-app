@@ -62,6 +62,11 @@ model Professional {
   foodSubstitutions  FoodSubstitution[]
   diets              Diet[]
   dietAuditLogs      DietAuditLog[]
+  createdExercises   Exercise[]           @relation("ExerciseCreatedBy")
+  privateExercises   Exercise[]           @relation("ExerciseOwner")
+  workouts           Workout[]
+  workoutAuditLogs   WorkoutAuditLog[]
+  workoutExecutionLogs WorkoutExecutionLog[]
 
   @@map("professionals")
 }
@@ -84,12 +89,15 @@ model Client {
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at")
 
-  user          User                 @relation(fields: [id], references: [id])
-  professional  Professional         @relation(fields: [professionalId], references: [id])
-  evaluations   PhysicalEvaluation[]
-  auditLogs     EvaluationAuditLog[]
-  diets         Diet[]
-  dietAuditLogs DietAuditLog[]
+  user               User                  @relation(fields: [id], references: [id])
+  professional       Professional          @relation(fields: [professionalId], references: [id])
+  evaluations        PhysicalEvaluation[]
+  auditLogs          EvaluationAuditLog[]
+  diets              Diet[]
+  dietAuditLogs      DietAuditLog[]
+  workouts           Workout[]
+  workoutAuditLogs   WorkoutAuditLog[]
+  workoutExecutionLogs WorkoutExecutionLog[]
 
   @@index([professionalId, status])
   @@map("clients")
@@ -515,4 +523,243 @@ model DietAuditLog {
   @@index([dietId, createdAt])
   @@index([professionalId, createdAt])
   @@map("diet_audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 6 — Treino
+// ---------------------------------------------------------------------------
+
+enum ExerciseType {
+  strength
+  cardio
+  mobility
+  stretching
+  bodyweight
+  other
+}
+
+enum ExerciseScope {
+  global
+  private
+}
+
+enum LoadUnit {
+  kg
+  lb
+  bodyweight
+  band_level
+  other
+}
+
+enum WorkoutStatus {
+  active
+  archived
+}
+
+enum WorkoutVersionStatus {
+  draft
+  published
+  superseded
+}
+
+enum WorkoutAuditAction {
+  created
+  updated
+  version_created
+  version_updated
+  published
+  archived
+  day_added
+  day_updated
+  day_removed
+  exercise_added
+  exercise_updated
+  exercise_removed
+  set_added
+  set_updated
+  set_removed
+  execution_logged
+  read
+  listed
+  compared
+}
+
+model Exercise {
+  id                      String        @id @default(uuid())
+  name                    String
+  description             String?       @db.Text
+  muscleGroup             String?       @map("muscle_group")
+  equipment               String?
+  instructions            String?       @db.Text
+  type                    ExerciseType
+  scope                   ExerciseScope @default(global)
+  ownerProfessionalId     String?       @map("owner_professional_id")
+  videoUrl                String?       @map("video_url")
+  imageUrl                String?       @map("image_url")
+  createdByProfessionalId String        @map("created_by_professional_id")
+  createdAt               DateTime      @default(now()) @map("created_at")
+  updatedAt               DateTime      @default(now()) @updatedAt @map("updated_at")
+
+  owner     Professional? @relation("ExerciseOwner", fields: [ownerProfessionalId], references: [id], onDelete: Restrict)
+  createdBy Professional  @relation("ExerciseCreatedBy", fields: [createdByProfessionalId], references: [id], onDelete: Restrict)
+
+  workoutExercises WorkoutExercise[]
+
+  @@index([name])
+  @@index([scope, ownerProfessionalId])
+  @@map("exercises")
+}
+
+model Workout {
+  id             String        @id @default(uuid())
+  clientId       String        @map("client_id")
+  professionalId String        @map("professional_id")
+  status         WorkoutStatus @default(active)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at")
+
+  client       Client            @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  professional Professional      @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  versions     WorkoutVersion[]
+  auditLogs    WorkoutAuditLog[]
+
+  @@index([clientId])
+  @@index([professionalId])
+  @@map("workouts")
+}
+
+model WorkoutVersion {
+  id                      String                @id @default(uuid())
+  workoutId               String                @map("workout_id")
+  versionNumber           Int                   @map("version_number")
+  status                  WorkoutVersionStatus  @default(draft)
+  startDate               DateTime?             @map("start_date")
+  endDate                 DateTime?             @map("end_date")
+  objective               String?
+  notes                   String?               @db.Text
+  createdByProfessionalId String                @map("created_by_professional_id")
+  publishedAt             DateTime?             @map("published_at")
+  supersededAt            DateTime?             @map("superseded_at")
+  createdAt               DateTime              @default(now()) @map("created_at")
+  updatedAt               DateTime              @default(now()) @updatedAt @map("updated_at")
+
+  workout        Workout               @relation(fields: [workoutId], references: [id], onDelete: Restrict)
+  days           WorkoutDay[]
+  auditLogs      WorkoutAuditLog[]
+  executionLogs  WorkoutExecutionLog[]
+
+  @@unique([workoutId, versionNumber])
+  @@index([workoutId, status])
+  @@map("workout_versions")
+}
+
+model WorkoutDay {
+  id              String   @id @default(uuid())
+  workoutVersionId String  @map("workout_version_id")
+  name            String
+  order           Int
+  notes           String?
+
+  workoutVersion WorkoutVersion        @relation(fields: [workoutVersionId], references: [id], onDelete: Restrict)
+  exercises      WorkoutExercise[]
+  executionLogs  WorkoutExecutionLog[]
+
+  @@index([workoutVersionId, order])
+  @@map("workout_days")
+}
+
+model WorkoutExercise {
+  id           String  @id @default(uuid())
+  workoutDayId String  @map("workout_day_id")
+  exerciseId   String  @map("exercise_id")
+  order        Int
+  notes        String?
+
+  workoutDay      WorkoutDay            @relation(fields: [workoutDayId], references: [id], onDelete: Restrict)
+  exercise        Exercise              @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+  sets            WorkoutSet[]
+  executionSets   WorkoutExecutionSet[]
+
+  @@index([workoutDayId, order])
+  @@map("workout_exercises")
+}
+
+model WorkoutSet {
+  id                String    @id @default(uuid())
+  workoutExerciseId String    @map("workout_exercise_id")
+  order             Int
+  reps              Int?
+  loadValue         Float?    @map("load_value")
+  loadUnit          LoadUnit? @map("load_unit")
+  durationSeconds   Int?      @map("duration_seconds")
+  distanceMeters    Float?    @map("distance_meters")
+  restSeconds       Int?      @map("rest_seconds")
+  tempo             String?
+  notes             String?
+
+  workoutExercise WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Restrict)
+
+  @@index([workoutExerciseId, order])
+  @@map("workout_sets")
+}
+
+model WorkoutExecutionLog {
+  id                     String    @id @default(uuid())
+  clientId               String    @map("client_id")
+  workoutDayId           String    @map("workout_day_id")
+  workoutVersionId       String    @map("workout_version_id")
+  loggedByProfessionalId String?   @map("logged_by_professional_id")
+  performedAt            DateTime  @map("performed_at")
+  notes                  String?
+  createdAt              DateTime  @default(now()) @map("created_at")
+
+  client         Client                @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  workoutDay     WorkoutDay            @relation(fields: [workoutDayId], references: [id], onDelete: Restrict)
+  workoutVersion WorkoutVersion        @relation(fields: [workoutVersionId], references: [id], onDelete: Restrict)
+  loggedBy       Professional?         @relation(fields: [loggedByProfessionalId], references: [id], onDelete: Restrict)
+  sets           WorkoutExecutionSet[]
+
+  @@index([clientId, performedAt])
+  @@index([workoutDayId])
+  @@map("workout_execution_logs")
+}
+
+model WorkoutExecutionSet {
+  id                String    @id @default(uuid())
+  executionLogId    String    @map("execution_log_id")
+  workoutExerciseId String    @map("workout_exercise_id")
+  setOrder          Int       @map("set_order")
+  repsPerformed     Int?      @map("reps_performed")
+  loadValue         Float?    @map("load_value")
+  loadUnit          LoadUnit? @map("load_unit")
+  durationSeconds   Int?      @map("duration_seconds")
+  distanceMeters    Float?    @map("distance_meters")
+  perceivedEffort   Int?      @map("perceived_effort")
+  notes             String?
+
+  executionLog    WorkoutExecutionLog @relation(fields: [executionLogId], references: [id], onDelete: Restrict)
+  workoutExercise WorkoutExercise     @relation(fields: [workoutExerciseId], references: [id], onDelete: Restrict)
+
+  @@index([executionLogId])
+  @@map("workout_execution_sets")
+}
+
+model WorkoutAuditLog {
+  id                String              @id @default(uuid())
+  professionalId    String              @map("professional_id")
+  clientId          String              @map("client_id")
+  workoutId         String              @map("workout_id")
+  workoutVersionId  String?             @map("workout_version_id")
+  action            WorkoutAuditAction
+  ipAddress         String?             @map("ip_address")
+  createdAt         DateTime            @default(now()) @map("created_at")
+
+  professional   Professional    @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  client         Client          @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  workout        Workout         @relation(fields: [workoutId], references: [id], onDelete: Restrict)
+  workoutVersion WorkoutVersion? @relation(fields: [workoutVersionId], references: [id], onDelete: SetNull)
+
+  @@index([workoutId, createdAt])
+  @@index([professionalId, createdAt])
+  @@map("workout_audit_logs")
 }
