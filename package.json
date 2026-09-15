@@ -1,0 +1,14 @@
+{
+  "name": "bocado-de-nutricao",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "backend",
+    "professional-web",
+    "mobile",
+    "shared"
+  ],
+  "scripts": {
+    "dev:backend": "npm run start:dev --workspace backend"
+  }
+}
