@@ -16,6 +16,7 @@ import { FoodsModule } from './foods/foods.module';
 import { DietsModule } from './diets/diets.module';
 import { ExercisesModule } from './exercises/exercises.module';
 import { WorkoutsModule } from './workouts/workouts.module';
+import { ClientAppModule } from './client-app/client-app.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { WorkoutsModule } from './workouts/workouts.module';
     DietsModule,
     ExercisesModule,
     WorkoutsModule,
+    ClientAppModule,
   ],
   controllers: [AppController],
   providers: [

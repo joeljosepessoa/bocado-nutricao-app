@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -19,5 +19,10 @@ export class ProfessionalsController {
   @Post('me/clients')
   createClient(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateClientDto) {
     return this.professionalsService.createClient(user.id, dto);
+  }
+
+  @Post('me/clients/:id/reset-password')
+  resetClientPassword(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    return this.professionalsService.resetClientPassword(user.id, id);
   }
 }

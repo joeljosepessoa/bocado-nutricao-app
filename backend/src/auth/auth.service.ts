@@ -12,7 +12,14 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 export interface AuthTokenPair {
   accessToken: string;
   refreshToken: string;
-  user: { id: string; email: string; fullName: string; role: Role };
+  user: {
+    id: string;
+    email: string;
+    fullName: string;
+    role: Role;
+    mustChangePassword: boolean;
+    privacyAcceptedAt: Date | null;
+  };
 }
 
 @Injectable()
@@ -65,7 +72,14 @@ export class AuthService {
     return {
       accessToken: this.signAccessToken(user.id, user.role),
       refreshToken: rawToken,
-      user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role },
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        mustChangePassword: user.mustChangePassword,
+        privacyAcceptedAt: user.privacyAcceptedAt,
+      },
     };
   }
 
@@ -86,7 +100,14 @@ export class AuthService {
     return {
       accessToken: this.signAccessToken(user.id, user.role),
       refreshToken: rawToken,
-      user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role },
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        mustChangePassword: user.mustChangePassword,
+        privacyAcceptedAt: user.privacyAcceptedAt,
+      },
     };
   }
 
@@ -97,7 +118,14 @@ export class AuthService {
     return {
       accessToken: this.signAccessToken(user.id, user.role),
       refreshToken: rotated.rawToken,
-      user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role },
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        mustChangePassword: user.mustChangePassword,
+        privacyAcceptedAt: user.privacyAcceptedAt,
+      },
     };
   }
 

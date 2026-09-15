@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { ClientStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { UpdateClientDto } from './dto/update-client.dto';
+import { UpdateClientSelfDto } from './dto/update-client-self.dto';
 
 const CLIENT_LIST_SELECT = {
   id: true,
@@ -140,5 +141,17 @@ export class ClientsService {
       select: CLIENT_SELF_SELECT,
     });
     return client;
+  }
+
+  async updateSelf(clientId: string, dto: UpdateClientSelfDto) {
+    await this.prisma.$transaction(async (tx) => {
+      if (dto.fullName !== undefined) {
+        await tx.user.update({ where: { id: clientId }, data: { fullName: dto.fullName } });
+      }
+      if (dto.phone !== undefined) {
+        await tx.client.update({ where: { id: clientId }, data: { phone: dto.phone } });
+      }
+    });
+    return this.me(clientId);
   }
 }

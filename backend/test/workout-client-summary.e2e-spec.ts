@@ -11,13 +11,21 @@ describe('WorkoutClientSummaryDto', () => {
     objective: 'Hipertrofia — plano interno',
     days: [
       {
+        id: 'day-1',
         name: 'Dia A',
         order: 0,
         notes: 'Observação interna do profissional',
         exercises: [
           {
+            id: 'we-1',
             order: 0,
-            exercise: { name: 'Supino reto', muscleGroup: 'peito' },
+            exercise: {
+              name: 'Supino reto',
+              muscleGroup: 'peito',
+              equipment: 'barra',
+              videoUrl: null,
+              imageUrl: null,
+            },
             sets: [
               {
                 order: 0,
@@ -36,11 +44,13 @@ describe('WorkoutClientSummaryDto', () => {
     ],
   };
 
-  it('expõe dias, exercícios e séries prescritas, mas nunca notas internas', () => {
+  it('expõe dias, exercícios (com id para execução) e séries prescritas, mas nunca notas internas', () => {
     const dto = WorkoutClientSummaryDto.fromPublishedVersion(fullVersion as never)!;
 
     expect(dto.workoutId).toBe('workout-1');
+    expect(dto.days[0].workoutDayId).toBe('day-1');
     expect(dto.days[0].name).toBe('Dia A');
+    expect(dto.days[0].exercises[0].workoutExerciseId).toBe('we-1');
     expect(dto.days[0].exercises[0].exerciseName).toBe('Supino reto');
     expect(dto.days[0].exercises[0].sets[0]).toEqual({
       order: 0,

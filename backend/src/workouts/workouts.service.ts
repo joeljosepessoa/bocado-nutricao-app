@@ -13,6 +13,7 @@ import { UpdateWorkoutExerciseDto } from './dto/update-workout-exercise.dto';
 import { CreateWorkoutSetDto } from './dto/create-workout-set.dto';
 import { UpdateWorkoutSetDto } from './dto/update-workout-set.dto';
 import { CreateExecutionLogDto } from './dto/create-execution-log.dto';
+import { WorkoutClientSummaryDto } from './dto/workout-client-summary.dto';
 
 export interface RequestMeta {
   ipAddress?: string;
@@ -23,7 +24,9 @@ const VERSION_DETAIL_INCLUDE = {
     include: {
       exercises: {
         include: {
-          exercise: { select: { id: true, name: true, type: true, muscleGroup: true, equipment: true } },
+          exercise: {
+            select: { id: true, name: true, type: true, muscleGroup: true, equipment: true, videoUrl: true, imageUrl: true },
+          },
           sets: true,
         },
       },
@@ -845,5 +848,80 @@ export class WorkoutsService {
       throw new NotFoundException('Registro de execução não encontrado.');
     }
     return log;
+  }
+
+  // --- Fase 7: acesso client-facing ---------------------------------------
+
+  async findCurrentPublishedForClient(clientId: string): Promise<WorkoutClientSummaryDto | null> {
+    const version = await this.prisma.workoutVersion.findFirst({
+      where: { status: WorkoutVersionStatus.published, workout: { clientId, status: 'active' } },
+      orderBy: { publishedAt: 'desc' },
+      include: VERSION_DETAIL_INCLUDE,
+    });
+    if (!version) {
+      return null;
+    }
+    return WorkoutClientSummaryDto.fromPublishedVersion(sortVersionDetail(version));
+  }
+
+  /**
+   * Registro de execução feito pelo próprio cliente. Não altera a versão
+   * publicada (só grava um log separado) e não é escrito no
+   * WorkoutAuditLog — essa tabela é reservada a ações do profissional
+   * (professionalId não é opcional nela); ações do cliente ficam
+   * implícitas no próprio WorkoutExecutionLog (loggedByProfessionalId nulo).
+   */
+  async createExecutionLogAsClient(clientId: string, dto: CreateExecutionLogDto) {
+    const day = await this.prisma.workoutDay.findFirst({
+      where: { id: dto.workoutDayId, workoutVersion: { workout: { clientId } } },
+    });
+    if (!day) {
+      throw new NotFoundException('Dia de treino não encontrado.');
+    }
+
+    return this.prisma.workoutExecutionLog.create({
+      data: {
+        clientId,
+        workoutDayId: day.id,
+        workoutVersionId: day.workoutVersionId,
+        loggedByProfessionalId: null,
+        performedAt: dto.performedAt ? new Date(dto.performedAt) : new Date(),
+        notes: dto.notes,
+        sets: {
+          createMany: {
+            data: dto.sets.map((s) => ({
+              workoutExerciseId: s.workoutExerciseId,
+              setOrder: s.setOrder,
+              repsPerformed: s.repsPerformed,
+              loadValue: s.loadValue,
+              loadUnit: s.loadUnit,
+              durationSeconds: s.durationSeconds,
+              distanceMeters: s.distanceMeters,
+              perceivedEffort: s.perceivedEffort,
+              notes: s.notes,
+            })),
+          },
+        },
+      },
+      include: { sets: true },
+    });
+  }
+
+  async listExecutionLogsForClient(clientId: string, page = 1, pageSize = 20) {
+    const safePage = page > 0 ? page : 1;
+    const safePageSize = pageSize > 0 ? pageSize : 20;
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.workoutExecutionLog.findMany({
+        where: { clientId },
+        include: { sets: true },
+        orderBy: { performedAt: 'desc' },
+        skip: (safePage - 1) * safePageSize,
+        take: safePageSize,
+      }),
+      this.prisma.workoutExecutionLog.count({ where: { clientId } }),
+    ]);
+
+    return { items, total, page: safePage, pageSize: safePageSize };
   }
 }

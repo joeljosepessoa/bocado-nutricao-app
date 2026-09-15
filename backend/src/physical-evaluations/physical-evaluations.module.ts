@@ -9,5 +9,6 @@ import { AuditLogService } from './audit-log.service';
   imports: [StorageModule],
   controllers: [PhysicalEvaluationsController],
   providers: [PhysicalEvaluationsService, CalculationService, AuditLogService],
+  exports: [PhysicalEvaluationsService],
 })
 export class PhysicalEvaluationsModule {}

@@ -11,6 +11,7 @@ import { CreateMealDto } from './dto/create-meal.dto';
 import { UpdateMealDto } from './dto/update-meal.dto';
 import { CreateMealFoodDto } from './dto/create-meal-food.dto';
 import { UpdateMealFoodDto } from './dto/update-meal-food.dto';
+import { DietClientSummaryDto, SubstitutionOption } from './dto/diet-client-summary.dto';
 
 export interface RequestMeta {
   ipAddress?: string;
@@ -652,5 +653,50 @@ export class DietsService {
       action: DietAuditAction.food_removed,
       ipAddress: meta.ipAddress,
     });
+  }
+
+  /**
+   * Fase 7 — dieta atual do próprio cliente (identidade só do token, sem
+   * checagem de propriedade por professionalId: o cliente só pode chamar
+   * isto para si mesmo). Entre todas as Diet ativas do cliente, pega a
+   * versão publicada mais recente por publishedAt — não há hoje uma trava
+   * que impeça mais de uma Diet ativa por cliente, então esta é a regra de
+   * desempate (Fase 7, Seção 15 do desenho).
+   */
+  async findCurrentPublishedForClient(clientId: string): Promise<DietClientSummaryDto | null> {
+    const version = await this.prisma.dietVersion.findFirst({
+      where: { status: DietVersionStatus.published, diet: { clientId, status: 'active' } },
+      orderBy: { publishedAt: 'desc' },
+      include: VERSION_DETAIL_INCLUDE,
+    });
+    if (!version) {
+      return null;
+    }
+
+    const foodIds = [...new Set(version.meals.flatMap((meal) => meal.foods.map((f) => f.foodId)))];
+    const substitutions = foodIds.length
+      ? await this.prisma.foodSubstitution.findMany({
+          where: { originalFoodId: { in: foodIds } },
+          include: { substituteFood: { select: { name: true } } },
+        })
+      : [];
+
+    const substitutionsByFoodId = new Map<string, SubstitutionOption[]>();
+    for (const sub of substitutions) {
+      const list = substitutionsByFoodId.get(sub.originalFoodId) ?? [];
+      list.push({
+        substituteFoodId: sub.substituteFoodId,
+        substituteFoodName: sub.substituteFood.name,
+        substituteQuantity: sub.substituteQuantity,
+        substituteUnit: sub.substituteUnit,
+        substituteKcal: sub.substituteKcal,
+        substituteProteinG: sub.substituteProteinG,
+        substituteCarbG: sub.substituteCarbG,
+        substituteFatG: sub.substituteFatG,
+      });
+      substitutionsByFoodId.set(sub.originalFoodId, list);
+    }
+
+    return DietClientSummaryDto.fromPublishedVersion(version, substitutionsByFoodId);
   }
 }

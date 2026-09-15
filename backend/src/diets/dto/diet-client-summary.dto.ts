@@ -1,10 +1,21 @@
 /**
- * Subconjunto seguro de uma dieta para eventual exposição ao próprio
- * cliente — sem rota nesta fase (Fase 7). Existe agora só para provar,
- * com teste dedicado, que o backend já sabe montar uma visão sem dado
- * interno: nunca notas do profissional, metas internas, nem versão que
- * não seja a publicada.
+ * Subconjunto seguro de uma dieta para exposição ao próprio cliente
+ * (Fase 7). Nunca notas da versão, metas internas (target*), nem versão
+ * que não seja a publicada. `Meal.notes` é orientação do profissional
+ * PARA o cliente (ex. "mastigar devagar") — diferente de
+ * `DietVersion.notes`, que continua interno e nunca aparece aqui.
  */
+export interface SubstitutionOption {
+  substituteFoodId: string;
+  substituteFoodName: string;
+  substituteQuantity: number;
+  substituteUnit: string;
+  substituteKcal: number | null;
+  substituteProteinG: number | null;
+  substituteCarbG: number | null;
+  substituteFatG: number | null;
+}
+
 export class DietClientMealFoodDto {
   foodName!: string;
   quantity!: number;
@@ -13,12 +24,14 @@ export class DietClientMealFoodDto {
   proteinG!: number | null;
   carbG!: number | null;
   fatG!: number | null;
+  substitutions!: SubstitutionOption[];
 }
 
 export class DietClientMealDto {
   name!: string;
   order!: number;
   time!: string | null;
+  notes!: string | null;
   foods!: DietClientMealFoodDto[];
 }
 
@@ -27,25 +40,30 @@ export class DietClientSummaryDto {
   versionId!: string;
   meals!: DietClientMealDto[];
 
-  static fromPublishedVersion(version: {
-    id: string;
-    dietId: string;
-    status: string;
-    meals: Array<{
-      name: string;
-      order: number;
-      time: string | null;
-      foods: Array<{
-        quantity: number;
-        unit: string;
-        kcal: number | null;
-        proteinG: number | null;
-        carbG: number | null;
-        fatG: number | null;
-        food: { name: string };
+  static fromPublishedVersion(
+    version: {
+      id: string;
+      dietId: string;
+      status: string;
+      meals: Array<{
+        name: string;
+        order: number;
+        time: string | null;
+        notes: string | null;
+        foods: Array<{
+          foodId: string;
+          quantity: number;
+          unit: string;
+          kcal: number | null;
+          proteinG: number | null;
+          carbG: number | null;
+          fatG: number | null;
+          food: { name: string };
+        }>;
       }>;
-    }>;
-  }): DietClientSummaryDto | null {
+    },
+    substitutionsByFoodId: Map<string, SubstitutionOption[]> = new Map(),
+  ): DietClientSummaryDto | null {
     if (version.status !== 'published') {
       return null;
     }
@@ -57,6 +75,7 @@ export class DietClientSummaryDto {
       mealDto.name = meal.name;
       mealDto.order = meal.order;
       mealDto.time = meal.time;
+      mealDto.notes = meal.notes;
       mealDto.foods = meal.foods.map((f) => {
         const foodDto = new DietClientMealFoodDto();
         foodDto.foodName = f.food.name;
@@ -66,6 +85,7 @@ export class DietClientSummaryDto {
         foodDto.proteinG = f.proteinG;
         foodDto.carbG = f.carbG;
         foodDto.fatG = f.fatG;
+        foodDto.substitutions = substitutionsByFoodId.get(f.foodId) ?? [];
         return foodDto;
       });
       return mealDto;

@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { Role } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { PasswordService } from '../auth/password.service';
+import { RefreshTokenService } from '../auth/refresh-token.service';
 import { CreateClientDto } from './dto/create-client.dto';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class ProfessionalsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly passwordService: PasswordService,
+    private readonly refreshTokenService: RefreshTokenService,
   ) {}
 
   async me(professionalId: string) {
@@ -57,5 +59,23 @@ export class ProfessionalsService {
     });
 
     return { client, temporaryPassword };
+  }
+
+  async resetClientPassword(professionalId: string, clientId: string) {
+    const client = await this.prisma.client.findFirst({ where: { id: clientId, professionalId } });
+    if (!client) {
+      throw new NotFoundException('Cliente não encontrado.');
+    }
+
+    const temporaryPassword = this.passwordService.generateTemporaryPassword();
+    const passwordHash = await this.passwordService.hash(temporaryPassword);
+
+    await this.prisma.user.update({
+      where: { id: clientId },
+      data: { passwordHash, mustChangePassword: true },
+    });
+    await this.refreshTokenService.revokeAllForUser(clientId);
+
+    return { temporaryPassword };
   }
 }

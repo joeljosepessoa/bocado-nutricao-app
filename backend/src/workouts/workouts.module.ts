@@ -8,5 +8,6 @@ import { WorkoutAuditLogService } from './workout-audit-log.service';
   imports: [ExercisesModule],
   controllers: [WorkoutsController],
   providers: [WorkoutsService, WorkoutAuditLogService],
+  exports: [WorkoutsService],
 })
 export class WorkoutsModule {}

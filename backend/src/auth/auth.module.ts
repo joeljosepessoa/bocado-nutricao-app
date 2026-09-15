@@ -21,6 +21,6 @@ const jwtModule = JwtModule.registerAsync({
   imports: [PassportModule, jwtModule],
   controllers: [AuthController],
   providers: [AuthService, PasswordService, RefreshTokenService, JwtStrategy],
-  exports: [PasswordService, jwtModule],
+  exports: [PasswordService, RefreshTokenService, jwtModule],
 })
 export class AuthModule {}

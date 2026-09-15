@@ -1,9 +1,9 @@
 /**
- * Subconjunto seguro de um treino para eventual exposição ao próprio
- * cliente — sem rota nesta fase (Fase 7). Existe agora só para provar,
- * com teste dedicado, que o backend já sabe montar uma visão sem dado
- * interno: nunca notas do profissional, nunca versão que não seja a
- * publicada.
+ * Subconjunto seguro de um treino para exposição ao próprio cliente
+ * (Fase 7). Nunca notas do profissional, nunca versão que não seja a
+ * publicada. Inclui `workoutDayId`/`workoutExerciseId` — não são dado
+ * técnico, são as referências que o próprio app precisa para registrar
+ * a execução (Seção 6 do desenho) apontando para o item certo.
  */
 export class WorkoutClientSetDto {
   order!: number;
@@ -17,12 +17,18 @@ export class WorkoutClientSetDto {
 }
 
 export class WorkoutClientExerciseDto {
+  workoutExerciseId!: string;
   exerciseName!: string;
+  muscleGroup!: string | null;
+  equipment!: string | null;
+  videoUrl!: string | null;
+  imageUrl!: string | null;
   order!: number;
   sets!: WorkoutClientSetDto[];
 }
 
 export class WorkoutClientDayDto {
+  workoutDayId!: string;
   name!: string;
   order!: number;
   exercises!: WorkoutClientExerciseDto[];
@@ -38,11 +44,13 @@ export class WorkoutClientSummaryDto {
     workoutId: string;
     status: string;
     days: Array<{
+      id: string;
       name: string;
       order: number;
       exercises: Array<{
+        id: string;
         order: number;
-        exercise: { name: string };
+        exercise: { name: string; muscleGroup: string | null; equipment: string | null; videoUrl: string | null; imageUrl: string | null };
         sets: Array<{
           order: number;
           reps: number | null;
@@ -64,11 +72,17 @@ export class WorkoutClientSummaryDto {
     dto.versionId = version.id;
     dto.days = version.days.map((day) => {
       const dayDto = new WorkoutClientDayDto();
+      dayDto.workoutDayId = day.id;
       dayDto.name = day.name;
       dayDto.order = day.order;
       dayDto.exercises = day.exercises.map((ex) => {
         const exDto = new WorkoutClientExerciseDto();
+        exDto.workoutExerciseId = ex.id;
         exDto.exerciseName = ex.exercise.name;
+        exDto.muscleGroup = ex.exercise.muscleGroup;
+        exDto.equipment = ex.exercise.equipment;
+        exDto.videoUrl = ex.exercise.videoUrl;
+        exDto.imageUrl = ex.exercise.imageUrl;
         exDto.order = ex.order;
         exDto.sets = ex.sets.map((s) => {
           const setDto = new WorkoutClientSetDto();

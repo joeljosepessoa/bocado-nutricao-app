@@ -20,6 +20,7 @@ model User {
   fullName           String    @map("full_name")
   role               Role
   mustChangePassword Boolean   @default(false) @map("must_change_password")
+  privacyAcceptedAt  DateTime? @map("privacy_accepted_at")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
@@ -139,6 +140,7 @@ enum EvaluationAuditAction {
   photo_uploaded
   photo_read
   photo_deleted
+  released
 }
 
 model Protocol {

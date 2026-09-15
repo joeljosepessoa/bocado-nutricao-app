@@ -8,5 +8,6 @@ import { DietAuditLogService } from './diet-audit-log.service';
   imports: [FoodsModule],
   controllers: [DietsController],
   providers: [DietsService, DietAuditLogService],
+  exports: [DietsService],
 })
 export class DietsModule {}

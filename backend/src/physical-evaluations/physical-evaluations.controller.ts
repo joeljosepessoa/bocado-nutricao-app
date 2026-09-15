@@ -23,6 +23,7 @@ import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { PhysicalEvaluationsService } from './physical-evaluations.service';
 import { CreateEvaluationDto } from './dto/create-evaluation.dto';
 import { UpdateEvaluationDto } from './dto/update-evaluation.dto';
+import { UpdateEvaluationReleaseDto } from './dto/update-evaluation-release.dto';
 
 function meta(req: Request) {
   return { ipAddress: req.ip };
@@ -93,6 +94,17 @@ export class PhysicalEvaluationsController {
     @Req() req: Request,
   ) {
     return this.evaluationsService.update(user.id, clientId, id, dto, meta(req));
+  }
+
+  @Patch(':id/release')
+  setRelease(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('clientId') clientId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateEvaluationReleaseDto,
+    @Req() req: Request,
+  ) {
+    return this.evaluationsService.setRelease(user.id, clientId, id, dto, meta(req));
   }
 
   @Post(':id/photos')

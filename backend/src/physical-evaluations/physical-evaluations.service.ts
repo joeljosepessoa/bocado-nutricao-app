@@ -6,6 +6,8 @@ import { AuditLogService } from './audit-log.service';
 import { StorageService } from '../storage/storage.service';
 import { CreateEvaluationDto } from './dto/create-evaluation.dto';
 import { UpdateEvaluationDto } from './dto/update-evaluation.dto';
+import { UpdateEvaluationReleaseDto } from './dto/update-evaluation-release.dto';
+import { PhysicalEvaluationClientSummaryDto } from './dto/physical-evaluation-client-summary.dto';
 
 const EVALUATION_DETAIL_INCLUDE = {
   measurements: true,
@@ -386,6 +388,56 @@ export class PhysicalEvaluationsService {
       action: EvaluationAuditAction.photo_deleted,
       ipAddress: meta.ipAddress,
     });
+  }
+
+  async setRelease(
+    professionalId: string,
+    clientId: string,
+    evaluationId: string,
+    dto: UpdateEvaluationReleaseDto,
+    meta: RequestMeta = {},
+  ) {
+    await this.assertOwnedEvaluation(professionalId, clientId, evaluationId);
+
+    const evaluation = await this.prisma.physicalEvaluation.update({
+      where: { id: evaluationId },
+      data: { releasedToClientAt: dto.released ? new Date() : null },
+    });
+
+    await this.auditLog.record({
+      professionalId,
+      clientId,
+      evaluationId,
+      action: EvaluationAuditAction.released,
+      ipAddress: meta.ipAddress,
+    });
+
+    return { id: evaluation.id, releasedToClientAt: evaluation.releasedToClientAt };
+  }
+
+  // --- Fase 7: acesso client-facing ---------------------------------------
+
+  async listReleasedForClient(clientId: string, page = 1, pageSize = 20) {
+    const safePage = page > 0 ? page : 1;
+    const safePageSize = pageSize > 0 ? pageSize : 20;
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.physicalEvaluation.findMany({
+        where: { clientId, releasedToClientAt: { not: null } },
+        select: { id: true, evaluatedAt: true, weightKg: true, calculatedMetrics: { select: { bmiClassification: true, bodyFatPercent: true, leanMassKg: true } } },
+        orderBy: { evaluatedAt: 'desc' },
+        skip: (safePage - 1) * safePageSize,
+        take: safePageSize,
+      }),
+      this.prisma.physicalEvaluation.count({ where: { clientId, releasedToClientAt: { not: null } } }),
+    ]);
+
+    return {
+      items: items.map((e) => PhysicalEvaluationClientSummaryDto.fromEvaluation(e)),
+      total,
+      page: safePage,
+      pageSize: safePageSize,
+    };
   }
 
   private async recalculateMetrics(evaluationId: string): Promise<void> {
