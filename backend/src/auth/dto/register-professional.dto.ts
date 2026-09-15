@@ -1,0 +1,20 @@
+import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MinLength } from 'class-validator';
+
+export class RegisterProfessionalDto {
+  @IsEmail()
+  email!: string;
+
+  @MinLength(10, { message: 'A senha deve ter pelo menos 10 caracteres.' })
+  @Matches(/(?=.*[A-Za-z])(?=.*\d)/, {
+    message: 'A senha deve conter pelo menos uma letra e um número.',
+  })
+  password!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  fullName!: string;
+
+  @IsOptional()
+  @IsString()
+  professionalRegister?: string;
+}
