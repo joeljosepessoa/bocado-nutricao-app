@@ -10,7 +10,8 @@
     "test:e2e": "jest --config test/jest-e2e.json",
     "prisma:generate": "prisma generate --schema ../database/schema.prisma",
     "prisma:migrate": "prisma migrate dev --schema ../database/schema.prisma",
-    "prisma:seed": "ts-node ../database/seed.ts"
+    "prisma:seed": "ts-node ../database/seed.ts",
+    "reference-data:import": "ts-node src/reference-data/import-reference-data.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",
