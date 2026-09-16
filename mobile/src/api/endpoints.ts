@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import type {
+  AiGenerationResult,
   AuthTokenPair,
   ClientSelf,
   CreateExecutionLogInput,
@@ -129,5 +130,26 @@ export async function listOwnDeviceMetrics(connectionId: string): Promise<Pagina
   const res = await apiClient.get<PaginatedResult<DeviceMetricSample>>(`/client/devices/${connectionId}/metrics`, {
     params: { pageSize: 20 },
   });
+  return res.data;
+}
+
+// ---------------------------------------------------------------------------
+// Fase 12 — IA assistiva
+// ---------------------------------------------------------------------------
+
+export async function acceptAiConsent(): Promise<void> {
+  await apiClient.post('/client/ai/consent');
+}
+
+export async function explainEvaluation(evaluationId: string): Promise<AiGenerationResult> {
+  const res = await apiClient.post<AiGenerationResult>('/client/ai/generate', {
+    feature: 'explain_evaluation',
+    evaluationId,
+  });
+  return res.data;
+}
+
+export async function narrateTrend(): Promise<AiGenerationResult> {
+  const res = await apiClient.post<AiGenerationResult>('/client/ai/generate', { feature: 'narrate_trend' });
   return res.data;
 }

@@ -406,3 +406,30 @@ export interface SignedUrl {
   url: string;
   expiresAt: string;
 }
+
+// --- IA assistiva (Fase 12) -----------------------------------------------
+
+export type AiFeatureKey = 'draft_note' | 'explain_evaluation' | 'narrate_trend';
+
+/** Sempre rotulado como conteúdo assistivo — nunca um dado original do sistema. */
+export interface AiGenerationResult {
+  feature: AiFeatureKey;
+  promptVersion: string;
+  provider: string;
+  model: string;
+  text: string;
+  generatedAt: string;
+  isAiGenerated: true;
+}
+
+export interface AiInteractionSummary {
+  id: string;
+  feature: AiFeatureKey;
+  provider: string;
+  model: string;
+  promptVersion: string;
+  contextRef: string | null;
+  status: string;
+  responseText: string | null;
+  createdAt: string;
+}

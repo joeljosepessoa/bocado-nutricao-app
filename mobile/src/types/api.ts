@@ -229,3 +229,20 @@ export interface DeviceMetricSample {
   endedAt: string;
   precision: number | null;
 }
+
+// ---------------------------------------------------------------------------
+// Fase 12 — IA assistiva (só o que o cliente pode pedir sobre o próprio dado)
+// ---------------------------------------------------------------------------
+
+export type ClientAiFeatureKey = 'explain_evaluation' | 'narrate_trend';
+
+/** Sempre rotulado como conteúdo assistivo — nunca um dado original do sistema. */
+export interface AiGenerationResult {
+  feature: ClientAiFeatureKey;
+  promptVersion: string;
+  provider: string;
+  model: string;
+  text: string;
+  generatedAt: string;
+  isAiGenerated: true;
+}

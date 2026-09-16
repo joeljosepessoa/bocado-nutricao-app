@@ -1,1 +1,2 @@
 process.env.AUTH_THROTTLE_LIMIT = '1000';
+process.env.AI_GENERATE_THROTTLE_LIMIT = '1000';

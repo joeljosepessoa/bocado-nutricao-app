@@ -1,5 +1,7 @@
 import { apiClient } from './client';
 import type {
+  AiGenerationResult,
+  AiInteractionSummary,
   ClientDetail,
   ClientListItem,
   ClientStatus,
@@ -364,6 +366,41 @@ export async function setReportRelease(clientId: string, reportId: string, relea
 
 export async function deleteReport(clientId: string, reportId: string): Promise<void> {
   await apiClient.delete(`/clients/${clientId}/reports/${reportId}`);
+}
+
+// --- IA assistiva (Fase 12) -------------------------------------------
+
+export async function acceptProfessionalAiConsent(): Promise<void> {
+  await apiClient.post('/professionals/me/ai/consent');
+}
+
+export async function generateDraftNote(
+  clientId: string,
+  input: { instructions: string; entityType: 'evaluation' | 'diet' | 'workout' },
+): Promise<AiGenerationResult> {
+  const res = await apiClient.post<AiGenerationResult>(`/clients/${clientId}/ai/generate`, {
+    feature: 'draft_note',
+    ...input,
+  });
+  return res.data;
+}
+
+export async function explainEvaluation(clientId: string, evaluationId: string): Promise<AiGenerationResult> {
+  const res = await apiClient.post<AiGenerationResult>(`/clients/${clientId}/ai/generate`, {
+    feature: 'explain_evaluation',
+    evaluationId,
+  });
+  return res.data;
+}
+
+export async function narrateTrend(clientId: string): Promise<AiGenerationResult> {
+  const res = await apiClient.post<AiGenerationResult>(`/clients/${clientId}/ai/generate`, { feature: 'narrate_trend' });
+  return res.data;
+}
+
+export async function listAiInteractions(clientId: string): Promise<PaginatedResult<AiInteractionSummary>> {
+  const res = await apiClient.get<PaginatedResult<AiInteractionSummary>>(`/clients/${clientId}/ai/interactions`);
+  return res.data;
 }
 
 export type { SessionUser };

@@ -6,6 +6,7 @@ import type { Measurements, Skinfolds } from '../../types/api';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { TextField } from '../../components/TextField';
+import { AiAssistPanel } from '../../components/AiAssistPanel';
 
 const MEASUREMENT_FIELDS: Array<{ key: keyof Measurements; label: string }> = [
   { key: 'chestCm', label: 'Tórax (cm)' }, { key: 'waistCm', label: 'Cintura (cm)' },
@@ -54,6 +55,7 @@ export function EvaluationFormPage() {
   const [heartRate, setHeartRate] = useState('');
   const [glucose, setGlucose] = useState('');
   const [notes, setNotes] = useState('');
+  const [draftInstructions, setDraftInstructions] = useState('');
   const [measurements, setMeasurements] = useState<NumField>({});
   const [skinfolds, setSkinfolds] = useState<NumField>({});
   const [bioimpedance, setBioimpedance] = useState<NumField>({});
@@ -204,6 +206,23 @@ export function EvaluationFormPage() {
           style={{ border: '1px solid var(--color-border)', borderRadius: 8, padding: 8, fontFamily: 'inherit' }}
         />
       </Card>
+
+      <Card title="Rascunho de nota com IA">
+        <TextField
+          label="O que aconteceu, em poucas palavras"
+          placeholder="Ex.: cliente relatou dor leve no joelho direito durante agachamento"
+          value={draftInstructions}
+          onChange={(e) => setDraftInstructions(e.target.value)}
+        />
+      </Card>
+
+      <AiAssistPanel
+        title="Rascunho gerado por IA"
+        helperText="A IA propõe um rascunho de nota a partir do texto acima — revise e edite antes de usar; nada é salvo automaticamente."
+        editable
+        onUse={(text) => setNotes(text)}
+        generate={() => api.generateDraftNote(clientId!, { instructions: draftInstructions, entityType: 'evaluation' })}
+      />
 
       {error ? <div style={{ color: 'var(--color-danger)', fontSize: 13 }}>{error}</div> : null}
 

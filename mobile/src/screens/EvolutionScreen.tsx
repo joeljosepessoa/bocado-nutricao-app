@@ -7,6 +7,7 @@ import { MeasurementsGrid } from '../components/MeasurementsGrid';
 import { MetricTabs } from '../components/MetricTabs';
 import { PeriodSelector } from '../components/PeriodSelector';
 import { ScreenContainer } from '../components/ScreenContainer';
+import { AiAssistPanel } from '../components/AiAssistPanel';
 import * as api from '../api/endpoints';
 import { toChartPoints } from '../evolution/chartData';
 import { resolveEvolutionViewState } from '../evolution/emptyState';
@@ -118,6 +119,21 @@ export function EvolutionScreen() {
         <>
           <MeasurementsGrid title="Circunferências" metrics={MEASUREMENT_METRICS} entry={current} />
           <MeasurementsGrid title="Composição (bioimpedância)" metrics={COMPOSITION_METRICS} entry={current} />
+        </>
+      ) : null}
+
+      {current ? (
+        <>
+          <AiAssistPanel
+            title="Explicar em linguagem simples"
+            helperText="Descreve, em texto simples, os números já liberados pelo seu profissional na avaliação mais recente — sem diagnosticar nem interpretar além do que os dados mostram."
+            generate={() => api.explainEvaluation(current.id)}
+          />
+          <AiAssistPanel
+            title="Narrar tendência"
+            helperText="Descreve a tendência entre suas duas avaliações liberadas mais recentes — o cálculo é sempre feito pelo sistema, a IA só descreve o resultado."
+            generate={() => api.narrateTrend()}
+          />
         </>
       ) : null}
 

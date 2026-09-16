@@ -53,6 +53,10 @@ model RefreshToken {
 model Professional {
   id                     String  @id
   professionalRegister   String? @map("professional_register")
+  // Fase 12: consentimento próprio, separado do do cliente — autoriza só
+  // o uso da ferramenta de IA pelo profissional, nunca o processamento do
+  // dado de um cliente específico (isso é Client.aiDataProcessingConsentAt).
+  aiFeaturesConsentAt    DateTime? @map("ai_features_consent_at")
 
   user             User                 @relation(fields: [id], references: [id])
   clients          Client[]
@@ -73,6 +77,8 @@ model Professional {
   scaleReadings      ScaleReading[]
   scaleAuditLogs     ScaleAuditLog[]
   deviceAuditLogs    DeviceAuditLog[]
+  aiInteractionLogs  AiInteractionLog[]
+  aiAuditLogs        AiAuditLog[]
 
   @@map("professionals")
 }
@@ -97,6 +103,11 @@ model Client {
   // cobre só dieta/treino/evolução; coleta contínua de terceiros exige
   // finalidade própria, LGPD).
   deviceDataConsentAt DateTime?    @map("device_data_consent_at")
+  // Fase 12: consentimento específico para o PRÓPRIO dado do cliente ser
+  // processado por IA — nunca implícito em privacyAcceptedAt nem em
+  // deviceDataConsentAt (finalidades diferentes, LGPD exige consentimento
+  // por finalidade). Independente de Professional.aiFeaturesConsentAt.
+  aiDataProcessingConsentAt DateTime? @map("ai_data_processing_consent_at")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at")
 
@@ -116,6 +127,8 @@ model Client {
   deviceConnections  DeviceConnection[]
   deviceMetricSamples DeviceMetricSample[]
   deviceAuditLogs    DeviceAuditLog[]
+  aiInteractionLogs  AiInteractionLog[]
+  aiAuditLogs        AiAuditLog[]
 
   @@index([professionalId, status])
   @@map("clients")
@@ -1021,4 +1034,79 @@ model DeviceAuditLog {
 
   @@index([clientId, createdAt])
   @@map("device_audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 12 — IA assistiva
+// ---------------------------------------------------------------------------
+
+// Catálogo fechado — só as 3 funcionalidades aprovadas para a Fase 12.
+// Qualquer funcionalidade nova exige desenho e aprovação próprios (nunca
+// um valor extra adicionado aqui sem isso).
+enum AiFeatureKey {
+  draft_note
+  explain_evaluation
+  narrate_trend
+}
+
+enum AiInteractionStatus {
+  succeeded
+  failed
+  blocked_by_consent
+  invalid_output
+  timeout
+}
+
+enum AiAuditAction {
+  consent_granted_professional
+  consent_granted_client
+  generation_requested
+  generation_succeeded
+  generation_failed
+  generation_blocked
+}
+
+// Tabela de DADO (mesmo papel que ScaleReading/DeviceMetricSample já têm) —
+// guarda o que foi enviado/recebido porque, sem isso, não é possível
+// prestar contas do que um processador de IA recebeu. Nunca secret/token.
+model AiInteractionLog {
+  id             String               @id @default(uuid())
+  professionalId String               @map("professional_id")
+  clientId       String?              @map("client_id")
+  feature        AiFeatureKey
+  provider       String
+  model          String
+  promptVersion  String               @map("prompt_version")
+  contextRef     String?              @map("context_ref") // ex.: evaluationId, quando aplicável
+  status         AiInteractionStatus
+  systemPrompt   String               @map("system_prompt") @db.Text
+  contextSummary Json                 @map("context_summary")
+  responseText   String?              @map("response_text") @db.Text
+  errorMessage   String?              @map("error_message")
+  createdAt      DateTime             @default(now()) @map("created_at")
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  client       Client?      @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  @@index([professionalId, createdAt])
+  @@index([clientId])
+  @@map("ai_interaction_logs")
+}
+
+// Tabela de AÇÃO (mesmo papel que ScaleAuditLog/DeviceAuditLog) — só
+// quem/o quê/quando, nunca prompt, contexto ou resposta.
+model AiAuditLog {
+  id             String        @id @default(uuid())
+  professionalId String        @map("professional_id")
+  clientId       String?       @map("client_id")
+  feature        AiFeatureKey?
+  action         AiAuditAction
+  ipAddress      String?       @map("ip_address")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  client       Client?      @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  @@index([professionalId, createdAt])
+  @@map("ai_audit_logs")
 }

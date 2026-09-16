@@ -20,6 +20,7 @@ import { ClientAppModule } from './client-app/client-app.module';
 import { ReportsModule } from './reports/reports.module';
 import { ScaleReadingsModule } from './scale-readings/scale-readings.module';
 import { DevicesModule } from './devices/devices.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { DevicesModule } from './devices/devices.module';
     ReportsModule,
     ScaleReadingsModule,
     DevicesModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [

@@ -6,6 +6,7 @@ import type { Measurements, Skinfolds } from '../../types/api';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
+import { AiAssistPanel } from '../../components/AiAssistPanel';
 import { formatDate, formatNumber } from '../../lib/format';
 
 const MEASUREMENT_LABELS: Record<keyof Measurements, string> = {
@@ -148,6 +149,22 @@ export function EvaluationDetailPage() {
         </div>
         {reportMessage ? <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{reportMessage}</div> : null}
       </Card>
+
+      <AiAssistPanel
+        title="Explicar em linguagem simples"
+        helperText={
+          isReleased
+            ? 'Descreve, em texto simples, os números já liberados ao cliente — sem diagnosticar nem interpretar além do que os dados mostram.'
+            : 'Libere esta avaliação ao cliente primeiro — a explicação só usa dado já liberado.'
+        }
+        generate={() => api.explainEvaluation(clientId!, evaluationId!)}
+      />
+
+      <AiAssistPanel
+        title="Narrar tendência"
+        helperText="Descreve em texto a tendência entre as duas avaliações liberadas mais recentes deste cliente — o cálculo é sempre feito pelo sistema, a IA só descreve o resultado."
+        generate={() => api.narrateTrend(clientId!)}
+      />
     </>
   );
 }
