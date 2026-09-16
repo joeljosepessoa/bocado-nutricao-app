@@ -4,6 +4,7 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { DietScreen } from '../screens/DietScreen';
 import { WorkoutScreen } from '../screens/WorkoutScreen';
 import { EvolutionScreen } from '../screens/EvolutionScreen';
+import { ActivityScreen } from '../screens/ActivityScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import type { MainTabParamList } from './types';
 import { colors } from '../theme/tokens';
@@ -23,6 +24,7 @@ export function MainTabs() {
       <Tab.Screen name="Diet" component={DietScreen} options={{ title: 'Dieta' }} />
       <Tab.Screen name="Workout" component={WorkoutScreen} options={{ title: 'Treino' }} />
       <Tab.Screen name="Evolution" component={EvolutionScreen} options={{ title: 'Evolução' }} />
+      <Tab.Screen name="Activity" component={ActivityScreen} options={{ title: 'Atividade' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Perfil' }} />
     </Tab.Navigator>
   );

@@ -7,6 +7,7 @@ import { ChangePasswordScreen } from '../screens/ChangePasswordScreen';
 import { PrivacyConsentScreen } from '../screens/PrivacyConsentScreen';
 import { WorkoutExecutionScreen } from '../screens/WorkoutExecutionScreen';
 import { ReportsScreen } from '../screens/ReportsScreen';
+import { ConnectDeviceScreen } from '../screens/ConnectDeviceScreen';
 import { MainTabs } from './MainTabs';
 import type { RootStackParamList } from './types';
 import { flushExecutionLogQueue } from '../offline/sync';
@@ -63,6 +64,7 @@ export function RootNavigator() {
         options={{ presentation: 'modal', title: 'Execução de treino' }}
       />
       <Stack.Screen name="Reports" component={ReportsScreen} options={{ title: 'Relatórios' }} />
+      <Stack.Screen name="ConnectDevice" component={ConnectDeviceScreen} options={{ title: 'Conectar dispositivo' }} />
     </Stack.Navigator>
   );
 }

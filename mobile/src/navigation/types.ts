@@ -6,6 +6,7 @@ export type MainTabParamList = {
   Diet: undefined;
   Workout: undefined;
   Evolution: undefined;
+  Activity: undefined;
   Profile: undefined;
 };
 
@@ -17,4 +18,5 @@ export type RootStackParamList = {
   Main: NavigatorScreenParams<MainTabParamList>;
   WorkoutExecution: { workout: WorkoutClientSummary; day: WorkoutClientDay };
   Reports: undefined;
+  ConnectDevice: undefined;
 };

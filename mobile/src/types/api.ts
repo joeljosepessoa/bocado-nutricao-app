@@ -165,3 +165,67 @@ export interface PaginatedResult<T> {
   page: number;
   pageSize: number;
 }
+
+// ---------------------------------------------------------------------------
+// Fase 11 — Wearables e dispositivos
+// ---------------------------------------------------------------------------
+
+export type DeviceSourceType = 'ble_direct' | 'apple_healthkit' | 'android_health_connect' | 'manufacturer_api' | 'manual_import';
+export type DeviceConnectionStatus = 'active' | 'revoked' | 'error';
+export type DeviceMetricType =
+  | 'heart_rate'
+  | 'resting_heart_rate'
+  | 'steps'
+  | 'distance'
+  | 'active_calories'
+  | 'sleep_session'
+  | 'workout_activity'
+  | 'exercise_duration'
+  | 'oxygen_saturation'
+  | 'body_temperature'
+  | 'respiratory_rate';
+
+export interface DeviceConnection {
+  id: string;
+  sourceType: DeviceSourceType;
+  driverId: string | null;
+  deviceIdentifier: string | null;
+  status: DeviceConnectionStatus;
+  sharedWithProfessional: boolean;
+  lastSyncedAt: string | null;
+  connectedAt: string;
+  revokedAt: string | null;
+}
+
+export interface DeviceConnectionsResponse {
+  consentedAt: string | null;
+  items: DeviceConnection[];
+}
+
+export interface MetricSampleInput {
+  metricType: DeviceMetricType;
+  value: number;
+  unit: string;
+  startedAt: string;
+  endedAt: string;
+  precision?: number;
+  externalId?: string;
+  rawPayload?: Record<string, unknown>;
+}
+
+export interface IngestMetricsResult {
+  inserted: number;
+  duplicates: number;
+  rejected: Array<{ index: number; reason: string }>;
+}
+
+export interface DeviceMetricSample {
+  id: string;
+  deviceConnectionId: string;
+  metricType: DeviceMetricType;
+  value: number;
+  unit: string;
+  startedAt: string;
+  endedAt: string;
+  precision: number | null;
+}

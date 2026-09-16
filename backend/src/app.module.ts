@@ -19,6 +19,7 @@ import { WorkoutsModule } from './workouts/workouts.module';
 import { ClientAppModule } from './client-app/client-app.module';
 import { ReportsModule } from './reports/reports.module';
 import { ScaleReadingsModule } from './scale-readings/scale-readings.module';
+import { DevicesModule } from './devices/devices.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { ScaleReadingsModule } from './scale-readings/scale-readings.module';
     ClientAppModule,
     ReportsModule,
     ScaleReadingsModule,
+    DevicesModule,
   ],
   controllers: [AppController],
   providers: [

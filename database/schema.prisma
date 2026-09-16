@@ -72,6 +72,7 @@ model Professional {
   reportAuditLogs    ReportAuditLog[]
   scaleReadings      ScaleReading[]
   scaleAuditLogs     ScaleAuditLog[]
+  deviceAuditLogs    DeviceAuditLog[]
 
   @@map("professionals")
 }
@@ -91,6 +92,11 @@ model Client {
   notes          String?      @db.Text
   status         ClientStatus @default(active)
   archivedAt     DateTime?    @map("archived_at")
+  // Fase 11: consentimento específico para coleta de dados de dispositivos/
+  // wearables — deliberadamente separado de User.privacyAcceptedAt (esse
+  // cobre só dieta/treino/evolução; coleta contínua de terceiros exige
+  // finalidade própria, LGPD).
+  deviceDataConsentAt DateTime?    @map("device_data_consent_at")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at")
 
@@ -107,6 +113,9 @@ model Client {
   reportAuditLogs    ReportAuditLog[]
   scaleReadings      ScaleReading[]
   scaleAuditLogs     ScaleAuditLog[]
+  deviceConnections  DeviceConnection[]
+  deviceMetricSamples DeviceMetricSample[]
+  deviceAuditLogs    DeviceAuditLog[]
 
   @@index([professionalId, status])
   @@map("clients")
@@ -901,4 +910,115 @@ model ScaleAuditLog {
 
   @@index([professionalId, createdAt])
   @@map("scale_audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 11 — Wearables e dispositivos
+// ---------------------------------------------------------------------------
+
+enum DeviceSourceType {
+  ble_direct
+  apple_healthkit
+  android_health_connect
+  manufacturer_api // reservado — nenhuma API de fabricante implementada nesta fase
+  manual_import
+}
+
+enum DeviceConnectionStatus {
+  active
+  revoked
+  error
+}
+
+// Catálogo fechado — só métricas que uma fonte real (HealthKit/Health
+// Connect/Heart Rate Service BLE) consegue efetivamente fornecer. Nenhuma
+// adicionada "porque outro dispositivo mede isso" sem um adapter real.
+enum DeviceMetricType {
+  heart_rate
+  resting_heart_rate
+  steps
+  distance
+  active_calories
+  sleep_session
+  workout_activity
+  exercise_duration
+  oxygen_saturation
+  body_temperature
+  respiratory_rate
+}
+
+model DeviceConnection {
+  id                     String                  @id @default(uuid())
+  clientId               String                  @map("client_id")
+  sourceType             DeviceSourceType        @map("source_type")
+  driverId               String?                 @map("driver_id") // só ble_direct — id no WearableDriverRegistry
+  deviceIdentifier       String?                 @map("device_identifier")
+  externalAccountId      String?                 @map("external_account_id") // reservado — só manufacturer_api
+  status                 DeviceConnectionStatus  @default(active)
+  sharedWithProfessional Boolean                 @default(false) @map("shared_with_professional")
+  lastSyncedAt           DateTime?               @map("last_synced_at")
+  lastSyncCursor         String?                 @map("last_sync_cursor")
+  connectedAt            DateTime                @default(now()) @map("connected_at")
+  revokedAt              DateTime?               @map("revoked_at")
+
+  client  Client               @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  samples DeviceMetricSample[]
+  auditLogs DeviceAuditLog[]
+
+  @@index([clientId, status])
+  @@map("device_connections")
+}
+
+model DeviceMetricSample {
+  id                 String           @id @default(uuid())
+  clientId           String           @map("client_id")
+  deviceConnectionId String           @map("device_connection_id")
+  metricType         DeviceMetricType @map("metric_type")
+  value              Float
+  unit               String
+  startedAt          DateTime         @map("started_at")
+  endedAt            DateTime         @map("ended_at")
+  precision          Float?
+  externalId         String?          @map("external_id")
+  dedupHash          String           @unique @map("dedup_hash")
+  rawPayload         Json?            @map("raw_payload")
+  createdAt          DateTime         @default(now()) @map("created_at")
+
+  client           Client           @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  deviceConnection DeviceConnection @relation(fields: [deviceConnectionId], references: [id], onDelete: Restrict)
+
+  @@index([clientId, metricType, startedAt])
+  @@index([deviceConnectionId])
+  @@map("device_metric_samples")
+}
+
+enum DeviceAuditAction {
+  connection_created
+  connection_revoked
+  share_enabled
+  share_disabled
+  metrics_ingested
+  metrics_viewed_by_professional
+}
+
+model DeviceAuditLog {
+  id                 String            @id @default(uuid())
+  clientId           String            @map("client_id")
+  // Nulo quando a ação foi do próprio cliente (conectar/revogar/
+  // compartilhar/sincronizar) — preenchido só quando um profissional agiu
+  // (ex.: visualizou métricas compartilhadas). Diferente de Evaluation/
+  // Report/ScaleAuditLog (sempre professionalId), porque aqui a maioria
+  // das ações é iniciada pelo cliente, não pelo profissional.
+  professionalId     String?           @map("professional_id")
+  deviceConnectionId String?           @map("device_connection_id")
+  action             DeviceAuditAction
+  ipAddress          String?           @map("ip_address")
+  createdAt          DateTime          @default(now()) @map("created_at")
+
+  client           Client            @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  professional     Professional?     @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  deviceConnection DeviceConnection? @relation(fields: [deviceConnectionId], references: [id], onDelete: SetNull)
+
+  @@index([clientId, createdAt])
+  @@map("device_audit_logs")
 }
