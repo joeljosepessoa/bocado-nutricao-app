@@ -19,4 +19,5 @@ export type RootStackParamList = {
   WorkoutExecution: { workout: WorkoutClientSummary; day: WorkoutClientDay };
   Reports: undefined;
   ConnectDevice: undefined;
+  NotificationPreferences: undefined;
 };

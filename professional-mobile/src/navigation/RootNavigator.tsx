@@ -6,6 +6,7 @@ import { LoginScreen } from '../screens/LoginScreen';
 import { ClientsListScreen } from '../screens/ClientsListScreen';
 import { EvaluationPickerScreen } from '../screens/EvaluationPickerScreen';
 import { ScaleConnectScreen } from '../screens/ScaleConnectScreen';
+import { NotificationPreferencesScreen } from '../screens/NotificationPreferencesScreen';
 import { flushScaleReadingQueue } from '../offline/sync';
 import type { RootStackParamList } from './types';
 
@@ -45,6 +46,11 @@ export function RootNavigator() {
         options={({ route }) => ({ title: route.params.clientName })}
       />
       <Stack.Screen name="ScaleConnect" component={ScaleConnectScreen} options={{ title: 'Conectar balança' }} />
+      <Stack.Screen
+        name="NotificationPreferences"
+        component={NotificationPreferencesScreen}
+        options={{ title: 'Notificações' }}
+      />
     </Stack.Navigator>
   );
 }

@@ -12,7 +12,8 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSBluetoothAlwaysUsageDescription": "Usamos Bluetooth para conectar com a balança de bioimpedância durante a avaliação física."
+        "NSBluetoothAlwaysUsageDescription": "Usamos Bluetooth para conectar com a balança de bioimpedância durante a avaliação física.",
+        "NSUserNotificationsUsageDescription": "Usamos notificações para avisar sobre relatórios, avaliações e planos liberados aos seus clientes."
       }
     },
     "android": {
@@ -27,6 +28,7 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": ["expo-notifications"]
   }
 }

@@ -1,9 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { BioimpedanceOrigin, BodyFatSource, EvaluationAuditAction, PhotoAngle } from '@prisma/client';
+import { BioimpedanceOrigin, BodyFatSource, EvaluationAuditAction, NotificationEventType, PhotoAngle } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { CalculationService } from './calculation.service';
 import { AuditLogService } from './audit-log.service';
 import { StorageService } from '../storage/storage.service';
+import { NotificationDispatchService } from '../notifications/notification-dispatch.service';
 import { CreateEvaluationDto } from './dto/create-evaluation.dto';
 import { UpdateEvaluationDto } from './dto/update-evaluation.dto';
 import { UpdateEvaluationReleaseDto } from './dto/update-evaluation-release.dto';
@@ -132,6 +133,7 @@ export class PhysicalEvaluationsService {
     private readonly calculation: CalculationService,
     private readonly auditLog: AuditLogService,
     private readonly storage: StorageService,
+    private readonly notifications: NotificationDispatchService,
   ) {}
 
   private async assertOwnedClient(professionalId: string, clientId: string) {
@@ -563,6 +565,15 @@ export class PhysicalEvaluationsService {
       action: EvaluationAuditAction.released,
       ipAddress: meta.ipAddress,
     });
+
+    if (dto.released) {
+      await this.notifications.dispatch({
+        eventType: NotificationEventType.evaluation_released,
+        recipient: { clientId },
+        title: 'Avaliação física liberada',
+        body: 'Sua avaliação física mais recente já está disponível.',
+      });
+    }
 
     return { id: evaluation.id, releasedToClientAt: evaluation.releasedToClientAt };
   }

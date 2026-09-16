@@ -12,6 +12,8 @@ import type {
   EvolutionEntry,
   IngestMetricsResult,
   MetricSampleInput,
+  NotificationEventType,
+  NotificationPreference,
   PaginatedResult,
   WorkoutClientSummary,
 } from '../types/api';
@@ -151,5 +153,27 @@ export async function explainEvaluation(evaluationId: string): Promise<AiGenerat
 
 export async function narrateTrend(): Promise<AiGenerationResult> {
   const res = await apiClient.post<AiGenerationResult>('/client/ai/generate', { feature: 'narrate_trend' });
+  return res.data;
+}
+
+// ---------------------------------------------------------------------------
+// Fase 16 — Notificações
+// ---------------------------------------------------------------------------
+
+export async function registerDeviceToken(platform: 'ios' | 'android', token: string): Promise<void> {
+  await apiClient.post('/notifications/device-tokens', { platform, token });
+}
+
+export async function revokeDeviceToken(token: string): Promise<void> {
+  await apiClient.post('/notifications/device-tokens/revoke', { token });
+}
+
+export async function listNotificationPreferences(): Promise<NotificationPreference[]> {
+  const res = await apiClient.get<NotificationPreference[]>('/notifications/preferences');
+  return res.data;
+}
+
+export async function updateNotificationPreference(eventType: NotificationEventType, enabled: boolean): Promise<NotificationPreference> {
+  const res = await apiClient.patch<NotificationPreference>('/notifications/preferences', { eventType, enabled });
   return res.data;
 }

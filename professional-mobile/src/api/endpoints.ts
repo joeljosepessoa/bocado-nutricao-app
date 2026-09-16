@@ -5,6 +5,8 @@ import type {
   ConfirmScaleReadingInput,
   EvaluationDetail,
   EvaluationListItem,
+  NotificationEventType,
+  NotificationPreference,
   PaginatedResult,
   ScaleReadingSummary,
 } from '../types/api';
@@ -61,5 +63,27 @@ export async function listScaleReadings(clientId: string, evaluationId: string):
   const res = await apiClient.get<ScaleReadingSummary[]>(
     `/clients/${clientId}/evaluations/${evaluationId}/scale-readings`,
   );
+  return res.data;
+}
+
+// ---------------------------------------------------------------------------
+// Fase 16 — Notificações
+// ---------------------------------------------------------------------------
+
+export async function registerDeviceToken(platform: 'ios' | 'android', token: string): Promise<void> {
+  await apiClient.post('/notifications/device-tokens', { platform, token });
+}
+
+export async function revokeDeviceToken(token: string): Promise<void> {
+  await apiClient.post('/notifications/device-tokens/revoke', { token });
+}
+
+export async function listNotificationPreferences(): Promise<NotificationPreference[]> {
+  const res = await apiClient.get<NotificationPreference[]>('/notifications/preferences');
+  return res.data;
+}
+
+export async function updateNotificationPreference(eventType: NotificationEventType, enabled: boolean): Promise<NotificationPreference> {
+  const res = await apiClient.patch<NotificationPreference>('/notifications/preferences', { eventType, enabled });
   return res.data;
 }

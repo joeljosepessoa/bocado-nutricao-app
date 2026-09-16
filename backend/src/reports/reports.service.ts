@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { Prisma, ReportAudience, ReportAuditAction, ReportStatus } from '@prisma/client';
+import { NotificationEventType, Prisma, ReportAudience, ReportAuditAction, ReportStatus } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { PhysicalEvaluationsService } from '../physical-evaluations/physical-evaluations.service';
+import { NotificationDispatchService } from '../notifications/notification-dispatch.service';
 import { PdfService } from './pdf.service';
 import { ReportAuditLogService } from './report-audit-log.service';
 import { CreateReportDto } from './dto/create-report.dto';
@@ -44,6 +45,7 @@ export class ReportsService {
     private readonly evaluations: PhysicalEvaluationsService,
     private readonly pdf: PdfService,
     private readonly auditLog: ReportAuditLogService,
+    private readonly notifications: NotificationDispatchService,
   ) {}
 
   private async assertOwnedClient(professionalId: string, clientId: string) {
@@ -305,6 +307,19 @@ export class ReportsService {
       action: released ? ReportAuditAction.released : ReportAuditAction.revoked,
       ipAddress: meta.ipAddress,
     });
+
+    // "Relatório pronto" dispara na liberação, não na geração — antes disso
+    // o relatório existe mas o cliente não consegue de fato ver nada (ver
+    // auditoria da Fase 16), então notificar antes seria um push morto.
+    if (released) {
+      await this.notifications.dispatch({
+        eventType: NotificationEventType.report_ready,
+        recipient: { clientId },
+        title: 'Relatório disponível',
+        body: 'Seu relatório já está disponível para download.',
+      });
+    }
+
     return ReportSummaryDto.fromEntity(updated);
   }
 

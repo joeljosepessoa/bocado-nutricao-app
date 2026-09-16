@@ -1,7 +1,8 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { WorkoutAuditAction, WorkoutVersionStatus } from '@prisma/client';
+import { NotificationEventType, WorkoutAuditAction, WorkoutVersionStatus } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { ExercisesService } from '../exercises/exercises.service';
+import { NotificationDispatchService } from '../notifications/notification-dispatch.service';
 import { WorkoutAuditLogService } from './workout-audit-log.service';
 import { CreateWorkoutDto } from './dto/create-workout.dto';
 import { UpdateWorkoutDto } from './dto/update-workout.dto';
@@ -54,6 +55,7 @@ export class WorkoutsService {
     private readonly prisma: PrismaService,
     private readonly exercisesService: ExercisesService,
     private readonly auditLog: WorkoutAuditLogService,
+    private readonly notifications: NotificationDispatchService,
   ) {}
 
   private async assertOwnedClient(professionalId: string, clientId: string) {
@@ -370,6 +372,13 @@ export class WorkoutsService {
       workoutVersionId: versionId,
       action: WorkoutAuditAction.published,
       ipAddress: meta.ipAddress,
+    });
+
+    await this.notifications.dispatch({
+      eventType: NotificationEventType.workout_published,
+      recipient: { clientId },
+      title: 'Novo treino publicado',
+      body: 'Uma nova versão do seu treino foi publicada.',
     });
 
     return this.findVersion(professionalId, clientId, workoutId, versionId, meta, false);

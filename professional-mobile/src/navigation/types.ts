@@ -4,4 +4,5 @@ export type RootStackParamList = {
   ClientsList: undefined;
   EvaluationPicker: { clientId: string; clientName: string };
   ScaleConnect: { clientId: string; clientName: string; evaluationId: string };
+  NotificationPreferences: undefined;
 };

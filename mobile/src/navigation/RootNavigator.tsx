@@ -8,6 +8,7 @@ import { PrivacyConsentScreen } from '../screens/PrivacyConsentScreen';
 import { WorkoutExecutionScreen } from '../screens/WorkoutExecutionScreen';
 import { ReportsScreen } from '../screens/ReportsScreen';
 import { ConnectDeviceScreen } from '../screens/ConnectDeviceScreen';
+import { NotificationPreferencesScreen } from '../screens/NotificationPreferencesScreen';
 import { MainTabs } from './MainTabs';
 import type { RootStackParamList } from './types';
 import { flushExecutionLogQueue } from '../offline/sync';
@@ -65,6 +66,11 @@ export function RootNavigator() {
       />
       <Stack.Screen name="Reports" component={ReportsScreen} options={{ title: 'Relatórios' }} />
       <Stack.Screen name="ConnectDevice" component={ConnectDeviceScreen} options={{ title: 'Conectar dispositivo' }} />
+      <Stack.Screen
+        name="NotificationPreferences"
+        component={NotificationPreferencesScreen}
+        options={{ title: 'Notificações' }}
+      />
     </Stack.Navigator>
   );
 }

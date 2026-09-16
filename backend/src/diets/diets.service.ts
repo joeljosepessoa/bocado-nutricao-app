@@ -1,8 +1,9 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { DietAuditAction, DietVersionStatus, NutritionUnit } from '@prisma/client';
+import { DietAuditAction, DietVersionStatus, NotificationEventType, NutritionUnit } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { FoodsService } from '../foods/foods.service';
 import { NutritionCalculationService } from '../foods/nutrition-calculation.service';
+import { NotificationDispatchService } from '../notifications/notification-dispatch.service';
 import { DietAuditLogService } from './diet-audit-log.service';
 import { CreateDietDto } from './dto/create-diet.dto';
 import { UpdateDietDto } from './dto/update-diet.dto';
@@ -47,6 +48,7 @@ export class DietsService {
     private readonly calculation: NutritionCalculationService,
     private readonly foodsService: FoodsService,
     private readonly auditLog: DietAuditLogService,
+    private readonly notifications: NotificationDispatchService,
   ) {}
 
   private async assertOwnedClient(professionalId: string, clientId: string) {
@@ -419,6 +421,13 @@ export class DietsService {
       dietVersionId: versionId,
       action: DietAuditAction.published,
       ipAddress: meta.ipAddress,
+    });
+
+    await this.notifications.dispatch({
+      eventType: NotificationEventType.diet_published,
+      recipient: { clientId },
+      title: 'Nova dieta publicada',
+      body: 'Uma nova versão da sua dieta foi publicada.',
     });
 
     return this.findVersion(professionalId, clientId, dietId, versionId, meta, false);

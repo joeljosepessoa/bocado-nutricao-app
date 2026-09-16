@@ -67,6 +67,11 @@ export function ClientsListScreen({ navigation }: Props) {
         )}
         ListEmptyComponent={!loading ? <Text style={styles.empty}>Nenhum cliente encontrado.</Text> : null}
       />
+      <Button
+        title="Notificações"
+        variant="secondary"
+        onPress={() => navigation.navigate('NotificationPreferences')}
+      />
       <Button title="Sair" variant="secondary" onPress={() => logout()} />
     </ScreenContainer>
   );

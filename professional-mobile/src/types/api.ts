@@ -87,3 +87,14 @@ export interface ScaleReadingSummary {
   recordedAt: string;
   createdAt: string;
 }
+
+// ---------------------------------------------------------------------------
+// Fase 16 — Notificações
+// ---------------------------------------------------------------------------
+
+export type NotificationEventType = 'report_ready' | 'evaluation_released' | 'diet_published' | 'workout_published';
+
+export interface NotificationPreference {
+  eventType: NotificationEventType;
+  enabled: boolean;
+}

@@ -104,6 +104,9 @@ model Professional {
   deviceAuditLogs    DeviceAuditLog[]
   aiInteractionLogs  AiInteractionLog[]
   aiAuditLogs        AiAuditLog[]
+  deviceTokens             DeviceToken[]
+  notificationPreferences  NotificationPreference[]
+  notificationLogs         NotificationLog[]
 
   @@map("professionals")
 }
@@ -154,6 +157,9 @@ model Client {
   deviceAuditLogs    DeviceAuditLog[]
   aiInteractionLogs  AiInteractionLog[]
   aiAuditLogs        AiAuditLog[]
+  deviceTokens             DeviceToken[]
+  notificationPreferences  NotificationPreference[]
+  notificationLogs         NotificationLog[]
 
   @@index([professionalId, status])
   @@map("clients")
@@ -1169,4 +1175,92 @@ model AdminAuditLog {
 
   @@index([adminId, createdAt])
   @@map("admin_audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 16 — Notificações
+// ---------------------------------------------------------------------------
+
+enum DeviceTokenPlatform {
+  ios
+  android
+}
+
+// Dono é Client OU Professional, nunca os dois nem nenhum — garantido na
+// camada de serviço (NotificationDeviceTokensService), não no banco, pelo
+// mesmo motivo de "Prisma só se necessário": todo write passa por um único
+// service interno, nunca por escrita externa/bruta.
+model DeviceToken {
+  id             String              @id @default(uuid())
+  clientId       String?             @map("client_id")
+  professionalId String?             @map("professional_id")
+  platform       DeviceTokenPlatform
+  token          String              @unique
+  createdAt      DateTime            @default(now()) @map("created_at")
+  revokedAt      DateTime?           @map("revoked_at")
+
+  client       Client?       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  professional Professional? @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  logs         NotificationLog[]
+
+  @@index([clientId, revokedAt])
+  @@index([professionalId, revokedAt])
+  @@map("device_tokens")
+}
+
+// Catálogo fechado — só os eventos aprovados na Fase 16. Qualquer evento
+// novo exige desenho próprio (mesma regra já usada em AiFeatureKey/
+// DeviceMetricType).
+enum NotificationEventType {
+  report_ready
+  evaluation_released
+  diet_published
+  workout_published
+}
+
+model NotificationPreference {
+  id             String                @id @default(uuid())
+  clientId       String?               @map("client_id")
+  professionalId String?               @map("professional_id")
+  eventType      NotificationEventType @map("event_type")
+  enabled        Boolean               @default(true)
+  updatedAt      DateTime              @default(now()) @updatedAt @map("updated_at")
+
+  client       Client?       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  professional Professional? @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+
+  // NULL não colide em unique constraint no Postgres — cada par funciona
+  // isoladamente para o dono que de fato preenche aquele campo.
+  @@unique([clientId, eventType])
+  @@unique([professionalId, eventType])
+  @@map("notification_preferences")
+}
+
+enum NotificationLogStatus {
+  sent
+  failed
+  skipped_preference
+}
+
+// Mesmo papel que um *AuditLog (quem/o quê/quando/resultado) — aqui é a
+// própria tabela de dado, porque o conteúdo da notificação é sempre um
+// template fixo por eventType, nunca texto livre ou dado de saúde; não há
+// separação dado-sensível/auditoria a fazer, ao contrário de AiInteractionLog.
+model NotificationLog {
+  id             String                @id @default(uuid())
+  clientId       String?               @map("client_id")
+  professionalId String?               @map("professional_id")
+  eventType      NotificationEventType @map("event_type")
+  status         NotificationLogStatus
+  deviceTokenId  String?               @map("device_token_id")
+  errorMessage   String?               @map("error_message")
+  createdAt      DateTime              @default(now()) @map("created_at")
+
+  client       Client?      @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  professional Professional? @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  deviceToken  DeviceToken? @relation(fields: [deviceTokenId], references: [id], onDelete: SetNull)
+
+  @@index([clientId, createdAt])
+  @@index([professionalId, createdAt])
+  @@map("notification_logs")
 }

@@ -3,6 +3,7 @@ import { authReducer, initialAuthState, type AuthState } from './authReducer';
 import { tokenStorage } from './tokenStorage';
 import { configureAuthHandlers, setAccessToken } from '../api/client';
 import * as api from '../api/endpoints';
+import { registerPushToken, revokeCurrentPushToken } from '../notifications/pushRegistration';
 import type { SessionUser } from '../types/api';
 
 interface AuthContextValue extends AuthState {
@@ -72,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await tokenStorage.setRefreshToken(session.refreshToken);
     setAccessToken(session.accessToken);
     dispatch({ type: 'LOGIN_SUCCESS', user: session.user, accessToken: session.accessToken });
+    registerPushToken().catch(() => undefined);
   }, []);
 
   const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
@@ -90,6 +92,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     const stored = refreshTokenRef.current;
+    // Precisa rodar com o access token ainda válido (revoke exige
+    // autenticação) — por isso antes de limpar accessToken/refreshToken.
+    await revokeCurrentPushToken();
     refreshTokenRef.current = null;
     setAccessToken(null);
     await tokenStorage.clear();

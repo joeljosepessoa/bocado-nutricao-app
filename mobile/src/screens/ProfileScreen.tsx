@@ -58,6 +58,7 @@ export function ProfileScreen() {
       </Card>
 
       <Button title="Relatórios" variant="secondary" onPress={() => navigation.navigate('Reports')} />
+      <Button title="Notificações" variant="secondary" onPress={() => navigation.navigate('NotificationPreferences')} />
       <Button title="Sair" variant="danger" onPress={() => logout()} />
     </ScreenContainer>
   );
