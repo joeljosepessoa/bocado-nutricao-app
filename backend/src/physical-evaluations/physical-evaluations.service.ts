@@ -593,6 +593,24 @@ export class PhysicalEvaluationsService {
   }
 
   /**
+   * Mesmo allowlist/mapper de listReleasedForClient, para uma avaliação só
+   * — usado pelo gerador de relatório "cliente" (Fase 9), que precisa
+   * exatamente do que o app do cliente já mostra, nunca de uma cópia
+   * paralela da lista de campos permitidos. Devolve null se a avaliação
+   * não existe, não é desse cliente, ou não está liberada.
+   */
+  async getReleasedSummaryForClient(
+    clientId: string,
+    evaluationId: string,
+  ): Promise<PhysicalEvaluationClientSummaryDto | null> {
+    const evaluation = await this.prisma.physicalEvaluation.findFirst({
+      where: { id: evaluationId, clientId, releasedToClientAt: { not: null } },
+      select: CLIENT_EVOLUTION_SELECT,
+    });
+    return evaluation ? PhysicalEvaluationClientSummaryDto.fromEvaluation(evaluation) : null;
+  }
+
+  /**
    * Série cronológica leve para os gráficos de evolução do profissional —
    * uma consulta só, sem N+1, sem incluir fotos/notas/protocolo por
    * extenso que os gráficos não usam. Ordenada ascendente (mais antiga

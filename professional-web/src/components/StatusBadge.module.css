@@ -1,0 +1,28 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.neutral {
+  background: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.positive {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+.warning {
+  background: #fbf0dd;
+  color: #a2650f;
+}
+
+.negative {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}

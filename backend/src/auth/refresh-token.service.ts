@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash, randomBytes, randomUUID } from 'crypto';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { parseDurationMs } from '../common/utils/duration';
 
 export interface IssuedRefreshToken {
   rawToken: string;
@@ -26,15 +27,7 @@ export class RefreshTokenService {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
   ) {
-    this.ttlMs = this.parseExpiresIn(this.config.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '7d');
-  }
-
-  private parseExpiresIn(value: string): number {
-    const match = /^(\d+)([smhd])$/.exec(value);
-    if (!match) return 7 * 24 * 60 * 60 * 1000;
-    const amount = Number(match[1]);
-    const unitMs: Record<string, number> = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 };
-    return amount * (unitMs[match[2]] ?? 86_400_000);
+    this.ttlMs = parseDurationMs(this.config.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '7d');
   }
 
   private hashToken(rawToken: string): string {

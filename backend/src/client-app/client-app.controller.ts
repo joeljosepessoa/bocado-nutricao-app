@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -64,8 +64,21 @@ export class ClientAppController {
   }
 
   @Get('reports')
-  getReports() {
-    return this.clientAppService.getReports();
+  getReports(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.clientAppService.getReports(
+      user.id,
+      page ? Number(page) : undefined,
+      pageSize ? Number(pageSize) : undefined,
+    );
+  }
+
+  @Get('reports/:reportId/download-url')
+  getReportDownloadUrl(@CurrentUser() user: AuthenticatedUser, @Param('reportId') reportId: string) {
+    return this.clientAppService.getReportDownloadUrl(user.id, reportId);
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)

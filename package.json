@@ -16,6 +16,7 @@
     "@prisma/client@5.22.0": true,
     "@prisma/engines@5.22.0": true,
     "prisma@5.22.0": true,
-    "bcrypt@5.1.1": true
+    "bcrypt@5.1.1": true,
+    "puppeteer@25.11.0": true
   }
 }

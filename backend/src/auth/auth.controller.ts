@@ -9,15 +9,7 @@ import { RegisterProfessionalDto } from './dto/register-professional.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { RequestMeta } from './refresh-token.service';
-
-function extractMeta(req: Request): RequestMeta {
-  return { userAgent: req.headers['user-agent'], ipAddress: req.ip };
-}
-
-// Limite baixo por padrão (produção); testes e2e sobem esse teto via
-// AUTH_THROTTLE_LIMIT para não travar a própria suíte.
-const AUTH_THROTTLE_LIMIT = Number(process.env.AUTH_THROTTLE_LIMIT ?? 5);
+import { AUTH_THROTTLE_LIMIT, extractMeta } from './auth-http.util';
 
 @Controller('auth')
 export class AuthController {

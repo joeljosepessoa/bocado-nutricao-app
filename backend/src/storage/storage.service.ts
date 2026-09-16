@@ -13,6 +13,9 @@ export interface SignedUrl {
 
 const SIGNED_URL_TTL_SECONDS = 300;
 
+export type DownloadPurpose = 'photo-download' | 'report-download';
+const VALID_PURPOSES: DownloadPurpose[] = ['photo-download', 'report-download'];
+
 @Injectable()
 export class StorageService {
   private readonly baseDir: string;
@@ -47,10 +50,10 @@ export class StorageService {
     }
   }
 
-  getSignedUrl(storageKey: string, contentType: string): SignedUrl {
+  getSignedUrl(storageKey: string, contentType: string, purpose: DownloadPurpose = 'photo-download'): SignedUrl {
     const expiresAt = new Date(Date.now() + SIGNED_URL_TTL_SECONDS * 1000);
     const token = this.jwtService.sign(
-      { storageKey, contentType, purpose: 'photo-download' },
+      { storageKey, contentType, purpose },
       {
         secret: this.config.get<string>('JWT_ACCESS_SECRET'),
         expiresIn: SIGNED_URL_TTL_SECONDS,
@@ -64,7 +67,7 @@ export class StorageService {
       token,
       { secret: this.config.get<string>('JWT_ACCESS_SECRET') },
     );
-    if (payload.purpose !== 'photo-download') {
+    if (!VALID_PURPOSES.includes(payload.purpose as DownloadPurpose)) {
       throw new NotFoundException('Token inválido.');
     }
     return payload;

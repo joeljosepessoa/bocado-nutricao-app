@@ -7,6 +7,7 @@ import { WorkoutsService } from '../workouts/workouts.service';
 import { WorkoutClientSummaryDto } from '../workouts/dto/workout-client-summary.dto';
 import { PhysicalEvaluationsService } from '../physical-evaluations/physical-evaluations.service';
 import { UsersService } from '../users/users.service';
+import { ReportsService } from '../reports/reports.service';
 import { CreateExecutionLogDto } from '../workouts/dto/create-execution-log.dto';
 
 @Injectable()
@@ -17,6 +18,7 @@ export class ClientAppService {
     private readonly workoutsService: WorkoutsService,
     private readonly evaluationsService: PhysicalEvaluationsService,
     private readonly usersService: UsersService,
+    private readonly reportsService: ReportsService,
   ) {}
 
   me(clientId: string) {
@@ -54,9 +56,12 @@ export class ClientAppService {
     return this.evaluationsService.listReleasedForClient(clientId, page, pageSize);
   }
 
-  // Stub proposital: relatórios (entidade Report) ficam fora da Fase 7.
-  getReports(): { items: []; total: number } {
-    return { items: [], total: 0 };
+  getReports(clientId: string, page?: number, pageSize?: number) {
+    return this.reportsService.listReleasedForClient(clientId, page, pageSize);
+  }
+
+  getReportDownloadUrl(clientId: string, reportId: string) {
+    return this.reportsService.getDownloadUrlForClient(clientId, reportId);
   }
 
   acceptPrivacyTerms(userId: string) {

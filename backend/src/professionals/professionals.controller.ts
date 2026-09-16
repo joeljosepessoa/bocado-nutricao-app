@@ -16,6 +16,11 @@ export class ProfessionalsController {
     return this.professionalsService.me(user.id);
   }
 
+  @Get('me/dashboard')
+  getDashboard(@CurrentUser() user: AuthenticatedUser) {
+    return this.professionalsService.getDashboard(user.id);
+  }
+
   @Post('me/clients')
   createClient(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateClientDto) {
     return this.professionalsService.createClient(user.id, dto);

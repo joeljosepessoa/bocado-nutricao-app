@@ -68,6 +68,8 @@ model Professional {
   workouts           Workout[]
   workoutAuditLogs   WorkoutAuditLog[]
   workoutExecutionLogs WorkoutExecutionLog[]
+  reports            Report[]
+  reportAuditLogs    ReportAuditLog[]
 
   @@map("professionals")
 }
@@ -99,6 +101,8 @@ model Client {
   workouts           Workout[]
   workoutAuditLogs   WorkoutAuditLog[]
   workoutExecutionLogs WorkoutExecutionLog[]
+  reports            Report[]
+  reportAuditLogs    ReportAuditLog[]
 
   @@index([professionalId, status])
   @@map("clients")
@@ -190,6 +194,7 @@ model PhysicalEvaluation {
   calculatedMetrics CalculatedMetrics?
   photos            BodyPhoto[]
   auditLogs         EvaluationAuditLog[]
+  reports           Report[]
 
   @@index([clientId, evaluatedAt])
   @@index([professionalId])
@@ -764,4 +769,74 @@ model WorkoutAuditLog {
   @@index([workoutId, createdAt])
   @@index([professionalId, createdAt])
   @@map("workout_audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 9 — Relatórios (PDF)
+// ---------------------------------------------------------------------------
+
+enum ReportAudience {
+  professional // PDF técnico completo — nunca visível ao cliente
+  client       // PDF restrito — mesmo allowlist de PhysicalEvaluationClientSummaryDto (Fase 8)
+}
+
+enum ReportStatus {
+  queued     // linha criada, geração ainda não rodou
+  generating // Puppeteer em execução
+  ready      // storageKey preenchido, PDF disponível
+  failed     // ver failureReason
+}
+
+enum ReportAuditAction {
+  created
+  generated
+  generation_failed
+  downloaded
+  released
+  revoked
+  deleted
+}
+
+model Report {
+  id                 String         @id @default(uuid())
+  evaluationId       String         @map("evaluation_id")
+  clientId           String         @map("client_id")
+  professionalId     String         @map("professional_id")
+  audience           ReportAudience
+  status             ReportStatus   @default(queued)
+  templateVersion    Int            @map("template_version")
+  dataSnapshot       Json?          @map("data_snapshot")
+  storageKey         String?        @map("storage_key")
+  sizeBytes          Int?           @map("size_bytes")
+  releasedToClientAt DateTime?      @map("released_to_client_at")
+  failureReason      String?        @map("failure_reason")
+  generatedAt        DateTime?      @map("generated_at")
+  createdAt          DateTime       @default(now()) @map("created_at")
+
+  evaluation   PhysicalEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Restrict)
+  client       Client             @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  professional Professional       @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  auditLogs    ReportAuditLog[]
+
+  @@index([clientId, createdAt])
+  @@index([evaluationId])
+  @@map("reports")
+}
+
+model ReportAuditLog {
+  id             String            @id @default(uuid())
+  professionalId String            @map("professional_id")
+  clientId       String            @map("client_id")
+  reportId       String?           @map("report_id")
+  action         ReportAuditAction
+  ipAddress      String?           @map("ip_address")
+  createdAt      DateTime          @default(now()) @map("created_at")
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  report       Report?      @relation(fields: [reportId], references: [id], onDelete: SetNull)
+
+  @@index([reportId])
+  @@index([professionalId, createdAt])
+  @@map("report_audit_logs")
 }

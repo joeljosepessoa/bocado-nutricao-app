@@ -376,8 +376,8 @@ describe('Aplicativo do cliente (e2e)', () => {
     expect(resA.body.items).toEqual([]);
   });
 
-  // 9. Relatórios — stub, sem entidade Report
-  it('GET /client/reports retorna stub vazio', async () => {
+  // 9. Relatórios — Fase 9: lista real, vazia quando não há relatório liberado
+  it('GET /client/reports retorna lista vazia quando não há relatório de cliente liberado', async () => {
     const professional = await registerProfessional(app);
     const { client, temporaryPassword } = await createClient(app, professional.accessToken);
     const session = await login(app, client.user.email, temporaryPassword);
@@ -386,7 +386,7 @@ describe('Aplicativo do cliente (e2e)', () => {
       .get('/client/reports')
       .set('Authorization', `Bearer ${session.accessToken}`)
       .expect(200);
-    expect(res.body).toEqual({ items: [], total: 0 });
+    expect(res.body).toEqual({ items: [], total: 0, page: 1, pageSize: 20 });
   });
 
   // 10. Privacidade — aceite obrigatório no primeiro acesso

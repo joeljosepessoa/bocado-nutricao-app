@@ -3,9 +3,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
+import { AuthWebController } from './auth-web.controller';
 import { AuthService } from './auth.service';
 import { PasswordService } from './password.service';
 import { RefreshTokenService } from './refresh-token.service';
+import { CookieAuthService } from './cookie-auth.service';
+import { WebCsrfGuard } from './web-csrf.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 const jwtModule = JwtModule.registerAsync({
@@ -19,8 +22,8 @@ const jwtModule = JwtModule.registerAsync({
 
 @Module({
   imports: [PassportModule, jwtModule],
-  controllers: [AuthController],
-  providers: [AuthService, PasswordService, RefreshTokenService, JwtStrategy],
+  controllers: [AuthController, AuthWebController],
+  providers: [AuthService, PasswordService, RefreshTokenService, CookieAuthService, WebCsrfGuard, JwtStrategy],
   exports: [PasswordService, RefreshTokenService, jwtModule],
 })
 export class AuthModule {}
