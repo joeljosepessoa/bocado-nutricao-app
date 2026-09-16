@@ -5,6 +5,8 @@ import { Role } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { PasswordService } from './password.service';
 import { RefreshTokenService, RequestMeta } from './refresh-token.service';
+import { PasswordResetTokenService } from './password-reset-token.service';
+import { EmailService } from './email/email.service';
 import { RegisterProfessionalDto } from './dto/register-professional.dto';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -30,6 +32,8 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly passwordService: PasswordService,
     private readonly refreshTokenService: RefreshTokenService,
+    private readonly passwordResetTokenService: PasswordResetTokenService,
+    private readonly emailService: EmailService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
   ) {}
@@ -146,5 +150,47 @@ export class AuthService {
       where: { id: userId },
       data: { passwordHash: newHash, mustChangePassword: false },
     });
+  }
+
+  /**
+   * Sempre resolve com sucesso, exista ou não o e-mail — nunca revela isso
+   * ao chamador (nem por corpo de resposta, nem por tempo: o caminho de
+   * "não existe" faz um bcrypt.compare de mesma duração via
+   * compareAgainstDummy, o mesmo truque já usado em login()).
+   */
+  async requestPasswordReset(email: string, meta: RequestMeta = {}): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      await this.passwordService.compareAgainstDummy();
+      return;
+    }
+
+    const { rawToken, expiresAt } = await this.passwordResetTokenService.issue(user.id, {
+      ipAddress: meta.ipAddress,
+    });
+    const resetUrlBase = this.config.get<string>('PASSWORD_RESET_URL') ?? 'http://localhost:5173/reset-password';
+    const minutesValid = Math.max(1, Math.round((expiresAt.getTime() - Date.now()) / 60_000));
+
+    await this.emailService.send({
+      to: user.email,
+      subject: 'Redefinição de senha — Bocado de Nutrição',
+      text:
+        `Recebemos uma solicitação para redefinir sua senha. Use o link abaixo em até ${minutesValid} minutos:\n\n` +
+        `${resetUrlBase}?token=${rawToken}\n\n` +
+        'Se você não pediu isso, ignore este e-mail — sua senha continua a mesma.',
+    });
+  }
+
+  /**
+   * Ao redefinir, revoga todo refresh token já emitido para o usuário
+   * (mobile e web) — nenhuma sessão aberta antes do reset continua válida
+   * depois dele.
+   */
+  async resetPassword(rawToken: string, newPassword: string): Promise<void> {
+    const userId = await this.passwordResetTokenService.consume(rawToken);
+    const newHash = await this.passwordService.hash(newPassword);
+
+    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: newHash } });
+    await this.refreshTokenService.revokeAllForUser(userId);
   }
 }

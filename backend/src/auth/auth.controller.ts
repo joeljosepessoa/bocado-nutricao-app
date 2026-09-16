@@ -9,6 +9,8 @@ import { RegisterProfessionalDto } from './dto/register-professional.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AUTH_THROTTLE_LIMIT, extractMeta } from './auth-http.util';
 
 @Controller('auth')
@@ -48,5 +50,24 @@ export class AuthController {
   @Post('change-password')
   async changePassword(@CurrentUser() user: AuthenticatedUser, @Body() dto: ChangePasswordDto): Promise<void> {
     await this.authService.changePassword(user.id, dto);
+  }
+
+  // Independente de change-password (que exige estar autenticado) — este
+  // fluxo é para quem perdeu o acesso à conta, então não pode depender de
+  // já estar logado.
+  @Public()
+  @Throttle({ default: { limit: AUTH_THROTTLE_LIMIT, ttl: 60_000 } })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Post('request-password-reset')
+  async requestPasswordReset(@Body() dto: RequestPasswordResetDto, @Req() req: Request): Promise<void> {
+    await this.authService.requestPasswordReset(dto.email, extractMeta(req));
+  }
+
+  @Public()
+  @Throttle({ default: { limit: AUTH_THROTTLE_LIMIT, ttl: 60_000 } })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<void> {
+    await this.authService.resetPassword(dto.token, dto.newPassword);
   }
 }

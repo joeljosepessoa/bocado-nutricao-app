@@ -53,6 +53,26 @@ export async function getMe(): Promise<{ user: { fullName: string; email: string
   return res.data;
 }
 
+// Fase 13 — endpoint mobile-shaped (mesmo usado pelo app do cliente), sem
+// cookie/sessão: o cadastro em si não estabelece a sessão do painel — a
+// tela chama login() (fluxo web) logo em seguida.
+export async function registerProfessional(input: {
+  email: string;
+  password: string;
+  fullName: string;
+  professionalRegister?: string;
+}): Promise<void> {
+  await apiClient.post('/auth/register-professional', input);
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  await apiClient.post('/auth/request-password-reset', { email });
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  await apiClient.post('/auth/reset-password', { token, newPassword });
+}
+
 // --- Dashboard --------------------------------------------------------
 
 export async function getDashboard(): Promise<DashboardSummary> {

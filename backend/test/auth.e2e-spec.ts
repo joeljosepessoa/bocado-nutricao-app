@@ -157,4 +157,64 @@ describe('Autenticação (e2e)', () => {
   it('/health continua público mesmo com o guard global ativo', async () => {
     await request(app.getHttpServer()).get('/health').expect(200);
   });
+
+  // Fase 13 — cadastro de profissional pela interface (mesmo endpoint, agora coberto por teste)
+  describe('Cadastro de profissional', () => {
+    it('cadastro válido cria a conta e autentica imediatamente', async () => {
+      const email = uniqueEmail('novo-profissional');
+      const res = await request(app.getHttpServer())
+        .post('/auth/register-professional')
+        .send({ email, password: 'SenhaForte123', fullName: 'Novo Profissional' })
+        .expect(201);
+
+      expect(res.body.user.email).toBe(email);
+      expect(res.body.user.role).toBe('professional');
+      expect(res.body.accessToken).toBeTruthy();
+      expect(res.body.refreshToken).toBeTruthy();
+
+      // autenticação após cadastro: o access token emitido já funciona numa rota protegida
+      await request(app.getHttpServer())
+        .get('/users/me')
+        .set('Authorization', `Bearer ${res.body.accessToken}`)
+        .expect(200);
+    });
+
+    it('rejeita e-mail já cadastrado com mensagem genérica (não confirma nem nega e-mail específico)', async () => {
+      const email = uniqueEmail('duplicado');
+      await request(app.getHttpServer())
+        .post('/auth/register-professional')
+        .send({ email, password: 'SenhaForte123', fullName: 'Primeiro' })
+        .expect(201);
+
+      const res = await request(app.getHttpServer())
+        .post('/auth/register-professional')
+        .send({ email, password: 'OutraSenha456', fullName: 'Segundo' })
+        .expect(400);
+      expect(res.body.message).not.toContain(email);
+    });
+
+    it('rejeita senha fraca (curta ou sem número)', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/register-professional')
+        .send({ email: uniqueEmail('senha-curta'), password: 'abc123', fullName: 'X' })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .post('/auth/register-professional')
+        .send({ email: uniqueEmail('senha-sem-numero'), password: 'senhasemNumero', fullName: 'X' })
+        .expect(400);
+    });
+
+    it('rejeita e-mail malformado e nome vazio', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/register-professional')
+        .send({ email: 'nao-e-email', password: 'SenhaForte123', fullName: 'X' })
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .post('/auth/register-professional')
+        .send({ email: uniqueEmail('sem-nome'), password: 'SenhaForte123', fullName: '' })
+        .expect(400);
+    });
+  });
 });

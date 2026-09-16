@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { Button } from '../components/Button';
 import { TextField } from '../components/TextField';
@@ -53,6 +53,10 @@ export function LoginPage() {
         <Button type="submit" loading={loading}>
           Entrar
         </Button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--color-text-secondary)' }}>
+          <Link to="/forgot-password">Esqueci minha senha</Link>
+          <Link to="/register">Criar conta</Link>
+        </div>
       </form>
     </div>
   );

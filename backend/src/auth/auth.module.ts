@@ -7,6 +7,9 @@ import { AuthWebController } from './auth-web.controller';
 import { AuthService } from './auth.service';
 import { PasswordService } from './password.service';
 import { RefreshTokenService } from './refresh-token.service';
+import { PasswordResetTokenService } from './password-reset-token.service';
+import { EmailService } from './email/email.service';
+import { ConsoleEmailService } from './email/console-email.service';
 import { CookieAuthService } from './cookie-auth.service';
 import { WebCsrfGuard } from './web-csrf.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -23,7 +26,17 @@ const jwtModule = JwtModule.registerAsync({
 @Module({
   imports: [PassportModule, jwtModule],
   controllers: [AuthController, AuthWebController],
-  providers: [AuthService, PasswordService, RefreshTokenService, CookieAuthService, WebCsrfGuard, JwtStrategy],
+  providers: [
+    AuthService,
+    PasswordService,
+    RefreshTokenService,
+    PasswordResetTokenService,
+    ConsoleEmailService,
+    { provide: EmailService, useExisting: ConsoleEmailService },
+    CookieAuthService,
+    WebCsrfGuard,
+    JwtStrategy,
+  ],
   exports: [PasswordService, RefreshTokenService, jwtModule],
 })
 export class AuthModule {}
