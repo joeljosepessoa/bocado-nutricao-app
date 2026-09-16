@@ -629,7 +629,8 @@ export class PhysicalEvaluationsService {
     return evaluations.map((evaluation) => EvolutionPointDto.fromEvaluation(evaluation));
   }
 
-  private async recalculateMetrics(evaluationId: string): Promise<void> {
+  /** Público: reaproveitado pela Fase 10 (ScaleReadingsService) após gravar Bioimpedance fora do fluxo manual create/update. */
+  async recalculateMetrics(evaluationId: string): Promise<void> {
     const evaluation = await this.prisma.physicalEvaluation.findUniqueOrThrow({
       where: { id: evaluationId },
       include: { measurements: true, skinfolds: true, bioimpedance: true, protocol: true },

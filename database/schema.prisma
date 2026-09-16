@@ -70,6 +70,8 @@ model Professional {
   workoutExecutionLogs WorkoutExecutionLog[]
   reports            Report[]
   reportAuditLogs    ReportAuditLog[]
+  scaleReadings      ScaleReading[]
+  scaleAuditLogs     ScaleAuditLog[]
 
   @@map("professionals")
 }
@@ -103,6 +105,8 @@ model Client {
   workoutExecutionLogs WorkoutExecutionLog[]
   reports            Report[]
   reportAuditLogs    ReportAuditLog[]
+  scaleReadings      ScaleReading[]
+  scaleAuditLogs     ScaleAuditLog[]
 
   @@index([professionalId, status])
   @@map("clients")
@@ -125,7 +129,7 @@ enum BodyFatSource {
 
 enum BioimpedanceOrigin {
   manual
-  device_confirmed // reservado para a Fase 10 (BLE) — não usado nesta fase
+  device_confirmed // Fase 10 (BLE) — leitura de balança confirmada pelo profissional
 }
 
 enum PhotoAngle {
@@ -195,6 +199,8 @@ model PhysicalEvaluation {
   photos            BodyPhoto[]
   auditLogs         EvaluationAuditLog[]
   reports           Report[]
+  scaleReadings     ScaleReading[]
+  scaleAuditLogs    ScaleAuditLog[]
 
   @@index([clientId, evaluatedAt])
   @@index([professionalId])
@@ -839,4 +845,60 @@ model ReportAuditLog {
   @@index([reportId])
   @@index([professionalId, createdAt])
   @@map("report_audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 10 — Integração com balança (BLE)
+// ---------------------------------------------------------------------------
+
+enum ScaleReadingStatus {
+  confirmed // virou Bioimpedance oficial da avaliação
+  discarded // profissional rejeitou; nunca alterou a avaliação
+}
+
+model ScaleReading {
+  id               String             @id @default(uuid())
+  professionalId   String             @map("professional_id")
+  clientId         String             @map("client_id")
+  evaluationId     String             @map("evaluation_id")
+  status           ScaleReadingStatus
+  driverId         String             @map("driver_id")
+  deviceIdentifier String             @map("device_identifier")
+  protocolVersion  String             @map("protocol_version")
+  idempotencyKey   String             @unique @map("idempotency_key")
+  rawPayload       Json               @map("raw_payload")
+  normalized       Json               @map("normalized")
+  recordedAt       DateTime           @map("recorded_at")
+  createdAt        DateTime           @default(now()) @map("created_at")
+
+  professional Professional       @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  client       Client             @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  evaluation   PhysicalEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Restrict)
+
+  @@index([evaluationId])
+  @@index([professionalId, createdAt])
+  @@map("scale_readings")
+}
+
+enum ScaleAuditAction {
+  reading_confirmed
+  reading_discarded
+  reading_listed
+}
+
+model ScaleAuditLog {
+  id             String            @id @default(uuid())
+  professionalId String            @map("professional_id")
+  clientId       String            @map("client_id")
+  evaluationId   String?           @map("evaluation_id")
+  action         ScaleAuditAction
+  ipAddress      String?           @map("ip_address")
+  createdAt      DateTime          @default(now()) @map("created_at")
+
+  professional Professional        @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  client       Client              @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  evaluation   PhysicalEvaluation? @relation(fields: [evaluationId], references: [id], onDelete: SetNull)
+
+  @@index([professionalId, createdAt])
+  @@map("scale_audit_logs")
 }

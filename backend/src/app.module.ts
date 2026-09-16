@@ -18,6 +18,7 @@ import { ExercisesModule } from './exercises/exercises.module';
 import { WorkoutsModule } from './workouts/workouts.module';
 import { ClientAppModule } from './client-app/client-app.module';
 import { ReportsModule } from './reports/reports.module';
+import { ScaleReadingsModule } from './scale-readings/scale-readings.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ReportsModule } from './reports/reports.module';
     WorkoutsModule,
     ClientAppModule,
     ReportsModule,
+    ScaleReadingsModule,
   ],
   controllers: [AppController],
   providers: [
