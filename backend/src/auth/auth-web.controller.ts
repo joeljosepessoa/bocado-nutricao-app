@@ -38,7 +38,7 @@ export class AuthWebController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const session = await this.authService.login(dto, extractMeta(req));
-    if (session.user.role !== Role.professional) {
+    if (session.user.role !== Role.professional && session.user.role !== Role.admin) {
       throw new ForbiddenException('Esta conta não tem acesso ao painel profissional.');
     }
     this.cookieAuth.setRefreshCookie(res, session.refreshToken);

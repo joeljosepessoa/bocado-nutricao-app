@@ -6,13 +6,16 @@ const STATUS_TONE: Record<string, Tone> = {
   active: 'positive',
   published: 'positive',
   ready: 'positive',
+  approved: 'positive',
   archived: 'neutral',
   superseded: 'neutral',
   inactive: 'neutral',
   draft: 'warning',
   queued: 'warning',
   generating: 'warning',
+  pending: 'warning',
   failed: 'negative',
+  suspended: 'negative',
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -26,6 +29,9 @@ const STATUS_LABEL: Record<string, string> = {
   generating: 'Gerando',
   ready: 'Pronto',
   failed: 'Falhou',
+  suspended: 'Suspenso',
+  pending: 'Pendente',
+  approved: 'Aprovado',
 };
 
 export function StatusBadge({ status }: { status: string }) {

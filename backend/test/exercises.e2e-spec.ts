@@ -2,7 +2,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { createClient, createExercise, createWorkout, registerProfessional } from './helpers';
+import { createAdmin, createClient, createExercise, createWorkout, registerProfessional } from './helpers';
 
 describe('Catálogo de exercícios (e2e)', () => {
   let app: INestApplication;
@@ -48,11 +48,28 @@ describe('Catálogo de exercícios (e2e)', () => {
     expect(listB.body.map((e: { id: string }) => e.id)).not.toContain(privateExercise.id);
   });
 
-  it('exercício global é visível a todos, mas só o criador pode editar', async () => {
+  it('exercício global recém-criado fica pendente (Fase 15) — só visível a outro profissional depois de aprovado; só o criador pode editar', async () => {
     const professionalA = await registerProfessional(app);
     const professionalB = await registerProfessional(app);
+    const admin = await createAdmin(app);
     const globalExercise = await createExercise(app, professionalA.accessToken, { name: 'Remada curvada' });
 
+    // pendente de moderação: o criador vê, o outro profissional não
+    await request(app.getHttpServer())
+      .get(`/exercises/${globalExercise.id}`)
+      .set('Authorization', `Bearer ${professionalA.accessToken}`)
+      .expect(200);
+    await request(app.getHttpServer())
+      .get(`/exercises/${globalExercise.id}`)
+      .set('Authorization', `Bearer ${professionalB.accessToken}`)
+      .expect(404);
+
+    await request(app.getHttpServer())
+      .post(`/admin/moderation/exercises/${globalExercise.id}/approve`)
+      .set('Authorization', `Bearer ${admin.accessToken}`)
+      .expect(200);
+
+    // aprovado: agora visível a todos, mas só o criador pode editar
     await request(app.getHttpServer())
       .get(`/exercises/${globalExercise.id}`)
       .set('Authorization', `Bearer ${professionalB.accessToken}`)

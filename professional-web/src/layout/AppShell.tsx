@@ -3,20 +3,29 @@ import styles from './AppShell.module.css';
 import { useAuth } from '../auth/AuthContext';
 import { Button } from '../components/Button';
 
-const NAV_ITEMS = [
+const PROFESSIONAL_NAV_ITEMS = [
   { to: '/', label: 'Início', end: true },
   { to: '/clients', label: 'Clientes', end: false },
 ];
 
+// Fase 15 — mesmo shell, nav diferente por role: admin nunca vê as telas
+// clínicas (o backend já barra, isso é só para não oferecer um link morto).
+const ADMIN_NAV_ITEMS = [
+  { to: '/admin', label: 'Profissionais', end: true },
+  { to: '/admin/moderation', label: 'Moderação', end: false },
+  { to: '/admin/metrics', label: 'Métricas', end: false },
+];
+
 export function AppShell() {
   const { user, logout } = useAuth();
+  const navItems = user?.role === 'admin' ? ADMIN_NAV_ITEMS : PROFESSIONAL_NAV_ITEMS;
 
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
-        <div className={styles.brand}>Bocado de Nutrição</div>
+        <div className={styles.brand}>Bocado de Nutrição{user?.role === 'admin' ? ' — Admin' : ''}</div>
         <nav className={styles.nav}>
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

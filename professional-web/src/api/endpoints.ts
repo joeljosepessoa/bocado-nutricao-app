@@ -1,5 +1,8 @@
 import { apiClient } from './client';
 import type {
+  AdminModerationExercise,
+  AdminModerationFood,
+  AdminProfessional,
   AiGenerationResult,
   AiInteractionSummary,
   ClientDetail,
@@ -18,6 +21,7 @@ import type {
   Exercise,
   Food,
   PaginatedResult,
+  PlatformMetrics,
   ReportAudience,
   ReportSummary,
   SessionUser,
@@ -420,6 +424,60 @@ export async function narrateTrend(clientId: string): Promise<AiGenerationResult
 
 export async function listAiInteractions(clientId: string): Promise<PaginatedResult<AiInteractionSummary>> {
   const res = await apiClient.get<PaginatedResult<AiInteractionSummary>>(`/clients/${clientId}/ai/interactions`);
+  return res.data;
+}
+
+// --- Administração (Fase 15) --------------------------------------------
+
+export async function listAdminProfessionals(params: {
+  search?: string;
+  status?: 'all' | 'active' | 'suspended';
+  page?: number;
+} = {}): Promise<PaginatedResult<AdminProfessional>> {
+  const res = await apiClient.get<PaginatedResult<AdminProfessional>>('/admin/professionals', { params });
+  return res.data;
+}
+
+export async function suspendProfessional(id: string): Promise<AdminProfessional> {
+  const res = await apiClient.post<AdminProfessional>(`/admin/professionals/${id}/suspend`);
+  return res.data;
+}
+
+export async function reactivateProfessional(id: string): Promise<AdminProfessional> {
+  const res = await apiClient.post<AdminProfessional>(`/admin/professionals/${id}/reactivate`);
+  return res.data;
+}
+
+export async function listPendingFoods(): Promise<AdminModerationFood[]> {
+  const res = await apiClient.get<AdminModerationFood[]>('/admin/moderation/foods');
+  return res.data;
+}
+
+export async function listPendingExercises(): Promise<AdminModerationExercise[]> {
+  const res = await apiClient.get<AdminModerationExercise[]>('/admin/moderation/exercises');
+  return res.data;
+}
+
+export async function approveFood(id: string): Promise<AdminModerationFood> {
+  const res = await apiClient.post<AdminModerationFood>(`/admin/moderation/foods/${id}/approve`);
+  return res.data;
+}
+
+export async function rejectFood(id: string): Promise<void> {
+  await apiClient.delete(`/admin/moderation/foods/${id}`);
+}
+
+export async function approveExercise(id: string): Promise<AdminModerationExercise> {
+  const res = await apiClient.post<AdminModerationExercise>(`/admin/moderation/exercises/${id}/approve`);
+  return res.data;
+}
+
+export async function rejectExercise(id: string): Promise<void> {
+  await apiClient.delete(`/admin/moderation/exercises/${id}`);
+}
+
+export async function getPlatformMetrics(): Promise<PlatformMetrics> {
+  const res = await apiClient.get<PlatformMetrics>('/admin/metrics');
   return res.data;
 }
 

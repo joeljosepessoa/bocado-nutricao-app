@@ -18,9 +18,16 @@ export class FoodsService {
     private readonly calculation: NutritionCalculationService,
   ) {}
 
+  // Fase 15: conteúdo global só é visível a outros profissionais depois de
+  // aprovado — mas o próprio criador continua vendo o que criou enquanto
+  // pendente de moderação (senão fica sem acesso ao próprio cadastro).
   private visibilityFilter(professionalId: string) {
     return {
-      OR: [{ scope: FoodScope.global }, { scope: FoodScope.private, ownerProfessionalId: professionalId }],
+      OR: [
+        { scope: FoodScope.global, approvedAt: { not: null } },
+        { scope: FoodScope.global, createdByProfessionalId: professionalId },
+        { scope: FoodScope.private, ownerProfessionalId: professionalId },
+      ],
     };
   }
 

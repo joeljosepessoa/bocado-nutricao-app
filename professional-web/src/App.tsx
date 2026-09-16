@@ -19,6 +19,9 @@ import { DietTab } from './pages/tabs/DietTab';
 import { WorkoutTab } from './pages/tabs/WorkoutTab';
 import { ReportsTab } from './pages/tabs/ReportsTab';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { AdminProfessionalsPage } from './pages/admin/AdminProfessionalsPage';
+import { AdminModerationPage } from './pages/admin/AdminModerationPage';
+import { AdminMetricsPage } from './pages/admin/AdminMetricsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -36,7 +39,7 @@ function App() {
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireRole="professional">
                   <AppShell />
                 </ProtectedRoute>
               }
@@ -54,6 +57,17 @@ function App() {
                 <Route path="workout" element={<WorkoutTab />} />
                 <Route path="reports" element={<ReportsTab />} />
               </Route>
+            </Route>
+            <Route
+              element={
+                <ProtectedRoute requireRole="admin">
+                  <AppShell />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/admin" element={<AdminProfessionalsPage />} />
+              <Route path="/admin/moderation" element={<AdminModerationPage />} />
+              <Route path="/admin/metrics" element={<AdminMetricsPage />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

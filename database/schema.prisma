@@ -21,6 +21,10 @@ model User {
   role               Role
   mustChangePassword Boolean   @default(false) @map("must_change_password")
   privacyAcceptedAt  DateTime? @map("privacy_accepted_at")
+  // Fase 15 — só usado para role=professional. Bloqueia login (checado em
+  // AuthService.login) e é sempre acompanhado de revokeAllForUser na
+  // suspensão, o mesmo mecanismo já usado pelo reset de senha (Fase 13).
+  suspendedAt        DateTime? @map("suspended_at")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
@@ -28,6 +32,7 @@ model User {
   client        Client?
   refreshTokens RefreshToken[]
   passwordResetTokens PasswordResetToken[]
+  adminAuditLogs AdminAuditLog[]
 
   @@map("users")
 }
@@ -426,6 +431,10 @@ model Food {
   fatGPer100             Float     @map("fat_g_per_100")
   fiberGPer100           Float?    @map("fiber_g_per_100")
   source                 String    @default("manual")
+  // Fase 15 — null = pendente de moderação (só o próprio criador enxerga,
+  // ver visibilityFilter em foods.service.ts). Preenchido = visível a todos.
+  // Migration faz backfill retroativo em todo Food global já existente.
+  approvedAt             DateTime? @map("approved_at")
   createdByProfessionalId String   @map("created_by_professional_id")
   createdAt              DateTime  @default(now()) @map("created_at")
   updatedAt              DateTime  @default(now()) @updatedAt @map("updated_at")
@@ -651,6 +660,8 @@ model Exercise {
   ownerProfessionalId     String?       @map("owner_professional_id")
   videoUrl                String?       @map("video_url")
   imageUrl                String?       @map("image_url")
+  // Fase 15 — mesmo papel de Food.approvedAt (ver comentário lá).
+  approvedAt              DateTime?     @map("approved_at")
   createdByProfessionalId String        @map("created_by_professional_id")
   createdAt               DateTime      @default(now()) @map("created_at")
   updatedAt               DateTime      @default(now()) @updatedAt @map("updated_at")
@@ -1129,4 +1140,33 @@ model AiAuditLog {
 
   @@index([professionalId, createdAt])
   @@map("ai_audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 15 — Administração
+// ---------------------------------------------------------------------------
+
+enum AdminAuditAction {
+  admin_created
+  professional_suspended
+  professional_reactivated
+  content_approved
+  content_rejected
+}
+
+// Tabela de AÇÃO (mesmo papel que ScaleAuditLog/DeviceAuditLog/AiAuditLog) —
+// só quem/o quê/quando, nunca senha, token ou dado sensível.
+model AdminAuditLog {
+  id         String            @id @default(uuid())
+  adminId    String            @map("admin_id")
+  targetType String?           @map("target_type") // 'professional' | 'food' | 'exercise', quando aplicável
+  targetId   String?           @map("target_id")
+  action     AdminAuditAction
+  ipAddress  String?           @map("ip_address")
+  createdAt  DateTime          @default(now()) @map("created_at")
+
+  admin User @relation(fields: [adminId], references: [id], onDelete: Restrict)
+
+  @@index([adminId, createdAt])
+  @@map("admin_audit_logs")
 }

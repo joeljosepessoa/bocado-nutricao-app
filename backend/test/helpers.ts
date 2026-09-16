@@ -1,8 +1,31 @@
 import { INestApplication } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 import request from 'supertest';
 
 export function uniqueEmail(prefix: string): string {
   return `${prefix}.${Date.now()}.${Math.floor(Math.random() * 100000)}@example.com`;
+}
+
+const prismaForHelpers = new PrismaClient();
+
+/**
+ * Não existe endpoint público de criação de admin (Fase 15, por decisão) —
+ * o único jeito real é o bootstrap CLI ou uma escrita direta no banco. Para
+ * testes, criamos o usuário admin direto via Prisma (mesma senha conhecida)
+ * e autenticamos pelo endpoint de login normal, exercitando o mesmo caminho
+ * que qualquer admin real usaria.
+ */
+export async function createAdmin(app: INestApplication) {
+  const email = uniqueEmail('admin');
+  const password = 'SenhaAdminForte123';
+  const passwordHash = await bcrypt.hash(password, 12);
+  const user = await prismaForHelpers.user.create({
+    data: { email, passwordHash, fullName: 'Admin de Teste', role: 'admin' },
+  });
+
+  const res = await request(app.getHttpServer()).post('/auth/login').send({ email, password }).expect(200);
+  return { id: user.id, email, password, accessToken: res.body.accessToken as string };
 }
 
 export async function registerProfessional(app: INestApplication, overrides: Partial<Record<'email' | 'password' | 'fullName', string>> = {}) {

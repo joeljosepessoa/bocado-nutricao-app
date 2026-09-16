@@ -21,6 +21,7 @@ import { ReportsModule } from './reports/reports.module';
 import { ScaleReadingsModule } from './scale-readings/scale-readings.module';
 import { DevicesModule } from './devices/devices.module';
 import { AiModule } from './ai/ai.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { AiModule } from './ai/ai.module';
     ScaleReadingsModule,
     DevicesModule,
     AiModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [

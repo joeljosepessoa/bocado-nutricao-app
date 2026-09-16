@@ -100,6 +100,12 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas.');
     }
 
+    // Fase 15 — checado só depois da senha já validada (nunca antes: não dá
+    // a quem não sabe a senha nenhum sinal sobre o estado da conta).
+    if (user.suspendedAt) {
+      throw new UnauthorizedException('Esta conta está suspensa. Entre em contato com a administração.');
+    }
+
     const { rawToken } = await this.refreshTokenService.issue(user.id, meta);
     return {
       accessToken: this.signAccessToken(user.id, user.role),

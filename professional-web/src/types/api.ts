@@ -1,4 +1,4 @@
-export type Role = 'professional' | 'client';
+export type Role = 'professional' | 'client' | 'admin';
 
 export interface SessionUser {
   id: string;
@@ -432,4 +432,42 @@ export interface AiInteractionSummary {
   status: string;
   responseText: string | null;
   createdAt: string;
+}
+
+// --- Administração (Fase 15) -------------------------------------------
+
+export interface AdminProfessional {
+  id: string;
+  professionalRegister: string | null;
+  user: { email: string; fullName: string; suspendedAt: string | null; createdAt: string };
+}
+
+export interface AdminModerationFood {
+  id: string;
+  name: string;
+  kcalPer100: number;
+  proteinGPer100: number;
+  carbGPer100: number;
+  fatGPer100: number;
+  source: string;
+  createdAt: string;
+}
+
+export interface AdminModerationExercise {
+  id: string;
+  name: string;
+  type: string;
+  muscleGroup: string | null;
+  equipment: string | null;
+  createdAt: string;
+}
+
+export interface PlatformMetrics {
+  professionals: { total: number; suspended: number };
+  clients: { total: number };
+  evaluations: { total: number };
+  diets: { total: number };
+  workouts: { total: number };
+  foods: { globalApproved: number; globalPending: number };
+  exercises: { globalApproved: number; globalPending: number };
 }

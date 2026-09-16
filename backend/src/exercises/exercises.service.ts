@@ -11,9 +11,15 @@ const LOCKED_IDENTITY_FIELDS = ['name', 'muscleGroup', 'equipment', 'type'] as c
 export class ExercisesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Fase 15: mesma regra de foods.service.ts — global só é visível a outros
+  // depois de aprovado; o próprio criador vê o que criou enquanto pendente.
   private visibilityFilter(professionalId: string) {
     return {
-      OR: [{ scope: ExerciseScope.global }, { scope: ExerciseScope.private, ownerProfessionalId: professionalId }],
+      OR: [
+        { scope: ExerciseScope.global, approvedAt: { not: null } },
+        { scope: ExerciseScope.global, createdByProfessionalId: professionalId },
+        { scope: ExerciseScope.private, ownerProfessionalId: professionalId },
+      ],
     };
   }
 
