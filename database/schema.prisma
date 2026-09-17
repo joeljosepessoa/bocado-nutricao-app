@@ -109,6 +109,9 @@ model Professional {
   notificationLogs         NotificationLog[]
   messageThreads           MessageThread[]
   messageAuditLogs         MessageAuditLog[]
+  availabilitySlots        AvailabilitySlot[]
+  appointments             Appointment[]
+  appointmentAuditLogs     AppointmentAuditLog[]
 
   @@map("professionals")
 }
@@ -164,6 +167,8 @@ model Client {
   notificationLogs         NotificationLog[]
   messageThreads           MessageThread[]
   messageAuditLogs         MessageAuditLog[]
+  appointments             Appointment[]
+  appointmentAuditLogs     AppointmentAuditLog[]
 
   @@index([professionalId, status])
   @@map("clients")
@@ -1221,6 +1226,7 @@ enum NotificationEventType {
   diet_published
   workout_published
   message_received
+  appointment_reminder
 }
 
 model NotificationPreference {
@@ -1337,4 +1343,106 @@ model MessageAuditLog {
   @@index([threadId])
   @@index([professionalId, createdAt])
   @@map("message_audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 18 — Agenda e consultas
+// ---------------------------------------------------------------------------
+
+// Slot discreto (não uma regra recorrente) — o profissional cria cada
+// horário individualmente. isBooked evita ter que consultar Appointment
+// toda vez que se lista disponibilidade; a garantia real de "no máximo uma
+// consulta ATIVA por slot" é um índice único parcial adicionado à mão na
+// migration (WHERE status != 'cancelled') — não este campo (só projeção de
+// leitura) nem um @unique bloqueante (uma consulta cancelada continua
+// existindo para histórico, então não pode "travar" o slot para sempre).
+// `appointments` é Appointment[] (não Appointment?) só porque o Prisma
+// exige @unique no escalar pra modelar 1:1 — a relação real, garantida no
+// banco, continua sendo "no máximo um agendamento ativo por slot".
+model AvailabilitySlot {
+  id             String   @id @default(uuid())
+  professionalId String   @map("professional_id")
+  startAt        DateTime @map("start_at")
+  endAt          DateTime @map("end_at")
+  isBooked       Boolean  @default(false) @map("is_booked")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  professional Professional  @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  appointments Appointment[]
+
+  @@index([professionalId, startAt])
+  @@map("availability_slots")
+}
+
+// Catálogo fechado e deliberadamente mínimo (Fase 18): sem "completed" —
+// "passada" é derivado de scheduledAt no momento da leitura, não um estado
+// armazenado (nenhuma rotina fica responsável por transicionar status).
+enum AppointmentStatus {
+  scheduled
+  confirmed
+  cancelled
+}
+
+// slotId NÃO é @unique aqui de propósito: uma consulta cancelada continua
+// existindo (histórico/auditoria), então um @unique bloquearia o slot para
+// sempre depois do primeiro cancelamento. A garantia real de "no máximo uma
+// consulta ATIVA por slot" é um índice único PARCIAL adicionado à mão na
+// migration (`WHERE status != 'cancelled'`) — Prisma não expressa índice
+// parcial declarativamente. Ver migration 20260917121643_fix_slot_uniqueness.
+model Appointment {
+  id              String            @id @default(uuid())
+  clientId        String            @map("client_id")
+  professionalId  String            @map("professional_id")
+  slotId          String            @map("slot_id")
+  // Redundante com slot.startAt de propósito: permite indexar/filtrar por
+  // data sem join, e preserva o horário original mesmo se o slot algum dia
+  // puder ser editado.
+  scheduledAt     DateTime          @map("scheduled_at")
+  durationMinutes Int               @map("duration_minutes")
+  status          AppointmentStatus @default(scheduled)
+  notes           String?
+  // Preenchido pelo job de lembrete (ver AppointmentReminderService) —
+  // garante que o mesmo lembrete nunca é disparado duas vezes.
+  reminderSentAt  DateTime?         @map("reminder_sent_at")
+  cancelledAt     DateTime?         @map("cancelled_at")
+  createdAt       DateTime          @default(now()) @map("created_at")
+
+  client       Client                 @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  professional Professional           @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  slot         AvailabilitySlot       @relation(fields: [slotId], references: [id], onDelete: Restrict)
+  auditLogs    AppointmentAuditLog[]
+
+  @@index([slotId])
+  @@index([professionalId, scheduledAt])
+  @@index([clientId, scheduledAt])
+  @@map("appointments")
+}
+
+enum AppointmentAuditAction {
+  slot_created
+  slot_removed
+  appointment_created
+  appointment_confirmed
+  appointment_cancelled
+}
+
+// Mesmo papel que os demais *AuditLog: quem/o quê/quando, nunca conteúdo
+// livre. clientId é opcional porque ações de disponibilidade (criar/
+// remover slot) não têm cliente nenhum envolvido ainda.
+model AppointmentAuditLog {
+  id             String                 @id @default(uuid())
+  professionalId String                 @map("professional_id")
+  clientId       String?                @map("client_id")
+  appointmentId  String?                @map("appointment_id")
+  action         AppointmentAuditAction
+  ipAddress      String?                @map("ip_address")
+  createdAt      DateTime               @default(now()) @map("created_at")
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  client       Client?      @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  appointment  Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@index([appointmentId])
+  @@index([professionalId, createdAt])
+  @@map("appointment_audit_logs")
 }

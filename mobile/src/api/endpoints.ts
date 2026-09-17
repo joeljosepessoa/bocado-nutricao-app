@@ -1,7 +1,9 @@
 import { apiClient } from './client';
 import type {
   AiGenerationResult,
+  Appointment,
   AuthTokenPair,
+  AvailabilitySlot,
   ClientSelf,
   CreateExecutionLogInput,
   DeviceConnection,
@@ -190,5 +192,29 @@ export async function getMessages(): Promise<Message[]> {
 
 export async function sendMessage(body: string): Promise<Message> {
   const res = await apiClient.post<Message>('/client/messages', { body });
+  return res.data;
+}
+
+// ---------------------------------------------------------------------------
+// Fase 18 — Agenda e consultas
+// ---------------------------------------------------------------------------
+
+export async function getAvailability(): Promise<AvailabilitySlot[]> {
+  const res = await apiClient.get<AvailabilitySlot[]>('/client/availability');
+  return res.data;
+}
+
+export async function bookAppointment(slotId: string, notes?: string): Promise<Appointment> {
+  const res = await apiClient.post<Appointment>('/client/appointments', { slotId, notes });
+  return res.data;
+}
+
+export async function getAppointments(): Promise<Appointment[]> {
+  const res = await apiClient.get<Appointment[]>('/client/appointments');
+  return res.data;
+}
+
+export async function cancelAppointment(id: string): Promise<Appointment> {
+  const res = await apiClient.post<Appointment>(`/client/appointments/${id}/cancel`);
   return res.data;
 }

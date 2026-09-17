@@ -97,7 +97,8 @@ export type NotificationEventType =
   | 'evaluation_released'
   | 'diet_published'
   | 'workout_published'
-  | 'message_received';
+  | 'message_received'
+  | 'appointment_reminder';
 
 export interface NotificationPreference {
   eventType: NotificationEventType;

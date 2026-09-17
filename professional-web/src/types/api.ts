@@ -484,3 +484,31 @@ export interface Message {
   readAt: string | null;
   createdAt: string;
 }
+
+// --- Agenda e consultas (Fase 18) ---------------------------------------
+
+export interface AvailabilitySlot {
+  id: string;
+  professionalId: string;
+  startAt: string;
+  endAt: string;
+  isBooked: boolean;
+  createdAt: string;
+}
+
+export type AppointmentStatus = 'scheduled' | 'confirmed' | 'cancelled';
+
+export interface Appointment {
+  id: string;
+  clientId: string;
+  professionalId: string;
+  slotId: string;
+  scheduledAt: string;
+  durationMinutes: number;
+  status: AppointmentStatus;
+  notes: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+  // Presente só na listagem do profissional (GET /professionals/me/appointments).
+  client?: { id: string; user: { fullName: string } };
+}

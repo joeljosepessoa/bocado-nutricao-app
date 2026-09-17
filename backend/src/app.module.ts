@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { PrismaModule } from './common/prisma/prisma.module';
@@ -24,10 +25,12 @@ import { AiModule } from './ai/ai.module';
 import { AdminModule } from './admin/admin.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { MessagesModule } from './messages/messages.module';
+import { AppointmentsModule } from './appointments/appointments.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     PrismaModule,
     AuthModule,
@@ -48,6 +51,7 @@ import { MessagesModule } from './messages/messages.module';
     AdminModule,
     NotificationsModule,
     MessagesModule,
+    AppointmentsModule,
   ],
   controllers: [AppController],
   providers: [

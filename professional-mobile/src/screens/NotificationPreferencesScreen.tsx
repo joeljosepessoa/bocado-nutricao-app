@@ -12,6 +12,7 @@ const EVENT_LABELS: Record<NotificationEventType, string> = {
   diet_published: 'Nova dieta publicada',
   workout_published: 'Novo treino publicado',
   message_received: 'Nova mensagem de cliente',
+  appointment_reminder: 'Lembrete de consulta',
 };
 
 export function NotificationPreferencesScreen() {

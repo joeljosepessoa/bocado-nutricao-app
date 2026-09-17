@@ -10,6 +10,9 @@ import { UsersService } from '../users/users.service';
 import { ReportsService } from '../reports/reports.service';
 import { CreateExecutionLogDto } from '../workouts/dto/create-execution-log.dto';
 import { MessagesService, RequestMeta } from '../messages/messages.service';
+import { AvailabilityService } from '../appointments/availability.service';
+import { AppointmentsService } from '../appointments/appointments.service';
+import { CreateAppointmentDto } from '../appointments/dto/create-appointment.dto';
 
 @Injectable()
 export class ClientAppService {
@@ -21,6 +24,8 @@ export class ClientAppService {
     private readonly usersService: UsersService,
     private readonly reportsService: ReportsService,
     private readonly messagesService: MessagesService,
+    private readonly availabilityService: AvailabilityService,
+    private readonly appointmentsService: AppointmentsService,
   ) {}
 
   me(clientId: string) {
@@ -76,5 +81,21 @@ export class ClientAppService {
 
   sendMessage(clientId: string, body: string, meta: RequestMeta = {}) {
     return this.messagesService.sendFromClient(clientId, body, meta);
+  }
+
+  getAvailability(clientId: string) {
+    return this.availabilityService.listBookableForClient(clientId);
+  }
+
+  bookAppointment(clientId: string, dto: CreateAppointmentDto, meta: RequestMeta = {}) {
+    return this.appointmentsService.bookForClient(clientId, dto, meta);
+  }
+
+  getAppointments(clientId: string) {
+    return this.appointmentsService.listForClient(clientId);
+  }
+
+  cancelAppointment(clientId: string, appointmentId: string, meta: RequestMeta = {}) {
+    return this.appointmentsService.cancelForClient(clientId, appointmentId, meta);
   }
 }

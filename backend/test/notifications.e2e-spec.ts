@@ -1,7 +1,7 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
-import { PrismaClient } from '@prisma/client';
+import { NotificationEventType, PrismaClient } from '@prisma/client';
 import { AppModule } from '../src/app.module';
 import { ConsoleNotificationService } from '../src/notifications/console-notification.service';
 import { createClient, createDiet, createWorkout, registerProfessional, uniqueEmail } from './helpers';
@@ -134,13 +134,12 @@ describe('Notificações (e2e — Fase 16)', () => {
         .set('Authorization', `Bearer ${professional.accessToken}`)
         .expect(200);
 
-      // 5 tipos desde a Fase 17 (message_received somado aos 4 da Fase 16) —
-      // sem número fixo hardcoded: sempre os mesmos valores do enum Prisma.
+      // Compara contra o enum real do Prisma, nunca uma lista hardcoded —
+      // toda fase nova que adiciona um NotificationEventType não deve
+      // quebrar esta asserção.
       expect(res.body.every((p: { enabled: boolean }) => p.enabled)).toBe(true);
       const types = res.body.map((p: { eventType: string }) => p.eventType).sort();
-      expect(types).toEqual(
-        ['diet_published', 'evaluation_released', 'report_ready', 'workout_published', 'message_received'].sort(),
-      );
+      expect(types).toEqual(Object.values(NotificationEventType).sort());
     });
 
     it('desabilitar um tipo persiste e reflete na listagem', async () => {

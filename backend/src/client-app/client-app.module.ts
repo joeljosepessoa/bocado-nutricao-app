@@ -6,11 +6,21 @@ import { PhysicalEvaluationsModule } from '../physical-evaluations/physical-eval
 import { UsersModule } from '../users/users.module';
 import { ReportsModule } from '../reports/reports.module';
 import { MessagesModule } from '../messages/messages.module';
+import { AppointmentsModule } from '../appointments/appointments.module';
 import { ClientAppController } from './client-app.controller';
 import { ClientAppService } from './client-app.service';
 
 @Module({
-  imports: [ClientsModule, DietsModule, WorkoutsModule, PhysicalEvaluationsModule, UsersModule, ReportsModule, MessagesModule],
+  imports: [
+    ClientsModule,
+    DietsModule,
+    WorkoutsModule,
+    PhysicalEvaluationsModule,
+    UsersModule,
+    ReportsModule,
+    MessagesModule,
+    AppointmentsModule,
+  ],
   controllers: [ClientAppController],
   providers: [ClientAppService],
 })

@@ -5,6 +5,8 @@ import type {
   AdminProfessional,
   AiGenerationResult,
   AiInteractionSummary,
+  Appointment,
+  AvailabilitySlot,
   ClientDetail,
   ClientListItem,
   ClientStatus,
@@ -491,6 +493,37 @@ export async function listMessages(clientId: string): Promise<Message[]> {
 
 export async function sendMessage(clientId: string, body: string): Promise<Message> {
   const res = await apiClient.post<Message>(`/clients/${clientId}/messages`, { body });
+  return res.data;
+}
+
+// --- Agenda e consultas (Fase 18) ---------------------------------------
+
+export async function listAvailability(): Promise<AvailabilitySlot[]> {
+  const res = await apiClient.get<AvailabilitySlot[]>('/professionals/me/availability');
+  return res.data;
+}
+
+export async function createAvailabilitySlot(startAt: string, endAt: string): Promise<AvailabilitySlot> {
+  const res = await apiClient.post<AvailabilitySlot>('/professionals/me/availability', { startAt, endAt });
+  return res.data;
+}
+
+export async function removeAvailabilitySlot(id: string): Promise<void> {
+  await apiClient.delete(`/professionals/me/availability/${id}`);
+}
+
+export async function listAppointments(): Promise<Appointment[]> {
+  const res = await apiClient.get<Appointment[]>('/professionals/me/appointments');
+  return res.data;
+}
+
+export async function confirmAppointment(id: string): Promise<Appointment> {
+  const res = await apiClient.post<Appointment>(`/professionals/me/appointments/${id}/confirm`);
+  return res.data;
+}
+
+export async function cancelAppointment(id: string): Promise<Appointment> {
+  const res = await apiClient.post<Appointment>(`/professionals/me/appointments/${id}/cancel`);
   return res.data;
 }
 

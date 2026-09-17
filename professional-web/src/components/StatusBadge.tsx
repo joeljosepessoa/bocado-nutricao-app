@@ -16,6 +16,9 @@ const STATUS_TONE: Record<string, Tone> = {
   pending: 'warning',
   failed: 'negative',
   suspended: 'negative',
+  scheduled: 'warning',
+  confirmed: 'positive',
+  cancelled: 'negative',
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -32,6 +35,9 @@ const STATUS_LABEL: Record<string, string> = {
   suspended: 'Suspenso',
   pending: 'Pendente',
   approved: 'Aprovado',
+  scheduled: 'Agendada',
+  confirmed: 'Confirmada',
+  cancelled: 'Cancelada',
 };
 
 export function StatusBadge({ status }: { status: string }) {

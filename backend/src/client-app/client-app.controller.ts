@@ -8,6 +8,7 @@ import { ClientAppService } from './client-app.service';
 import { UpdateClientSelfDto } from '../clients/dto/update-client-self.dto';
 import { CreateExecutionLogDto } from '../workouts/dto/create-execution-log.dto';
 import { CreateMessageDto } from '../messages/dto/create-message.dto';
+import { CreateAppointmentDto } from '../appointments/dto/create-appointment.dto';
 
 @Controller('client')
 @Roles(Role.client)
@@ -97,5 +98,26 @@ export class ClientAppController {
   @Post('messages')
   sendMessage(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateMessageDto, @Req() req: Request) {
     return this.clientAppService.sendMessage(user.id, dto.body, { ipAddress: req.ip });
+  }
+
+  @Get('availability')
+  getAvailability(@CurrentUser() user: AuthenticatedUser) {
+    return this.clientAppService.getAvailability(user.id);
+  }
+
+  @Post('appointments')
+  bookAppointment(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateAppointmentDto, @Req() req: Request) {
+    return this.clientAppService.bookAppointment(user.id, dto, { ipAddress: req.ip });
+  }
+
+  @Get('appointments')
+  getAppointments(@CurrentUser() user: AuthenticatedUser) {
+    return this.clientAppService.getAppointments(user.id);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('appointments/:id/cancel')
+  cancelAppointment(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Req() req: Request) {
+    return this.clientAppService.cancelAppointment(user.id, id, { ipAddress: req.ip });
   }
 }

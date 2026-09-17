@@ -256,7 +256,8 @@ export type NotificationEventType =
   | 'evaluation_released'
   | 'diet_published'
   | 'workout_published'
-  | 'message_received';
+  | 'message_received'
+  | 'appointment_reminder';
 
 export interface NotificationPreference {
   eventType: NotificationEventType;
@@ -275,5 +276,33 @@ export interface Message {
   senderRole: MessageSenderRole;
   body: string;
   readAt: string | null;
+  createdAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// Fase 18 — Agenda e consultas
+// ---------------------------------------------------------------------------
+
+export interface AvailabilitySlot {
+  id: string;
+  professionalId: string;
+  startAt: string;
+  endAt: string;
+  isBooked: boolean;
+  createdAt: string;
+}
+
+export type AppointmentStatus = 'scheduled' | 'confirmed' | 'cancelled';
+
+export interface Appointment {
+  id: string;
+  clientId: string;
+  professionalId: string;
+  slotId: string;
+  scheduledAt: string;
+  durationMinutes: number;
+  status: AppointmentStatus;
+  notes: string | null;
+  cancelledAt: string | null;
   createdAt: string;
 }

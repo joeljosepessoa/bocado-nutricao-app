@@ -21,4 +21,5 @@ export type RootStackParamList = {
   ConnectDevice: undefined;
   NotificationPreferences: undefined;
   Messages: undefined;
+  Appointments: undefined;
 };
