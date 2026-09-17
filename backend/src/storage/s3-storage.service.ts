@@ -27,6 +27,13 @@ export class S3StorageService extends StorageService {
   constructor(jwtService: JwtService, config: ConfigService) {
     super(jwtService, config);
     this.bucket = this.config.get<string>('S3_BUCKET') ?? '';
+    if (!this.bucket) {
+      // Falha no boot (DI instancia isto na inicialização do Nest), não no
+      // primeiro upload — S3_REGION/S3_ENDPOINT/credenciais têm fallback
+      // seguro (default da AWS / cadeia padrão do SDK), mas não existe
+      // "bucket padrão" possível de assumir.
+      throw new Error('STORAGE_PROVIDER=s3 requer S3_BUCKET configurado (.env).');
+    }
     const region = this.config.get<string>('S3_REGION') ?? 'us-east-1';
     const endpoint = this.config.get<string>('S3_ENDPOINT');
     const accessKeyId = this.config.get<string>('S3_ACCESS_KEY_ID');
