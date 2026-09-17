@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { json, urlencoded } from 'express';
+import type { IncomingMessage } from 'http';
 import { AppModule } from './app.module';
 import { JsonLoggerService } from './common/logging/json-logger.service';
 
@@ -25,7 +26,17 @@ async function bootstrap() {
 
   app.use(helmet());
   app.use(cookieParser());
-  app.use(json({ limit: BODY_SIZE_LIMIT }));
+  // `verify` guarda o corpo cru em req.rawBody — o webhook de cobrança
+  // (Fase 22) precisa dos bytes exatos para validar a assinatura HMAC
+  // (reparsear o JSON e reserializar não garante byte-a-byte idêntico).
+  app.use(
+    json({
+      limit: BODY_SIZE_LIMIT,
+      verify: (req: IncomingMessage & { rawBody?: Buffer }, _res, buf) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
   app.use(urlencoded({ extended: true, limit: BODY_SIZE_LIMIT }));
 
   // credentials:true + lista explícita de origens (nunca "*") — obrigatório

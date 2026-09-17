@@ -28,6 +28,8 @@ import { AdminModule } from './admin/admin.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { MessagesModule } from './messages/messages.module';
 import { AppointmentsModule } from './appointments/appointments.module';
+import { BillingModule } from './billing/billing.module';
+import { RequiresActiveSubscriptionGuard } from './billing/requires-active-subscription.guard';
 
 @Module({
   imports: [
@@ -55,12 +57,14 @@ import { AppointmentsModule } from './appointments/appointments.module';
     NotificationsModule,
     MessagesModule,
     AppointmentsModule,
+    BillingModule,
   ],
   controllers: [AppController],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: RequiresActiveSubscriptionGuard },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
   ],
 })

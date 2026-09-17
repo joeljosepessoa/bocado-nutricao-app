@@ -32,3 +32,7 @@ export function formatPercent(value: number | null): string {
   const sign = value > 0 ? '+' : '';
   return `${sign}${value}%`;
 }
+
+export function formatCurrencyCents(cents: number): string {
+  return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}

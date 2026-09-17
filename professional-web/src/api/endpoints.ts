@@ -24,11 +24,13 @@ import type {
   Food,
   Message,
   PaginatedResult,
+  Plan,
   PlatformMetrics,
   ReportAudience,
   ReportSummary,
   SessionUser,
   SignedUrl,
+  Subscription,
   UpdateClientInput,
   UpdateEvaluationInput,
   WebSession,
@@ -524,6 +526,28 @@ export async function confirmAppointment(id: string): Promise<Appointment> {
 
 export async function cancelAppointment(id: string): Promise<Appointment> {
   const res = await apiClient.post<Appointment>(`/professionals/me/appointments/${id}/cancel`);
+  return res.data;
+}
+
+// --- Comercial: planos e assinaturas (Fase 22) ---------------------------
+
+export async function listPlans(): Promise<Plan[]> {
+  const res = await apiClient.get<Plan[]>('/professionals/me/billing/plans');
+  return res.data;
+}
+
+export async function getSubscription(): Promise<Subscription | null> {
+  const res = await apiClient.get<{ subscription: Subscription | null }>('/professionals/me/billing/subscription');
+  return res.data.subscription;
+}
+
+export async function subscribeToPlan(planCode: string): Promise<Subscription> {
+  const res = await apiClient.post<Subscription>('/professionals/me/billing/subscribe', { planCode });
+  return res.data;
+}
+
+export async function cancelSubscription(): Promise<Subscription> {
+  const res = await apiClient.post<Subscription>('/professionals/me/billing/cancel');
   return res.data;
 }
 

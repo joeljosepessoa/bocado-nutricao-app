@@ -19,6 +19,11 @@ const STATUS_TONE: Record<string, Tone> = {
   scheduled: 'warning',
   confirmed: 'positive',
   cancelled: 'negative',
+  trialing: 'warning',
+  past_due: 'negative',
+  canceled: 'negative',
+  paid: 'positive',
+  open: 'warning',
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -38,6 +43,11 @@ const STATUS_LABEL: Record<string, string> = {
   scheduled: 'Agendada',
   confirmed: 'Confirmada',
   cancelled: 'Cancelada',
+  trialing: 'Em teste',
+  past_due: 'Pagamento pendente',
+  canceled: 'Cancelada',
+  paid: 'Paga',
+  open: 'Em aberto',
 };
 
 export function StatusBadge({ status }: { status: string }) {

@@ -7,6 +7,7 @@ const PROFESSIONAL_NAV_ITEMS = [
   { to: '/', label: 'Início', end: true },
   { to: '/clients', label: 'Clientes', end: false },
   { to: '/agenda', label: 'Agenda', end: false },
+  { to: '/plano', label: 'Plano', end: false },
 ];
 
 // Fase 15 — mesmo shell, nav diferente por role: admin nunca vê as telas

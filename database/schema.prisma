@@ -117,6 +117,8 @@ model Professional {
   availabilitySlots        AvailabilitySlot[]
   appointments             Appointment[]
   appointmentAuditLogs     AppointmentAuditLog[]
+  subscription             Subscription?
+  billingAuditLogs         BillingAuditLog[]
 
   @@map("professionals")
 }
@@ -1490,4 +1492,115 @@ model AccountDeletionRequest {
   client Client @relation(fields: [clientId], references: [id], onDelete: Restrict)
 
   @@map("account_deletion_requests")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 22 — Comercial: planos e assinaturas
+// ---------------------------------------------------------------------------
+
+enum PlanInterval {
+  month
+  year
+}
+
+// Planos são cadastro interno (sem tela de admin nesta fase — como os
+// dados de referência da Fase 1, entram via seed/migration); o que muda
+// por fase futura é só o catálogo, nunca a estrutura.
+model Plan {
+  id         String       @id @default(uuid())
+  code       String       @unique
+  name       String
+  priceCents Int          @map("price_cents")
+  interval   PlanInterval
+  trialDays  Int          @default(0) @map("trial_days")
+  active     Boolean      @default(true)
+  createdAt  DateTime     @default(now()) @map("created_at")
+
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+enum SubscriptionStatus {
+  trialing
+  active
+  past_due
+  canceled
+}
+
+// Um profissional tem no máximo uma assinatura (@unique) — é a conta que
+// paga, nunca o cliente dela. gatewayCustomerId/gatewaySubscriptionId
+// ficam nulos com o adapter mock (Fase 22: nenhum gateway real está
+// configurado ainda); um adapter real só passa a preenchê-los.
+model Subscription {
+  id                    String             @id @default(uuid())
+  professionalId        String             @unique @map("professional_id")
+  planId                String             @map("plan_id")
+  status                SubscriptionStatus @default(trialing)
+  currentPeriodStart    DateTime           @map("current_period_start")
+  currentPeriodEnd      DateTime           @map("current_period_end")
+  cancelAtPeriodEnd     Boolean            @default(false) @map("cancel_at_period_end")
+  canceledAt            DateTime?          @map("canceled_at")
+  gatewayCustomerId     String?            @map("gateway_customer_id")
+  gatewaySubscriptionId String?            @map("gateway_subscription_id")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  professional Professional      @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  plan         Plan              @relation(fields: [planId], references: [id], onDelete: Restrict)
+  invoices     Invoice[]
+  auditLogs    BillingAuditLog[]
+
+  @@map("subscriptions")
+}
+
+enum InvoiceStatus {
+  open
+  paid
+  failed
+}
+
+model Invoice {
+  id               String        @id @default(uuid())
+  subscriptionId   String        @map("subscription_id")
+  amountCents      Int           @map("amount_cents")
+  status           InvoiceStatus @default(open)
+  dueDate          DateTime      @map("due_date")
+  paidAt           DateTime?     @map("paid_at")
+  gatewayInvoiceId String?       @map("gateway_invoice_id")
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+
+  @@index([subscriptionId, createdAt])
+  @@map("invoices")
+}
+
+enum BillingAuditAction {
+  subscription_started
+  subscription_canceled
+  subscription_renewed
+  invoice_paid
+  invoice_failed
+  webhook_received
+  webhook_rejected
+}
+
+// Mesmo papel que os demais *AuditLog: quem/o quê/quando. `metadata` fica
+// restrito a campos não sensíveis (nunca dado de cartão — isso nem chega
+// à nossa aplicação, é responsabilidade do gateway/tokenização).
+model BillingAuditLog {
+  id             String             @id @default(uuid())
+  professionalId String             @map("professional_id")
+  subscriptionId String?            @map("subscription_id")
+  action         BillingAuditAction
+  metadata       Json?
+  ipAddress      String?            @map("ip_address")
+  createdAt      DateTime           @default(now()) @map("created_at")
+
+  professional Professional  @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([professionalId, createdAt])
+  @@map("billing_audit_logs")
 }

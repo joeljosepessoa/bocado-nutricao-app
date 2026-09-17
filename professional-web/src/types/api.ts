@@ -512,3 +512,43 @@ export interface Appointment {
   // Presente só na listagem do profissional (GET /professionals/me/appointments).
   client?: { id: string; user: { fullName: string } };
 }
+
+// --- Comercial: planos e assinaturas (Fase 22) ---------------------------
+
+export type PlanInterval = 'month' | 'year';
+
+export interface Plan {
+  id: string;
+  code: string;
+  name: string;
+  priceCents: number;
+  interval: PlanInterval;
+  trialDays: number;
+  active: boolean;
+}
+
+export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled';
+export type InvoiceStatus = 'open' | 'paid' | 'failed';
+
+export interface Invoice {
+  id: string;
+  subscriptionId: string;
+  amountCents: number;
+  status: InvoiceStatus;
+  dueDate: string;
+  paidAt: string | null;
+  createdAt: string;
+}
+
+export interface Subscription {
+  id: string;
+  professionalId: string;
+  planId: string;
+  status: SubscriptionStatus;
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+  cancelAtPeriodEnd: boolean;
+  canceledAt: string | null;
+  plan: Plan;
+  invoices: Invoice[];
+}

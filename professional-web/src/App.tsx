@@ -20,6 +20,7 @@ import { WorkoutTab } from './pages/tabs/WorkoutTab';
 import { ReportsTab } from './pages/tabs/ReportsTab';
 import { MessagesTab } from './pages/tabs/MessagesTab';
 import { AgendaPage } from './pages/AgendaPage';
+import { PlanPage } from './pages/PlanPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { AdminProfessionalsPage } from './pages/admin/AdminProfessionalsPage';
 import { AdminModerationPage } from './pages/admin/AdminModerationPage';
@@ -49,6 +50,7 @@ function App() {
               <Route path="/" element={<DashboardPage />} />
               <Route path="/clients" element={<ClientsListPage />} />
               <Route path="/agenda" element={<AgendaPage />} />
+              <Route path="/plano" element={<PlanPage />} />
               <Route path="/clients/:clientId" element={<ClientProfilePage />}>
                 <Route index element={<OverviewTab />} />
                 <Route path="evaluations" element={<EvaluationsTab />} />
