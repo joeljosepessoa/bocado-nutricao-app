@@ -9,6 +9,7 @@ import { WorkoutExecutionScreen } from '../screens/WorkoutExecutionScreen';
 import { ReportsScreen } from '../screens/ReportsScreen';
 import { ConnectDeviceScreen } from '../screens/ConnectDeviceScreen';
 import { NotificationPreferencesScreen } from '../screens/NotificationPreferencesScreen';
+import { MessagesScreen } from '../screens/MessagesScreen';
 import { MainTabs } from './MainTabs';
 import type { RootStackParamList } from './types';
 import { flushExecutionLogQueue } from '../offline/sync';
@@ -71,6 +72,7 @@ export function RootNavigator() {
         component={NotificationPreferencesScreen}
         options={{ title: 'Notificações' }}
       />
+      <Stack.Screen name="Messages" component={MessagesScreen} options={{ title: 'Mensagens' }} />
     </Stack.Navigator>
   );
 }

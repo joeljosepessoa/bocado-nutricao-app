@@ -107,6 +107,8 @@ model Professional {
   deviceTokens             DeviceToken[]
   notificationPreferences  NotificationPreference[]
   notificationLogs         NotificationLog[]
+  messageThreads           MessageThread[]
+  messageAuditLogs         MessageAuditLog[]
 
   @@map("professionals")
 }
@@ -160,6 +162,8 @@ model Client {
   deviceTokens             DeviceToken[]
   notificationPreferences  NotificationPreference[]
   notificationLogs         NotificationLog[]
+  messageThreads           MessageThread[]
+  messageAuditLogs         MessageAuditLog[]
 
   @@index([professionalId, status])
   @@map("clients")
@@ -1216,6 +1220,7 @@ enum NotificationEventType {
   evaluation_released
   diet_published
   workout_published
+  message_received
 }
 
 model NotificationPreference {
@@ -1263,4 +1268,73 @@ model NotificationLog {
   @@index([clientId, createdAt])
   @@index([professionalId, createdAt])
   @@map("notification_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 17 — Comunicação
+// ---------------------------------------------------------------------------
+
+// Uma thread por par profissional↔cliente — nunca mais de uma (garantido
+// pelo @@unique, não por lógica de aplicação).
+model MessageThread {
+  id             String   @id @default(uuid())
+  clientId       String   @map("client_id")
+  professionalId String   @map("professional_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  client       Client            @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  professional Professional      @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  messages     Message[]
+  auditLogs    MessageAuditLog[]
+
+  @@unique([clientId, professionalId])
+  @@map("message_threads")
+}
+
+enum MessageSenderRole {
+  professional
+  client
+}
+
+model Message {
+  id         String            @id @default(uuid())
+  threadId   String            @map("thread_id")
+  senderRole MessageSenderRole @map("sender_role")
+  body       String            @db.Text
+  // Preenchido quando o destinatário (quem NÃO enviou) abre a thread —
+  // nunca setado pelo próprio remetente.
+  readAt     DateTime?         @map("read_at")
+  createdAt  DateTime          @default(now()) @map("created_at")
+
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Restrict)
+
+  @@index([threadId, createdAt])
+  @@map("messages")
+}
+
+enum MessageAuditAction {
+  thread_created
+  message_sent
+  thread_read
+}
+
+// Mesmo papel que ReportAuditLog: quem/o quê/quando, nunca o conteúdo da
+// mensagem (isso vive só em Message.body).
+model MessageAuditLog {
+  id             String             @id @default(uuid())
+  professionalId String             @map("professional_id")
+  clientId       String             @map("client_id")
+  threadId       String?            @map("thread_id")
+  messageId      String?            @map("message_id")
+  action         MessageAuditAction
+  ipAddress      String?            @map("ip_address")
+  createdAt      DateTime           @default(now()) @map("created_at")
+
+  professional Professional   @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  client       Client         @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  thread       MessageThread? @relation(fields: [threadId], references: [id], onDelete: SetNull)
+
+  @@index([threadId])
+  @@index([professionalId, createdAt])
+  @@map("message_audit_logs")
 }

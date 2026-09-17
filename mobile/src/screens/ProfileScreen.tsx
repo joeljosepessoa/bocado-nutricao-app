@@ -57,6 +57,7 @@ export function ProfileScreen() {
         <Button title="Salvar" onPress={handleSave} loading={saving} />
       </Card>
 
+      <Button title="Mensagens" variant="secondary" onPress={() => navigation.navigate('Messages')} />
       <Button title="Relatórios" variant="secondary" onPress={() => navigation.navigate('Reports')} />
       <Button title="Notificações" variant="secondary" onPress={() => navigation.navigate('NotificationPreferences')} />
       <Button title="Sair" variant="danger" onPress={() => logout()} />

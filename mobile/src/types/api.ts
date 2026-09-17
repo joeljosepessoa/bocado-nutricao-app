@@ -251,9 +251,29 @@ export interface AiGenerationResult {
 // Fase 16 — Notificações
 // ---------------------------------------------------------------------------
 
-export type NotificationEventType = 'report_ready' | 'evaluation_released' | 'diet_published' | 'workout_published';
+export type NotificationEventType =
+  | 'report_ready'
+  | 'evaluation_released'
+  | 'diet_published'
+  | 'workout_published'
+  | 'message_received';
 
 export interface NotificationPreference {
   eventType: NotificationEventType;
   enabled: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Fase 17 — Comunicação
+// ---------------------------------------------------------------------------
+
+export type MessageSenderRole = 'professional' | 'client';
+
+export interface Message {
+  id: string;
+  threadId: string;
+  senderRole: MessageSenderRole;
+  body: string;
+  readAt: string | null;
+  createdAt: string;
 }

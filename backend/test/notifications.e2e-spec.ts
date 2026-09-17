@@ -127,17 +127,20 @@ describe('Notificações (e2e — Fase 16)', () => {
   // --- Preferências ---------------------------------------------------------
 
   describe('Preferências de notificação', () => {
-    it('sem nenhuma preferência salva, todos os 4 tipos vêm habilitados por padrão', async () => {
+    it('sem nenhuma preferência salva, todos os tipos de evento vêm habilitados por padrão', async () => {
       const professional = await registerProfessional(app);
       const res = await request(app.getHttpServer())
         .get('/notifications/preferences')
         .set('Authorization', `Bearer ${professional.accessToken}`)
         .expect(200);
 
-      expect(res.body).toHaveLength(4);
+      // 5 tipos desde a Fase 17 (message_received somado aos 4 da Fase 16) —
+      // sem número fixo hardcoded: sempre os mesmos valores do enum Prisma.
       expect(res.body.every((p: { enabled: boolean }) => p.enabled)).toBe(true);
       const types = res.body.map((p: { eventType: string }) => p.eventType).sort();
-      expect(types).toEqual(['diet_published', 'evaluation_released', 'report_ready', 'workout_published'].sort());
+      expect(types).toEqual(
+        ['diet_published', 'evaluation_released', 'report_ready', 'workout_published', 'message_received'].sort(),
+      );
     });
 
     it('desabilitar um tipo persiste e reflete na listagem', async () => {
@@ -249,28 +252,36 @@ describe('Notificações (e2e — Fase 16)', () => {
       expect(log?.status).toBe('skipped_preference');
     });
 
-    it('relatório: gerar não dispara "relatório pronto", só a liberação dispara (e só para audience client)', async () => {
-      const professional = await registerProfessional(app);
-      const { client, temporaryPassword } = await createClient(app, professional.accessToken);
-      const clientAccessToken = await loginAsClient(app, client.user.email, temporaryPassword);
-      await registerToken(app, clientAccessToken, uniqueEmail('push-token-report')).expect(201);
+    it(
+      'relatório: gerar não dispara "relatório pronto", só a liberação dispara (e só para audience client)',
+      async () => {
+        const professional = await registerProfessional(app);
+        const { client, temporaryPassword } = await createClient(app, professional.accessToken);
+        const clientAccessToken = await loginAsClient(app, client.user.email, temporaryPassword);
+        await registerToken(app, clientAccessToken, uniqueEmail('push-token-report')).expect(201);
 
-      const evaluation = await createEvaluation(app, professional.accessToken, client.id);
-      // relatório de audience "client" exige a avaliação já liberada (regra pré-existente, não desta fase)
-      await releaseEvaluation(app, professional.accessToken, client.id, evaluation.id).expect(200);
+        const evaluation = await createEvaluation(app, professional.accessToken, client.id);
+        // relatório de audience "client" exige a avaliação já liberada (regra pré-existente, não desta fase)
+        await releaseEvaluation(app, professional.accessToken, client.id, evaluation.id).expect(200);
 
-      await generateReport(app, professional.accessToken, client.id, evaluation.id, 'professional');
-      const afterProfessionalGen = await prisma.notificationLog.count({ where: { clientId: client.id, eventType: 'report_ready' } });
-      expect(afterProfessionalGen).toBe(0);
+        await generateReport(app, professional.accessToken, client.id, evaluation.id, 'professional');
+        const afterProfessionalGen = await prisma.notificationLog.count({ where: { clientId: client.id, eventType: 'report_ready' } });
+        expect(afterProfessionalGen).toBe(0);
 
-      const clientReport = await generateReport(app, professional.accessToken, client.id, evaluation.id, 'client');
-      const afterClientGen = await prisma.notificationLog.count({ where: { clientId: client.id, eventType: 'report_ready' } });
-      expect(afterClientGen).toBe(0); // gerar ainda não é liberar
+        const clientReport = await generateReport(app, professional.accessToken, client.id, evaluation.id, 'client');
+        const afterClientGen = await prisma.notificationLog.count({ where: { clientId: client.id, eventType: 'report_ready' } });
+        expect(afterClientGen).toBe(0); // gerar ainda não é liberar
 
-      await releaseReport(app, professional.accessToken, client.id, clientReport.id).expect(200);
-      const afterRelease = await prisma.notificationLog.count({ where: { clientId: client.id, eventType: 'report_ready' } });
-      expect(afterRelease).toBe(1);
-    });
+        await releaseReport(app, professional.accessToken, client.id, clientReport.id).expect(200);
+        const afterRelease = await prisma.notificationLog.count({ where: { clientId: client.id, eventType: 'report_ready' } });
+        expect(afterRelease).toBe(1);
+      },
+      // Duas gerações reais de PDF via Puppeteer (render-pdf.js) — o padrão
+      // de 5s do Jest é apertado para isso mesmo isolado, e fica ainda mais
+      // justo rodando depois de outras 20+ suítes na mesma sessão (mesmo
+      // motivo do timeout de 30s já usado em reports.e2e-spec.ts).
+      20_000,
+    );
 
     it('dieta publicada dispara notificação', async () => {
       const professional = await registerProfessional(app);

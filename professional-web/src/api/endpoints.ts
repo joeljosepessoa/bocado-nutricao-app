@@ -20,6 +20,7 @@ import type {
   ExecutionLog,
   Exercise,
   Food,
+  Message,
   PaginatedResult,
   PlatformMetrics,
   ReportAudience,
@@ -478,6 +479,18 @@ export async function rejectExercise(id: string): Promise<void> {
 
 export async function getPlatformMetrics(): Promise<PlatformMetrics> {
   const res = await apiClient.get<PlatformMetrics>('/admin/metrics');
+  return res.data;
+}
+
+// --- Mensagens (Fase 17) ------------------------------------------------
+
+export async function listMessages(clientId: string): Promise<Message[]> {
+  const res = await apiClient.get<Message[]>(`/clients/${clientId}/messages`);
+  return res.data;
+}
+
+export async function sendMessage(clientId: string, body: string): Promise<Message> {
+  const res = await apiClient.post<Message>(`/clients/${clientId}/messages`, { body });
   return res.data;
 }
 

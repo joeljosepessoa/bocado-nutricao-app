@@ -12,6 +12,7 @@ const TAB_ITEMS = [
   { key: 'diet', label: 'Dieta' },
   { key: 'workout', label: 'Treino' },
   { key: 'reports', label: 'Relatórios' },
+  { key: 'messages', label: 'Mensagens' },
 ];
 
 export function ClientProfilePage() {

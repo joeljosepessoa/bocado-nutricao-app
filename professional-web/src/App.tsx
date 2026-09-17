@@ -18,6 +18,7 @@ import { EvolutionTab } from './pages/tabs/EvolutionTab';
 import { DietTab } from './pages/tabs/DietTab';
 import { WorkoutTab } from './pages/tabs/WorkoutTab';
 import { ReportsTab } from './pages/tabs/ReportsTab';
+import { MessagesTab } from './pages/tabs/MessagesTab';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { AdminProfessionalsPage } from './pages/admin/AdminProfessionalsPage';
 import { AdminModerationPage } from './pages/admin/AdminModerationPage';
@@ -56,6 +57,7 @@ function App() {
                 <Route path="diet" element={<DietTab />} />
                 <Route path="workout" element={<WorkoutTab />} />
                 <Route path="reports" element={<ReportsTab />} />
+                <Route path="messages" element={<MessagesTab />} />
               </Route>
             </Route>
             <Route

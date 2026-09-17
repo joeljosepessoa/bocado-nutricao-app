@@ -11,6 +11,7 @@ const EVENT_LABELS: Record<NotificationEventType, string> = {
   evaluation_released: 'Avaliação física liberada',
   diet_published: 'Nova dieta publicada',
   workout_published: 'Novo treino publicado',
+  message_received: 'Nova mensagem',
 };
 
 export function NotificationPreferencesScreen() {

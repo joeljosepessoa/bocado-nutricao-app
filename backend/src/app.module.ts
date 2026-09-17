@@ -23,6 +23,7 @@ import { DevicesModule } from './devices/devices.module';
 import { AiModule } from './ai/ai.module';
 import { AdminModule } from './admin/admin.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     AiModule,
     AdminModule,
     NotificationsModule,
+    MessagesModule,
   ],
   controllers: [AppController],
   providers: [

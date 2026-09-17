@@ -471,3 +471,16 @@ export interface PlatformMetrics {
   foods: { globalApproved: number; globalPending: number };
   exercises: { globalApproved: number; globalPending: number };
 }
+
+// --- Mensagens (Fase 17) ------------------------------------------------
+
+export type MessageSenderRole = 'professional' | 'client';
+
+export interface Message {
+  id: string;
+  threadId: string;
+  senderRole: MessageSenderRole;
+  body: string;
+  readAt: string | null;
+  createdAt: string;
+}

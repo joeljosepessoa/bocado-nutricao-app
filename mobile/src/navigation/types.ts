@@ -20,4 +20,5 @@ export type RootStackParamList = {
   Reports: undefined;
   ConnectDevice: undefined;
   NotificationPreferences: undefined;
+  Messages: undefined;
 };

@@ -11,6 +11,7 @@ import type {
   DietClientSummary,
   EvolutionEntry,
   IngestMetricsResult,
+  Message,
   MetricSampleInput,
   NotificationEventType,
   NotificationPreference,
@@ -175,5 +176,19 @@ export async function listNotificationPreferences(): Promise<NotificationPrefere
 
 export async function updateNotificationPreference(eventType: NotificationEventType, enabled: boolean): Promise<NotificationPreference> {
   const res = await apiClient.patch<NotificationPreference>('/notifications/preferences', { eventType, enabled });
+  return res.data;
+}
+
+// ---------------------------------------------------------------------------
+// Fase 17 — Comunicação
+// ---------------------------------------------------------------------------
+
+export async function getMessages(): Promise<Message[]> {
+  const res = await apiClient.get<Message[]>('/client/messages');
+  return res.data;
+}
+
+export async function sendMessage(body: string): Promise<Message> {
+  const res = await apiClient.post<Message>('/client/messages', { body });
   return res.data;
 }

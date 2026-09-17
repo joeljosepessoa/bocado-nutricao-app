@@ -9,6 +9,7 @@ import { PhysicalEvaluationsService } from '../physical-evaluations/physical-eva
 import { UsersService } from '../users/users.service';
 import { ReportsService } from '../reports/reports.service';
 import { CreateExecutionLogDto } from '../workouts/dto/create-execution-log.dto';
+import { MessagesService, RequestMeta } from '../messages/messages.service';
 
 @Injectable()
 export class ClientAppService {
@@ -19,6 +20,7 @@ export class ClientAppService {
     private readonly evaluationsService: PhysicalEvaluationsService,
     private readonly usersService: UsersService,
     private readonly reportsService: ReportsService,
+    private readonly messagesService: MessagesService,
   ) {}
 
   me(clientId: string) {
@@ -66,5 +68,13 @@ export class ClientAppService {
 
   acceptPrivacyTerms(userId: string) {
     return this.usersService.acceptPrivacyTerms(userId);
+  }
+
+  getMessages(clientId: string, meta: RequestMeta = {}) {
+    return this.messagesService.listForClient(clientId, meta);
+  }
+
+  sendMessage(clientId: string, body: string, meta: RequestMeta = {}) {
+    return this.messagesService.sendFromClient(clientId, body, meta);
   }
 }

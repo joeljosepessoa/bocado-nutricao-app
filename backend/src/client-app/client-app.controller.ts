@@ -1,4 +1,5 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req } from '@nestjs/common';
+import type { Request } from 'express';
 import { Role } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -6,6 +7,7 @@ import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { ClientAppService } from './client-app.service';
 import { UpdateClientSelfDto } from '../clients/dto/update-client-self.dto';
 import { CreateExecutionLogDto } from '../workouts/dto/create-execution-log.dto';
+import { CreateMessageDto } from '../messages/dto/create-message.dto';
 
 @Controller('client')
 @Roles(Role.client)
@@ -85,5 +87,15 @@ export class ClientAppController {
   @Post('accept-privacy-terms')
   async acceptPrivacyTerms(@CurrentUser() user: AuthenticatedUser): Promise<void> {
     await this.clientAppService.acceptPrivacyTerms(user.id);
+  }
+
+  @Get('messages')
+  getMessages(@CurrentUser() user: AuthenticatedUser, @Req() req: Request) {
+    return this.clientAppService.getMessages(user.id, { ipAddress: req.ip });
+  }
+
+  @Post('messages')
+  sendMessage(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateMessageDto, @Req() req: Request) {
+    return this.clientAppService.sendMessage(user.id, dto.body, { ipAddress: req.ip });
   }
 }
