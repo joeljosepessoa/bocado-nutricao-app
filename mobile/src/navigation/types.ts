@@ -22,4 +22,5 @@ export type RootStackParamList = {
   NotificationPreferences: undefined;
   Messages: undefined;
   Appointments: undefined;
+  Privacy: undefined;
 };

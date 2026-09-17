@@ -25,6 +25,11 @@ model User {
   // AuthService.login) e é sempre acompanhado de revokeAllForUser na
   // suspensão, o mesmo mecanismo já usado pelo reset de senha (Fase 13).
   suspendedAt        DateTime? @map("suspended_at")
+  // Fase 19 — marca que email/fullName/passwordHash foram substituídos por
+  // um placeholder irreversível (exclusão de conta LGPD). A linha em si
+  // nunca é apagada — preserva a integridade referencial das tabelas do
+  // profissional (avaliações, dietas, treinos, etc. continuam existindo).
+  anonymizedAt       DateTime? @map("anonymized_at")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
@@ -169,6 +174,8 @@ model Client {
   messageAuditLogs         MessageAuditLog[]
   appointments             Appointment[]
   appointmentAuditLogs     AppointmentAuditLog[]
+  dataExportRequests       DataExportRequest[]
+  accountDeletionRequest   AccountDeletionRequest?
 
   @@index([professionalId, status])
   @@map("clients")
@@ -1445,4 +1452,42 @@ model AppointmentAuditLog {
   @@index([appointmentId])
   @@index([professionalId, createdAt])
   @@map("appointment_audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 19 — LGPD operacional
+// ---------------------------------------------------------------------------
+
+// Síncrono nesta fase (o volume de dado de um cliente é pequeno — nada
+// como um PDF renderizado) — a linha já nasce "ready", serve de registro
+// de auditoria de quando a exportação aconteceu, não de fila real.
+enum DataExportStatus {
+  ready
+  failed
+}
+
+model DataExportRequest {
+  id          String           @id @default(uuid())
+  clientId    String           @map("client_id")
+  status      DataExportStatus @default(ready)
+  requestedAt DateTime         @default(now()) @map("requested_at")
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  @@index([clientId, requestedAt])
+  @@map("data_export_requests")
+}
+
+// Um pedido por cliente (@unique) — a conta só pode ser apagada uma vez.
+// A própria linha já é o registro de auditoria (quem/quando) — mesmo
+// raciocínio de NotificationLog (Fase 16): sem conteúdo sensível, não
+// precisa de uma *AuditLog separada.
+model AccountDeletionRequest {
+  id          String   @id @default(uuid())
+  clientId    String   @unique @map("client_id")
+  requestedAt DateTime @default(now()) @map("requested_at")
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  @@map("account_deletion_requests")
 }

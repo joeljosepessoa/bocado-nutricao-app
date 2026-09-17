@@ -4,6 +4,7 @@ import type {
   Appointment,
   AuthTokenPair,
   AvailabilitySlot,
+  ClientDataExport,
   ClientSelf,
   CreateExecutionLogInput,
   DeviceConnection,
@@ -217,4 +218,17 @@ export async function getAppointments(): Promise<Appointment[]> {
 export async function cancelAppointment(id: string): Promise<Appointment> {
   const res = await apiClient.post<Appointment>(`/client/appointments/${id}/cancel`);
   return res.data;
+}
+
+// ---------------------------------------------------------------------------
+// Fase 19 — LGPD operacional
+// ---------------------------------------------------------------------------
+
+export async function exportMyData(): Promise<ClientDataExport> {
+  const res = await apiClient.post<ClientDataExport>('/client/data-export');
+  return res.data;
+}
+
+export async function deleteMyAccount(currentPassword: string): Promise<void> {
+  await apiClient.post('/client/account-deletion', { currentPassword });
 }

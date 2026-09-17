@@ -61,6 +61,7 @@ export function ProfileScreen() {
       <Button title="Mensagens" variant="secondary" onPress={() => navigation.navigate('Messages')} />
       <Button title="Relatórios" variant="secondary" onPress={() => navigation.navigate('Reports')} />
       <Button title="Notificações" variant="secondary" onPress={() => navigation.navigate('NotificationPreferences')} />
+      <Button title="Privacidade e dados" variant="secondary" onPress={() => navigation.navigate('Privacy')} />
       <Button title="Sair" variant="danger" onPress={() => logout()} />
     </ScreenContainer>
   );

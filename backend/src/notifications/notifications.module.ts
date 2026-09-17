@@ -15,6 +15,6 @@ import { ConsoleNotificationService } from './console-notification.service';
     ConsoleNotificationService,
     { provide: NotificationService, useExisting: ConsoleNotificationService },
   ],
-  exports: [NotificationDispatchService],
+  exports: [NotificationDispatchService, NotificationPreferencesService],
 })
 export class NotificationsModule {}

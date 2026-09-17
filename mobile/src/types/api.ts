@@ -306,3 +306,17 @@ export interface Appointment {
   cancelledAt: string | null;
   createdAt: string;
 }
+
+// ---------------------------------------------------------------------------
+// Fase 19 — LGPD operacional
+// ---------------------------------------------------------------------------
+
+// Formato solto de propósito: é um bundle de vários domínios já tipados em
+// outro lugar (perfil, avaliações, dieta, treino, relatórios, mensagens,
+// consultas, dispositivos, preferências) — só serializado como texto para
+// compartilhar via Share, nunca renderizado campo a campo na tela.
+export interface ClientDataExport {
+  requestId: string;
+  exportedAt: string;
+  [key: string]: unknown;
+}

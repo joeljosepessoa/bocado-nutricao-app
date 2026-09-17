@@ -13,6 +13,7 @@ import { MessagesService, RequestMeta } from '../messages/messages.service';
 import { AvailabilityService } from '../appointments/availability.service';
 import { AppointmentsService } from '../appointments/appointments.service';
 import { CreateAppointmentDto } from '../appointments/dto/create-appointment.dto';
+import { LgpdService } from '../lgpd/lgpd.service';
 
 @Injectable()
 export class ClientAppService {
@@ -26,6 +27,7 @@ export class ClientAppService {
     private readonly messagesService: MessagesService,
     private readonly availabilityService: AvailabilityService,
     private readonly appointmentsService: AppointmentsService,
+    private readonly lgpdService: LgpdService,
   ) {}
 
   me(clientId: string) {
@@ -97,5 +99,13 @@ export class ClientAppService {
 
   cancelAppointment(clientId: string, appointmentId: string, meta: RequestMeta = {}) {
     return this.appointmentsService.cancelForClient(clientId, appointmentId, meta);
+  }
+
+  exportData(clientId: string) {
+    return this.lgpdService.exportClientData(clientId);
+  }
+
+  deleteAccount(clientId: string, currentPassword: string) {
+    return this.lgpdService.deleteAccount(clientId, currentPassword);
   }
 }

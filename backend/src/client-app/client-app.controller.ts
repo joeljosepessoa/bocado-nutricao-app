@@ -9,6 +9,7 @@ import { UpdateClientSelfDto } from '../clients/dto/update-client-self.dto';
 import { CreateExecutionLogDto } from '../workouts/dto/create-execution-log.dto';
 import { CreateMessageDto } from '../messages/dto/create-message.dto';
 import { CreateAppointmentDto } from '../appointments/dto/create-appointment.dto';
+import { DeleteAccountDto } from '../lgpd/dto/delete-account.dto';
 
 @Controller('client')
 @Roles(Role.client)
@@ -119,5 +120,16 @@ export class ClientAppController {
   @Post('appointments/:id/cancel')
   cancelAppointment(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Req() req: Request) {
     return this.clientAppService.cancelAppointment(user.id, id, { ipAddress: req.ip });
+  }
+
+  @Post('data-export')
+  exportData(@CurrentUser() user: AuthenticatedUser) {
+    return this.clientAppService.exportData(user.id);
+  }
+
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Post('account-deletion')
+  async deleteAccount(@CurrentUser() user: AuthenticatedUser, @Body() dto: DeleteAccountDto): Promise<void> {
+    await this.clientAppService.deleteAccount(user.id, dto.currentPassword);
   }
 }

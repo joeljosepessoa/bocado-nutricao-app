@@ -11,6 +11,7 @@ import { ConnectDeviceScreen } from '../screens/ConnectDeviceScreen';
 import { NotificationPreferencesScreen } from '../screens/NotificationPreferencesScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
 import { AppointmentsScreen } from '../screens/AppointmentsScreen';
+import { PrivacyScreen } from '../screens/PrivacyScreen';
 import { MainTabs } from './MainTabs';
 import type { RootStackParamList } from './types';
 import { flushExecutionLogQueue } from '../offline/sync';
@@ -75,6 +76,7 @@ export function RootNavigator() {
       />
       <Stack.Screen name="Messages" component={MessagesScreen} options={{ title: 'Mensagens' }} />
       <Stack.Screen name="Appointments" component={AppointmentsScreen} options={{ title: 'Consultas' }} />
+      <Stack.Screen name="Privacy" component={PrivacyScreen} options={{ title: 'Privacidade e dados' }} />
     </Stack.Navigator>
   );
 }
