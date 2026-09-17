@@ -33,26 +33,26 @@ model User {
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
-  professional  Professional?
-  client        Client?
-  refreshTokens RefreshToken[]
+  professional        Professional?
+  client              Client?
+  refreshTokens       RefreshToken[]
   passwordResetTokens PasswordResetToken[]
-  adminAuditLogs AdminAuditLog[]
+  adminAuditLogs      AdminAuditLog[]
 
   @@map("users")
 }
 
 model RefreshToken {
-  id         String    @id @default(uuid())
-  userId     String    @map("user_id")
-  familyId   String    @map("family_id")
-  tokenHash  String    @unique @map("token_hash")
-  issuedAt   DateTime  @default(now()) @map("issued_at")
-  expiresAt  DateTime  @map("expires_at")
-  usedAt     DateTime? @map("used_at")
-  revokedAt  DateTime? @map("revoked_at")
-  userAgent  String?   @map("user_agent")
-  ipAddress  String?   @map("ip_address")
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  familyId  String    @map("family_id")
+  tokenHash String    @unique @map("token_hash")
+  issuedAt  DateTime  @default(now()) @map("issued_at")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  revokedAt DateTime? @map("revoked_at")
+  userAgent String?   @map("user_agent")
+  ipAddress String?   @map("ip_address")
 
   user User @relation(fields: [userId], references: [id])
 
@@ -81,44 +81,49 @@ model PasswordResetToken {
 }
 
 model Professional {
-  id                     String  @id
-  professionalRegister   String? @map("professional_register")
+  id                   String    @id
+  professionalRegister String?   @map("professional_register")
   // Fase 12: consentimento próprio, separado do do cliente — autoriza só
   // o uso da ferramenta de IA pelo profissional, nunca o processamento do
   // dado de um cliente específico (isso é Client.aiDataProcessingConsentAt).
-  aiFeaturesConsentAt    DateTime? @map("ai_features_consent_at")
+  aiFeaturesConsentAt  DateTime? @map("ai_features_consent_at")
 
-  user             User                 @relation(fields: [id], references: [id])
-  clients          Client[]
-  evaluations      PhysicalEvaluation[]
-  auditLogs        EvaluationAuditLog[]
-  createdFoods       Food[]               @relation("FoodCreatedBy")
-  privateFoods       Food[]               @relation("FoodOwner")
-  foodSubstitutions  FoodSubstitution[]
-  diets              Diet[]
-  dietAuditLogs      DietAuditLog[]
-  createdExercises   Exercise[]           @relation("ExerciseCreatedBy")
-  privateExercises   Exercise[]           @relation("ExerciseOwner")
-  workouts           Workout[]
-  workoutAuditLogs   WorkoutAuditLog[]
-  workoutExecutionLogs WorkoutExecutionLog[]
-  reports            Report[]
-  reportAuditLogs    ReportAuditLog[]
-  scaleReadings      ScaleReading[]
-  scaleAuditLogs     ScaleAuditLog[]
-  deviceAuditLogs    DeviceAuditLog[]
-  aiInteractionLogs  AiInteractionLog[]
-  aiAuditLogs        AiAuditLog[]
-  deviceTokens             DeviceToken[]
-  notificationPreferences  NotificationPreference[]
-  notificationLogs         NotificationLog[]
-  messageThreads           MessageThread[]
-  messageAuditLogs         MessageAuditLog[]
-  availabilitySlots        AvailabilitySlot[]
-  appointments             Appointment[]
-  appointmentAuditLogs     AppointmentAuditLog[]
-  subscription             Subscription?
-  billingAuditLogs         BillingAuditLog[]
+  user                    User                     @relation(fields: [id], references: [id])
+  clients                 Client[]
+  evaluations             PhysicalEvaluation[]
+  auditLogs               EvaluationAuditLog[]
+  createdFoods            Food[]                   @relation("FoodCreatedBy")
+  privateFoods            Food[]                   @relation("FoodOwner")
+  foodSubstitutions       FoodSubstitution[]
+  diets                   Diet[]
+  dietAuditLogs           DietAuditLog[]
+  createdExercises        Exercise[]               @relation("ExerciseCreatedBy")
+  privateExercises        Exercise[]               @relation("ExerciseOwner")
+  workouts                Workout[]
+  workoutAuditLogs        WorkoutAuditLog[]
+  workoutExecutionLogs    WorkoutExecutionLog[]
+  reports                 Report[]
+  reportAuditLogs         ReportAuditLog[]
+  scaleReadings           ScaleReading[]
+  scaleAuditLogs          ScaleAuditLog[]
+  deviceAuditLogs         DeviceAuditLog[]
+  aiInteractionLogs       AiInteractionLog[]
+  aiAuditLogs             AiAuditLog[]
+  deviceTokens            DeviceToken[]
+  notificationPreferences NotificationPreference[]
+  notificationLogs        NotificationLog[]
+  messageThreads          MessageThread[]
+  messageAuditLogs        MessageAuditLog[]
+  availabilitySlots       AvailabilitySlot[]
+  appointments            Appointment[]
+  appointmentAuditLogs    AppointmentAuditLog[]
+  subscription            Subscription?
+  billingAuditLogs        BillingAuditLog[]
+  professionalProducts    ProfessionalProduct[]
+  paymentLinks            PaymentLink[]
+  clientSubscriptions     ClientSubscription[]
+  clientInvoices          ClientInvoice[]
+  clientBillingAuditLogs  ClientBillingAuditLog[]
 
   @@map("professionals")
 }
@@ -130,54 +135,58 @@ enum ClientStatus {
 }
 
 model Client {
-  id             String       @id
-  professionalId String       @map("professional_id")
-  birthDate      DateTime?    @map("birth_date")
-  phone          String?
-  gender         String?
-  notes          String?      @db.Text
-  status         ClientStatus @default(active)
-  archivedAt     DateTime?    @map("archived_at")
+  id                        String       @id
+  professionalId            String       @map("professional_id")
+  birthDate                 DateTime?    @map("birth_date")
+  phone                     String?
+  gender                    String?
+  notes                     String?      @db.Text
+  status                    ClientStatus @default(active)
+  archivedAt                DateTime?    @map("archived_at")
   // Fase 11: consentimento específico para coleta de dados de dispositivos/
   // wearables — deliberadamente separado de User.privacyAcceptedAt (esse
   // cobre só dieta/treino/evolução; coleta contínua de terceiros exige
   // finalidade própria, LGPD).
-  deviceDataConsentAt DateTime?    @map("device_data_consent_at")
+  deviceDataConsentAt       DateTime?    @map("device_data_consent_at")
   // Fase 12: consentimento específico para o PRÓPRIO dado do cliente ser
   // processado por IA — nunca implícito em privacyAcceptedAt nem em
   // deviceDataConsentAt (finalidades diferentes, LGPD exige consentimento
   // por finalidade). Independente de Professional.aiFeaturesConsentAt.
-  aiDataProcessingConsentAt DateTime? @map("ai_data_processing_consent_at")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at")
+  aiDataProcessingConsentAt DateTime?    @map("ai_data_processing_consent_at")
+  createdAt                 DateTime     @default(now()) @map("created_at")
+  updatedAt                 DateTime     @default(now()) @updatedAt @map("updated_at")
 
-  user               User                  @relation(fields: [id], references: [id])
-  professional       Professional          @relation(fields: [professionalId], references: [id])
-  evaluations        PhysicalEvaluation[]
-  auditLogs          EvaluationAuditLog[]
-  diets              Diet[]
-  dietAuditLogs      DietAuditLog[]
-  workouts           Workout[]
-  workoutAuditLogs   WorkoutAuditLog[]
-  workoutExecutionLogs WorkoutExecutionLog[]
-  reports            Report[]
-  reportAuditLogs    ReportAuditLog[]
-  scaleReadings      ScaleReading[]
-  scaleAuditLogs     ScaleAuditLog[]
-  deviceConnections  DeviceConnection[]
-  deviceMetricSamples DeviceMetricSample[]
-  deviceAuditLogs    DeviceAuditLog[]
-  aiInteractionLogs  AiInteractionLog[]
-  aiAuditLogs        AiAuditLog[]
-  deviceTokens             DeviceToken[]
-  notificationPreferences  NotificationPreference[]
-  notificationLogs         NotificationLog[]
-  messageThreads           MessageThread[]
-  messageAuditLogs         MessageAuditLog[]
-  appointments             Appointment[]
-  appointmentAuditLogs     AppointmentAuditLog[]
-  dataExportRequests       DataExportRequest[]
-  accountDeletionRequest   AccountDeletionRequest?
+  user                    User                     @relation(fields: [id], references: [id])
+  professional            Professional             @relation(fields: [professionalId], references: [id])
+  evaluations             PhysicalEvaluation[]
+  auditLogs               EvaluationAuditLog[]
+  diets                   Diet[]
+  dietAuditLogs           DietAuditLog[]
+  workouts                Workout[]
+  workoutAuditLogs        WorkoutAuditLog[]
+  workoutExecutionLogs    WorkoutExecutionLog[]
+  reports                 Report[]
+  reportAuditLogs         ReportAuditLog[]
+  scaleReadings           ScaleReading[]
+  scaleAuditLogs          ScaleAuditLog[]
+  deviceConnections       DeviceConnection[]
+  deviceMetricSamples     DeviceMetricSample[]
+  deviceAuditLogs         DeviceAuditLog[]
+  aiInteractionLogs       AiInteractionLog[]
+  aiAuditLogs             AiAuditLog[]
+  deviceTokens            DeviceToken[]
+  notificationPreferences NotificationPreference[]
+  notificationLogs        NotificationLog[]
+  messageThreads          MessageThread[]
+  messageAuditLogs        MessageAuditLog[]
+  appointments            Appointment[]
+  appointmentAuditLogs    AppointmentAuditLog[]
+  dataExportRequests      DataExportRequest[]
+  accountDeletionRequest  AccountDeletionRequest?
+  paymentLinks            PaymentLink[]
+  clientSubscriptions     ClientSubscription[]
+  clientInvoices          ClientInvoice[]
+  clientBillingAuditLogs  ClientBillingAuditLog[]
 
   @@index([professionalId, status])
   @@map("clients")
@@ -223,18 +232,18 @@ enum EvaluationAuditAction {
 }
 
 model Protocol {
-  id                     String    @id @default(uuid())
-  code                   String    @unique
+  id                     String   @id @default(uuid())
+  code                   String   @unique
   name                   String
-  description            String    @db.Text
-  requiredSkinfoldSites  String[]  @map("required_skinfold_sites")
-  sexSpecific            Boolean   @default(false) @map("sex_specific")
+  description            String   @db.Text
+  requiredSkinfoldSites  String[] @map("required_skinfold_sites")
+  sexSpecific            Boolean  @default(false) @map("sex_specific")
   version                Int
-  supersededByProtocolId String?   @map("superseded_by_protocol_id")
-  createdAt              DateTime  @default(now()) @map("created_at")
+  supersededByProtocolId String?  @map("superseded_by_protocol_id")
+  createdAt              DateTime @default(now()) @map("created_at")
 
-  supersededBy Protocol?  @relation("ProtocolVersion", fields: [supersededByProtocolId], references: [id])
-  supersedes   Protocol[] @relation("ProtocolVersion")
+  supersededBy Protocol?            @relation("ProtocolVersion", fields: [supersededByProtocolId], references: [id])
+  supersedes   Protocol[]           @relation("ProtocolVersion")
   evaluations  PhysicalEvaluation[]
 
   @@map("protocols")
@@ -245,7 +254,7 @@ model PhysicalEvaluation {
   clientId                    String                   @map("client_id")
   professionalId              String                   @map("professional_id")
   evaluatedAt                 DateTime                 @map("evaluated_at")
-  ageAtEvaluation              Int?                     @map("age_at_evaluation")
+  ageAtEvaluation             Int?                     @map("age_at_evaluation")
   biologicalSexForCalculation EvaluationBiologicalSex? @map("biological_sex_for_calculation")
   heightCm                    Float                    @map("height_cm")
   weightKg                    Float?                   @map("weight_kg")
@@ -259,9 +268,9 @@ model PhysicalEvaluation {
   createdAt                   DateTime                 @default(now()) @map("created_at")
   updatedAt                   DateTime                 @default(now()) @updatedAt @map("updated_at")
 
-  client       Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
-  professional Professional  @relation(fields: [professionalId], references: [id], onDelete: Restrict)
-  protocol     Protocol?     @relation(fields: [protocolId], references: [id])
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  protocol     Protocol?    @relation(fields: [protocolId], references: [id])
 
   measurements      Measurements?
   skinfolds         Skinfolds?
@@ -279,21 +288,21 @@ model PhysicalEvaluation {
 }
 
 model Measurements {
-  id             String  @id @default(uuid())
-  evaluationId   String  @unique @map("evaluation_id")
-  chestCm        Float?  @map("chest_cm")
-  waistCm        Float?  @map("waist_cm")
-  abdomenCm      Float?  @map("abdomen_cm")
-  hipCm          Float?  @map("hip_cm")
-  armRightCm     Float?  @map("arm_right_cm")
-  armLeftCm      Float?  @map("arm_left_cm")
-  forearmRightCm Float?  @map("forearm_right_cm")
-  forearmLeftCm  Float?  @map("forearm_left_cm")
-  thighRightCm   Float?  @map("thigh_right_cm")
-  thighLeftCm    Float?  @map("thigh_left_cm")
-  calfRightCm    Float?  @map("calf_right_cm")
-  calfLeftCm     Float?  @map("calf_left_cm")
-  wristCm        Float?  @map("wrist_cm")
+  id                String @id @default(uuid())
+  evaluationId      String @unique @map("evaluation_id")
+  chestCm           Float? @map("chest_cm")
+  waistCm           Float? @map("waist_cm")
+  abdomenCm         Float? @map("abdomen_cm")
+  hipCm             Float? @map("hip_cm")
+  armRightCm        Float? @map("arm_right_cm")
+  armLeftCm         Float? @map("arm_left_cm")
+  forearmRightCm    Float? @map("forearm_right_cm")
+  forearmLeftCm     Float? @map("forearm_left_cm")
+  thighRightCm      Float? @map("thigh_right_cm")
+  thighLeftCm       Float? @map("thigh_left_cm")
+  calfRightCm       Float? @map("calf_right_cm")
+  calfLeftCm        Float? @map("calf_left_cm")
+  wristCm           Float? @map("wrist_cm")
   femurBicondylarCm Float? @map("femur_bicondylar_cm")
 
   evaluation PhysicalEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Restrict)
@@ -302,17 +311,17 @@ model Measurements {
 }
 
 model Skinfolds {
-  id             String  @id @default(uuid())
-  evaluationId   String  @unique @map("evaluation_id")
-  chestMm        Float?  @map("chest_mm")
-  axillaryMidMm  Float?  @map("axillary_mid_mm")
-  subscapularMm  Float?  @map("subscapular_mm")
-  bicepsMm       Float?  @map("biceps_mm")
-  tricepsMm      Float?  @map("triceps_mm")
-  abdominalMm    Float?  @map("abdominal_mm")
-  suprailiacMm   Float?  @map("suprailiac_mm")
-  thighMm        Float?  @map("thigh_mm")
-  calfMm         Float?  @map("calf_mm")
+  id            String @id @default(uuid())
+  evaluationId  String @unique @map("evaluation_id")
+  chestMm       Float? @map("chest_mm")
+  axillaryMidMm Float? @map("axillary_mid_mm")
+  subscapularMm Float? @map("subscapular_mm")
+  bicepsMm      Float? @map("biceps_mm")
+  tricepsMm     Float? @map("triceps_mm")
+  abdominalMm   Float? @map("abdominal_mm")
+  suprailiacMm  Float? @map("suprailiac_mm")
+  thighMm       Float? @map("thigh_mm")
+  calfMm        Float? @map("calf_mm")
 
   evaluation PhysicalEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Restrict)
 
@@ -444,32 +453,32 @@ enum DietAuditAction {
 }
 
 model Food {
-  id                     String    @id @default(uuid())
-  name                   String
-  scope                  FoodScope @default(global)
-  ownerProfessionalId    String?   @map("owner_professional_id") // só quando scope = private
-  baseUnit               NutritionUnit @map("base_unit") // g ou ml, validado no DTO
-  kcalPer100             Float     @map("kcal_per_100")
-  proteinGPer100         Float     @map("protein_g_per_100")
-  carbGPer100            Float     @map("carb_g_per_100")
-  fatGPer100             Float     @map("fat_g_per_100")
-  fiberGPer100           Float?    @map("fiber_g_per_100")
-  source                 String    @default("manual")
+  id                      String        @id @default(uuid())
+  name                    String
+  scope                   FoodScope     @default(global)
+  ownerProfessionalId     String?       @map("owner_professional_id") // só quando scope = private
+  baseUnit                NutritionUnit @map("base_unit") // g ou ml, validado no DTO
+  kcalPer100              Float         @map("kcal_per_100")
+  proteinGPer100          Float         @map("protein_g_per_100")
+  carbGPer100             Float         @map("carb_g_per_100")
+  fatGPer100              Float         @map("fat_g_per_100")
+  fiberGPer100            Float?        @map("fiber_g_per_100")
+  source                  String        @default("manual")
   // Fase 15 — null = pendente de moderação (só o próprio criador enxerga,
   // ver visibilityFilter em foods.service.ts). Preenchido = visível a todos.
   // Migration faz backfill retroativo em todo Food global já existente.
-  approvedAt             DateTime? @map("approved_at")
-  createdByProfessionalId String   @map("created_by_professional_id")
-  createdAt              DateTime  @default(now()) @map("created_at")
-  updatedAt              DateTime  @default(now()) @updatedAt @map("updated_at")
+  approvedAt              DateTime?     @map("approved_at")
+  createdByProfessionalId String        @map("created_by_professional_id")
+  createdAt               DateTime      @default(now()) @map("created_at")
+  updatedAt               DateTime      @default(now()) @updatedAt @map("updated_at")
 
   owner     Professional? @relation("FoodOwner", fields: [ownerProfessionalId], references: [id], onDelete: Restrict)
   createdBy Professional  @relation("FoodCreatedBy", fields: [createdByProfessionalId], references: [id], onDelete: Restrict)
 
-  unitConversions            FoodUnitConversion[]
-  mealFoods                  MealFood[]
-  substitutionsAsOriginal    FoodSubstitution[]   @relation("OriginalFood")
-  substitutionsAsSubstitute  FoodSubstitution[]   @relation("SubstituteFood")
+  unitConversions           FoodUnitConversion[]
+  mealFoods                 MealFood[]
+  substitutionsAsOriginal   FoodSubstitution[]   @relation("OriginalFood")
+  substitutionsAsSubstitute FoodSubstitution[]   @relation("SubstituteFood")
 
   @@index([name])
   @@index([scope, ownerProfessionalId])
@@ -502,9 +511,9 @@ model FoodSubstitution {
   createdByProfessionalId String        @map("created_by_professional_id")
   createdAt               DateTime      @default(now()) @map("created_at")
 
-  originalFood    Food         @relation("OriginalFood", fields: [originalFoodId], references: [id], onDelete: Restrict)
-  substituteFood  Food         @relation("SubstituteFood", fields: [substituteFoodId], references: [id], onDelete: Restrict)
-  createdBy       Professional @relation(fields: [createdByProfessionalId], references: [id], onDelete: Restrict)
+  originalFood   Food         @relation("OriginalFood", fields: [originalFoodId], references: [id], onDelete: Restrict)
+  substituteFood Food         @relation("SubstituteFood", fields: [substituteFoodId], references: [id], onDelete: Restrict)
+  createdBy      Professional @relation(fields: [createdByProfessionalId], references: [id], onDelete: Restrict)
 
   @@index([originalFoodId])
   @@map("food_substitutions")
@@ -518,8 +527,8 @@ model Diet {
   createdAt      DateTime   @default(now()) @map("created_at")
   updatedAt      DateTime   @default(now()) @updatedAt @map("updated_at")
 
-  client       Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
-  professional Professional  @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  client       Client         @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  professional Professional   @relation(fields: [professionalId], references: [id], onDelete: Restrict)
   versions     DietVersion[]
   auditLogs    DietAuditLog[]
 
@@ -529,23 +538,23 @@ model Diet {
 }
 
 model DietVersion {
-  id                      String             @id @default(uuid())
-  dietId                  String             @map("diet_id")
-  versionNumber           Int                @map("version_number")
-  status                  DietVersionStatus  @default(draft)
-  startDate               DateTime?          @map("start_date")
-  endDate                 DateTime?          @map("end_date")
-  notes                   String?            @db.Text
+  id                      String            @id @default(uuid())
+  dietId                  String            @map("diet_id")
+  versionNumber           Int               @map("version_number")
+  status                  DietVersionStatus @default(draft)
+  startDate               DateTime?         @map("start_date")
+  endDate                 DateTime?         @map("end_date")
+  notes                   String?           @db.Text
   objective               String?
-  targetCalories          Float?             @map("target_calories")
-  targetProteinG          Float?             @map("target_protein_g")
-  targetCarbG             Float?             @map("target_carb_g")
-  targetFatG              Float?             @map("target_fat_g")
-  createdByProfessionalId String             @map("created_by_professional_id")
-  publishedAt             DateTime?          @map("published_at")
-  supersededAt            DateTime?          @map("superseded_at")
-  createdAt               DateTime           @default(now()) @map("created_at")
-  updatedAt               DateTime           @default(now()) @updatedAt @map("updated_at")
+  targetCalories          Float?            @map("target_calories")
+  targetProteinG          Float?            @map("target_protein_g")
+  targetCarbG             Float?            @map("target_carb_g")
+  targetFatG              Float?            @map("target_fat_g")
+  createdByProfessionalId String            @map("created_by_professional_id")
+  publishedAt             DateTime?         @map("published_at")
+  supersededAt            DateTime?         @map("superseded_at")
+  createdAt               DateTime          @default(now()) @map("created_at")
+  updatedAt               DateTime          @default(now()) @updatedAt @map("updated_at")
 
   diet      Diet           @relation(fields: [dietId], references: [id], onDelete: Restrict)
   meals     Meal[]
@@ -557,8 +566,8 @@ model DietVersion {
 }
 
 model Meal {
-  id            String   @id @default(uuid())
-  dietVersionId String   @map("diet_version_id")
+  id            String  @id @default(uuid())
+  dietVersionId String  @map("diet_version_id")
   name          String
   order         Int
   time          String?
@@ -594,14 +603,14 @@ model MealFood {
 }
 
 model DietAuditLog {
-  id             String           @id @default(uuid())
-  professionalId String           @map("professional_id")
-  clientId       String           @map("client_id")
-  dietId         String           @map("diet_id")
-  dietVersionId  String?          @map("diet_version_id")
+  id             String          @id @default(uuid())
+  professionalId String          @map("professional_id")
+  clientId       String          @map("client_id")
+  dietId         String          @map("diet_id")
+  dietVersionId  String?         @map("diet_version_id")
   action         DietAuditAction
-  ipAddress      String?          @map("ip_address")
-  createdAt      DateTime         @default(now()) @map("created_at")
+  ipAddress      String?         @map("ip_address")
+  createdAt      DateTime        @default(now()) @map("created_at")
 
   professional Professional @relation(fields: [professionalId], references: [id], onDelete: Restrict)
   client       Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
@@ -719,24 +728,24 @@ model Workout {
 }
 
 model WorkoutVersion {
-  id                      String                @id @default(uuid())
-  workoutId               String                @map("workout_id")
-  versionNumber           Int                   @map("version_number")
-  status                  WorkoutVersionStatus  @default(draft)
-  startDate               DateTime?             @map("start_date")
-  endDate                 DateTime?             @map("end_date")
+  id                      String               @id @default(uuid())
+  workoutId               String               @map("workout_id")
+  versionNumber           Int                  @map("version_number")
+  status                  WorkoutVersionStatus @default(draft)
+  startDate               DateTime?            @map("start_date")
+  endDate                 DateTime?            @map("end_date")
   objective               String?
-  notes                   String?               @db.Text
-  createdByProfessionalId String                @map("created_by_professional_id")
-  publishedAt             DateTime?             @map("published_at")
-  supersededAt            DateTime?             @map("superseded_at")
-  createdAt               DateTime              @default(now()) @map("created_at")
-  updatedAt               DateTime              @default(now()) @updatedAt @map("updated_at")
+  notes                   String?              @db.Text
+  createdByProfessionalId String               @map("created_by_professional_id")
+  publishedAt             DateTime?            @map("published_at")
+  supersededAt            DateTime?            @map("superseded_at")
+  createdAt               DateTime             @default(now()) @map("created_at")
+  updatedAt               DateTime             @default(now()) @updatedAt @map("updated_at")
 
-  workout        Workout               @relation(fields: [workoutId], references: [id], onDelete: Restrict)
-  days           WorkoutDay[]
-  auditLogs      WorkoutAuditLog[]
-  executionLogs  WorkoutExecutionLog[]
+  workout       Workout               @relation(fields: [workoutId], references: [id], onDelete: Restrict)
+  days          WorkoutDay[]
+  auditLogs     WorkoutAuditLog[]
+  executionLogs WorkoutExecutionLog[]
 
   @@unique([workoutId, versionNumber])
   @@index([workoutId, status])
@@ -744,11 +753,11 @@ model WorkoutVersion {
 }
 
 model WorkoutDay {
-  id              String   @id @default(uuid())
+  id               String  @id @default(uuid())
   workoutVersionId String  @map("workout_version_id")
-  name            String
-  order           Int
-  notes           String?
+  name             String
+  order            Int
+  notes            String?
 
   workoutVersion WorkoutVersion        @relation(fields: [workoutVersionId], references: [id], onDelete: Restrict)
   exercises      WorkoutExercise[]
@@ -765,10 +774,10 @@ model WorkoutExercise {
   order        Int
   notes        String?
 
-  workoutDay      WorkoutDay            @relation(fields: [workoutDayId], references: [id], onDelete: Restrict)
-  exercise        Exercise              @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
-  sets            WorkoutSet[]
-  executionSets   WorkoutExecutionSet[]
+  workoutDay    WorkoutDay            @relation(fields: [workoutDayId], references: [id], onDelete: Restrict)
+  exercise      Exercise              @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+  sets          WorkoutSet[]
+  executionSets WorkoutExecutionSet[]
 
   @@index([workoutDayId, order])
   @@map("workout_exercises")
@@ -794,14 +803,14 @@ model WorkoutSet {
 }
 
 model WorkoutExecutionLog {
-  id                     String    @id @default(uuid())
-  clientId               String    @map("client_id")
-  workoutDayId           String    @map("workout_day_id")
-  workoutVersionId       String    @map("workout_version_id")
-  loggedByProfessionalId String?   @map("logged_by_professional_id")
-  performedAt            DateTime  @map("performed_at")
+  id                     String   @id @default(uuid())
+  clientId               String   @map("client_id")
+  workoutDayId           String   @map("workout_day_id")
+  workoutVersionId       String   @map("workout_version_id")
+  loggedByProfessionalId String?  @map("logged_by_professional_id")
+  performedAt            DateTime @map("performed_at")
   notes                  String?
-  createdAt              DateTime  @default(now()) @map("created_at")
+  createdAt              DateTime @default(now()) @map("created_at")
 
   client         Client                @relation(fields: [clientId], references: [id], onDelete: Restrict)
   workoutDay     WorkoutDay            @relation(fields: [workoutDayId], references: [id], onDelete: Restrict)
@@ -835,14 +844,14 @@ model WorkoutExecutionSet {
 }
 
 model WorkoutAuditLog {
-  id                String              @id @default(uuid())
-  professionalId    String              @map("professional_id")
-  clientId          String              @map("client_id")
-  workoutId         String              @map("workout_id")
-  workoutVersionId  String?             @map("workout_version_id")
-  action            WorkoutAuditAction
-  ipAddress         String?             @map("ip_address")
-  createdAt         DateTime            @default(now()) @map("created_at")
+  id               String             @id @default(uuid())
+  professionalId   String             @map("professional_id")
+  clientId         String             @map("client_id")
+  workoutId        String             @map("workout_id")
+  workoutVersionId String?            @map("workout_version_id")
+  action           WorkoutAuditAction
+  ipAddress        String?            @map("ip_address")
+  createdAt        DateTime           @default(now()) @map("created_at")
 
   professional   Professional    @relation(fields: [professionalId], references: [id], onDelete: Restrict)
   client         Client          @relation(fields: [clientId], references: [id], onDelete: Restrict)
@@ -860,14 +869,14 @@ model WorkoutAuditLog {
 
 enum ReportAudience {
   professional // PDF técnico completo — nunca visível ao cliente
-  client       // PDF restrito — mesmo allowlist de PhysicalEvaluationClientSummaryDto (Fase 8)
+  client // PDF restrito — mesmo allowlist de PhysicalEvaluationClientSummaryDto (Fase 8)
 }
 
 enum ReportStatus {
-  queued     // linha criada, geração ainda não rodou
+  queued // linha criada, geração ainda não rodou
   generating // Puppeteer em execução
-  ready      // storageKey preenchido, PDF disponível
-  failed     // ver failureReason
+  ready // storageKey preenchido, PDF disponível
+  failed // ver failureReason
 }
 
 enum ReportAuditAction {
@@ -964,13 +973,13 @@ enum ScaleAuditAction {
 }
 
 model ScaleAuditLog {
-  id             String            @id @default(uuid())
-  professionalId String            @map("professional_id")
-  clientId       String            @map("client_id")
-  evaluationId   String?           @map("evaluation_id")
+  id             String           @id @default(uuid())
+  professionalId String           @map("professional_id")
+  clientId       String           @map("client_id")
+  evaluationId   String?          @map("evaluation_id")
   action         ScaleAuditAction
-  ipAddress      String?           @map("ip_address")
-  createdAt      DateTime          @default(now()) @map("created_at")
+  ipAddress      String?          @map("ip_address")
+  createdAt      DateTime         @default(now()) @map("created_at")
 
   professional Professional        @relation(fields: [professionalId], references: [id], onDelete: Restrict)
   client       Client              @relation(fields: [clientId], references: [id], onDelete: Restrict)
@@ -1016,21 +1025,21 @@ enum DeviceMetricType {
 }
 
 model DeviceConnection {
-  id                     String                  @id @default(uuid())
-  clientId               String                  @map("client_id")
-  sourceType             DeviceSourceType        @map("source_type")
-  driverId               String?                 @map("driver_id") // só ble_direct — id no WearableDriverRegistry
-  deviceIdentifier       String?                 @map("device_identifier")
-  externalAccountId      String?                 @map("external_account_id") // reservado — só manufacturer_api
-  status                 DeviceConnectionStatus  @default(active)
-  sharedWithProfessional Boolean                 @default(false) @map("shared_with_professional")
-  lastSyncedAt           DateTime?               @map("last_synced_at")
-  lastSyncCursor         String?                 @map("last_sync_cursor")
-  connectedAt            DateTime                @default(now()) @map("connected_at")
-  revokedAt              DateTime?               @map("revoked_at")
+  id                     String                 @id @default(uuid())
+  clientId               String                 @map("client_id")
+  sourceType             DeviceSourceType       @map("source_type")
+  driverId               String?                @map("driver_id") // só ble_direct — id no WearableDriverRegistry
+  deviceIdentifier       String?                @map("device_identifier")
+  externalAccountId      String?                @map("external_account_id") // reservado — só manufacturer_api
+  status                 DeviceConnectionStatus @default(active)
+  sharedWithProfessional Boolean                @default(false) @map("shared_with_professional")
+  lastSyncedAt           DateTime?              @map("last_synced_at")
+  lastSyncCursor         String?                @map("last_sync_cursor")
+  connectedAt            DateTime               @default(now()) @map("connected_at")
+  revokedAt              DateTime?              @map("revoked_at")
 
-  client  Client               @relation(fields: [clientId], references: [id], onDelete: Restrict)
-  samples DeviceMetricSample[]
+  client    Client               @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  samples   DeviceMetricSample[]
   auditLogs DeviceAuditLog[]
 
   @@index([clientId, status])
@@ -1125,20 +1134,20 @@ enum AiAuditAction {
 // guarda o que foi enviado/recebido porque, sem isso, não é possível
 // prestar contas do que um processador de IA recebeu. Nunca secret/token.
 model AiInteractionLog {
-  id             String               @id @default(uuid())
-  professionalId String               @map("professional_id")
-  clientId       String?              @map("client_id")
+  id             String              @id @default(uuid())
+  professionalId String              @map("professional_id")
+  clientId       String?             @map("client_id")
   feature        AiFeatureKey
   provider       String
   model          String
-  promptVersion  String               @map("prompt_version")
-  contextRef     String?              @map("context_ref") // ex.: evaluationId, quando aplicável
+  promptVersion  String              @map("prompt_version")
+  contextRef     String?             @map("context_ref") // ex.: evaluationId, quando aplicável
   status         AiInteractionStatus
-  systemPrompt   String               @map("system_prompt") @db.Text
-  contextSummary Json                 @map("context_summary")
-  responseText   String?              @map("response_text") @db.Text
-  errorMessage   String?              @map("error_message")
-  createdAt      DateTime             @default(now()) @map("created_at")
+  systemPrompt   String              @map("system_prompt") @db.Text
+  contextSummary Json                @map("context_summary")
+  responseText   String?             @map("response_text") @db.Text
+  errorMessage   String?             @map("error_message")
+  createdAt      DateTime            @default(now()) @map("created_at")
 
   professional Professional @relation(fields: [professionalId], references: [id], onDelete: Restrict)
   client       Client?      @relation(fields: [clientId], references: [id], onDelete: Restrict)
@@ -1181,13 +1190,13 @@ enum AdminAuditAction {
 // Tabela de AÇÃO (mesmo papel que ScaleAuditLog/DeviceAuditLog/AiAuditLog) —
 // só quem/o quê/quando, nunca senha, token ou dado sensível.
 model AdminAuditLog {
-  id         String            @id @default(uuid())
-  adminId    String            @map("admin_id")
-  targetType String?           @map("target_type") // 'professional' | 'food' | 'exercise', quando aplicável
-  targetId   String?           @map("target_id")
+  id         String           @id @default(uuid())
+  adminId    String           @map("admin_id")
+  targetType String?          @map("target_type") // 'professional' | 'food' | 'exercise', quando aplicável
+  targetId   String?          @map("target_id")
   action     AdminAuditAction
-  ipAddress  String?           @map("ip_address")
-  createdAt  DateTime          @default(now()) @map("created_at")
+  ipAddress  String?          @map("ip_address")
+  createdAt  DateTime         @default(now()) @map("created_at")
 
   admin User @relation(fields: [adminId], references: [id], onDelete: Restrict)
 
@@ -1217,8 +1226,8 @@ model DeviceToken {
   createdAt      DateTime            @default(now()) @map("created_at")
   revokedAt      DateTime?           @map("revoked_at")
 
-  client       Client?       @relation(fields: [clientId], references: [id], onDelete: Restrict)
-  professional Professional? @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  client       Client?           @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  professional Professional?     @relation(fields: [professionalId], references: [id], onDelete: Restrict)
   logs         NotificationLog[]
 
   @@index([clientId, revokedAt])
@@ -1276,9 +1285,9 @@ model NotificationLog {
   errorMessage   String?               @map("error_message")
   createdAt      DateTime              @default(now()) @map("created_at")
 
-  client       Client?      @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  client       Client?       @relation(fields: [clientId], references: [id], onDelete: Restrict)
   professional Professional? @relation(fields: [professionalId], references: [id], onDelete: Restrict)
-  deviceToken  DeviceToken? @relation(fields: [deviceTokenId], references: [id], onDelete: SetNull)
+  deviceToken  DeviceToken?  @relation(fields: [deviceTokenId], references: [id], onDelete: SetNull)
 
   @@index([clientId, createdAt])
   @@index([professionalId, createdAt])
@@ -1416,9 +1425,9 @@ model Appointment {
   cancelledAt     DateTime?         @map("cancelled_at")
   createdAt       DateTime          @default(now()) @map("created_at")
 
-  client       Client                 @relation(fields: [clientId], references: [id], onDelete: Restrict)
-  professional Professional           @relation(fields: [professionalId], references: [id], onDelete: Restrict)
-  slot         AvailabilitySlot       @relation(fields: [slotId], references: [id], onDelete: Restrict)
+  client       Client                @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  professional Professional          @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  slot         AvailabilitySlot      @relation(fields: [slotId], references: [id], onDelete: Restrict)
   auditLogs    AppointmentAuditLog[]
 
   @@index([slotId])
@@ -1603,4 +1612,220 @@ model BillingAuditLog {
 
   @@index([professionalId, createdAt])
   @@map("billing_audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 23 — Comercial cliente (profissional cobra o próprio cliente)
+// ---------------------------------------------------------------------------
+
+// Deliberadamente um domínio à parte de Plan/Subscription/Invoice/
+// BillingAuditLog (Fase 22): aquele é Bocado→profissional (1:1,
+// Subscription.professionalId é @unique); este é profissional→cliente
+// (1:N — um profissional tem muitos clientes com cobranças independentes
+// e simultâneas). Forçar os dois no mesmo conjunto de tabelas exigiria
+// remover o @unique que hoje garante a corretude do SaaS — decisão de
+// modelagem registrada na Fase 23.1, sem relação nenhuma com Plan/
+// Subscription/Invoice/BillingAuditLog daqui em diante.
+
+// Usado tanto em ProfessionalProduct.billingType quanto em
+// PaymentLink.paymentType (o link é sempre uma cópia do tipo do produto
+// no momento da criação) — mesmo enum nos dois lugares em vez de dois
+// enums idênticos.
+enum BillingType {
+  one_time
+  recurring
+}
+
+enum RecurrenceInterval {
+  month
+  year
+}
+
+// Catálogo do que o profissional vende ao próprio cliente (ex.:
+// "Acompanhamento 3 meses", R$259) — é a fonte de verdade de preço no
+// backend; PaymentLink nunca aceita um valor vindo do frontend, sempre
+// copia priceCents daqui. recurrenceInterval só faz sentido quando
+// billingType = recurring; o Prisma não expressa "obrigatório condicional"
+// declarativamente, então essa regra é garantida no service layer, não
+// pelo schema (documentado na Fase 23.2).
+model ProfessionalProduct {
+  id                 String              @id @default(uuid())
+  professionalId     String              @map("professional_id")
+  name               String
+  description        String?             @db.Text
+  priceCents         Int                 @map("price_cents")
+  billingType        BillingType         @map("billing_type")
+  recurrenceInterval RecurrenceInterval? @map("recurrence_interval")
+  active             Boolean             @default(true)
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @default(now()) @updatedAt @map("updated_at")
+
+  professional Professional  @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  paymentLinks PaymentLink[]
+
+  @@index([professionalId])
+  @@map("professional_products")
+}
+
+enum PaymentLinkStatus {
+  created
+  paid
+  converted
+  expired
+  canceled
+}
+
+// O link comercial que o profissional gera e compartilha (ex.: por
+// WhatsApp) — "created" é o estado inicial; "paid" é terminal só para
+// paymentType=one_time; "converted" (virou uma ClientSubscription) só se
+// aplica a paymentType=recurring. amountCents/paymentType são cópias
+// congeladas do ProfessionalProduct no momento da criação — mudar o
+// preço do produto depois não altera links já gerados (mesmo raciocínio
+// de Invoice.amountCents na Fase 22). externalPreferenceId (pagamento
+// único) e externalSubscriptionId (recorrente) são mutuamente exclusivos
+// por paymentType — regra garantida no service layer, não pelo schema.
+model PaymentLink {
+  id                     String            @id @default(uuid())
+  professionalId         String            @map("professional_id")
+  clientId               String            @map("client_id")
+  professionalProductId  String            @map("professional_product_id")
+  amountCents            Int               @map("amount_cents")
+  paymentType            BillingType       @map("payment_type")
+  status                 PaymentLinkStatus @default(created)
+  checkoutUrl            String?           @map("checkout_url")
+  externalPreferenceId   String?           @unique @map("external_preference_id")
+  externalSubscriptionId String?           @unique @map("external_subscription_id")
+  expiresAt              DateTime?         @map("expires_at")
+  createdAt              DateTime          @default(now()) @map("created_at")
+  updatedAt              DateTime          @default(now()) @updatedAt @map("updated_at")
+
+  professional        Professional            @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  client              Client                  @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  professionalProduct ProfessionalProduct     @relation(fields: [professionalProductId], references: [id], onDelete: Restrict)
+  invoices            ClientInvoice[]
+  subscription        ClientSubscription?
+  auditLogs           ClientBillingAuditLog[]
+
+  @@index([professionalId])
+  @@index([clientId])
+  @@index([professionalProductId])
+  @@index([status])
+  @@map("payment_links")
+}
+
+enum ClientSubscriptionStatus {
+  pending
+  authorized
+  paused
+  cancelled
+}
+
+// Assinatura recorrente de um cliente com um produto do profissional —
+// só existe depois que o cliente autoriza no gateway (webhook). Sem
+// @@unique(professionalId, clientId) de propósito: o mesmo cliente pode
+// voltar a assinar (o mesmo produto ou outro) no futuro, e queremos as
+// linhas antigas preservadas como histórico, não reaproveitadas (ao
+// contrário de Subscription/SaaS, que reaproveita a única linha do
+// profissional por não ter esse cenário de "voltar a assinar algo novo").
+model ClientSubscription {
+  id                     String                   @id @default(uuid())
+  professionalId         String                   @map("professional_id")
+  clientId               String                   @map("client_id")
+  professionalProductId  String                   @map("professional_product_id")
+  paymentLinkId          String?                  @unique @map("payment_link_id")
+  status                 ClientSubscriptionStatus @default(pending)
+  externalSubscriptionId String                   @unique @map("external_subscription_id")
+  currentPeriodStart     DateTime?                @map("current_period_start")
+  currentPeriodEnd       DateTime?                @map("current_period_end")
+  cancelAtPeriodEnd      Boolean                  @default(false) @map("cancel_at_period_end")
+  canceledAt             DateTime?                @map("canceled_at")
+  createdAt              DateTime                 @default(now()) @map("created_at")
+  updatedAt              DateTime                 @default(now()) @updatedAt @map("updated_at")
+
+  professional Professional            @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  client       Client                  @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  paymentLink  PaymentLink?            @relation(fields: [paymentLinkId], references: [id], onDelete: Restrict)
+  invoices     ClientInvoice[]
+  auditLogs    ClientBillingAuditLog[]
+
+  @@index([professionalId])
+  @@index([clientId])
+  @@map("client_subscriptions")
+}
+
+enum ClientInvoiceStatus {
+  pending
+  paid
+  failed
+  refunded
+}
+
+// Registro financeiro de uma cobrança de cliente — tanto pagamento único
+// (paymentLinkId preenchido) quanto ciclo de assinatura recorrente
+// (clientSubscriptionId preenchido). Exatamente um dos dois deve estar
+// preenchido, nunca os dois nem nenhum — o Prisma não expressa esse tipo
+// de exclusividade mútua declarativamente (seria um CHECK manual fora do
+// que o schema garante sozinho); a regra fica documentada aqui e é
+// aplicada no service layer, não pelo banco. externalPaymentId é a chave
+// de idempotência: um mesmo pagamento do gateway nunca gera duas linhas
+// aqui, mesmo sob reentrega de webhook.
+model ClientInvoice {
+  id                   String              @id @default(uuid())
+  professionalId       String              @map("professional_id")
+  clientId             String              @map("client_id")
+  paymentLinkId        String?             @map("payment_link_id")
+  clientSubscriptionId String?             @map("client_subscription_id")
+  amountCents          Int                 @map("amount_cents")
+  status               ClientInvoiceStatus @default(pending)
+  externalPaymentId    String              @unique @map("external_payment_id")
+  paidAt               DateTime?           @map("paid_at")
+  createdAt            DateTime            @default(now()) @map("created_at")
+  updatedAt            DateTime            @default(now()) @updatedAt @map("updated_at")
+
+  professional       Professional        @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  client             Client              @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  paymentLink        PaymentLink?        @relation(fields: [paymentLinkId], references: [id], onDelete: Restrict)
+  clientSubscription ClientSubscription? @relation(fields: [clientSubscriptionId], references: [id], onDelete: Restrict)
+
+  @@index([professionalId])
+  @@index([clientId])
+  @@index([paymentLinkId])
+  @@index([clientSubscriptionId])
+  @@map("client_invoices")
+}
+
+enum ClientBillingAuditAction {
+  link_created
+  payment_approved
+  payment_failed
+  subscription_authorized
+  subscription_paused
+  subscription_canceled
+  webhook_received
+  webhook_rejected
+}
+
+// Mesmo papel que BillingAuditLog (Fase 22) e os demais *AuditLog do
+// projeto: quem/o quê/quando, nunca conteúdo sensível. `metadata` nunca
+// deve conter Access Token, segredo de webhook, número de cartão, CVV ou
+// qualquer dado bancário — só informação técnica não sensível (ex.: tipo
+// de evento, valor em centavos).
+model ClientBillingAuditLog {
+  id                   String                   @id @default(uuid())
+  professionalId       String                   @map("professional_id")
+  clientId             String                   @map("client_id")
+  paymentLinkId        String?                  @map("payment_link_id")
+  clientSubscriptionId String?                  @map("client_subscription_id")
+  action               ClientBillingAuditAction
+  metadata             Json?
+  ipAddress            String?                  @map("ip_address")
+  createdAt            DateTime                 @default(now()) @map("created_at")
+
+  professional       Professional        @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  client             Client              @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  paymentLink        PaymentLink?        @relation(fields: [paymentLinkId], references: [id], onDelete: SetNull)
+  clientSubscription ClientSubscription? @relation(fields: [clientSubscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([professionalId, createdAt])
+  @@map("client_billing_audit_logs")
 }
