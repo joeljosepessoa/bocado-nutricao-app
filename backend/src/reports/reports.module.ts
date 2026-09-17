@@ -6,11 +6,12 @@ import { EvaluationReportsController, ReportsController } from './reports.contro
 import { ReportsService } from './reports.service';
 import { ReportAuditLogService } from './report-audit-log.service';
 import { PdfService } from './pdf.service';
+import { PdfQueueService } from './pdf-queue.service';
 
 @Module({
   imports: [StorageModule, PhysicalEvaluationsModule, NotificationsModule],
   controllers: [ReportsController, EvaluationReportsController],
-  providers: [ReportsService, ReportAuditLogService, PdfService],
+  providers: [ReportsService, ReportAuditLogService, PdfService, PdfQueueService],
   exports: [ReportsService],
 })
 export class ReportsModule {}

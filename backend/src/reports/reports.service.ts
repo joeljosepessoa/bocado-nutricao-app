@@ -5,6 +5,7 @@ import { StorageService } from '../storage/storage.service';
 import { PhysicalEvaluationsService } from '../physical-evaluations/physical-evaluations.service';
 import { NotificationDispatchService } from '../notifications/notification-dispatch.service';
 import { PdfService } from './pdf.service';
+import { PdfQueueService } from './pdf-queue.service';
 import { ReportAuditLogService } from './report-audit-log.service';
 import { CreateReportDto } from './dto/create-report.dto';
 import { ClientReportSummaryDto, ReportSummaryDto } from './dto/report-summary.dto';
@@ -44,6 +45,7 @@ export class ReportsService {
     private readonly storage: StorageService,
     private readonly evaluations: PhysicalEvaluationsService,
     private readonly pdf: PdfService,
+    private readonly pdfQueue: PdfQueueService,
     private readonly auditLog: ReportAuditLogService,
     private readonly notifications: NotificationDispatchService,
   ) {}
@@ -227,7 +229,7 @@ export class ReportsService {
         snapshot = { ...data, photos: data.photos.map((p) => ({ angle: p.angle })) }; // nunca guarda a imagem no snapshot
       }
 
-      const pdfBuffer = await this.pdf.renderHtmlToPdf(html);
+      const pdfBuffer = await this.pdfQueue.run(() => this.pdf.renderHtmlToPdf(html));
       const { storageKey, sizeBytes } = await this.storage.save(pdfBuffer, 'application/pdf');
 
       const updated = await this.prisma.report.update({

@@ -1,10 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { randomUUID } from 'crypto';
-import { mkdir, readFile, writeFile, unlink } from 'fs/promises';
-import { existsSync } from 'fs';
-import { join, resolve } from 'path';
 
 export interface SignedUrl {
   url: string;
@@ -16,39 +12,26 @@ const SIGNED_URL_TTL_SECONDS = 300;
 export type DownloadPurpose = 'photo-download' | 'report-download';
 const VALID_PURPOSES: DownloadPurpose[] = ['photo-download', 'report-download'];
 
+/**
+ * Abstração de armazenamento de arquivo — mesmo padrão de EmailService
+ * (Fase 13) e AiProvider (Fase 12): o domínio (avaliações, relatórios)
+ * depende só desta interface, nunca de um backend concreto. `getSignedUrl`
+ * e `verifySignedToken` ficam aqui (não em cada adapter) porque o esquema
+ * de autorização — posse de um JWT de curta duração assinado por nós — é
+ * o mesmo independente de o arquivo estar em disco local ou num bucket;
+ * é o que permite `/files/:token` continuar público (mas só útil para
+ * quem tem o token) nos dois casos, sem expor o bucket diretamente.
+ */
 @Injectable()
-export class StorageService {
-  private readonly baseDir: string;
-
+export abstract class StorageService {
   constructor(
-    private readonly jwtService: JwtService,
-    private readonly config: ConfigService,
-  ) {
-    this.baseDir = resolve(this.config.get<string>('STORAGE_LOCAL_DIR') ?? '../storage');
-  }
+    protected readonly jwtService: JwtService,
+    protected readonly config: ConfigService,
+  ) {}
 
-  async save(buffer: Buffer, contentType: string): Promise<{ storageKey: string; sizeBytes: number }> {
-    await mkdir(this.baseDir, { recursive: true });
-    const extension = contentType.split('/')[1] ?? 'bin';
-    const storageKey = `${randomUUID()}.${extension}`;
-    await writeFile(join(this.baseDir, storageKey), buffer);
-    return { storageKey, sizeBytes: buffer.byteLength };
-  }
-
-  async read(storageKey: string): Promise<Buffer> {
-    const path = join(this.baseDir, storageKey);
-    if (!existsSync(path)) {
-      throw new NotFoundException('Arquivo não encontrado.');
-    }
-    return readFile(path);
-  }
-
-  async delete(storageKey: string): Promise<void> {
-    const path = join(this.baseDir, storageKey);
-    if (existsSync(path)) {
-      await unlink(path);
-    }
-  }
+  abstract save(buffer: Buffer, contentType: string): Promise<{ storageKey: string; sizeBytes: number }>;
+  abstract read(storageKey: string): Promise<Buffer>;
+  abstract delete(storageKey: string): Promise<void>;
 
   getSignedUrl(storageKey: string, contentType: string, purpose: DownloadPurpose = 'photo-download'): SignedUrl {
     const expiresAt = new Date(Date.now() + SIGNED_URL_TTL_SECONDS * 1000);

@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: bocado
+          POSTGRES_PASSWORD: bocado
+          POSTGRES_DB: bocado_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bocado"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://bocado:bocado@localhost:5432/bocado_ci
+      JWT_ACCESS_SECRET: ci-secret-nao-usar-em-producao
+      JWT_ACCESS_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      CORS_ORIGIN: http://localhost:5173
+      STORAGE_LOCAL_DIR: ../storage
+      PORT: 3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Bibliotecas do Chromium (Puppeteer) — mesma lista do Dockerfile
+      # (https://pptr.dev/troubleshooting#chrome-doesnt-launch-on-linux).
+      - name: Instala dependências do Chromium
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            fonts-liberation libasound2t64 libatk-bridge2.0-0 libatk1.0-0 \
+            libcairo2 libcups2 libdbus-1-3 libgbm1 libgtk-3-0 libnspr4 \
+            libnss3 libpango-1.0-0 libxcomposite1 libxdamage1 libxfixes3 \
+            libxrandr2 libxss1 libxtst6
+
+      - name: Instala dependências (workspace backend)
+        run: npm ci --workspace backend --include-workspace-root
+
+      - name: Gera Prisma Client
+        run: npm run prisma:generate --workspace backend
+
+      - name: Aplica migrações
+        run: npm run prisma:migrate:deploy --workspace backend
+
+      - name: Build
+        run: npm run build --workspace backend
+
+      - name: Testes e2e
+        run: npm run test:e2e --workspace backend
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instala dependências (workspace backend)
+        run: npm ci --workspace backend --include-workspace-root
+
+      # Só a árvore de produção (--omit=dev): achados em devDependencies
+      # (ex.: toolchain do @nestjs/cli) nunca chegam à imagem de runtime
+      # (Dockerfile roda `npm prune --omit=dev`), então não bloqueiam.
+      # `continue-on-error`: hoje há achados alto/crítico em dependências
+      # transitivas (qs via express/body-parser; tar via node-pre-gyp do
+      # bcrypt, usado só na instalação, nunca em runtime) sem correção
+      # upstream disponível ainda — ver relatório da Fase 21. O job roda
+      # e fica visível em todo PR em vez de ficar sempre vermelho por algo
+      # que ninguém consegue corrigir agora; revisar manualmente quando
+      # uma correção for publicada.
+      - name: npm audit (produção)
+        run: npm audit --workspace backend --omit=dev --audit-level=high
+        continue-on-error: true
