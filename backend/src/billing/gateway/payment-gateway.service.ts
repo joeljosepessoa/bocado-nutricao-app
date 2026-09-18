@@ -1,4 +1,4 @@
-import { PlanInterval } from '@prisma/client';
+import { PlanInterval, RecurrenceInterval } from '@prisma/client';
 
 export interface GatewayCustomer {
   gatewayCustomerId: string;
@@ -27,6 +27,11 @@ export interface GatewayCheckout {
   checkoutUrl: string;
 }
 
+export interface CreateRecurringCheckoutParams extends CreateCheckoutParams {
+  /** Periodicidade da cobrança — sem isso não há como montar `auto_recurring` num gateway real (Fase 23.4). */
+  recurrenceInterval: RecurrenceInterval;
+}
+
 /**
  * Abstração de gateway de pagamento — mesmo padrão de EmailService (Fase
  * 13) e StorageService (Fase 9): BillingService depende só desta
@@ -51,7 +56,7 @@ export abstract class PaymentGatewayService {
   // necessário para PaymentLinksService.create() funcionar ponta a ponta
   // contra o mock; nada de Mercado Pago real ainda (Fase 23.4+).
   abstract createOneTimeCheckout(params: CreateCheckoutParams): Promise<GatewayCheckout>;
-  abstract createRecurringCheckout(params: CreateCheckoutParams): Promise<GatewayCheckout>;
+  abstract createRecurringCheckout(params: CreateRecurringCheckoutParams): Promise<GatewayCheckout>;
 
   /** Assina um payload de webhook (usado pelo simulador de ciclo de cobrança para se auto-chamar). */
   abstract signWebhookPayload(rawBody: string): string;

@@ -52,6 +52,9 @@ export class PaymentLinksService {
             amountCents: product.priceCents,
             description: product.name,
             externalReference: id,
+            // Não-nulo garantido por ProfessionalProductsService.assertValidRecurrence
+            // (billingType=recurring sempre exige recurrenceInterval).
+            recurrenceInterval: product.recurrenceInterval!,
           })
         : await this.gateway.createOneTimeCheckout({
             amountCents: product.priceCents,

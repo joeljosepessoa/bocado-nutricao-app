@@ -4,6 +4,7 @@ import { PlanInterval } from '@prisma/client';
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'crypto';
 import {
   CreateCheckoutParams,
+  CreateRecurringCheckoutParams,
   GatewayCharge,
   GatewayCheckout,
   GatewayCustomer,
@@ -60,7 +61,7 @@ export class MockPaymentGatewayService extends PaymentGatewayService {
     return { externalId, checkoutUrl: `${MOCK_CHECKOUT_BASE_URL}/${externalId}` };
   }
 
-  async createRecurringCheckout(_params: CreateCheckoutParams): Promise<GatewayCheckout> {
+  async createRecurringCheckout(_params: CreateRecurringCheckoutParams): Promise<GatewayCheckout> {
     const externalId = `mock_preapproval_${randomUUID()}`;
     return { externalId, checkoutUrl: `${MOCK_CHECKOUT_BASE_URL}/${externalId}` };
   }
