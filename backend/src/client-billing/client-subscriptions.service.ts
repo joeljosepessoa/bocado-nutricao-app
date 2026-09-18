@@ -9,7 +9,7 @@ export interface RequestMeta {
 
 /**
  * Criação não faz parte desta fase: uma ClientSubscription só passa a
- * existir depois que o cliente autoriza no gateway (webhook, Fase 23.6+).
+ * existir depois que o cliente autoriza no gateway (webhook, Fase 23.5).
  * Aqui só leitura e cancelamento — mesmo padrão de `cancelAtPeriodEnd` já
  * usado por SubscriptionsService (Fase 22, SaaS): nunca corta acesso na
  * hora, só marca para não renovar no fim do período atual.

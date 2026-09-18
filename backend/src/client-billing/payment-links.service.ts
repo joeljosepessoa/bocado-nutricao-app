@@ -143,8 +143,8 @@ export class PaymentLinksService {
   /**
    * Marca como expirado todo link vencido ainda "created" — não é chamado
    * por nenhuma rota nesta fase (não faz sentido como ação de usuário);
-   * existe para ser invocado por um cron/reconciliação em fase futura
-   * (F23.6+), mesmo raciocínio de BillingCycleService.processDueBilling.
+   * existe para ser invocado pela reconciliação automática/cron da Fase
+   * 23.6, mesmo raciocínio de BillingCycleService.processDueBilling.
    */
   async markExpired(): Promise<number> {
     const due = await this.prisma.paymentLink.findMany({
