@@ -1795,7 +1795,12 @@ model ClientInvoice {
 }
 
 enum ClientBillingAuditAction {
+  product_created
+  product_updated
+  product_deactivated
   link_created
+  link_canceled
+  link_expired
   payment_approved
   payment_failed
   subscription_authorized
@@ -1813,7 +1818,11 @@ enum ClientBillingAuditAction {
 model ClientBillingAuditLog {
   id                   String                   @id @default(uuid())
   professionalId       String                   @map("professional_id")
-  clientId             String                   @map("client_id")
+  // Opcional (Fase 23.3): ações sobre o catálogo do profissional
+  // (ProfessionalProduct criado/alterado/desativado) não envolvem nenhum
+  // cliente específico — as demais ações deste domínio (link, assinatura,
+  // fatura) sempre preenchem.
+  clientId             String?                  @map("client_id")
   paymentLinkId        String?                  @map("payment_link_id")
   clientSubscriptionId String?                  @map("client_subscription_id")
   action               ClientBillingAuditAction
@@ -1822,7 +1831,7 @@ model ClientBillingAuditLog {
   createdAt            DateTime                 @default(now()) @map("created_at")
 
   professional       Professional        @relation(fields: [professionalId], references: [id], onDelete: Restrict)
-  client             Client              @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  client             Client?             @relation(fields: [clientId], references: [id], onDelete: Restrict)
   paymentLink        PaymentLink?        @relation(fields: [paymentLinkId], references: [id], onDelete: SetNull)
   clientSubscription ClientSubscription? @relation(fields: [clientSubscriptionId], references: [id], onDelete: SetNull)
 

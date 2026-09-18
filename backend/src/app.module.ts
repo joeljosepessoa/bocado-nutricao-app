@@ -30,6 +30,7 @@ import { MessagesModule } from './messages/messages.module';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { BillingModule } from './billing/billing.module';
 import { RequiresActiveSubscriptionGuard } from './billing/requires-active-subscription.guard';
+import { ClientBillingModule } from './client-billing/client-billing.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { RequiresActiveSubscriptionGuard } from './billing/requires-active-subsc
     MessagesModule,
     AppointmentsModule,
     BillingModule,
+    ClientBillingModule,
   ],
   controllers: [AppController],
   providers: [

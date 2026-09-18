@@ -132,4 +132,25 @@ export class ClientAppController {
   async deleteAccount(@CurrentUser() user: AuthenticatedUser, @Body() dto: DeleteAccountDto): Promise<void> {
     await this.clientAppService.deleteAccount(user.id, dto.currentPassword);
   }
+
+  @Get('payment-links')
+  getPaymentLinks(@CurrentUser() user: AuthenticatedUser) {
+    return this.clientAppService.getPaymentLinks(user.id);
+  }
+
+  @Get('client-subscriptions')
+  getClientSubscriptions(@CurrentUser() user: AuthenticatedUser) {
+    return this.clientAppService.getClientSubscriptions(user.id);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('client-subscriptions/:id/cancel')
+  cancelClientSubscription(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Req() req: Request) {
+    return this.clientAppService.cancelClientSubscription(user.id, id, { ipAddress: req.ip });
+  }
+
+  @Get('client-invoices')
+  getClientInvoices(@CurrentUser() user: AuthenticatedUser) {
+    return this.clientAppService.getClientInvoices(user.id);
+  }
 }

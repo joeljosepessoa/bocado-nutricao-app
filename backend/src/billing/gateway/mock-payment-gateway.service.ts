@@ -3,11 +3,17 @@ import { ConfigService } from '@nestjs/config';
 import { PlanInterval } from '@prisma/client';
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'crypto';
 import {
+  CreateCheckoutParams,
   GatewayCharge,
+  GatewayCheckout,
   GatewayCustomer,
   GatewaySubscription,
   PaymentGatewayService,
 } from './payment-gateway.service';
+
+// URL claramente falsa (nunca resolve) — mesmo raciocínio dos IDs `mock_*`:
+// ninguém confunde isto com um checkout real por engano.
+const MOCK_CHECKOUT_BASE_URL = 'https://mock-gateway.invalid/checkout';
 
 /**
  * Adapter padrão (dev/produção até um gateway real ser configurado) — não
@@ -45,6 +51,18 @@ export class MockPaymentGatewayService extends PaymentGatewayService {
     // Mock sempre "aprova" — não há como simular recusa de cartão sem um
     // gateway real por trás.
     return { gatewayInvoiceId: `mock_inv_${randomUUID()}`, paid: true };
+  }
+
+  // --- Comercial cliente (Fase 23.3) ---
+
+  async createOneTimeCheckout(_params: CreateCheckoutParams): Promise<GatewayCheckout> {
+    const externalId = `mock_pref_${randomUUID()}`;
+    return { externalId, checkoutUrl: `${MOCK_CHECKOUT_BASE_URL}/${externalId}` };
+  }
+
+  async createRecurringCheckout(_params: CreateCheckoutParams): Promise<GatewayCheckout> {
+    const externalId = `mock_preapproval_${randomUUID()}`;
+    return { externalId, checkoutUrl: `${MOCK_CHECKOUT_BASE_URL}/${externalId}` };
   }
 
   nextPeriodEnd(from: Date, interval: PlanInterval): Date {

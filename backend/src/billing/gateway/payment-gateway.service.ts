@@ -13,6 +13,20 @@ export interface GatewayCharge {
   paid: boolean;
 }
 
+export interface CreateCheckoutParams {
+  amountCents: number;
+  description: string;
+  /** Nosso próprio ID (ex.: PaymentLink.id), enviado ao gateway para correlacionar o retorno/webhook — mesmo papel do `external_reference` do Mercado Pago. */
+  externalReference: string;
+}
+
+export interface GatewayCheckout {
+  /** ID do recurso no gateway (preferência/checkout para pagamento único, preapproval/assinatura para recorrente). */
+  externalId: string;
+  /** URL de checkout a compartilhar com o cliente (ex.: `init_point`). */
+  checkoutUrl: string;
+}
+
 /**
  * Abstração de gateway de pagamento — mesmo padrão de EmailService (Fase
  * 13) e StorageService (Fase 9): BillingService depende só desta
@@ -31,6 +45,13 @@ export abstract class PaymentGatewayService {
   abstract cancelSubscription(gatewaySubscriptionId: string): Promise<void>;
   abstract charge(gatewaySubscriptionId: string, amountCents: number): Promise<GatewayCharge>;
   abstract nextPeriodEnd(from: Date, interval: PlanInterval): Date;
+
+  // --- Comercial cliente (Fase 23.3) — link de pagamento gerado pelo
+  // profissional para cobrar o próprio cliente. Extensão mínima: só o
+  // necessário para PaymentLinksService.create() funcionar ponta a ponta
+  // contra o mock; nada de Mercado Pago real ainda (Fase 23.4+).
+  abstract createOneTimeCheckout(params: CreateCheckoutParams): Promise<GatewayCheckout>;
+  abstract createRecurringCheckout(params: CreateCheckoutParams): Promise<GatewayCheckout>;
 
   /** Assina um payload de webhook (usado pelo simulador de ciclo de cobrança para se auto-chamar). */
   abstract signWebhookPayload(rawBody: string): string;

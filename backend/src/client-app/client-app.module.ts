@@ -8,6 +8,7 @@ import { ReportsModule } from '../reports/reports.module';
 import { MessagesModule } from '../messages/messages.module';
 import { AppointmentsModule } from '../appointments/appointments.module';
 import { LgpdModule } from '../lgpd/lgpd.module';
+import { ClientBillingModule } from '../client-billing/client-billing.module';
 import { ClientAppController } from './client-app.controller';
 import { ClientAppService } from './client-app.service';
 
@@ -22,6 +23,7 @@ import { ClientAppService } from './client-app.service';
     MessagesModule,
     AppointmentsModule,
     LgpdModule,
+    ClientBillingModule,
   ],
   controllers: [ClientAppController],
   providers: [ClientAppService],

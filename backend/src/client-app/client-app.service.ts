@@ -14,6 +14,9 @@ import { AvailabilityService } from '../appointments/availability.service';
 import { AppointmentsService } from '../appointments/appointments.service';
 import { CreateAppointmentDto } from '../appointments/dto/create-appointment.dto';
 import { LgpdService } from '../lgpd/lgpd.service';
+import { PaymentLinksService } from '../client-billing/payment-links.service';
+import { ClientSubscriptionsService } from '../client-billing/client-subscriptions.service';
+import { ClientInvoicesService } from '../client-billing/client-invoices.service';
 
 @Injectable()
 export class ClientAppService {
@@ -28,6 +31,9 @@ export class ClientAppService {
     private readonly availabilityService: AvailabilityService,
     private readonly appointmentsService: AppointmentsService,
     private readonly lgpdService: LgpdService,
+    private readonly paymentLinksService: PaymentLinksService,
+    private readonly clientSubscriptionsService: ClientSubscriptionsService,
+    private readonly clientInvoicesService: ClientInvoicesService,
   ) {}
 
   me(clientId: string) {
@@ -107,5 +113,21 @@ export class ClientAppService {
 
   deleteAccount(clientId: string, currentPassword: string) {
     return this.lgpdService.deleteAccount(clientId, currentPassword);
+  }
+
+  getPaymentLinks(clientId: string) {
+    return this.paymentLinksService.listForClient(clientId);
+  }
+
+  getClientSubscriptions(clientId: string) {
+    return this.clientSubscriptionsService.listForClient(clientId);
+  }
+
+  cancelClientSubscription(clientId: string, id: string, meta: RequestMeta = {}) {
+    return this.clientSubscriptionsService.cancelForClient(clientId, id, meta);
+  }
+
+  getClientInvoices(clientId: string) {
+    return this.clientInvoicesService.listForClient(clientId);
   }
 }
