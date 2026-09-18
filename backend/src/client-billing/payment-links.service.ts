@@ -21,7 +21,12 @@ export class PaymentLinksService {
   ) {}
 
   private async assertOwnedClient(professionalId: string, clientId: string) {
-    const client = await this.prisma.client.findFirst({ where: { id: clientId, professionalId } });
+    // Já traz user.email junto (mesma consulta) — evita um segundo round-trip
+    // só para o e-mail que createRecurringCheckout precisa (payerEmail).
+    const client = await this.prisma.client.findFirst({
+      where: { id: clientId, professionalId },
+      include: { user: { select: { email: true } } },
+    });
     if (!client) {
       throw new NotFoundException('Cliente não encontrado.');
     }
@@ -40,7 +45,7 @@ export class PaymentLinksService {
     // Cliente sempre validado contra o próprio profissional autenticado —
     // nunca um professionalId vindo do corpo da requisição (não existe
     // esse campo no DTO de propósito).
-    await this.assertOwnedClient(professionalId, dto.clientId);
+    const client = await this.assertOwnedClient(professionalId, dto.clientId);
     // assertOwnedActive já garante: produto existe, pertence a este
     // profissional (nunca de outro) e está ativo.
     const product = await this.products.assertOwnedActive(professionalId, dto.professionalProductId);
@@ -55,6 +60,10 @@ export class PaymentLinksService {
             // Não-nulo garantido por ProfessionalProductsService.assertValidRecurrence
             // (billingType=recurring sempre exige recurrenceInterval).
             recurrenceInterval: product.recurrenceInterval!,
+            // Client.user.email — mesma fonte já usada para o e-mail do
+            // profissional no SaaS (SubscriptionsService, Fase 22); User.email
+            // é obrigatório e único, sempre presente.
+            payerEmail: client.user.email,
           })
         : await this.gateway.createOneTimeCheckout({
             amountCents: product.priceCents,

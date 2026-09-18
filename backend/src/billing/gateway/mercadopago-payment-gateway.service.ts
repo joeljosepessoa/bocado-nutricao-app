@@ -19,6 +19,11 @@ interface MercadoPagoPreferenceResponse {
   init_point?: string;
 }
 
+interface MercadoPagoPreapprovalResponse {
+  id?: string;
+  init_point?: string;
+}
+
 /**
  * Adapter real do Mercado Pago (Fase 23.4) — só `createOneTimeCheckout`/
  * `createRecurringCheckout` (Checkout Pro via Preferences API / Subscriptions
@@ -81,31 +86,33 @@ export class MercadoPagoPaymentGatewayService extends PaymentGatewayService {
   }
 
   async createRecurringCheckout(params: CreateRecurringCheckoutParams): Promise<GatewayCheckout> {
-    // Incompatibilidade real entre o domínio e a API, encontrada nesta
-    // fase (não mascarada): POST /preapproval exige `payer_email`, campo
-    // marcado OBRIGATÓRIO de forma incondicional na referência oficial
-    // (ao contrário de `reason`/`external_reference`, que só são
-    // obrigatórios sem plano associado). CreateRecurringCheckoutParams
-    // não carrega e-mail nenhum do cliente hoje, e este adapter não pode
-    // inventar um nem consultar o Prisma para obtê-lo (fora do escopo do
-    // adapter, Fase 23.4). Completar isto exige uma decisão de produto
-    // sobre de onde esse e-mail vem — ver relatório da Fase 23.4.
-    //
-    // Mapeamento de periodicidade já resolvido para quando isso acontecer
-    // (só documentado aqui, nada é enviado): só "months" foi confirmado
-    // como frequency_type válido na documentação oficial consultada
-    // (exemplo de Criar assinatura) — RecurrenceInterval.year viraria
-    // frequency=12 + frequency_type="months" em vez de arriscar um
-    // "years" não documentado; RecurrenceInterval.month viraria
-    // frequency=1 + frequency_type="months".
-    const wouldBeFrequency = params.recurrenceInterval === RecurrenceInterval.year ? 12 : 1;
+    // Só "months" foi confirmado como frequency_type válido na
+    // documentação oficial consultada (exemplo de Criar assinatura) —
+    // RecurrenceInterval.year vira frequency=12 em vez de arriscar um
+    // "years" não documentado; RecurrenceInterval.month vira frequency=1.
+    const frequency = params.recurrenceInterval === RecurrenceInterval.year ? 12 : 1;
 
-    throw new NotImplementedException(
-      `createRecurringCheckout via Mercado Pago ainda não está disponível: POST /preapproval exige payer_email ` +
-        `(campo obrigatório na API), que o contrato atual do domínio comercial não fornece. Mapeamento de ` +
-        `periodicidade já resolvido (frequency=${wouldBeFrequency}, frequency_type="months") — falta decisão de ` +
-        `produto sobre a origem do e-mail do pagador antes de completar esta implementação (ver relatório da Fase 23.4).`,
-    );
+    const body = {
+      reason: params.description,
+      external_reference: params.externalReference,
+      payer_email: params.payerEmail,
+      auto_recurring: {
+        frequency,
+        frequency_type: 'months',
+        transaction_amount: params.amountCents / 100,
+        currency_id: 'BRL',
+      },
+      // back_url deliberadamente ausente: o contrato atual não fornece
+      // URL de retorno nenhuma — campo opcional em POST /preapproval.
+    };
+
+    const data = await this.request<MercadoPagoPreapprovalResponse>('POST', '/preapproval', body);
+    if (!data.id || !data.init_point) {
+      throw new InternalServerErrorException(
+        'Resposta do Mercado Pago sem id/init_point ao criar a assinatura (preapproval).',
+      );
+    }
+    return { externalId: data.id, checkoutUrl: data.init_point };
   }
 
   // --- Fora do escopo desta fase (SaaS/webhook) — ver comentário da classe. ---

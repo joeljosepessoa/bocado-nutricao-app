@@ -30,6 +30,14 @@ export interface GatewayCheckout {
 export interface CreateRecurringCheckoutParams extends CreateCheckoutParams {
   /** Periodicidade da cobrança — sem isso não há como montar `auto_recurring` num gateway real (Fase 23.4). */
   recurrenceInterval: RecurrenceInterval;
+  /**
+   * E-mail do cliente que vai autorizar a assinatura — `payer_email` é
+   * obrigatório incondicional em POST /preapproval do Mercado Pago. Vem de
+   * `Client.user.email` (a mesma fonte já usada por `SubscriptionsService`
+   * para o e-mail do profissional, Fase 22) — nunca inventado, nunca
+   * buscado dentro do adapter (Fase 23.4, correção pós-relatório).
+   */
+  payerEmail: string;
 }
 
 /**

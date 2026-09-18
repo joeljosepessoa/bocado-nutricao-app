@@ -89,19 +89,98 @@ describe('MercadoPagoPaymentGatewayService', () => {
     ).rejects.toThrow(/Falha de rede/);
   });
 
-  it('createRecurringCheckout: rejeita com erro claro (payer_email obrigatório e ausente do contrato) e nunca chama a rede', async () => {
+  it('createRecurringCheckout: chama POST /preapproval com payer_email, auto_recurring e converte a resposta', async () => {
+    fetchSpy.mockResolvedValueOnce(
+      jsonResponse(201, {
+        id: 'preapproval_123',
+        init_point: 'https://www.mercadopago.com/subscriptions/checkout?preapproval_id=preapproval_123',
+      }),
+    );
+    const service = new MercadoPagoPaymentGatewayService(configWith({ MERCADOPAGO_ACCESS_TOKEN: 'TEST-token' }));
+
+    const result = await service.createRecurringCheckout({
+      amountCents: 9990,
+      description: 'Acompanhamento mensal',
+      externalReference: 'link-xyz',
+      recurrenceInterval: RecurrenceInterval.month,
+      payerEmail: 'cliente@example.com',
+    });
+
+    expect(result).toEqual({
+      externalId: 'preapproval_123',
+      checkoutUrl: 'https://www.mercadopago.com/subscriptions/checkout?preapproval_id=preapproval_123',
+    });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchSpy.mock.calls[0];
+    expect(url).toBe('https://api.mercadopago.com/preapproval');
+    expect(init.method).toBe('POST');
+    expect(init.headers.Authorization).toBe('Bearer TEST-token');
+    const body = JSON.parse(init.body);
+    expect(body.payer_email).toBe('cliente@example.com');
+    expect(body.external_reference).toBe('link-xyz');
+    expect(body.auto_recurring).toEqual({
+      frequency: 1,
+      frequency_type: 'months',
+      transaction_amount: 99.9,
+      currency_id: 'BRL',
+    });
+  });
+
+  it('createRecurringCheckout: RecurrenceInterval.year vira frequency=12 com frequency_type "months" (único valor confirmado na documentação)', async () => {
+    fetchSpy.mockResolvedValueOnce(
+      jsonResponse(201, { id: 'preapproval_456', init_point: 'https://www.mercadopago.com/subscriptions/checkout?preapproval_id=preapproval_456' }),
+    );
+    const service = new MercadoPagoPaymentGatewayService(configWith({ MERCADOPAGO_ACCESS_TOKEN: 'TEST-token' }));
+
+    await service.createRecurringCheckout({
+      amountCents: 99_900,
+      description: 'Acompanhamento anual',
+      externalReference: 'link-anual',
+      recurrenceInterval: RecurrenceInterval.year,
+      payerEmail: 'cliente@example.com',
+    });
+
+    const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
+    expect(body.auto_recurring.frequency).toBe(12);
+    expect(body.auto_recurring.frequency_type).toBe('months');
+  });
+
+  it('createRecurringCheckout: resposta sem id/init_point é rejeitada', async () => {
+    fetchSpy.mockResolvedValueOnce(jsonResponse(201, {}));
     const service = new MercadoPagoPaymentGatewayService(configWith({ MERCADOPAGO_ACCESS_TOKEN: 'TEST-token' }));
 
     await expect(
       service.createRecurringCheckout({
         amountCents: 9990,
-        description: 'Acompanhamento mensal',
-        externalReference: 'link-xyz',
+        description: 'x',
+        externalReference: 'y',
         recurrenceInterval: RecurrenceInterval.month,
+        payerEmail: 'cliente@example.com',
       }),
-    ).rejects.toThrow(/payer_email/);
+    ).rejects.toThrow(/sem id\/init_point/);
+  });
 
-    expect(fetchSpy).not.toHaveBeenCalled();
+  it('createRecurringCheckout: HTTP não-2xx vira erro claro, sem vazar payerEmail nem token', async () => {
+    fetchSpy.mockResolvedValueOnce(jsonResponse(400, { message: 'invalid_payer_email' }));
+    const service = new MercadoPagoPaymentGatewayService(
+      configWith({ MERCADOPAGO_ACCESS_TOKEN: 'TEST-segredo-nao-vazar' }),
+    );
+
+    try {
+      await service.createRecurringCheckout({
+        amountCents: 9990,
+        description: 'x',
+        externalReference: 'y',
+        recurrenceInterval: RecurrenceInterval.month,
+        payerEmail: 'cliente-secreto@example.com',
+      });
+      throw new Error('deveria ter lançado');
+    } catch (error) {
+      const message = String((error as Error).message);
+      expect(message).not.toContain('TEST-segredo-nao-vazar');
+      expect(message).not.toContain('cliente-secreto@example.com');
+    }
   });
 
   it('nextPeriodEnd: cálculo puro, sem chamar rede (month +1 mês, year +1 ano)', () => {
