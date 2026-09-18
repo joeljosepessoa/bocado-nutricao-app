@@ -162,8 +162,22 @@ export class PaymentLinksService {
     return due.length;
   }
 
-  /** Uso interno (ex.: ClientSubscriptionsService, quando o webhook confirmar a autorização em fase futura). */
+  /** Uso interno pelo webhook (Fase 23.5) — quando o preapproval é confirmado "authorized". */
   async markConverted(id: string): Promise<PaymentLink> {
     return this.prisma.paymentLink.update({ where: { id }, data: { status: PaymentLinkStatus.converted } });
+  }
+
+  /** Uso interno pelo webhook (Fase 23.5) — quando o pagamento único é confirmado "approved". */
+  async markPaid(id: string): Promise<PaymentLink> {
+    return this.prisma.paymentLink.update({ where: { id }, data: { status: PaymentLinkStatus.paid } });
+  }
+
+  /**
+   * Uso interno pelo webhook (Fase 23.5) — resolve por ID sem exigir
+   * ownership de sessão (quem chama é o próprio sistema reagindo a um
+   * evento do gateway, não uma requisição de profissional/cliente).
+   */
+  async findById(id: string): Promise<PaymentLink | null> {
+    return this.prisma.paymentLink.findUnique({ where: { id } });
   }
 }

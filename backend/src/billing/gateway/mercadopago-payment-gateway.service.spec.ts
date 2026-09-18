@@ -198,8 +198,64 @@ describe('MercadoPagoPaymentGatewayService', () => {
     await expect(service.createSubscription('cus-1', 'plan-1')).rejects.toThrow(/MockPaymentGatewayService/);
     await expect(service.cancelSubscription('sub-1')).rejects.toThrow(/MockPaymentGatewayService/);
     await expect(service.charge('sub-1', 1000)).rejects.toThrow(/MockPaymentGatewayService/);
-    expect(() => service.signWebhookPayload('{}')).toThrow(/Fase 23.6/);
-    expect(() => service.verifyWebhookSignature('{}', 'sig')).toThrow(/Fase 23.6/);
+    expect(() => service.signWebhookPayload('{}')).toThrow(/MercadoPagoWebhookSignatureService/);
+    expect(() => service.verifyWebhookSignature('{}', 'sig')).toThrow(/MercadoPagoWebhookSignatureService/);
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('getOneTimePayment: chama GET /v1/payments/:id e converte a resposta (status, valor em centavos, external_reference)', async () => {
+    fetchSpy.mockResolvedValueOnce(
+      jsonResponse(200, { id: 987654321, status: 'approved', transaction_amount: 259.0, external_reference: 'link-abc' }),
+    );
+    const service = new MercadoPagoPaymentGatewayService(configWith({ MERCADOPAGO_ACCESS_TOKEN: 'TEST-token' }));
+
+    const result = await service.getOneTimePayment('987654321');
+
+    expect(result).toEqual({ externalId: '987654321', status: 'approved', amountCents: 25_900, externalReference: 'link-abc' });
+    const [url, init] = fetchSpy.mock.calls[0];
+    expect(url).toBe('https://api.mercadopago.com/v1/payments/987654321');
+    expect(init.method).toBe('GET');
+    expect(init.body).toBeUndefined();
+    expect(init.headers.Authorization).toBe('Bearer TEST-token');
+  });
+
+  it('getOneTimePayment: resposta sem id/status é rejeitada', async () => {
+    fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+    const service = new MercadoPagoPaymentGatewayService(configWith({ MERCADOPAGO_ACCESS_TOKEN: 'TEST-token' }));
+
+    await expect(service.getOneTimePayment('123')).rejects.toThrow(/sem id\/status/);
+  });
+
+  it('getRecurringSubscription: chama GET /preapproval/:id e converte a resposta', async () => {
+    fetchSpy.mockResolvedValueOnce(
+      jsonResponse(200, { id: 'preapproval_123', status: 'authorized', external_reference: 'link-xyz' }),
+    );
+    const service = new MercadoPagoPaymentGatewayService(configWith({ MERCADOPAGO_ACCESS_TOKEN: 'TEST-token' }));
+
+    const result = await service.getRecurringSubscription('preapproval_123');
+
+    expect(result).toEqual({ externalId: 'preapproval_123', status: 'authorized', externalReference: 'link-xyz' });
+    const [url, init] = fetchSpy.mock.calls[0];
+    expect(url).toBe('https://api.mercadopago.com/preapproval/preapproval_123');
+    expect(init.method).toBe('GET');
+  });
+
+  it('getRecurringSubscription: resposta sem id/status é rejeitada', async () => {
+    fetchSpy.mockResolvedValueOnce(jsonResponse(200, {}));
+    const service = new MercadoPagoPaymentGatewayService(configWith({ MERCADOPAGO_ACCESS_TOKEN: 'TEST-token' }));
+
+    await expect(service.getRecurringSubscription('x')).rejects.toThrow(/sem id\/status/);
+  });
+
+  it('consultas (GET) também nunca vazam o token em erro HTTP não-2xx', async () => {
+    fetchSpy.mockResolvedValueOnce(jsonResponse(404, { message: 'not found' }));
+    const service = new MercadoPagoPaymentGatewayService(configWith({ MERCADOPAGO_ACCESS_TOKEN: 'TEST-segredo-nao-vazar' }));
+
+    try {
+      await service.getOneTimePayment('inexistente');
+      throw new Error('deveria ter lançado');
+    } catch (error) {
+      expect(String((error as Error).message)).not.toContain('TEST-segredo-nao-vazar');
+    }
   });
 });

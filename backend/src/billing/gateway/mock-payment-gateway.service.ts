@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PlanInterval } from '@prisma/client';
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'crypto';
@@ -8,13 +8,21 @@ import {
   GatewayCharge,
   GatewayCheckout,
   GatewayCustomer,
+  GatewayPaymentStatus,
   GatewaySubscription,
+  GatewaySubscriptionStatus,
   PaymentGatewayService,
 } from './payment-gateway.service';
 
 // URL claramente falsa (nunca resolve) — mesmo raciocínio dos IDs `mock_*`:
 // ninguém confunde isto com um checkout real por engano.
 const MOCK_CHECKOUT_BASE_URL = 'https://mock-gateway.invalid/checkout';
+
+interface MockResource {
+  externalReference: string;
+  status: string;
+  amountCents?: number;
+}
 
 /**
  * Adapter padrão (dev/produção até um gateway real ser configurado) — não
@@ -27,6 +35,14 @@ const MOCK_CHECKOUT_BASE_URL = 'https://mock-gateway.invalid/checkout';
  */
 @Injectable()
 export class MockPaymentGatewayService extends PaymentGatewayService {
+  // Registro em memória {externalId -> recurso} — necessário para que o
+  // MESMO id, consultado em webhooks sucessivos, possa refletir um status
+  // que evolui com o tempo (ex.: preapproval authorized -> paused ->
+  // cancelled), exatamente como um gateway real. Um esquema sem estado
+  // (status embutido no próprio id) não sustenta esse cenário: o id nunca
+  // muda, então o status "de dentro dele" também não poderia.
+  private readonly resources = new Map<string, MockResource>();
+
   constructor(private readonly config: ConfigService) {
     super();
   }
@@ -56,14 +72,80 @@ export class MockPaymentGatewayService extends PaymentGatewayService {
 
   // --- Comercial cliente (Fase 23.3) ---
 
-  async createOneTimeCheckout(_params: CreateCheckoutParams): Promise<GatewayCheckout> {
+  async createOneTimeCheckout(params: CreateCheckoutParams): Promise<GatewayCheckout> {
     const externalId = `mock_pref_${randomUUID()}`;
+    // "pending" é o status inicial real de um pagamento recém-criado no
+    // Mercado Pago (vocabulário confirmado da Payments API) — o webhook de
+    // teste evolui esse status via `simulateStatusChange`.
+    this.resources.set(externalId, { externalReference: params.externalReference, status: 'pending', amountCents: params.amountCents });
     return { externalId, checkoutUrl: `${MOCK_CHECKOUT_BASE_URL}/${externalId}` };
   }
 
-  async createRecurringCheckout(_params: CreateRecurringCheckoutParams): Promise<GatewayCheckout> {
+  async createRecurringCheckout(params: CreateRecurringCheckoutParams): Promise<GatewayCheckout> {
     const externalId = `mock_preapproval_${randomUUID()}`;
+    // "pending" é um dos dois status confirmados na documentação oficial
+    // do preapproval antes de o pagador autorizar (o outro é "authorized").
+    this.resources.set(externalId, { externalReference: params.externalReference, status: 'pending', amountCents: params.amountCents });
     return { externalId, checkoutUrl: `${MOCK_CHECKOUT_BASE_URL}/${externalId}` };
+  }
+
+  // --- Consulta (Fase 23.5) ---
+  //
+  // O mock não fala com rede, mas precisa de ALGUM estado para reproduzir
+  // fielmente um gateway real: o "Payment ID"/"Preapproval ID" retornado
+  // por createOneTimeCheckout/createRecurringCheckout é a chave de um
+  // registro em memória (`resources`), e getOneTimePayment/
+  // getRecurringSubscription simplesmente leem esse registro — exatamente
+  // como uma consulta real leria o estado atual do recurso no gateway.
+  // `simulateStatusChange` (só para testes) é o único jeito de fazer esse
+  // estado evoluir, permitindo simular o MESMO id passando por status
+  // sucessivos ao longo de vários webhooks (ex.: authorized -> paused ->
+  // cancelled), o que um esquema sem estado (status embutido no próprio
+  // id) não conseguiria sustentar.
+
+  private getResource(id: string): MockResource {
+    const resource = this.resources.get(id);
+    if (!resource) {
+      throw new NotFoundException(`Recurso mock "${id}" não reconhecido.`);
+    }
+    return resource;
+  }
+
+  /**
+   * Só para testes — registra diretamente um recurso no mock (sem passar
+   * por createOneTimeCheckout/createRecurringCheckout), útil quando o
+   * teste só precisa simular a resposta da consulta, não o fluxo de
+   * criação do checkout em si.
+   */
+  registerMockResource(externalId: string, params: { externalReference: string; status: string; amountCents?: number }): void {
+    this.resources.set(externalId, { externalReference: params.externalReference, status: params.status, amountCents: params.amountCents });
+  }
+
+  /**
+   * Só para testes — evolui o status de um recurso já existente (criado
+   * via createOneTimeCheckout/createRecurringCheckout ou registerMockResource),
+   * simulando "o Mercado Pago agora diz que este id está com outro status"
+   * entre uma entrega de webhook e outra, sem mudar o id nem o
+   * external_reference.
+   */
+  simulateStatusChange(externalId: string, status: string): void {
+    const resource = this.getResource(externalId);
+    resource.status = status;
+  }
+
+  async getOneTimePayment(paymentId: string): Promise<GatewayPaymentStatus> {
+    const resource = this.getResource(paymentId);
+    return {
+      externalId: paymentId,
+      status: resource.status,
+      amountCents: resource.amountCents ?? 0,
+      externalReference: resource.externalReference,
+    };
+  }
+
+  async getRecurringSubscription(subscriptionId: string): Promise<GatewaySubscriptionStatus> {
+    const resource = this.getResource(subscriptionId);
+    return { externalId: subscriptionId, status: resource.status, externalReference: resource.externalReference };
   }
 
   nextPeriodEnd(from: Date, interval: PlanInterval): Date {

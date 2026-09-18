@@ -7,7 +7,9 @@ import {
   GatewayCharge,
   GatewayCheckout,
   GatewayCustomer,
+  GatewayPaymentStatus,
   GatewaySubscription,
+  GatewaySubscriptionStatus,
   PaymentGatewayService,
 } from './payment-gateway.service';
 
@@ -22,6 +24,15 @@ interface MercadoPagoPreferenceResponse {
 interface MercadoPagoPreapprovalResponse {
   id?: string;
   init_point?: string;
+  status?: string;
+  external_reference?: string;
+}
+
+interface MercadoPagoPaymentResponse {
+  id?: number | string;
+  status?: string;
+  transaction_amount?: number;
+  external_reference?: string;
 }
 
 /**
@@ -38,9 +49,16 @@ interface MercadoPagoPreapprovalResponse {
  * este arquivo sabe que existe uma API HTTP por trás).
  *
  * `createCustomer`/`createSubscription`/`cancelSubscription`/`charge` (Fase
- * 22, SaaS) e `signWebhookPayload`/`verifyWebhookSignature` (webhook, Fase
- * 23.6) NÃO são implementados aqui — fora do escopo desta fase (SaaS
- * continua só no mock; webhook é etapa própria).
+ * 22, SaaS) continuam fora do escopo — SaaS permanece só no mock.
+ *
+ * `signWebhookPayload`/`verifyWebhookSignature` NÃO são implementados
+ * aqui de propósito, não por falta de tempo: o esquema real do Mercado
+ * Pago (manifest `id:...;request-id:...;ts:...;`, HMAC sobre isso, não
+ * sobre o corpo) é estruturalmente incompatível com essas duas
+ * assinaturas de método (pensadas para HMAC direto sobre `rawBody`, o
+ * esquema do mock). A validação de webhook real fica em
+ * `MercadoPagoWebhookSignatureService` (Fase 23.5, módulo
+ * `client-billing`), fora do `PaymentGatewayService`.
  */
 @Injectable()
 export class MercadoPagoPaymentGatewayService extends PaymentGatewayService {
@@ -115,6 +133,33 @@ export class MercadoPagoPaymentGatewayService extends PaymentGatewayService {
     return { externalId: data.id, checkoutUrl: data.init_point };
   }
 
+  // --- Consulta (Fase 23.5) — o webhook usa isto para confirmar o estado
+  // real antes de gravar qualquer coisa; nunca confia só no payload
+  // recebido. Nenhuma regra de negócio aqui, só tradução da resposta.
+
+  async getOneTimePayment(paymentId: string): Promise<GatewayPaymentStatus> {
+    const data = await this.request<MercadoPagoPaymentResponse>('GET', `/v1/payments/${paymentId}`);
+    if (data.id === undefined || data.id === null || !data.status) {
+      throw new InternalServerErrorException(`Resposta do Mercado Pago sem id/status ao consultar o pagamento ${paymentId}.`);
+    }
+    return {
+      externalId: String(data.id),
+      status: data.status,
+      amountCents: Math.round((data.transaction_amount ?? 0) * 100),
+      externalReference: data.external_reference,
+    };
+  }
+
+  async getRecurringSubscription(subscriptionId: string): Promise<GatewaySubscriptionStatus> {
+    const data = await this.request<MercadoPagoPreapprovalResponse>('GET', `/preapproval/${subscriptionId}`);
+    if (!data.id || !data.status) {
+      throw new InternalServerErrorException(
+        `Resposta do Mercado Pago sem id/status ao consultar a assinatura ${subscriptionId}.`,
+      );
+    }
+    return { externalId: data.id, status: data.status, externalReference: data.external_reference };
+  }
+
   // --- Fora do escopo desta fase (SaaS/webhook) — ver comentário da classe. ---
 
   async createCustomer(_professionalId: string, _email: string): Promise<GatewayCustomer> {
@@ -146,15 +191,17 @@ export class MercadoPagoPaymentGatewayService extends PaymentGatewayService {
 
   signWebhookPayload(_rawBody: string): string {
     throw new NotImplementedException(
-      'Assinatura de webhook do Mercado Pago é Fase 23.6 — esquema diferente (manifest id/request-id/ts) do HMAC sobre o corpo usado pelo mock.',
+      'MercadoPagoPaymentGatewayService não assina webhook por este método — o esquema real (manifest id/request-id/ts) fica em MercadoPagoWebhookSignatureService.',
     );
   }
 
   verifyWebhookSignature(_rawBody: string, _signature: string): boolean {
-    throw new NotImplementedException('Verificação de webhook do Mercado Pago é Fase 23.6.');
+    throw new NotImplementedException(
+      'MercadoPagoPaymentGatewayService não verifica webhook por este método — use MercadoPagoWebhookSignatureService.',
+    );
   }
 
-  private async request<T>(method: string, path: string, body: unknown): Promise<T> {
+  private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
     let response: Response;
     try {
       response = await fetch(`${MERCADOPAGO_API_BASE}${path}`, {
@@ -163,7 +210,7 @@ export class MercadoPagoPaymentGatewayService extends PaymentGatewayService {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${this.accessToken}`,
         },
-        body: JSON.stringify(body),
+        ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
     } catch (error) {

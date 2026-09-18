@@ -27,6 +27,29 @@ export interface GatewayCheckout {
   checkoutUrl: string;
 }
 
+export interface GatewayPaymentStatus {
+  externalId: string;
+  /**
+   * Vocabulário do próprio gateway, não traduzido para nosso enum aqui —
+   * a tradução é responsabilidade de quem consome (Fase 23.5). Mercado
+   * Pago: approved/pending/in_process/authorized/in_mediation/rejected/
+   * cancelled/refunded/charged_back (confirmados na documentação oficial
+   * de Payments API).
+   */
+  status: string;
+  amountCents: number;
+  /** Nosso próprio ID (PaymentLink.id) — Mercado Pago: `external_reference`. Ausente se o gateway não devolveu. */
+  externalReference?: string;
+}
+
+export interface GatewaySubscriptionStatus {
+  externalId: string;
+  /** Vocabulário do gateway. Mercado Pago (preapproval): pending/authorized/paused/cancelled. */
+  status: string;
+  /** Nosso próprio ID (PaymentLink.id) — Mercado Pago: `external_reference`. */
+  externalReference?: string;
+}
+
 export interface CreateRecurringCheckoutParams extends CreateCheckoutParams {
   /** Periodicidade da cobrança — sem isso não há como montar `auto_recurring` num gateway real (Fase 23.4). */
   recurrenceInterval: RecurrenceInterval;
@@ -65,6 +88,12 @@ export abstract class PaymentGatewayService {
   // contra o mock; nada de Mercado Pago real ainda (Fase 23.4+).
   abstract createOneTimeCheckout(params: CreateCheckoutParams): Promise<GatewayCheckout>;
   abstract createRecurringCheckout(params: CreateRecurringCheckoutParams): Promise<GatewayCheckout>;
+
+  // --- Consulta (Fase 23.5) — o webhook nunca confia só no payload
+  // recebido; sempre consulta o recurso de volta no gateway antes de
+  // gravar qualquer transição de estado.
+  abstract getOneTimePayment(paymentId: string): Promise<GatewayPaymentStatus>;
+  abstract getRecurringSubscription(subscriptionId: string): Promise<GatewaySubscriptionStatus>;
 
   /** Assina um payload de webhook (usado pelo simulador de ciclo de cobrança para se auto-chamar). */
   abstract signWebhookPayload(rawBody: string): string;
