@@ -111,7 +111,7 @@ const EVOLUTION_SERIES_SELECT = {
 const MAX_EVOLUTION_SERIES_POINTS = 500;
 
 const ALLOWED_PHOTO_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_PHOTO_SIZE_BYTES = 10 * 1024 * 1024;
+export const MAX_PHOTO_SIZE_BYTES = 10 * 1024 * 1024;
 
 function calculateAge(birthDate: Date, atDate: Date): number {
   let age = atDate.getFullYear() - birthDate.getFullYear();

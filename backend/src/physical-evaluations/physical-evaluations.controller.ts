@@ -20,7 +20,7 @@ import { Request } from 'express';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
-import { PhysicalEvaluationsService } from './physical-evaluations.service';
+import { MAX_PHOTO_SIZE_BYTES, PhysicalEvaluationsService } from './physical-evaluations.service';
 import { CreateEvaluationDto } from './dto/create-evaluation.dto';
 import { UpdateEvaluationDto } from './dto/update-evaluation.dto';
 import { UpdateEvaluationReleaseDto } from './dto/update-evaluation-release.dto';
@@ -114,7 +114,10 @@ export class PhysicalEvaluationsController {
   }
 
   @Post(':id/photos')
-  @UseInterceptors(FileInterceptor('file'))
+  // limits.fileSize: sem isso o multer lê o arquivo inteiro na memória antes de
+  // qualquer checagem de tamanho (DoS por upload gigante); acima do limite ele
+  // aborta o stream e o Nest responde 413.
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_PHOTO_SIZE_BYTES, files: 1 } }))
   uploadPhoto(
     @CurrentUser() user: AuthenticatedUser,
     @Param('clientId') clientId: string,
