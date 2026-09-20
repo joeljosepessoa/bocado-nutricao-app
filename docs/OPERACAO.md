@@ -61,8 +61,9 @@ docker compose exec api node -e "fetch('http://127.0.0.1:3000/health').then(r=>r
 ```
 
 - Com `NODE_ENV=production` a API **recusa subir** se `JWT_ACCESS_SECRET` for fraco/de exemplo,
-  `CORS_ORIGIN` apontar para localhost, `DATABASE_URL` faltar ou `PAYMENT_GATEWAY_PROVIDER=mercadopago`
-  estiver sem `MERCADOPAGO_WEBHOOK_SECRET`. Ela também loga **avisos** para tudo que ainda está
+  `CORS_ORIGIN` apontar para localhost, `DATABASE_URL` faltar, `PAYMENT_GATEWAY_PROVIDER=mercadopago`
+  estiver sem `MERCADOPAGO_WEBHOOK_SECRET` ou o storage local não tiver `STORAGE_LOCAL_DIR` absoluto
+  (o compose já fixa `/data/storage`). Ela também loga **avisos** para tudo que ainda está
   simulado (cobrança mock, e-mail console, IA mock, storage local, sem Sentry, sem `TRUST_PROXY`).
 - Coloque a API atrás de HTTPS (proxy reverso/load balancer) e defina `TRUST_PROXY` (ex.: `1`).
   Se painel e API estiverem em sites diferentes, `AUTH_COOKIE_SAME_SITE=none` (exige HTTPS).
@@ -74,17 +75,97 @@ docker compose exec api node -e "fetch('http://127.0.0.1:3000/health').then(r=>r
 
 ## 6. Armazenamento
 
-`STORAGE_PROVIDER=local` grava em `STORAGE_LOCAL_DIR` (o compose monta o volume `bocado-storage`
-em `/data/storage`). **Em produção o storage local só serve com volume persistente e com backup**;
-em ambiente efêmero (PaaS sem disco) use `STORAGE_PROVIDER=s3` (S3, R2, B2, MinIO) com `S3_*`.
-O adapter S3 tem testes unitários, mas **ainda não foi validado contra um bucket real**. Guarda:
-fotos de avaliação, PDFs de relatório e os GIFs do piloto (`exercise-media/`).
+O que fica no storage, sempre **privado** (não existe URL pública de arquivo):
+
+| Conteúdo | Chave | Como o usuário acessa |
+|---|---|---|
+| Fotos de avaliação | `<uuid>.jpeg\|png\|webp` | API autenticada devolve uma URL assinada `/files/<token>` (JWT de 5 min, `Cache-Control: no-store`) |
+| PDFs de relatório | `<uuid>.pdf` | idem |
+| GIFs de exercício (piloto) | `exercise-media/<sha256>.gif` | `GET /exercise-media/:sha256`, autenticado, cache imutável |
+
+O token expirado, adulterado ou de outro segredo devolve 404; uma chave que tente sair do diretório de
+storage (`../`, caminho absoluto) é recusada. As chaves são UUID aleatório (não adivinháveis); o cliente
+só chega a um arquivo pelo mesmo caminho de autorização das rotas que geram a URL.
+
+### Local (padrão) e Docker
+
+- `STORAGE_PROVIDER=local` grava em `STORAGE_LOCAL_DIR`. Em desenvolvimento, `../storage` (pasta `storage/` da
+  raiz do repositório, ignorada pelo git). **Em produção precisa ser um caminho absoluto de volume persistente**
+  — com `NODE_ENV=production` a API recusa subir sem isso.
+- No Compose o volume nomeado `bocado-storage` é montado em `/data/storage` e `STORAGE_LOCAL_DIR` já vem fixo.
+  O volume sobrevive a `docker compose restart`, `up --force-recreate` e `down`; **só `docker compose down -v`
+  (ou `docker volume rm`) o apaga — nunca use `-v` em produção**.
+- No boot a API cria o diretório e confere que ele é gravável; se não for (volume ausente, somente leitura, sem
+  permissão), ela não sobe e diz por quê, em vez de falhar no primeiro upload. Arquivos são gravados de forma
+  atômica (temporário + rename), então um backup nunca captura um arquivo pela metade.
+- **Teste de persistência** (exige Docker): `SMOKE_CONFIRM=sim ./database/scripts/verify-storage-persistence.sh`
+  sobe a stack, cria foto + PDF, reinicia a API e a recria, e confere o hash byte a byte depois de cada etapa.
+  Deixa um profissional/cliente de teste no banco — rode em homologação. **Status: escrito, mas nunca executado —
+  a máquina de desenvolvimento não tem Docker** (o mesmo fluxo, sem container, foi validado com a API
+  em processo: gravar → reiniciar → conferir → restaurar de backup → conferir; sem o volume a conferência falha).
+
+### S3 (futuro, opcional)
+
+Continua disponível e **não é obrigatório**: sem `STORAGE_PROVIDER=s3` nada muda. Para trocar:
+
+1. Crie um bucket **privado** (bloqueio de acesso público ligado, sem ACL pública) e um usuário/chave com
+   permissão só de `GetObject`, `PutObject` e `DeleteObject` nesse bucket.
+2. No `.env`: `STORAGE_PROVIDER=s3`, `S3_BUCKET`, `S3_REGION` (R2: `auto`), `S3_ENDPOINT` (só R2/B2/MinIO) e
+   `S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY` — ou deixe as duas chaves vazias e use IAM role da infraestrutura.
+   Sem `S3_BUCKET` a API não sobe. Erros do provedor vão só para o log do servidor (sem chaves nem conteúdo);
+   o cliente recebe uma mensagem genérica.
+3. **Migração de arquivos existentes não é automática**: copie o conteúdo do volume para o bucket mantendo as
+   chaves (`aws s3 sync` / `rclone`) antes de trocar o provedor, senão as fotos/PDFs antigos viram 404. Os GIFs
+   do piloto (`exercise-media/<sha256>.gif`) precisam ser copiados também (a importação do piloto só grava em
+   storage local).
+4. O adapter S3 tem testes unitários (bucket, endpoint/path-style, credenciais opcionais, content type, ACL
+   ausente, leitura, remoção, erros), mas **nunca foi exercitado contra um bucket real**: valide com um bucket de
+   homologação (subir foto, gerar PDF, baixar pelas URLs assinadas) antes de depender dele.
 
 ## 7. Backup e restauração
 
-`database/scripts/backup.sh` e `restore.sh` (`pg_dump`/`pg_restore`), sem agendamento automático:
-agende `backup.sh` no seu provedor (diário) e **copie o dump e o volume de storage para fora do
-servidor**. Teste uma restauração antes de ir ao ar.
+Faça backup de **duas coisas juntas**: o banco e o storage (banco sem arquivos deixa fotos/PDFs órfãos, e
+arquivos sem banco não servem). Nada é agendado: agende no seu provedor (diário) e **copie os resultados para fora
+do servidor**. Teste uma restauração antes de ir ao ar.
+
+**Banco** — `database/scripts/backup.sh` / `restore.sh` (`pg_dump`/`pg_restore`, o restore destrói o banco de destino).
+
+**Storage** — `database/scripts/backup-storage.sh` e `restore-storage.sh` (só precisam de `bash`, `tar`, `sha256sum`):
+
+```bash
+# backup: lê o storage (nunca altera), grava bocado-storage-<UTC>.tar.gz + .sha256 em destino SEPARADO
+STORAGE_LOCAL_DIR=/caminho/do/storage ./database/scripts/backup-storage.sh /caminho/dos/backups
+
+./database/scripts/restore-storage.sh --list /caminho/dos/backups/bocado-storage-<UTC>.tar.gz   # lista o conteúdo
+./database/scripts/restore-storage.sh /caminho/dos/backups/bocado-storage-<UTC>.tar.gz /destino  # restaura
+```
+
+O backup recusa um destino dentro do storage, descarta temporários de escrita em andamento, confere que o tar.gz
+é legível antes de publicá-lo e só então grava o checksum. A restauração confere o checksum e a integridade,
+recusa caminhos com `..`, **nunca apaga** nada do destino e **não sobrescreve** arquivos que já existem lá
+(`OVERWRITE=1` para sobrescrever; `RESTORE_CONFIRM=sim` dispensa a pergunta). Para validar um backup sem risco,
+restaure num diretório vazio e compare com o original (`sha256sum` dos arquivos). Restaurar sobre o storage de
+produção: pare a API antes.
+
+**Docker Compose** — o storage está no volume `bocado-storage`, então rode o mesmo `tar` dentro de um container da
+imagem da API (que já monta o volume; a imagem é Debian, com GNU tar):
+
+```bash
+mkdir -p backups
+docker compose run --rm --no-deps -v "$PWD/backups:/backup" --entrypoint bash api -c \
+  'tar --exclude=".tmp-*" --exclude=".write-check-*" -C /data/storage -czf /backup/bocado-storage-$(date -u +%Y%m%dT%H%M%SZ).tar.gz . && ls -la /backup'
+# restauração (API parada; não apaga nada e mantém arquivos já existentes):
+docker compose stop api
+docker compose run --rm --no-deps -v "$PWD/backups:/backup:ro" --entrypoint bash api -c \
+  'tar --skip-old-files -xzf /backup/bocado-storage-<UTC>.tar.gz -C /data/storage'
+docker compose start api
+```
+
+**Status da validação:** `backup-storage.sh` e `restore-storage.sh` foram executados de verdade contra um storage
+real (561 arquivos, ida e volta com `sha256` idêntico por arquivo, origem intacta, checksum adulterado / tar
+truncado / `..` no tar / destino dentro do storage recusados, restauração sobre destino não vazio sem perda). Os
+comandos `docker compose run` acima **não foram executados** (sem Docker nesta máquina) — valide-os uma vez em
+homologação. `restore.sh`/`backup.sh` do banco também não puderam ser rodados aqui (sem `pg_dump`).
 
 ## 8. E-mail
 
@@ -146,7 +227,9 @@ Release (APK/AAB/IPA) **ainda não configurado**: faltam `eas.json`, `android.pa
 
 30 exercícios do catálogo têm GIF (`GET /exercise-media/:sha256`, autenticado, cache imutável).
 Reimportar: `EXERCISE_MEDIA_SOURCE_DIR=<biblioteca> npm run reference-data:import-exercise-media-pilot --workspace backend`
-(`-- --dry-run` só valida). Só storage local. Validação em aparelho Android real: **pendente**.
+(`-- --dry-run` só valida). Só storage local; os arquivos ficam em `exercise-media/<sha256>.gif` dentro do
+storage, então entram no backup do storage (§7) e continuam servidos pelo mesmo endpoint em qualquer volume.
+Validação em aparelho Android real: **pendente**.
 
 ## 13. Checklist de release
 
@@ -155,7 +238,7 @@ Reimportar: `EXERCISE_MEDIA_SOURCE_DIR=<biblioteca> npm run reference-data:impor
 - [ ] Primeiro admin criado; catálogo importado
 - [ ] HTTPS + `TRUST_PROXY` + `CORS_ORIGIN` reais; painel publicado com `VITE_API_URL`
 - [ ] SMTP funcionando (teste um "esqueci minha senha" de ponta a ponta)
-- [ ] Storage persistente (volume ou S3) + backup agendado e restauração testada
+- [ ] Storage persistente (volume ou S3): `verify-storage-persistence.sh` executado em homologação; backup do banco **e** do storage agendado e restauração testada
 - [ ] Sentry (`ERROR_TRACKING_PROVIDER=sentry`) se desejado
 - [ ] Mercado Pago validado em sandbox (se a cobrança do cliente for ao ar)
 - [ ] Apps: EAS configurado, builds gerados e testados em aparelho real

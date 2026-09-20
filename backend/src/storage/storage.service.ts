@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { randomUUID } from 'crypto';
 
 export interface SignedUrl {
   url: string;
@@ -8,6 +9,16 @@ export interface SignedUrl {
 }
 
 const SIGNED_URL_TTL_SECONDS = 300;
+
+/**
+ * Chave de um arquivo novo: UUID v4 (imprevisível) + extensão do tipo de
+ * conteúdo, sanitizada (só [a-z0-9]) — nunca vem separador de caminho nem
+ * caractere estranho do tipo informado pelo cliente. Usada por todos os adapters.
+ */
+export function buildStorageKey(contentType: string): string {
+  const extension = (contentType.split('/')[1] ?? '').toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
+  return `${randomUUID()}.${extension}`;
+}
 
 export type DownloadPurpose = 'photo-download' | 'report-download';
 const VALID_PURPOSES: DownloadPurpose[] = ['photo-download', 'report-download'];
@@ -46,13 +57,21 @@ export abstract class StorageService {
   }
 
   verifySignedToken(token: string): { storageKey: string; contentType: string } {
-    const payload = this.jwtService.verify<{ storageKey: string; contentType: string; purpose: string }>(
-      token,
-      { secret: this.config.get<string>('JWT_ACCESS_SECRET') },
-    );
-    if (!VALID_PURPOSES.includes(payload.purpose as DownloadPurpose)) {
-      throw new NotFoundException('Token inválido.');
+    let payload: { storageKey?: string; contentType?: string; purpose?: string };
+    try {
+      payload = this.jwtService.verify(token, { secret: this.config.get<string>('JWT_ACCESS_SECRET') });
+    } catch {
+      // Link expirado, adulterado ou lixo: é um pedido inválido do cliente (404), não um
+      // erro do servidor — sem isso virava 500 e disparava log/rastreamento de erro.
+      throw new NotFoundException('Link inválido ou expirado.');
     }
-    return payload;
+    if (
+      !VALID_PURPOSES.includes(payload.purpose as DownloadPurpose) ||
+      typeof payload.storageKey !== 'string' ||
+      typeof payload.contentType !== 'string'
+    ) {
+      throw new NotFoundException('Link inválido ou expirado.');
+    }
+    return { storageKey: payload.storageKey, contentType: payload.contentType };
   }
 }

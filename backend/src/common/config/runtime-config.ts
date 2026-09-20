@@ -41,6 +41,14 @@ export function checkRuntimeConfig(get: Getter): RuntimeConfigReport {
     report.errors.push('PAYMENT_GATEWAY_PROVIDER=mercadopago exige MERCADOPAGO_WEBHOOK_SECRET (sem ele todo webhook é rejeitado).');
   }
 
+  // Storage local só é seguro num caminho ABSOLUTO (o volume montado): o padrão relativo
+  // ("../storage") cai dentro da camada do container e se perde a cada recriação.
+  if ((get('STORAGE_PROVIDER') ?? 'local') === 'local' && !/^(\/|[A-Za-z]:[\\/])/.test(get('STORAGE_LOCAL_DIR') ?? '')) {
+    report.errors.push(
+      'STORAGE_LOCAL_DIR ausente ou relativo: com STORAGE_PROVIDER=local aponte para o caminho absoluto de um volume persistente (ex.: /data/storage) ou use STORAGE_PROVIDER=s3.',
+    );
+  }
+
   if (!get('PASSWORD_RESET_URL')) {
     report.warnings.push('PASSWORD_RESET_URL não definida: o link de redefinição de senha apontará para localhost.');
   }

@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { NoSuchKey, S3Client } from '@aws-sdk/client-s3';
@@ -63,6 +63,31 @@ describe('S3StorageService', () => {
     expect(command.input.ContentType).toBe('image/png');
     expect(result.storageKey).toMatch(/\.png$/);
     expect(result.sizeBytes).toBe(Buffer.from('conteudo').byteLength);
+  });
+
+  it('falha do provedor no save vira erro genérico — a mensagem do SDK (bucket/endpoint) fica só no log do servidor', async () => {
+    send.mockRejectedValueOnce(new Error('AccessDenied: bucket interno-secreto em https://endpoint.interno'));
+    const service = new S3StorageService(jwtServiceStub, configWith({ S3_BUCKET: 'interno-secreto' }));
+
+    const error = await service.save(Buffer.from('x'), 'image/png').catch((e: Error) => e);
+
+    expect(error).toBeInstanceOf(InternalServerErrorException);
+    expect((error as Error).message).not.toMatch(/interno|endpoint/);
+  });
+
+  it('a chave gerada é imprevisível (uuid), plana e sem caracteres de caminho', async () => {
+    send.mockResolvedValue({});
+    const service = new S3StorageService(jwtServiceStub, configWith({ S3_BUCKET: 'meu-bucket' }));
+    const keys = await Promise.all(Array.from({ length: 20 }, () => service.save(Buffer.from('x'), 'application/pdf')));
+    expect(new Set(keys.map((k) => k.storageKey)).size).toBe(20);
+    for (const { storageKey } of keys) expect(storageKey).toMatch(/^[0-9a-f-]{36}\.pdf$/);
+  });
+
+  it('nunca usa ACL pública nem gera URL pública: o objeto é gravado sem ACL (bucket privado)', async () => {
+    send.mockResolvedValueOnce({});
+    const service = new S3StorageService(jwtServiceStub, configWith({ S3_BUCKET: 'meu-bucket' }));
+    await service.save(Buffer.from('x'), 'image/png');
+    expect(send.mock.calls[0][0].input.ACL).toBeUndefined();
   });
 
   it('read concatena o corpo em chunks e retorna um Buffer', async () => {

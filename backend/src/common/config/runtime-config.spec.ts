@@ -6,6 +6,7 @@ const goodProd = {
   JWT_ACCESS_SECRET: 'x'.repeat(48),
   DATABASE_URL: 'postgresql://u:p@db:5432/bocado',
   CORS_ORIGIN: 'https://painel.exemplo.com.br',
+  STORAGE_LOCAL_DIR: '/data/storage',
 };
 
 describe('checkRuntimeConfig', () => {
@@ -37,6 +38,18 @@ describe('checkRuntimeConfig', () => {
     const noDb = { ...goodProd } as Record<string, string>;
     delete noDb.DATABASE_URL;
     expect(checkRuntimeConfig(getter(noDb)).errors.join(' ')).toMatch(/DATABASE_URL/);
+  });
+
+  it('storage local em produção exige caminho ABSOLUTO (volume); relativo/ausente é erro; s3 dispensa', () => {
+    const noDir: Record<string, string> = { ...goodProd };
+    delete noDir.STORAGE_LOCAL_DIR;
+    expect(checkRuntimeConfig(getter(noDir)).errors.join(' ')).toMatch(/STORAGE_LOCAL_DIR/);
+    for (const relative of ['../storage', 'storage', './storage']) {
+      expect(checkRuntimeConfig(getter({ ...goodProd, STORAGE_LOCAL_DIR: relative })).errors.join(' ')).toMatch(/STORAGE_LOCAL_DIR/);
+    }
+    expect(checkRuntimeConfig(getter({ ...goodProd, STORAGE_LOCAL_DIR: '/var/lib/bocado' })).errors).toEqual([]);
+    expect(checkRuntimeConfig(getter({ ...goodProd, STORAGE_LOCAL_DIR: 'D:\\dados\\storage' })).errors).toEqual([]);
+    expect(checkRuntimeConfig(getter({ ...noDir, STORAGE_PROVIDER: 's3' })).errors).toEqual([]);
   });
 
   it('mercadopago sem MERCADOPAGO_WEBHOOK_SECRET é erro; com o segredo, não', () => {

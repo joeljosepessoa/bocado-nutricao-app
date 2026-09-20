@@ -5,11 +5,10 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { randomUUID } from 'crypto';
-import { StorageService } from './storage.service';
+import { buildStorageKey, StorageService } from './storage.service';
 
 /**
  * Adapter de object storage compatível com S3 — protocolo público e
@@ -21,6 +20,7 @@ import { StorageService } from './storage.service';
  */
 @Injectable()
 export class S3StorageService extends StorageService {
+  private readonly logger = new Logger(S3StorageService.name);
   private readonly client: S3Client;
   private readonly bucket: string;
 
@@ -47,8 +47,7 @@ export class S3StorageService extends StorageService {
   }
 
   async save(buffer: Buffer, contentType: string): Promise<{ storageKey: string; sizeBytes: number }> {
-    const extension = contentType.split('/')[1] ?? 'bin';
-    const storageKey = `${randomUUID()}.${extension}`;
+    const storageKey = buildStorageKey(contentType);
     try {
       await this.client.send(
         new PutObjectCommand({
@@ -59,9 +58,9 @@ export class S3StorageService extends StorageService {
         }),
       );
     } catch (error) {
-      throw new InternalServerErrorException(
-        `Falha ao salvar arquivo no object storage: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      // O detalhe do provedor (bucket, região, política) fica só no log do servidor.
+      this.logger.error(`Falha ao salvar arquivo no object storage: ${error instanceof Error ? error.message : String(error)}`);
+      throw new InternalServerErrorException('Falha ao salvar arquivo no object storage.');
     }
     return { storageKey, sizeBytes: buffer.byteLength };
   }
