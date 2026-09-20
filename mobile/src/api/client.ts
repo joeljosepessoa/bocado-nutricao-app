@@ -2,6 +2,13 @@ import axios, { type InternalAxiosRequestConfig } from 'axios';
 import Constants from 'expo-constants';
 
 function resolveBaseUrl(): string {
+  // EXPO_PUBLIC_API_URL (embutida pelo Expo no bundle) tem precedência sobre o
+  // app.json: permite apontar para o IP da rede em teste e para a API de
+  // produção no build de release sem editar arquivo versionado.
+  const fromEnv = process.env.EXPO_PUBLIC_API_URL;
+  if (typeof fromEnv === 'string' && fromEnv.length > 0) {
+    return fromEnv;
+  }
   const fromExtra = Constants.expoConfig?.extra?.apiUrl;
   if (typeof fromExtra === 'string' && fromExtra.length > 0) {
     return fromExtra;

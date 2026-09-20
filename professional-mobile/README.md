@@ -9,7 +9,7 @@ npm install
 npm run start --workspace professional-mobile
 ```
 
-Configure a URL do backend via `extra.apiUrl` em `app.json` (padrão `http://localhost:3000`).
+Configure a URL do backend por `EXPO_PUBLIC_API_URL=http://IP-DO-PC:3000 npx expo start` (tem precedência) ou via `extra.apiUrl` em `app.json` (padrão `http://localhost:3000`, que um aparelho físico NÃO alcança).
 
 ## Scripts
 
