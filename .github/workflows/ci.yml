@@ -1,15 +1,37 @@
 name: CI
 
+# Valida o monorepo inteiro em runner Linux padrão (ubuntu-latest), sem Docker, sem segredos do
+# projeto e sem serviços externos: cobrança = mock, e-mail = console, storage = disco, IA = mock.
+# Um job por parte do monorepo; qualquer teste, typecheck, lint, build, migration ou secret
+# acidental que falhe reprova o CI.
+
 on:
   push:
     branches: [main, master]
   pull_request:
     branches: [main, master]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  e2e:
+  # Rede de segurança contra segredo/arquivo sensível versionado por descuido (scripts/check-secrets.sh).
+  secrets:
+    name: Secrets acidentais
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/check-secrets.sh
+
+  backend:
+    name: Backend (migrations, build, unit, e2e)
     runs-on: ubuntu-latest
     services:
+      # Banco descartável só do CI (vive e morre com o job). Nada aponta para banco de verdade.
       postgres:
         image: postgres:16-alpine
         env:
@@ -24,24 +46,33 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
+    # Somente valores de TESTE. NODE_ENV fica indefinido de propósito: a validação de produção
+    # (segredo forte, CORS real...) não se aplica ao CI.
     env:
       DATABASE_URL: postgresql://bocado:bocado@localhost:5432/bocado_ci
+      SHADOW_DATABASE_URL: postgresql://bocado:bocado@localhost:5432/bocado_ci_shadow
       JWT_ACCESS_SECRET: ci-secret-nao-usar-em-producao
       JWT_ACCESS_EXPIRES_IN: 15m
       JWT_REFRESH_EXPIRES_IN: 7d
       CORS_ORIGIN: http://localhost:5173
+      PAYMENT_GATEWAY_PROVIDER: mock
+      EMAIL_PROVIDER: console
+      STORAGE_PROVIDER: local
       STORAGE_LOCAL_DIR: ../storage
+      AI_PROVIDER: mock-local
+      ERROR_TRACKING_PROVIDER: console
       PORT: 3000
 
     steps:
       - uses: actions/checkout@v4
 
+      # Node 22: mínimo exigido por dependências atuais (puppeteer 25 e vitest 5 pedem >= 22.12).
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
-      # Bibliotecas do Chromium (Puppeteer) — mesma lista do Dockerfile
+      # Bibliotecas do Chromium (Puppeteer) para o e2e de PDF — mesma lista do Dockerfile
       # (https://pptr.dev/troubleshooting#chrome-doesnt-launch-on-linux).
       - name: Instala dependências do Chromium
         run: |
@@ -58,10 +89,26 @@ jobs:
       - name: Gera Prisma Client
         run: npm run prisma:generate --workspace backend
 
-      - name: Aplica migrações
+      - name: Aplica migrações (banco vazio)
         run: npm run prisma:migrate:deploy --workspace backend
 
-      - name: Build
+      # Dados-base que o produto e o e2e esperam num banco novo: catálogo de planos e protocolo
+      # Jackson & Pollock (database/seed.ts). Idempotente (upsert), sem segredos.
+      - name: Seed dos dados-base
+        run: npm run prisma:seed --workspace backend
+
+      # Reprova se o schema.prisma tem mudança sem migration correspondente (ou o contrário).
+      - name: Migrations em dia com o schema.prisma
+        working-directory: backend
+        run: |
+          echo "CREATE DATABASE bocado_ci_shadow;" | npx prisma db execute --stdin --url "$DATABASE_URL"
+          npx prisma migrate diff \
+            --from-migrations ../database/migrations \
+            --to-schema-datamodel ../database/schema.prisma \
+            --shadow-database-url "$SHADOW_DATABASE_URL" \
+            --exit-code
+
+      - name: Typecheck e build
         run: npm run build --workspace backend
 
       - name: Testes unitários
@@ -70,6 +117,63 @@ jobs:
       - name: Testes e2e
         run: npm run test:e2e --workspace backend
 
+      # Fora do gate: `npm run lint --workspace backend` nunca funcionou (o ESLint 10 do projeto exige
+      # eslint.config.* e o backend não tem — dívida histórica, não regressão). O typecheck do build
+      # acima é o gate estático do backend até o lint ser configurado.
+
+  web:
+    name: Professional Web (testes, typecheck, lint, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Instala dependências (workspace professional-web)
+        run: npm ci --workspace professional-web --include-workspace-root
+
+      - name: Testes
+        run: npm test --workspace professional-web
+
+      - name: Typecheck
+        run: npm run typecheck --workspace professional-web
+
+      - name: Lint
+        run: npm run lint --workspace professional-web
+
+      - name: Build
+        run: npm run build --workspace professional-web
+
+  mobile:
+    name: ${{ matrix.workspace }} (testes, typecheck, lint)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace: [mobile, professional-mobile]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Instala dependências (workspace ${{ matrix.workspace }})
+        run: npm ci --workspace ${{ matrix.workspace }} --include-workspace-root
+
+      - name: Testes
+        run: npm test --workspace ${{ matrix.workspace }}
+
+      - name: Typecheck
+        run: npm run typecheck --workspace ${{ matrix.workspace }}
+
+      - name: Lint
+        run: npm run lint --workspace ${{ matrix.workspace }}
+
   dependency-audit:
     runs-on: ubuntu-latest
     steps:
@@ -77,7 +181,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Instala dependências (workspace backend)

@@ -20,7 +20,7 @@ todas (são idempotentes, mas duplicam trabalho).
 
 ## 2. Requisitos
 
-Node 20+ (a imagem Docker usa 20), npm 10+, PostgreSQL 16, e Chromium (baixado pelo
+Node **22.12+** (exigido por `puppeteer` 25 e `vitest` 5; o CI usa Node 22), npm 10+, PostgreSQL 16, e Chromium (baixado pelo
 `puppeteer`) para gerar PDFs.
 
 ## 3. Desenvolvimento
@@ -52,6 +52,12 @@ Em qualquer ambiente novo ou após atualizar o código: `npm run prisma:migrate:
 (aplica as migrations versionadas em `database/migrations`; nunca use `prisma:migrate`/`dev` em produção).
 O compose faz isso no serviço `migrate` antes de subir a API.
 
+**Dados-base (seed) — obrigatório em ambiente novo.** As migrations só criam o esquema. O catálogo de planos do
+billing e o protocolo de avaliação `jackson_pollock_7` vêm de `database/seed.ts`; sem ele, criar uma avaliação com
+`protocolCode` devolve 400 e a listagem de planos vem vazia. Rode uma vez (é idempotente, pode repetir):
+`npm run prisma:seed --workspace backend`. No Compose (a imagem da API não traz `ts-node`; o serviço `migrate` traz):
+`docker compose run --rm migrate npm run prisma:seed --workspace backend`. O compose **não** faz isso sozinho.
+
 ## 5. Produção com Docker Compose
 
 ```bash
@@ -72,6 +78,9 @@ docker compose exec api node -e "fetch('http://127.0.0.1:3000/health').then(r=>r
 - A imagem tem `HEALTHCHECK` em `/health` (200 só com o banco acessível). O Compose não foi
   exercitado em uma máquina com Docker neste ambiente de desenvolvimento — valide o primeiro
   `docker compose up` antes de depender dele.
+- **Pendência conhecida:** o `Dockerfile` ainda parte de `node:20-bookworm-slim`, mas `puppeteer` 25 pede Node
+  >= 22.12. Na validação Docker, troque a base para `node:22-bookworm-slim` e confirme a geração de PDF
+  dentro da imagem (o CI já roda em Node 22).
 
 ## 6. Armazenamento
 
@@ -234,7 +243,7 @@ Validação em aparelho Android real: **pendente**.
 ## 13. Checklist de release
 
 - [ ] `.env` de produção preenchido (nada de valor de exemplo); a API sobe sem erros de configuração
-- [ ] `npm run prisma:migrate:deploy` aplicado; `GET /health` = 200
+- [ ] `npm run prisma:migrate:deploy` aplicado e `npm run prisma:seed` executado (planos + protocolo, §4); `GET /health` = 200
 - [ ] Primeiro admin criado; catálogo importado
 - [ ] HTTPS + `TRUST_PROXY` + `CORS_ORIGIN` reais; painel publicado com `VITE_API_URL`
 - [ ] SMTP funcionando (teste um "esqueci minha senha" de ponta a ponta)
@@ -242,3 +251,49 @@ Validação em aparelho Android real: **pendente**.
 - [ ] Sentry (`ERROR_TRACKING_PROVIDER=sentry`) se desejado
 - [ ] Mercado Pago validado em sandbox (se a cobrança do cliente for ao ar)
 - [ ] Apps: EAS configurado, builds gerados e testados em aparelho real
+- [ ] Repositório remoto criado, CI verde no GitHub e proteção de branch exigindo os checks (§14)
+
+## 14. Repositório remoto e CI
+
+**Remoto.** O repositório local ainda não tem `origin`. Crie um repositório **vazio e privado** no GitHub
+(sem README/.gitignore/licença, para não gerar histórico divergente) e conecte-o com a URL que o GitHub mostrar:
+
+```bash
+git remote add origin <URL-DO-SEU-REPOSITÓRIO>
+git push -u origin master        # a branch local se chama "master"; o CI escuta "main" e "master"
+```
+
+Antes do primeiro push rode `bash scripts/check-secrets.sh` (o mesmo verificador do CI). O histórico atual foi
+varrido (38 commits): nenhum `.env` ou credencial real, só placeholders. Não reescreva o histórico para publicar.
+
+**CI** — `.github/workflows/ci.yml`, em `ubuntu-latest`, Node 22, a cada push/PR em `main` ou `master`. Nenhum
+segredo do projeto é necessário: cobrança `mock`, e-mail `console`, storage em disco, IA `mock-local`, e um
+PostgreSQL descartável como service do job.
+
+| Job | O que reprova o CI |
+|---|---|
+| `secrets` | arquivo sensível versionado (`.env*`, chaves) ou padrão de credencial real (`scripts/check-secrets.sh`) |
+| `backend` | migration inválida em banco vazio, schema.prisma sem migration correspondente (drift), typecheck/build, testes unitários, e2e |
+| `web` | testes (vitest), typecheck, lint (oxlint), build |
+| `mobile` / `professional-mobile` | testes (jest), typecheck, lint (eslint) |
+| `dependency-audit` | **não bloqueia** (`continue-on-error`): achados sem correção upstream, ver comentário no workflow |
+
+Fora do gate, de propósito: `npm run lint --workspace backend` (o ESLint 10 exige `eslint.config.*` e o backend não tem;
+dívida histórica, o typecheck do build cobre o essencial) e qualquer coisa com Docker (a validação da stack fica
+separada, ver §5 e §6). As actions são as oficiais `actions/checkout@v4` e `actions/setup-node@v4` (tag de versão
+maior; fixe por SHA se a política de segurança do repositório exigir).
+
+Rodar localmente o que o CI roda: `bash scripts/check-secrets.sh`; `npm test --workspace <ws>`; `npm run typecheck --workspace <ws>`;
+`npm run lint --workspace <ws>`; no backend, `npm run test:e2e --workspace backend` com um banco de teste (o e2e grava no banco de `DATABASE_URL`).
+
+**Proteção de branch (configurar no GitHub, não é versionável):** em Settings → Branches, exija os checks `Secrets acidentais`,
+`Backend (migrations, build, unit, e2e)`, `Professional Web (testes, typecheck, lint, build)` e `mobile`/`professional-mobile`
+antes de mergear na branch principal.
+
+**Lockfile e Linux.** O `package-lock.json` foi gerado no Windows e faltavam nele os binários nativos de Linux do
+`rolldown` (Vite 8), `oxlint` e `lightningcss`; sem eles `npm ci` no runner Linux instala sem esses binários e
+`vite build`/`oxlint` falham. As entradas de todas as plataformas foram adicionadas ao lockfile. Ao atualizar dependências,
+prefira gerar o lockfile com `npm install` e confira `node -e "console.log(Object.keys(require('./package-lock.json').packages).filter(k=>k.includes('linux-x64-gnu')))"`.
+
+**Status:** o workflow foi validado localmente (YAML, comandos emulados num clone limpo). **Ele ainda não rodou no GitHub**
+— o primeiro push é a validação real.

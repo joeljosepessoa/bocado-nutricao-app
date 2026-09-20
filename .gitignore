@@ -3,9 +3,24 @@ dist/
 build/
 .env
 .env.local
+# Qualquer variante de .env (.env.production, .env.staging...) fica fora; só o modelo é versionado.
+.env.*
+!.env.example
 *.log
 .DS_Store
 .expo/
 .turbo/
 coverage/
 /storage/
+# Backups gerados pelos scripts de database/scripts (dump do banco e tar.gz do storage): nunca versionar.
+/backups/
+*.dump
+# Chaves e credenciais de plataforma
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+google-services.json
+GoogleService-Info.plist
