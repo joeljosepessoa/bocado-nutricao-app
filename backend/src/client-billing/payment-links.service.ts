@@ -147,19 +147,31 @@ export class PaymentLinksService {
    * 23.6, mesmo raciocínio de BillingCycleService.processDueBilling.
    */
   async markExpired(): Promise<number> {
+    const now = new Date();
     const due = await this.prisma.paymentLink.findMany({
-      where: { status: PaymentLinkStatus.created, expiresAt: { lte: new Date() } },
+      where: { status: PaymentLinkStatus.created, expiresAt: { lte: now } },
     });
+    let expired = 0;
     for (const link of due) {
-      await this.prisma.paymentLink.update({ where: { id: link.id }, data: { status: PaymentLinkStatus.expired } });
+      // Condicional em status=created: se um webhook marcou o link como
+      // pago (ou outra instância do cron já o expirou) entre o findMany e
+      // aqui, não sobrescreve nem audita de novo.
+      const { count } = await this.prisma.paymentLink.updateMany({
+        where: { id: link.id, status: PaymentLinkStatus.created, expiresAt: { lte: now } },
+        data: { status: PaymentLinkStatus.expired },
+      });
+      if (count === 0) {
+        continue;
+      }
       await this.auditLog.record({
         professionalId: link.professionalId,
         clientId: link.clientId,
         paymentLinkId: link.id,
         action: ClientBillingAuditAction.link_expired,
       });
+      expired++;
     }
-    return due.length;
+    return expired;
   }
 
   /** Uso interno pelo webhook (Fase 23.5) — quando o preapproval é confirmado "authorized". */

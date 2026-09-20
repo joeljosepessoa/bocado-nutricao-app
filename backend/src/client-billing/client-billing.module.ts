@@ -12,6 +12,8 @@ import { ClientBillingAuditLogService } from './client-billing-audit-log.service
 import { MercadoPagoWebhookSignatureService } from './mercadopago-webhook-signature.service';
 import { ClientBillingWebhookService } from './client-billing-webhook.service';
 import { ClientBillingWebhookController } from './client-billing-webhook.controller';
+import { PaymentLinkExpirationService } from './payment-link-expiration.service';
+import { ClientSubscriptionReconciliationService } from './client-subscription-reconciliation.service';
 
 // Domínio deliberadamente separado do Billing SaaS (Fase 23.1/23.2) —
 // importa BillingModule só para reaproveitar o PaymentGatewayService/
@@ -38,6 +40,8 @@ import { ClientBillingWebhookController } from './client-billing-webhook.control
     ClientBillingAuditLogService,
     MercadoPagoWebhookSignatureService,
     ClientBillingWebhookService,
+    PaymentLinkExpirationService,
+    ClientSubscriptionReconciliationService,
   ],
   exports: [ProfessionalProductsService, PaymentLinksService, ClientSubscriptionsService, ClientInvoicesService],
 })

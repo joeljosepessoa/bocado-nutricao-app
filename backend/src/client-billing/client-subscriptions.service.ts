@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { ClientBillingAuditAction, ClientSubscription, ClientSubscriptionStatus, Prisma } from '@prisma/client';
+import { ClientBillingAuditAction, ClientSubscription, ClientSubscriptionStatus } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { ClientBillingAuditLogService } from './client-billing-audit-log.service';
 
 export interface RequestMeta {
   ipAddress?: string;
 }
+
+export type ApplyGatewayStatusResult =
+  | { outcome: 'applied' | 'unchanged' | 'conflict'; subscription: ClientSubscription }
+  | { outcome: 'unknown_status' | 'not_found' };
 
 /**
  * Criação não faz parte desta fase: uma ClientSubscription só passa a
@@ -131,44 +135,89 @@ export class ClientSubscriptionsService {
   }
 
   /**
-   * paused/cancelled reportados pelo webhook — nunca cria (só uma
-   * assinatura já autorizada pode pausar/cancelar); se não existir,
-   * devolve null (recurso externo desconhecido — quem chama decide como
-   * tratar, sem inventar uma ClientSubscription do nada).
+   * Aplica em uma ClientSubscription JÁ EXISTENTE o estado que o gateway
+   * acabou de confirmar (Fase 23.6) — lógica única compartilhada pelo
+   * webhook (Fase 23.5) e pela reconciliação automática. Não conhece HTTP
+   * nem o gateway: recebe o status já consultado.
+   *
+   * - Nunca cria (só uma assinatura já autorizada em nosso sistema pode
+   *   mudar de estado); inexistente -> `not_found`.
+   * - Status do gateway fora de authorized/paused/cancelled não vira
+   *   transição nenhuma (`unknown_status`) — nunca é interpretado como
+   *   cancelamento.
+   * - Idempotente e seguro sob concorrência: `updateMany` condicional em
+   *   `status != alvo`; só quem de fato mudou a linha audita, então
+   *   reexecuções/entregas repetidas/dois workers não duplicam auditoria.
+   * - `expectedLocalStatus` (usado pela reconciliação) é um lock
+   *   otimista: se o estado local mudou entre a leitura e a escrita
+   *   (ex.: um webhook mais novo), NÃO sobrescreve com dado possivelmente
+   *   velho (`conflict`) — a próxima execução reavalia.
    */
-  async applyStatusFromWebhook(
-    externalSubscriptionId: string,
-    status: typeof ClientSubscriptionStatus.paused | typeof ClientSubscriptionStatus.cancelled,
+  async applyGatewayStatus(
+    params: {
+      externalSubscriptionId: string;
+      gatewayStatus: string;
+      source: 'webhook' | 'reconciliation';
+      expectedLocalStatus?: ClientSubscriptionStatus;
+    },
     meta: RequestMeta = {},
-  ): Promise<ClientSubscription | null> {
-    let subscription: ClientSubscription;
-    try {
-      subscription = await this.prisma.clientSubscription.update({
-        where: { externalSubscriptionId },
-        data: {
-          status,
-          ...(status === ClientSubscriptionStatus.cancelled ? { canceledAt: new Date() } : {}),
-        },
-      });
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-        return null;
-      }
-      throw error;
+  ): Promise<ApplyGatewayStatusResult> {
+    const target = this.mapGatewayStatus(params.gatewayStatus);
+    if (!target) {
+      return { outcome: 'unknown_status' };
+    }
+
+    const { count } = await this.prisma.clientSubscription.updateMany({
+      where: {
+        externalSubscriptionId: params.externalSubscriptionId,
+        status: { not: target },
+        ...(params.expectedLocalStatus ? { AND: [{ status: params.expectedLocalStatus }] } : {}),
+      },
+      data: {
+        status: target,
+        ...(target === ClientSubscriptionStatus.cancelled ? { canceledAt: new Date() } : {}),
+      },
+    });
+
+    const subscription = await this.prisma.clientSubscription.findUnique({
+      where: { externalSubscriptionId: params.externalSubscriptionId },
+    });
+    if (!subscription) {
+      return { outcome: 'not_found' };
+    }
+    if (count === 0) {
+      return { outcome: subscription.status === target ? 'unchanged' : 'conflict', subscription };
     }
 
     await this.auditLog.record({
       professionalId: subscription.professionalId,
       clientId: subscription.clientId,
+      paymentLinkId: subscription.paymentLinkId ?? undefined,
       clientSubscriptionId: subscription.id,
-      action:
-        status === ClientSubscriptionStatus.paused
-          ? ClientBillingAuditAction.subscription_paused
-          : ClientBillingAuditAction.subscription_canceled,
-      metadata: { externalSubscriptionId },
+      action: this.auditActionFor(target),
+      metadata: { externalSubscriptionId: params.externalSubscriptionId, source: params.source },
       ipAddress: meta.ipAddress,
     });
 
-    return subscription;
+    return { outcome: 'applied', subscription };
+  }
+
+  private mapGatewayStatus(gatewayStatus: string): ClientSubscriptionStatus | null {
+    switch (gatewayStatus) {
+      case 'authorized':
+        return ClientSubscriptionStatus.authorized;
+      case 'paused':
+        return ClientSubscriptionStatus.paused;
+      case 'cancelled':
+        return ClientSubscriptionStatus.cancelled;
+      default:
+        return null;
+    }
+  }
+
+  private auditActionFor(status: ClientSubscriptionStatus): ClientBillingAuditAction {
+    if (status === ClientSubscriptionStatus.authorized) return ClientBillingAuditAction.subscription_authorized;
+    if (status === ClientSubscriptionStatus.paused) return ClientBillingAuditAction.subscription_paused;
+    return ClientBillingAuditAction.subscription_canceled;
   }
 }

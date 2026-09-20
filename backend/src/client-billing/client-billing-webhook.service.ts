@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ClientBillingAuditAction, ClientInvoiceStatus, ClientSubscriptionStatus, PaymentLinkStatus } from '@prisma/client';
+import { ClientBillingAuditAction, ClientInvoiceStatus, PaymentLinkStatus } from '@prisma/client';
 import { PaymentGatewayService } from '../billing/gateway/payment-gateway.service';
 import { MercadoPagoWebhookSignatureService } from './mercadopago-webhook-signature.service';
 import { PaymentLinksService } from './payment-links.service';
@@ -190,16 +190,8 @@ export class ClientBillingWebhookService {
         metadata: { type: SUBSCRIPTION_TOPIC, externalSubscriptionId: subscriptionId, gatewayStatus: 'authorized' },
         ipAddress: meta.ipAddress,
       });
-      await this.clientSubscriptions.activateFromWebhook(
-        {
-          professionalId: existing.professionalId,
-          clientId: existing.clientId,
-          professionalProductId: existing.professionalProductId,
-          paymentLinkId: existing.paymentLinkId ?? undefined,
-          externalSubscriptionId: subscriptionId,
-          currentPeriodStart: existing.currentPeriodStart ?? new Date(),
-          currentPeriodEnd: existing.currentPeriodEnd ?? undefined,
-        },
+      await this.clientSubscriptions.applyGatewayStatus(
+        { externalSubscriptionId: subscriptionId, gatewayStatus: 'authorized', source: 'webhook' },
         meta,
       );
       return { accepted: true, reason: 'subscription_authorized' };
@@ -257,15 +249,18 @@ export class ClientBillingWebhookService {
     status: 'paused' | 'cancelled',
     meta: WebhookRequestMeta,
   ): Promise<WebhookResult> {
-    const prismaStatus = status === 'paused' ? ClientSubscriptionStatus.paused : ClientSubscriptionStatus.cancelled;
-    const updated = await this.clientSubscriptions.applyStatusFromWebhook(subscriptionId, prismaStatus, meta);
-    if (!updated) {
+    const result = await this.clientSubscriptions.applyGatewayStatus(
+      { externalSubscriptionId: subscriptionId, gatewayStatus: status, source: 'webhook' },
+      meta,
+    );
+    if (!('subscription' in result)) {
       // paused/cancelled só pode se aplicar a uma assinatura que já foi
       // autorizada antes — nunca cria uma ClientSubscription a partir de
       // um evento de pausa/cancelamento.
       this.logger.warn(`Assinatura ${subscriptionId}: evento "${status}" para uma assinatura desconhecida (nunca autorizada em nosso sistema).`);
       return { accepted: true, reason: 'unknown_subscription' };
     }
+    const updated = result.subscription;
 
     await this.auditLog.record({
       professionalId: updated.professionalId,
