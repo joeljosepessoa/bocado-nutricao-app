@@ -192,15 +192,57 @@ describe('MercadoPagoPaymentGatewayService', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it('métodos do SaaS (Fase 22) fora de escopo desta fase lançam erro claro em vez de simular sucesso', async () => {
+  it('métodos do SaaS (Fase 22) continuam simulados (mock interno), sem rede — ativar o Mercado Pago não quebra o SaaS', async () => {
     const service = new MercadoPagoPaymentGatewayService(configWith({ MERCADOPAGO_ACCESS_TOKEN: 'TEST-token' }));
-    await expect(service.createCustomer('prof-1', 'a@b.com')).rejects.toThrow(/MockPaymentGatewayService/);
-    await expect(service.createSubscription('cus-1', 'plan-1')).rejects.toThrow(/MockPaymentGatewayService/);
-    await expect(service.cancelSubscription('sub-1')).rejects.toThrow(/MockPaymentGatewayService/);
-    await expect(service.charge('sub-1', 1000)).rejects.toThrow(/MockPaymentGatewayService/);
-    expect(() => service.signWebhookPayload('{}')).toThrow(/MercadoPagoWebhookSignatureService/);
-    expect(() => service.verifyWebhookSignature('{}', 'sig')).toThrow(/MercadoPagoWebhookSignatureService/);
+
+    const customer = await service.createCustomer('prof-1', 'a@b.com');
+    expect(customer.gatewayCustomerId).toMatch(/^mock_cus_/);
+    const subscription = await service.createSubscription(customer.gatewayCustomerId, 'plan-1');
+    expect(subscription.gatewaySubscriptionId).toMatch(/^mock_sub_/);
+    await expect(service.cancelSubscription(subscription.gatewaySubscriptionId)).resolves.toBeUndefined();
+    await expect(service.charge(subscription.gatewaySubscriptionId, 1000)).resolves.toEqual({
+      gatewayInvoiceId: expect.stringMatching(/^mock_inv_/),
+      paid: true,
+    });
+
+    // HMAC-sobre-corpo do webhook do SaaS continua funcional (roundtrip).
+    const signature = service.signWebhookPayload('{"evento":"x"}');
+    expect(service.verifyWebhookSignature('{"evento":"x"}', signature)).toBe(true);
+    expect(service.verifyWebhookSignature('{"evento":"adulterado"}', signature)).toBe(false);
+
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('cancelRecurringSubscription: chama PUT /preapproval/:id com status e Authorization Bearer', async () => {
+    fetchSpy.mockResolvedValueOnce(jsonResponse(200, { id: 'pre_1', status: 'cancelled' }));
+    const service = new MercadoPagoPaymentGatewayService(configWith({ MERCADOPAGO_ACCESS_TOKEN: 'TEST-token' }));
+
+    await expect(service.cancelRecurringSubscription('pre_1')).resolves.toBeUndefined();
+
+    const [url, init] = fetchSpy.mock.calls[0];
+    expect(url).toBe('https://api.mercadopago.com/preapproval/pre_1');
+    expect(init.method).toBe('PUT');
+    expect(init.headers.Authorization).toBe('Bearer TEST-token');
+    expect(JSON.parse(init.body)).toEqual({ status: 'canceled' });
+  });
+
+  it('cancelRecurringSubscription: recusa do Mercado Pago lança (o estado local não deve mudar)', async () => {
+    fetchSpy.mockResolvedValueOnce(jsonResponse(400, { message: 'invalid_status' }));
+    const service = new MercadoPagoPaymentGatewayService(configWith({ MERCADOPAGO_ACCESS_TOKEN: 'TEST-token' }));
+    await expect(service.cancelRecurringSubscription('pre_1')).rejects.toThrow(/retornou 400/);
+  });
+
+  it('erro HTTP do Mercado Pago NÃO devolve o corpo da resposta na mensagem (só vai para o log do servidor)', async () => {
+    fetchSpy.mockResolvedValueOnce(jsonResponse(400, { message: 'dado-interno-do-pagador-nao-vazar' }));
+    const service = new MercadoPagoPaymentGatewayService(configWith({ MERCADOPAGO_ACCESS_TOKEN: 'TEST-token' }));
+
+    try {
+      await service.createOneTimeCheckout({ amountCents: 1000, description: 'x', externalReference: 'y' });
+      throw new Error('deveria ter lançado');
+    } catch (error) {
+      expect(String((error as Error).message)).toMatch(/retornou 400/);
+      expect(String((error as Error).message)).not.toContain('dado-interno-do-pagador-nao-vazar');
+    }
   });
 
   it('getOneTimePayment: chama GET /v1/payments/:id e converte a resposta (status, valor em centavos, external_reference)', async () => {

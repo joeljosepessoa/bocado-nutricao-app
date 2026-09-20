@@ -8,6 +8,7 @@ import { ReportsModule } from '../reports/reports.module';
 import { AppointmentsModule } from '../appointments/appointments.module';
 import { DevicesModule } from '../devices/devices.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { ClientBillingModule } from '../client-billing/client-billing.module';
 import { LgpdService } from './lgpd.service';
 
 @Module({
@@ -21,6 +22,7 @@ import { LgpdService } from './lgpd.service';
     AppointmentsModule,
     DevicesModule,
     NotificationsModule,
+    ClientBillingModule,
   ],
   providers: [LgpdService],
   exports: [LgpdService],

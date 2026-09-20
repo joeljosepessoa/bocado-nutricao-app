@@ -143,6 +143,15 @@ export class MockPaymentGatewayService extends PaymentGatewayService {
     };
   }
 
+  async cancelRecurringSubscription(externalSubscriptionId: string): Promise<void> {
+    // Idempotente e tolerante: um id que o mock nunca criou (ex.: linha
+    // semeada direto no banco) é um no-op, como cancelar algo já cancelado.
+    const resource = this.resources.get(externalSubscriptionId);
+    if (resource) {
+      resource.status = 'cancelled';
+    }
+  }
+
   async getRecurringSubscription(subscriptionId: string): Promise<GatewaySubscriptionStatus> {
     const resource = this.getResource(subscriptionId);
     return { externalId: subscriptionId, status: resource.status, externalReference: resource.externalReference };

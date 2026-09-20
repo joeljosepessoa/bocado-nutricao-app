@@ -11,6 +11,7 @@ import { ReportsService } from '../reports/reports.service';
 import { AppointmentsService } from '../appointments/appointments.service';
 import { DevicesService } from '../devices/devices.service';
 import { NotificationPreferencesService } from '../notifications/notification-preferences.service';
+import { ClientSubscriptionsService } from '../client-billing/client-subscriptions.service';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 
 const EXPORT_PAGE_SIZE = 10_000;
@@ -52,6 +53,7 @@ export class LgpdService {
     private readonly appointmentsService: AppointmentsService,
     private readonly devicesService: DevicesService,
     private readonly notificationPreferencesService: NotificationPreferencesService,
+    private readonly clientSubscriptions: ClientSubscriptionsService,
   ) {}
 
   async exportClientData(clientId: string): Promise<ClientDataExport> {
@@ -111,6 +113,11 @@ export class LgpdService {
     if (!passwordMatches) {
       throw new UnauthorizedException('Senha atual incorreta.');
     }
+
+    // Cancela no gateway toda assinatura ainda ativa ANTES de anonimizar: sem
+    // isso o gateway continuaria cobrando uma conta já excluída. Se o gateway
+    // recusar, a exclusão é abortada (nada foi anonimizado até aqui).
+    await this.clientSubscriptions.cancelAllActiveForClient(clientId);
 
     const unusableHash = await this.passwordService.hash(this.passwordService.generateTemporaryPassword());
     const anonymizedEmail = `deleted-${clientId}@bocadodenutricao.invalid`;

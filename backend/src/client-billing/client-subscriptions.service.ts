@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ClientBillingAuditAction, ClientSubscription, ClientSubscriptionStatus } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { PaymentGatewayService } from '../billing/gateway/payment-gateway.service';
 import { ClientBillingAuditLogService } from './client-billing-audit-log.service';
 
 export interface RequestMeta {
@@ -23,6 +24,7 @@ export class ClientSubscriptionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditLog: ClientBillingAuditLogService,
+    private readonly gateway: PaymentGatewayService,
   ) {}
 
   async listForProfessional(professionalId: string, clientId?: string): Promise<ClientSubscription[]> {
@@ -56,6 +58,10 @@ export class ClientSubscriptionsService {
     if (subscription.status === ClientSubscriptionStatus.cancelled || subscription.cancelAtPeriodEnd) {
       return subscription;
     }
+    // Cancela de verdade no gateway ANTES de marcar localmente: se o gateway
+    // recusar, o erro sobe e o estado local não muda — sem isso o gateway
+    // continuaria cobrando uma assinatura que a interface mostra cancelada.
+    await this.gateway.cancelRecurringSubscription(subscription.externalSubscriptionId);
     const updated = await this.prisma.clientSubscription.update({
       where: { id: subscription.id },
       data: { cancelAtPeriodEnd: true },
@@ -79,6 +85,25 @@ export class ClientSubscriptionsService {
   async cancelForClient(clientId: string, id: string, meta: RequestMeta = {}): Promise<ClientSubscription> {
     const subscription = await this.assertOwnedByClient(clientId, id);
     return this.cancel(subscription, meta);
+  }
+
+  /**
+   * Usado pela exclusão de conta (LGPD): cancela no gateway toda assinatura
+   * do cliente que ainda pode cobrar. Se qualquer cancelamento falhar, lança
+   * — quem chama deve abortar a exclusão em vez de deixar uma cobrança órfã.
+   */
+  async cancelAllActiveForClient(clientId: string, meta: RequestMeta = {}): Promise<number> {
+    const active = await this.prisma.clientSubscription.findMany({
+      where: {
+        clientId,
+        status: { in: [ClientSubscriptionStatus.pending, ClientSubscriptionStatus.authorized, ClientSubscriptionStatus.paused] },
+        cancelAtPeriodEnd: false,
+      },
+    });
+    for (const subscription of active) {
+      await this.cancel(subscription, meta);
+    }
+    return active.length;
   }
 
   async findByExternalSubscriptionId(externalSubscriptionId: string): Promise<ClientSubscription | null> {
@@ -209,6 +234,9 @@ export class ClientSubscriptionsService {
       case 'paused':
         return ClientSubscriptionStatus.paused;
       case 'cancelled':
+      // A documentação oficial usa "canceled" ao cancelar e as consultas devolvem
+      // "cancelled": aceitar as duas evita ignorar silenciosamente um cancelamento.
+      case 'canceled':
         return ClientSubscriptionStatus.cancelled;
       default:
         return null;

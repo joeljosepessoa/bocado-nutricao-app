@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotImplementedException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PlanInterval, RecurrenceInterval } from '@prisma/client';
 import {
@@ -12,6 +12,7 @@ import {
   GatewaySubscriptionStatus,
   PaymentGatewayService,
 } from './payment-gateway.service';
+import { MockPaymentGatewayService } from './mock-payment-gateway.service';
 
 const MERCADOPAGO_API_BASE = 'https://api.mercadopago.com';
 const REQUEST_TIMEOUT_MS = 15_000;
@@ -49,7 +50,11 @@ interface MercadoPagoPaymentResponse {
  * este arquivo sabe que existe uma API HTTP por trás).
  *
  * `createCustomer`/`createSubscription`/`cancelSubscription`/`charge` (Fase
- * 22, SaaS) continuam fora do escopo — SaaS permanece só no mock.
+ * 22, SaaS) continuam SIMULADOS: o SaaS não tem gateway real escolhido, então
+ * este adapter delega esses métodos (e o HMAC do webhook do SaaS) a uma
+ * instância interna do MockPaymentGatewayService. Assim, ativar
+ * PAYMENT_GATEWAY_PROVIDER=mercadopago para o comercial cliente NÃO quebra
+ * o billing SaaS.
  *
  * `signWebhookPayload`/`verifyWebhookSignature` NÃO são implementados
  * aqui de propósito, não por falta de tempo: o esquema real do Mercado
@@ -62,10 +67,13 @@ interface MercadoPagoPaymentResponse {
  */
 @Injectable()
 export class MercadoPagoPaymentGatewayService extends PaymentGatewayService {
+  private readonly logger = new Logger(MercadoPagoPaymentGatewayService.name);
   private readonly accessToken: string;
+  private readonly saasGateway: MockPaymentGatewayService;
 
   constructor(config: ConfigService) {
     super();
+    this.saasGateway = new MockPaymentGatewayService(config);
     const token = config.get<string>('MERCADOPAGO_ACCESS_TOKEN');
     if (!token) {
       // Falha no boot (DI instancia isto na inicialização do Nest), não na
@@ -160,45 +168,50 @@ export class MercadoPagoPaymentGatewayService extends PaymentGatewayService {
     return { externalId: data.id, status: data.status, externalReference: data.external_reference };
   }
 
-  // --- Fora do escopo desta fase (SaaS/webhook) — ver comentário da classe. ---
-
-  async createCustomer(_professionalId: string, _email: string): Promise<GatewayCustomer> {
-    throw new NotImplementedException('SaaS (Fase 22) continua exclusivamente no MockPaymentGatewayService.');
+  /**
+   * Cancela o preapproval no Mercado Pago: `PUT /preapproval/{id}` com
+   * `status`. O valor `canceled` é o que a documentação oficial de
+   * "Gerenciamento de assinaturas" informa para cancelar (e `paused` para
+   * pausar), enquanto as consultas devolvem `cancelled` — a grafia a
+   * enviar deve ser confirmada no sandbox antes de produção. Qualquer
+   * recusa do Mercado Pago lança e o estado local NÃO é alterado.
+   */
+  async cancelRecurringSubscription(externalSubscriptionId: string): Promise<void> {
+    await this.request<MercadoPagoPreapprovalResponse>('PUT', `/preapproval/${encodeURIComponent(externalSubscriptionId)}`, {
+      status: 'canceled',
+    });
   }
 
-  async createSubscription(_gatewayCustomerId: string, _planCode: string): Promise<GatewaySubscription> {
-    throw new NotImplementedException('SaaS (Fase 22) continua exclusivamente no MockPaymentGatewayService.');
+  // --- SaaS (Fase 22): simulado — ver comentário da classe. ---
+
+  createCustomer(professionalId: string, email: string): Promise<GatewayCustomer> {
+    return this.saasGateway.createCustomer(professionalId, email);
   }
 
-  async cancelSubscription(_gatewaySubscriptionId: string): Promise<void> {
-    throw new NotImplementedException('SaaS (Fase 22) continua exclusivamente no MockPaymentGatewayService.');
+  createSubscription(gatewayCustomerId: string, planCode: string): Promise<GatewaySubscription> {
+    return this.saasGateway.createSubscription(gatewayCustomerId, planCode);
   }
 
-  async charge(_gatewaySubscriptionId: string, _amountCents: number): Promise<GatewayCharge> {
-    throw new NotImplementedException('SaaS (Fase 22) continua exclusivamente no MockPaymentGatewayService.');
+  cancelSubscription(gatewaySubscriptionId: string): Promise<void> {
+    return this.saasGateway.cancelSubscription(gatewaySubscriptionId);
+  }
+
+  charge(gatewaySubscriptionId: string, amountCents: number): Promise<GatewayCharge> {
+    return this.saasGateway.charge(gatewaySubscriptionId, amountCents);
   }
 
   /** Cálculo puro (sem rede) — implementado de verdade mesmo fora do escopo principal, igual ao mock. */
   nextPeriodEnd(from: Date, interval: PlanInterval): Date {
-    const next = new Date(from);
-    if (interval === PlanInterval.year) {
-      next.setFullYear(next.getFullYear() + 1);
-    } else {
-      next.setMonth(next.getMonth() + 1);
-    }
-    return next;
+    return this.saasGateway.nextPeriodEnd(from, interval);
   }
 
-  signWebhookPayload(_rawBody: string): string {
-    throw new NotImplementedException(
-      'MercadoPagoPaymentGatewayService não assina webhook por este método — o esquema real (manifest id/request-id/ts) fica em MercadoPagoWebhookSignatureService.',
-    );
+  /** HMAC-sobre-corpo do webhook do SaaS (mock). O webhook do comercial cliente usa MercadoPagoWebhookSignatureService. */
+  signWebhookPayload(rawBody: string): string {
+    return this.saasGateway.signWebhookPayload(rawBody);
   }
 
-  verifyWebhookSignature(_rawBody: string, _signature: string): boolean {
-    throw new NotImplementedException(
-      'MercadoPagoPaymentGatewayService não verifica webhook por este método — use MercadoPagoWebhookSignatureService.',
-    );
+  verifyWebhookSignature(rawBody: string, signature: string): boolean {
+    return this.saasGateway.verifyWebhookSignature(rawBody, signature);
   }
 
   private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -222,10 +235,11 @@ export class MercadoPagoPaymentGatewayService extends PaymentGatewayService {
     }
 
     if (!response.ok) {
+      // O corpo do erro pode trazer dados do pagador/da conta: fica só no log
+      // do servidor, nunca na mensagem devolvida ao cliente da API.
       const detail = await response.text().catch(() => '');
-      throw new InternalServerErrorException(
-        `Mercado Pago retornou ${response.status} para ${method} ${path}.${detail ? ` Detalhe: ${detail.slice(0, 500)}` : ''}`,
-      );
+      this.logger.error(`Mercado Pago retornou ${response.status} para ${method} ${path}. Detalhe: ${detail.slice(0, 500)}`);
+      throw new InternalServerErrorException(`Mercado Pago retornou ${response.status} para ${method} ${path}.`);
     }
 
     try {

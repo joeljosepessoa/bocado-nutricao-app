@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ClientBillingAuditAction, ClientInvoiceStatus, PaymentLinkStatus } from '@prisma/client';
+import { BillingType, ClientBillingAuditAction, ClientInvoiceStatus, PaymentLinkStatus } from '@prisma/client';
 import { PaymentGatewayService } from '../billing/gateway/payment-gateway.service';
 import { MercadoPagoWebhookSignatureService } from './mercadopago-webhook-signature.service';
 import { PaymentLinksService } from './payment-links.service';
@@ -108,6 +108,16 @@ export class ClientBillingWebhookService {
       return { accepted: true, reason: 'unknown_payment_link' };
     }
 
+    // Este handler é o de PAGAMENTO ÚNICO (Checkout Pro). Um `payment` cujo
+    // external_reference é de um link RECORRENTE (ex.: cobrança de um ciclo do
+    // preapproval) não pode virar fatura do link nem marcá-lo `paid` — o
+    // ciclo de vida de assinatura é tratado pelo tópico subscription_preapproval.
+    // Faturas de ciclos recorrentes ainda não são geradas (limitação conhecida).
+    if (link.paymentType === BillingType.recurring) {
+      this.logger.warn(`Pagamento ${paymentId}: pertence a um link recorrente (${link.id}) — ignorado pelo handler de pagamento único.`);
+      return { accepted: true, reason: 'recurring_link_payment_ignored' };
+    }
+
     // A partir daqui já sabemos a quem este evento pertence — registra o
     // recebimento como auditoria estruturada (não só Logger).
     await this.auditLog.record({
@@ -165,7 +175,7 @@ export class ClientBillingWebhookService {
     if (subscription.status === 'authorized') {
       return this.handleSubscriptionAuthorized(subscriptionId, subscription.externalReference, meta);
     }
-    if (subscription.status === 'paused' || subscription.status === 'cancelled') {
+    if (subscription.status === 'paused' || subscription.status === 'cancelled' || subscription.status === 'canceled') {
       return this.handleSubscriptionStatusChange(subscriptionId, subscription.status, meta);
     }
 
@@ -246,7 +256,7 @@ export class ClientBillingWebhookService {
 
   private async handleSubscriptionStatusChange(
     subscriptionId: string,
-    status: 'paused' | 'cancelled',
+    status: string,
     meta: WebhookRequestMeta,
   ): Promise<WebhookResult> {
     const result = await this.clientSubscriptions.applyGatewayStatus(

@@ -95,6 +95,14 @@ export abstract class PaymentGatewayService {
   abstract getOneTimePayment(paymentId: string): Promise<GatewayPaymentStatus>;
   abstract getRecurringSubscription(subscriptionId: string): Promise<GatewaySubscriptionStatus>;
 
+  /**
+   * Cancela de fato uma assinatura recorrente do comercial cliente no
+   * gateway (interrompe cobranças futuras). Sem isto, "cancelar" só
+   * marcaria uma flag local e o gateway continuaria cobrando. Lança se o
+   * gateway recusar — quem chama não deve alterar o estado local nesse caso.
+   */
+  abstract cancelRecurringSubscription(externalSubscriptionId: string): Promise<void>;
+
   /** Assina um payload de webhook (usado pelo simulador de ciclo de cobrança para se auto-chamar). */
   abstract signWebhookPayload(rawBody: string): string;
   /** Verifica a assinatura de um webhook recebido — HMAC-SHA256 com comparação em tempo constante. */
