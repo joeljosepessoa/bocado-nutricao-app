@@ -26,7 +26,16 @@ export class SmtpEmailService extends EmailService {
       throw new Error('EMAIL_PROVIDER=smtp requer SMTP_URL e EMAIL_FROM configurados (.env).');
     }
     this.from = from;
-    this.transporter = transporter ?? createTransport(url);
+    // Timeouts curtos: os padrões do nodemailer (2 min de conexão) deixariam um SMTP
+    // fora do ar segurando conexões; o envio é em segundo plano, mas não deve pendurar.
+    this.transporter =
+      transporter ??
+      createTransport({ url, connectionTimeout: 10_000, greetingTimeout: 10_000, socketTimeout: 30_000 });
+  }
+
+  /** Confere conexão, TLS e autenticação com o servidor SMTP, sem enviar nada (usado por `npm run email:test`). */
+  async verify(): Promise<void> {
+    await this.transporter.verify();
   }
 
   async send(message: EmailMessage): Promise<void> {

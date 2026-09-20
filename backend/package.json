@@ -15,7 +15,8 @@
     "prisma:seed": "ts-node ../database/seed.ts",
     "reference-data:import": "ts-node src/reference-data/import-reference-data.ts",
     "reference-data:import-exercise-media-pilot": "ts-node src/reference-data/import-exercise-media-pilot.ts",
-    "admin:bootstrap": "ts-node src/admin-bootstrap/bootstrap-admin.ts"
+    "admin:bootstrap": "ts-node src/admin-bootstrap/bootstrap-admin.ts",
+    "email:test": "ts-node src/auth/email/send-test-email.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1134.0",

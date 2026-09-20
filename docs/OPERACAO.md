@@ -88,9 +88,29 @@ servidor**. Teste uma restauração antes de ir ao ar.
 
 ## 8. E-mail
 
-`EMAIL_PROVIDER=smtp` + `SMTP_URL` + `EMAIL_FROM` (qualquer provedor com SMTP). Sem isso
-(`console`) nenhum e-mail sai — inclusive o de redefinição de senha. Defina também
-`PASSWORD_RESET_URL` com a URL real do painel.
+Pronto para qualquer provedor com SMTP; falta só a **conta e as credenciais**. Sem isso
+(`EMAIL_PROVIDER=console`, o padrão) nenhum e-mail sai — inclusive o de redefinição de senha.
+
+1. Contrate/escolha o provedor de envio e **verifique o domínio remetente** (SPF, DKIM e DMARC no DNS,
+   conforme o provedor — sem isso as mensagens caem no spam ou são recusadas).
+2. Configure no `.env`:
+   - `EMAIL_PROVIDER=smtp`
+   - `SMTP_URL`: `smtps://usuario:senha@host:465` (TLS implícito) **ou** `smtp://usuario:senha@host:587`
+     (STARTTLS; acrescente `?requireTLS=true` para recusar conexão sem TLS). Informe sempre a porta.
+     Caracteres especiais no usuário/senha precisam de URL-encode (`@` → `%40`, `:` → `%3A`, `/` → `%2F`).
+   - `EMAIL_FROM`: `Bocado de Nutrição <nao-responda@seudominio.com.br>` (no domínio verificado)
+   - `PASSWORD_RESET_URL`: URL real do painel (`https://painel.seudominio.com.br/reset-password`)
+3. **Valide antes de ir ao ar** (confere conexão/autenticação e envia uma mensagem de teste):
+   `npm run email:test --workspace backend -- voce@seudominio.com.br` (com as variáveis acima no ambiente).
+   Em Docker: `docker compose run --rm migrate npm run email:test --workspace backend -- voce@...`
+   (o serviço `migrate` usa a imagem com as ferramentas de desenvolvimento; repasse as variáveis com `-e`).
+4. Teste o fluxo real: "esqueci minha senha" no painel → e-mail chega → link abre → senha nova → login.
+
+Comportamento: o envio da redefinição é **em segundo plano** (a resposta é sempre 204, exista ou não o
+e-mail, e não depende do SMTP — evita revelar quem está cadastrado pelo tempo ou por erro). Timeouts:
+10 s de conexão/saudação, 30 s de socket. **Uma falha de envio aparece só no log**
+(`Falha ao enviar e-mail de redefinição de senha (usuário <id>)`, sem o e-mail nem o token) — monitore
+esse texto. Resíduo conhecido: o caminho "e-mail existe" ainda faz um `INSERT` a mais (~7 ms mais lento).
 
 ## 9. Mercado Pago (comercial do cliente)
 

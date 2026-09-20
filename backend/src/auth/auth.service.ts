@@ -160,14 +160,16 @@ export class AuthService {
 
   /**
    * Sempre resolve com sucesso, exista ou não o e-mail — nunca revela isso
-   * ao chamador (nem por corpo de resposta, nem por tempo: o caminho de
-   * "não existe" faz um bcrypt.compare de mesma duração via
-   * compareAgainstDummy, o mesmo truque já usado em login()).
+   * ao chamador, nem por corpo/status, nem por tempo. Por isso o envio do
+   * e-mail NÃO é aguardado: a latência ou a falha do SMTP (real) faria o
+   * caminho "e-mail existe" demorar mais ou responder 500. Uma falha de envio
+   * é logada (sem o token) e o usuário pode pedir de novo. Também não há
+   * bcrypt no caminho "não existe": ele só deixaria esse caminho MAIS LENTO
+   * que o do e-mail existente.
    */
   async requestPasswordReset(email: string, meta: RequestMeta = {}): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
-      await this.passwordService.compareAgainstDummy();
       return;
     }
 
@@ -177,14 +179,23 @@ export class AuthService {
     const resetUrlBase = this.config.get<string>('PASSWORD_RESET_URL') ?? 'http://localhost:5173/reset-password';
     const minutesValid = Math.max(1, Math.round((expiresAt.getTime() - Date.now()) / 60_000));
 
-    await this.emailService.send({
+    const message = {
       to: user.email,
       subject: 'Redefinição de senha — Bocado de Nutrição',
       text:
         `Recebemos uma solicitação para redefinir sua senha. Use o link abaixo em até ${minutesValid} minutos:\n\n` +
         `${resetUrlBase}?token=${rawToken}\n\n` +
         'Se você não pediu isso, ignore este e-mail — sua senha continua a mesma.',
-    });
+    };
+    void (async () => {
+      try {
+        await this.emailService.send(message);
+      } catch (error) {
+        this.logger.error(
+          `Falha ao enviar e-mail de redefinição de senha (usuário ${user.id}): ${error instanceof Error ? error.message : 'erro desconhecido'}`,
+        );
+      }
+    })();
   }
 
   /**
