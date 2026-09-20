@@ -1,15 +1,20 @@
+# Stack de execução (banco + migrations + API). Os valores vêm de um arquivo
+# `.env` na RAIZ do repositório (copie de .env.example e preencha) ou do
+# ambiente. Os marcados com `:?` são OBRIGATÓRIOS: sem eles o compose recusa
+# subir, em vez de rodar com segredo de exemplo. Ver docs/OPERACAO.md.
 services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: bocado
-      POSTGRES_PASSWORD: bocado
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
       POSTGRES_DB: bocado
     volumes:
       - bocado-db-data:/var/lib/postgresql/data
+    # Só o próprio host acessa o banco; a API fala com ele pela rede interna.
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5432:5432'
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U bocado']
       interval: 5s
@@ -22,7 +27,7 @@ services:
       target: builder
     command: npm run prisma:migrate:deploy --workspace backend
     environment:
-      DATABASE_URL: postgresql://bocado:bocado@db:5432/bocado
+      DATABASE_URL: postgresql://bocado:${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}@db:5432/bocado
     depends_on:
       db:
         condition: service_healthy
@@ -33,16 +38,34 @@ services:
       target: runtime
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://bocado:bocado@db:5432/bocado
-      JWT_ACCESS_SECRET: troque-por-um-segredo-gerado
-      JWT_ACCESS_EXPIRES_IN: 15m
-      JWT_REFRESH_EXPIRES_IN: 7d
-      CORS_ORIGIN: http://localhost:5173
-      STORAGE_PROVIDER: local
-      STORAGE_LOCAL_DIR: /data/storage
-      PORT: 3000
       NODE_ENV: production
       LOG_FORMAT: json
+      PORT: 3000
+      DATABASE_URL: postgresql://bocado:${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}@db:5432/bocado
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?defina JWT_ACCESS_SECRET (>= 32 caracteres aleatórios) no .env}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:?defina CORS_ORIGIN (origem do painel web) no .env}
+      AUTH_COOKIE_SAME_SITE: ${AUTH_COOKIE_SAME_SITE:-lax}
+      TRUST_PROXY: ${TRUST_PROXY:-}
+      PASSWORD_RESET_URL: ${PASSWORD_RESET_URL:-}
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-local}
+      STORAGE_LOCAL_DIR: /data/storage
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-console}
+      SMTP_URL: ${SMTP_URL:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      PAYMENT_GATEWAY_PROVIDER: ${PAYMENT_GATEWAY_PROVIDER:-mock}
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN:-}
+      MERCADOPAGO_WEBHOOK_SECRET: ${MERCADOPAGO_WEBHOOK_SECRET:-}
+      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:-}
+      ERROR_TRACKING_PROVIDER: ${ERROR_TRACKING_PROVIDER:-console}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      AI_PROVIDER: ${AI_PROVIDER:-mock-local}
     volumes:
       - bocado-storage:/data/storage
     ports:

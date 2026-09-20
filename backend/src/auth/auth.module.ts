@@ -10,6 +10,7 @@ import { RefreshTokenService } from './refresh-token.service';
 import { PasswordResetTokenService } from './password-reset-token.service';
 import { EmailService } from './email/email.service';
 import { ConsoleEmailService } from './email/console-email.service';
+import { SmtpEmailService } from './email/smtp-email.service';
 import { CookieAuthService } from './cookie-auth.service';
 import { WebCsrfGuard } from './web-csrf.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -32,7 +33,20 @@ const jwtModule = JwtModule.registerAsync({
     RefreshTokenService,
     PasswordResetTokenService,
     ConsoleEmailService,
-    { provide: EmailService, useExisting: ConsoleEmailService },
+    {
+      // EMAIL_PROVIDER: "console" (default, dev/teste) ou "smtp". Valor inválido
+      // falha no boot — nunca cai silenciosamente para console em produção.
+      provide: EmailService,
+      useFactory: (config: ConfigService, consoleEmail: ConsoleEmailService) => {
+        const provider = config.get<string>('EMAIL_PROVIDER') ?? 'console';
+        if (provider === 'smtp') return new SmtpEmailService(config);
+        if (provider !== 'console') {
+          throw new Error(`EMAIL_PROVIDER inválido: "${provider}". Use "console" ou "smtp".`);
+        }
+        return consoleEmail;
+      },
+      inject: [ConfigService, ConsoleEmailService],
+    },
     CookieAuthService,
     WebCsrfGuard,
     JwtStrategy,

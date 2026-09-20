@@ -1,11 +1,14 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import { ConfigService } from '@nestjs/config';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { json, urlencoded } from 'express';
 import type { IncomingMessage } from 'http';
 import { AppModule } from './app.module';
 import { JsonLoggerService } from './common/logging/json-logger.service';
+import { checkRuntimeConfig, parseTrustProxy } from './common/config/runtime-config';
 
 // JSON estruturado em produção (para um coletor de log indexar); texto
 // colorido do ConsoleLogger padrão do Nest em dev/teste — sem mudar nada
@@ -19,10 +22,29 @@ async function bootstrap() {
   // limite de tamanho do corpo no Express (o parser default do Nest já
   // roda dentro de NestFactory.create e prevaleceria sobre qualquer
   // app.use(json(...)) registrado depois).
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: useJsonLogs ? new JsonLoggerService() : undefined,
     bodyParser: false,
   });
+
+  // Configuração de produção: erros impedem o boot (segredo de exemplo, CORS em
+  // localhost, webhook sem segredo); avisos listam o que ainda está simulado.
+  const config = app.get(ConfigService);
+  const report = checkRuntimeConfig((key) => config.get<string>(key));
+  const logger = new Logger('Bootstrap');
+  report.warnings.forEach((warning) => logger.warn(warning));
+  if (report.errors.length > 0) {
+    report.errors.forEach((error) => logger.error(error));
+    await app.close();
+    throw new Error(`Configuração de produção inválida (${report.errors.length} erro(s)) — veja os logs acima.`);
+  }
+
+  // Atrás de proxy/load balancer, sem isto req.ip é o do proxy: o rate limit
+  // passa a ser compartilhado por todos os usuários e a auditoria grava o IP errado.
+  const trustProxy = parseTrustProxy(config.get<string>('TRUST_PROXY'));
+  if (trustProxy !== undefined) {
+    app.set('trust proxy', trustProxy);
+  }
 
   app.use(helmet());
   app.use(cookieParser());
@@ -53,4 +75,7 @@ async function bootstrap() {
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
 }
-bootstrap();
+bootstrap().catch((error) => {
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
+});

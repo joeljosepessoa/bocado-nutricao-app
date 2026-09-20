@@ -64,6 +64,9 @@ jobs:
       - name: Build
         run: npm run build --workspace backend
 
+      - name: Testes unitários
+        run: npm test --workspace backend
+
       - name: Testes e2e
         run: npm run test:e2e --workspace backend
 

@@ -18,6 +18,13 @@ export class ConsoleEmailService extends EmailService {
   private readonly sentMessages: EmailMessage[] = [];
 
   async send(message: EmailMessage): Promise<void> {
+    // Em produção nada de corpo (o texto traz o token de redefinição de senha)
+    // nem retenção em memória: só um aviso de que o e-mail NÃO foi enviado.
+    if (process.env.NODE_ENV === 'production') {
+      process.stdout.write(`[EMAIL NÃO ENVIADO — nenhum provedor real configurado] para ${message.to} | assunto: ${message.subject}
+`);
+      return;
+    }
     this.sentMessages.push(message);
     process.stdout.write(
       `\n[DEV EMAIL] Para: ${message.to}\nAssunto: ${message.subject}\n${message.text}\n[/DEV EMAIL]\n\n`,

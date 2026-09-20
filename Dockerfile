@@ -52,4 +52,7 @@ COPY --from=builder /app/database ./database
 
 WORKDIR /app/backend
 EXPOSE 3000
+# /health responde 200 só com o banco acessível (AppController.health).
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget -qO- "http://127.0.0.1:${PORT:-3000}/health" > /dev/null || exit 1
 CMD ["node", "dist/main.js"]
