@@ -8,6 +8,8 @@ import { StatusBadge } from '../../components/StatusBadge';
 import { EmptyState } from '../../components/EmptyState';
 import { TextField } from '../../components/TextField';
 import { Modal } from '../../components/Modal';
+import { ExercisePreview } from '../../components/ExercisePreview';
+import { describeExercise } from '../../lib/exerciseMedia';
 import { formatDate } from '../../lib/format';
 
 export function WorkoutTab() {
@@ -184,6 +186,7 @@ function AddExerciseModal({
   const [exerciseId, setExerciseId] = useState('');
 
   const { data: exercises } = useQuery({ queryKey: ['exercises', search], queryFn: () => api.listExercises(search || undefined) });
+  const selectedExercise = (exercises ?? []).find((ex) => ex.id === exerciseId);
 
   const mutation = useMutation({
     mutationFn: () => api.addWorkoutExercise(clientId, workoutId, versionId, dayId, { exerciseId }),
@@ -210,14 +213,55 @@ function AddExerciseModal({
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <TextField label="Buscar exercício" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select value={exerciseId} onChange={(e) => setExerciseId(e.target.value)} style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid var(--color-border)' }}>
-          <option value="">Selecione…</option>
-          {(exercises ?? []).map((ex) => (
-            <option key={ex.id} value={ex.id}>
-              {ex.name}
-            </option>
-          ))}
-        </select>
+        <div
+          role="listbox"
+          aria-label="Exercícios"
+          style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid var(--color-border)', borderRadius: 8 }}
+        >
+          {(exercises ?? []).length === 0 ? (
+            <div style={{ padding: 12, fontSize: 13 }}>Nenhum exercício encontrado.</div>
+          ) : null}
+          {(exercises ?? []).map((ex) => {
+            const selected = ex.id === exerciseId;
+            const detail = describeExercise(ex);
+            return (
+              <button
+                key={ex.id}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                onClick={() => setExerciseId(ex.id)}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 8,
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '8px 12px',
+                  border: 'none',
+                  borderBottom: '1px solid var(--color-border)',
+                  background: selected ? 'var(--color-primary-soft, #e6f4ec)' : 'transparent',
+                  cursor: 'pointer',
+                }}
+              >
+                <span>
+                  <span style={{ display: 'block', fontWeight: 600, fontSize: 13.5 }}>{ex.name}</span>
+                  {detail ? <span style={{ display: 'block', fontSize: 12, opacity: 0.75 }}>{detail}</span> : null}
+                </span>
+                {ex.imageUrl ? (
+                  <span
+                    title="Tem demonstração em GIF"
+                    style={{ fontSize: 11, fontWeight: 700, padding: '2px 6px', borderRadius: 6, border: '1px solid var(--color-border)' }}
+                  >
+                    GIF
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+        {selectedExercise ? <ExercisePreview key={selectedExercise.id} exercise={selectedExercise} /> : null}
       </div>
     </Modal>
   );

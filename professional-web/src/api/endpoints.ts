@@ -278,6 +278,12 @@ export async function listExercises(search?: string): Promise<Exercise[]> {
   return res.data;
 }
 
+/** GIF de demonstração (autenticado, cacheável por hash) — `path` é o `imageUrl` relativo do exercício. */
+export async function fetchExerciseMedia(path: string): Promise<Blob> {
+  const res = await apiClient.get<Blob>(path, { responseType: 'blob' });
+  return res.data;
+}
+
 // --- Treinos ----------------------------------------------------------
 
 export async function listWorkouts(

@@ -14,6 +14,7 @@
     "prisma:migrate:deploy": "prisma migrate deploy --schema ../database/schema.prisma",
     "prisma:seed": "ts-node ../database/seed.ts",
     "reference-data:import": "ts-node src/reference-data/import-reference-data.ts",
+    "reference-data:import-exercise-media-pilot": "ts-node src/reference-data/import-exercise-media-pilot.ts",
     "admin:bootstrap": "ts-node src/admin-bootstrap/bootstrap-admin.ts"
   },
   "dependencies": {

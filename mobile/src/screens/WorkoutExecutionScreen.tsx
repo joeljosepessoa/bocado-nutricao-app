@@ -4,6 +4,7 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { ExerciseDemo } from '../components/ExerciseDemo';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { useRestTimer } from '../hooks/useRestTimer';
 import * as api from '../api/endpoints';
@@ -47,6 +48,8 @@ export function WorkoutExecutionScreen() {
   );
   const [submitting, setSubmitting] = useState(false);
   const [savedOffline, setSavedOffline] = useState(false);
+  // No máximo um GIF aberto por vez (cada GIF é 1920x1080).
+  const [openDemo, setOpenDemo] = useState<string | null>(null);
 
   function updateSet(key: string, patch: Partial<LoggedSet>) {
     setSets((prev) => prev.map((s) => (s.key === key ? { ...s, ...patch } : s)));
@@ -105,6 +108,12 @@ export function WorkoutExecutionScreen() {
       {exerciseNames.map((name) => (
         <Card key={name}>
           <Text style={styles.exerciseName}>{name}</Text>
+          <ExerciseDemo
+            imageUrl={day.exercises.find((e) => e.exerciseName === name)?.imageUrl ?? null}
+            exerciseName={name}
+            expanded={openDemo === name}
+            onToggle={() => setOpenDemo((current) => (current === name ? null : name))}
+          />
           {sets
             .filter((s) => s.exerciseName === name)
             .map((set) => (

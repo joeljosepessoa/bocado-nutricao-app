@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { ExerciseDemo } from '../components/ExerciseDemo';
 import { ScreenContainer } from '../components/ScreenContainer';
 import * as api from '../api/endpoints';
 import type { WorkoutClientSummary } from '../types/api';
@@ -14,6 +15,8 @@ export function WorkoutScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [workout, setWorkout] = useState<WorkoutClientSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  // No máximo um GIF aberto por vez: limita memória/dados (cada GIF é 1920x1080).
+  const [openDemoId, setOpenDemoId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -54,6 +57,16 @@ export function WorkoutScreen() {
                     <Text style={styles.exerciseMeta}>{exercise.muscleGroup}</Text>
                   ) : null}
                   <Text style={styles.exerciseMeta}>{exercise.sets.length} série(s) prescrita(s)</Text>
+                  <ExerciseDemo
+                    imageUrl={exercise.imageUrl}
+                    exerciseName={exercise.exerciseName}
+                    expanded={openDemoId === exercise.workoutExerciseId}
+                    onToggle={() =>
+                      setOpenDemoId((current) =>
+                        current === exercise.workoutExerciseId ? null : exercise.workoutExerciseId,
+                      )
+                    }
+                  />
                 </View>
               ))}
             <Button

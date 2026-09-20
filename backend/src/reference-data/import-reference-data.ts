@@ -13,7 +13,7 @@ function loadJson<T>(fileName: string): T {
 // obrigatórios (toda Professional é 1:1 com um User real). Ninguém conhece a
 // senha (gerada e descartada na hora, nunca logada nem persistida em texto):
 // esta conta nunca deve logar, só serve como referência de proveniência.
-const SYSTEM_PROFESSIONAL_EMAIL = 'sistema.catalogo@bocadodenutricao.com.br';
+export const SYSTEM_PROFESSIONAL_EMAIL = 'sistema.catalogo@bocadodenutricao.com.br';
 const SYSTEM_PROFESSIONAL_NAME = 'Catálogo Bocado de Nutrição (sistema)';
 const FOOD_SOURCE = 'taco';
 

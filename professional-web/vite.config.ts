@@ -28,5 +28,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/setupTests.ts'],
     globals: true,
+    // Sem isto o Vitest carrega o react-query "de fora" (Node), que importa o
+    // React da raiz do monorepo — dois React na árvore (ver comentário acima).
+    server: { deps: { inline: ['@tanstack/react-query'] } },
   },
 })

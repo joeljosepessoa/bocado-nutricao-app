@@ -20,6 +20,11 @@ export function setAccessToken(token: string | null): void {
   accessToken = token;
 }
 
+/** Só para quem precisa anexar o token fora do axios (ex.: `<Image>` carregando mídia autenticada). */
+export function getAccessToken(): string | null {
+  return accessToken;
+}
+
 /**
  * O AuthContext injeta aqui, depois de montado, como renovar o access
  * token (via refresh token) e o que fazer quando a sessão não é mais

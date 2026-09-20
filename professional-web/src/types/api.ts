@@ -308,7 +308,7 @@ export interface WorkoutExercise {
   id: string;
   order: number;
   notes: string | null;
-  exercise: { id: string; name: string; muscleGroup: string | null; equipment: string | null };
+  exercise: { id: string; name: string; muscleGroup: string | null; equipment: string | null; imageUrl?: string | null };
   sets: WorkoutSet[];
 }
 
