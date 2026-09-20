@@ -1,24 +1,30 @@
-# Plano de desenvolvimento — Bocado de Nutrição
+# Status por fase — Bocado de Nutrição
 
-Detalhamento completo de cada fase (objetivo, dependências, riscos) está na auditoria técnica. Este arquivo registra o roadmap e o status atual.
+Fases entregues (conforme o histórico do Git). O que ainda impede uma versão de produção está em
+[OPERACAO.md](OPERACAO.md) (limitações, integrações externas e checklist de release).
 
-| Fase | Nome | Status |
-|---|---|---|
-| 1 | Fundação | 🟡 Em andamento |
-| 2 | Autenticação e usuários | ⬜ Não iniciada |
-| 3 | Clientes | ⬜ Não iniciada |
-| 4 | Avaliação física | ⬜ Não iniciada |
-| 5 | Dieta | ⬜ Não iniciada |
-| 6 | Treino | ⬜ Não iniciada |
-| 7 | Aplicativo cliente | ⬜ Não iniciada |
-| 8 | Evolução | ⬜ Não iniciada |
-| 9 | Relatórios PDF | ⬜ Não iniciada |
-| 10 | Bluetooth / Balança | ⬜ Não iniciada |
-| 11 | Wearables | ⬜ Não iniciada (escopo em aberto) |
-| 12 | IA | ⬜ Não iniciada |
-
-## Fase 1 — Fundação (atual)
-
-Escopo: monorepo com npm workspaces, esqueleto do backend NestJS (módulos vazios: `auth`, `users`, `professionals`, `clients`), pacote `shared` com tipos base, schema inicial do banco (`User`, `Professional`, `Client`) em Prisma, placeholders de `professional-web`, `mobile` e `reports-templates`.
-
-Fora do escopo desta fase: lógica de autenticação/JWT, conexão real com PostgreSQL (depende do Docker ser instalado), scaffolding real de frontend/mobile, qualquer schema além do trio inicial de usuários.
+| Fase | Entrega |
+|---|---|
+| 1 | Fundação do monorepo |
+| 2 | Autenticação JWT, refresh rotativo, isolamento profissional/cliente |
+| 3 | Clientes (busca, status, arquivamento) |
+| 4 | Avaliação física (bioimpedância, dobras, auditoria de acesso) |
+| 5 | Dietas versionadas, catálogo de alimentos, substituições |
+| 6 | Treinos versionados, catálogo de exercícios, execução |
+| 7–8 | App do cliente e evolução |
+| 9 | Painel profissional (React) e relatórios em PDF |
+| 10 | BLE / balança — pipeline com driver simulado (sem protocolo de fabricante real) |
+| 11 | Wearables e dispositivos (consentimento, métricas) |
+| 12 | IA assistiva (provedor simulado) |
+| 13 | Cadastro autônomo e recuperação de senha |
+| 14 | Dados de referência (TACO, exercícios) |
+| 15 | Administração e moderação |
+| 16 | Notificações (registro/preferências; envio simulado) |
+| 17 | Mensagens profissional↔cliente |
+| 18 | Agenda e consultas |
+| 19 | LGPD operacional (exportação, exclusão) |
+| 20–21 | Infraestrutura de produção e hardening |
+| 22 | Billing SaaS (planos/assinaturas dos profissionais, simulado) |
+| 23.2–23.6 | Comercial do cliente: schema, domínio, adapter Mercado Pago, webhook, expiração e reconciliação |
+| Piloto GIFs | 30 demonstrações de exercício (validação em aparelho Android real pendente) |
+| Release Candidate | Fechamento: correções de segurança/cobrança, validação de configuração de produção, adapter SMTP, documentação |
