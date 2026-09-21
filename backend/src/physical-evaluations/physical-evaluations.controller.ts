@@ -29,6 +29,27 @@ function meta(req: Request) {
   return { ipAddress: req.ip };
 }
 
+/**
+ * Limites do multipart do upload de foto. O contrato tem exatamente duas partes: o arquivo `file`
+ * (uma única foto) e o campo de texto `angle` (enum de até 10 caracteres). O multer processa o
+ * corpo ANTES do nosso código e cada campo aceito custa CPU/memória, então tudo que sobra do
+ * contrato é rejeitado cedo (400/413). É a mesma classe de falha dos avisos de DoS do multer
+ * < 2.3.0 (nomes de campo com colchetes/índices enormes, aninhamento profundo, inundação de
+ * campos e partes), que a versão nova corrige e estes limites impedem de reaparecer.
+ * Não aumente sem necessidade: qualquer campo novo do formulário exige subir `fields`/`parts`.
+ */
+export const PHOTO_UPLOAD_LIMITS = {
+  fileSize: MAX_PHOTO_SIZE_BYTES, // até 10 MB; sem isso o multer lê o arquivo inteiro na memória
+  files: 1, // uma foto por requisição
+  fields: 1, // só `angle`
+  parts: 2, // `file` + `angle`
+  fieldNameSize: 16, // maiores nomes legítimos: `angle` (5) e `file` (4)
+  fieldSize: 32, // maior valor legítimo de `angle`: `side_right` (10); o padrão do multer é 1 MB
+  fieldNestingDepth: 0, // nomes sem colchetes: rejeita `a[b][c]...` e `a[]`
+  fieldArrayIndexLimit: 0, // defesa em profundidade: `a[4294967294]` trava a CPU se o aninhamento for relaxado
+  headerPairs: 8, // cada parte legítima traz 2 cabeçalhos (Content-Disposition e Content-Type)
+} as const;
+
 @Controller('clients/:clientId/evaluations')
 @Roles(Role.professional)
 export class PhysicalEvaluationsController {
@@ -114,10 +135,9 @@ export class PhysicalEvaluationsController {
   }
 
   @Post(':id/photos')
-  // limits.fileSize: sem isso o multer lê o arquivo inteiro na memória antes de
-  // qualquer checagem de tamanho (DoS por upload gigante); acima do limite ele
-  // aborta o stream e o Nest responde 413.
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_PHOTO_SIZE_BYTES, files: 1 } }))
+  // Limites do multipart em PHOTO_UPLOAD_LIMITS. Acima de fileSize o multer aborta o stream e
+  // responde 413; violações dos demais limites respondem 400 (ver AllExceptionsFilter).
+  @UseInterceptors(FileInterceptor('file', { limits: PHOTO_UPLOAD_LIMITS }))
   uploadPhoto(
     @CurrentUser() user: AuthenticatedUser,
     @Param('clientId') clientId: string,

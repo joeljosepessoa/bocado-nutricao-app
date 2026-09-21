@@ -295,5 +295,14 @@ antes de mergear na branch principal.
 `vite build`/`oxlint` falham. As entradas de todas as plataformas foram adicionadas ao lockfile. Ao atualizar dependências,
 prefira gerar o lockfile com `npm install` e confira `node -e "console.log(Object.keys(require('./package-lock.json').packages).filter(k=>k.includes('linux-x64-gnu')))"`.
 
+**Override do `multer`.** O `package.json` da raiz tem `"overrides": { "multer": "2.4.0" }`: o `@nestjs/platform-express` 10.x
+fixa o multer em 2.0.2 (versão exata), que tem falhas de DoS (crash do processo e loop de CPU com nomes de campo
+hostis; corrigidas a partir da 2.3.0). O override só é necessário enquanto o Nest estiver na linha 10.x — remova-o ao
+migrar para o Nest 12 (que já traz o multer 2.4.0). Só atualizar o multer **não basta**: os limites de
+`PHOTO_UPLOAD_LIMITS` (`fieldNestingDepth`, `fieldNameSize`, `fields`...) no upload de foto é que impedem o loop de CPU, e o teste
+`photo-upload-limits.spec.ts` falha se a versão instalada voltar a ser < 2.3.0. Ao mexer no lockfile: o npm 11 não reaplica um override
+sobre um lockfile já resolvido (edite a entrada `node_modules/multer` ou regenere do zero) e o `npm ls multer` do npm 11 mostra `invalid`
+mesmo com tudo certo — valide com `npm ci` em clone limpo (o npm 10, o do CI, mostra `overridden`).
+
 **Status:** o workflow foi validado localmente (YAML, comandos emulados num clone limpo). **Ele ainda não rodou no GitHub**
 — o primeiro push é a validação real.

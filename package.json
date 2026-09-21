@@ -12,6 +12,9 @@
   "scripts": {
     "dev:backend": "npm run start:dev --workspace backend"
   },
+  "overrides": {
+    "multer": "2.4.0"
+  },
   "allowScripts": {
     "@nestjs/core@10.4.22": true,
     "@prisma/client@5.22.0": true,
