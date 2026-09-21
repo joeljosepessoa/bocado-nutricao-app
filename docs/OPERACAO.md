@@ -304,5 +304,15 @@ migrar para o Nest 12 (que já traz o multer 2.4.0). Só atualizar o multer **n�
 sobre um lockfile já resolvido (edite a entrada `node_modules/multer` ou regenere do zero) e o `npm ls multer` do npm 11 mostra `invalid`
 mesmo com tudo certo — valide com `npm ci` em clone limpo (o npm 10, o do CI, mostra `overridden`).
 
+**Overrides de `express`, `body-parser` e `lodash`.** Pelo mesmo motivo do `multer`: o `@nestjs/platform-express` 10.x fixa
+`express@4.22.1` e `body-parser@1.20.4` exatos e o `@nestjs/config@3.3.0` fixa `lodash@4.17.21`, versões com avisos de segurança
+(DoS em `qs`/`body-parser`, injeção e poluição de protótipo em `lodash`). O `package.json` da raiz fixa `express@4.22.3`,
+`body-parser@1.20.8` e `lodash@4.18.1`. **Não há override de `qs`**: o `qs` 6.16.0 vem sozinho, é o que o Express 4.22.3 e o body-parser
+1.20.8 declaram (`~6.16.0`) — subir só o `qs` deixaria um par que o Express 4.22.1 (`~6.14.0`) não suporta. O teste
+`backend/test/http-parsing.e2e-spec.ts` fixa o que a API usa (JSON, `req.rawBody` byte a byte para a assinatura do webhook,
+urlencoded, query string) e falha se um override sair. Remova os overrides ao migrar para o Nest 12. Efeito observado ao subir: chaves repetidas
+com mais de 20 itens na query (100 no urlencoded) passam a virar arrays em vez de objetos com chaves numéricas; nenhum endpoint usa isso
+(só `@Query` escalar e corpos JSON).
+
 **Status:** o workflow foi validado localmente (YAML, comandos emulados num clone limpo). **Ele ainda não rodou no GitHub**
 — o primeiro push é a validação real.
