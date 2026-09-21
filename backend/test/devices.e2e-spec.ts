@@ -38,6 +38,50 @@ function samplePayload(overrides: Record<string, unknown> = {}) {
   };
 }
 
+/**
+ * Contrato de GET /clients/:id/devices (DeviceConnectionSummaryDto): SÓ metadados da conexão.
+ * Qualquer chave fora desta lista é vazamento, seja qual for o nome dela.
+ */
+const CONNECTION_SUMMARY_KEYS = [
+  'connectedAt',
+  'deviceIdentifier',
+  'driverId',
+  'id',
+  'lastSyncedAt',
+  'revokedAt',
+  'sharedWithProfessional',
+  'sourceType',
+  'status',
+];
+
+/**
+ * Campos que carregam a métrica (DeviceMetricSampleDto + colunas de DeviceMetricSample). Ficam
+ * listados por nome para a falha apontar exatamente o campo vazado (a checagem de chaves acima
+ * já os barraria, mas a mensagem seria só "arrays diferentes").
+ */
+const METRIC_FIELDS = [
+  'value',
+  'metricType',
+  'unit',
+  'startedAt',
+  'endedAt',
+  'precision',
+  'externalId',
+  'dedupHash',
+  'rawPayload',
+  'samples',
+];
+
+/** Procura um valor NUMÉRICO (por tipo e igualdade, nunca por substring) em qualquer nível do JSON. */
+function containsNumber(node: unknown, target: number): boolean {
+  if (typeof node === 'number') return node === target;
+  if (Array.isArray(node)) return node.some((item) => containsNumber(item, target));
+  if (node !== null && typeof node === 'object') {
+    return Object.values(node).some((item) => containsNumber(item, target));
+  }
+  return false;
+}
+
 async function loginAsClient(app: INestApplication, client: { user: { email: string } }, temporaryPassword: string) {
   const res = await request(app.getHttpServer())
     .post('/auth/login')
@@ -304,10 +348,11 @@ describe('Dispositivos e wearables (e2e)', () => {
     const { client, temporaryPassword } = await createClient(app, professional.accessToken);
     const clientToken = await loginAsClient(app, client, temporaryPassword);
     const connection = await consentAndConnect(app, clientToken);
+    const sentValue = 61;
     await request(app.getHttpServer())
       .post(`/client/devices/${connection.id}/metrics`)
       .set('Authorization', `Bearer ${clientToken}`)
-      .send({ samples: [samplePayload({ value: 61 })] })
+      .send({ samples: [samplePayload({ value: sentValue })] })
       .expect(201);
 
     const res = await request(app.getHttpServer())
@@ -316,7 +361,15 @@ describe('Dispositivos e wearables (e2e)', () => {
       .expect(200);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].sharedWithProfessional).toBe(false);
-    expect(JSON.stringify(res.body)).not.toContain('61');
+
+    // Verifica o contrato (chaves), não o texto: o JSON traz UUID e timestamps aleatórios, e uma
+    // busca de substring por "61" falhava sempre que um deles continha "61" por acaso.
+    expect(Object.keys(res.body[0]).sort()).toEqual(CONNECTION_SUMMARY_KEYS);
+    for (const field of METRIC_FIELDS) {
+      expect(res.body[0]).not.toHaveProperty(field);
+    }
+    // E o valor enviado não aparece como valor em lugar nenhum da resposta.
+    expect(containsNumber(res.body, sentValue)).toBe(false);
   });
 
   // 14. Auditoria nunca contém valor de métrica
