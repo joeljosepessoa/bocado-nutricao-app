@@ -97,14 +97,14 @@ No Railway, atualize as variáveis do backend:
 | Variável | Valor |
 |---|---|
 | `EMAIL_PROVIDER` | `smtp` |
-| `SMTP_URL` | `smtps://resend:SUA_API_KEY@smtp.resend.com:465` |
+| `SMTP_URL` | `smtps://usuario:<SMTP_PASSWORD>@smtp.example.com:465` (troque `usuario`/host pelo `resend`/`smtp.resend.com` do parágrafo acima e `<SMTP_PASSWORD>` pela chave gerada) |
 | `EMAIL_FROM` | `Bocado de Nutrição <onboarding@resend.dev>` |
 | `PASSWORD_RESET_URL` | `https://SEU-PAINEL.vercel.app/reset-password` (URL do passo 3) |
 
 Valide antes de depender (do seu terminal, com as variáveis acima exportadas):
 
 ```bash
-SMTP_URL="smtps://resend:SUA_API_KEY@smtp.resend.com:465" EMAIL_FROM="Bocado de Nutrição <onboarding@resend.dev>" \
+SMTP_URL="smtps://usuario:<SMTP_PASSWORD>@smtp.example.com:465" EMAIL_FROM="Bocado de Nutrição <onboarding@resend.dev>" \
   npm run email:test --workspace backend -- voce@seudominio.com
 ```
 
