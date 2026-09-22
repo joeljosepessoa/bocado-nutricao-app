@@ -34,8 +34,7 @@ COPY shared/package.json shared/package.json
 # dependências de Expo/React Native dos outros workspaces.
 RUN npm ci --workspace backend --include-workspace-root
 
-COPY database ./database
-COPY backend ./backend
+COPY . .
 RUN npm run prisma:generate --workspace backend
 RUN npm run build --workspace backend
 RUN npm prune --omit=dev
