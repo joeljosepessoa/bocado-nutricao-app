@@ -2,6 +2,9 @@
   "name": "backend",
   "private": true,
   "version": "0.1.0",
+  "prisma": {
+    "schema": "../database/schema.prisma"
+  },
   "scripts": {
     "prebuild": "npm run prisma:generate",
     "build": "nest build",
@@ -10,9 +13,9 @@
     "lint": "eslint \"src/**/*.ts\"",
     "test": "jest",
     "test:e2e": "jest --config test/jest-e2e.json",
-    "prisma:generate": "prisma generate --schema ../database/schema.prisma",
-    "prisma:migrate": "prisma migrate dev --schema ../database/schema.prisma",
-    "prisma:migrate:deploy": "prisma migrate deploy --schema ../database/schema.prisma",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:seed": "ts-node ../database/seed.ts",
     "reference-data:import": "ts-node src/reference-data/import-reference-data.ts",
     "reference-data:import-exercise-media-pilot": "ts-node src/reference-data/import-exercise-media-pilot.ts",
