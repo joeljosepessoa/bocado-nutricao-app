@@ -78,9 +78,9 @@ docker compose exec api node -e "fetch('http://127.0.0.1:3000/health').then(r=>r
 - A imagem tem `HEALTHCHECK` em `/health` (200 só com o banco acessível). O Compose não foi
   exercitado em uma máquina com Docker neste ambiente de desenvolvimento — valide o primeiro
   `docker compose up` antes de depender dele.
-- **Pendência conhecida:** o `Dockerfile` ainda parte de `node:20-bookworm-slim`, mas `puppeteer` 25 pede Node
-  >= 22.12. Na validação Docker, troque a base para `node:22-bookworm-slim` e confirme a geração de PDF
-  dentro da imagem (o CI já roda em Node 22).
+- O `Dockerfile` usa `node:22-bookworm-slim` (o `puppeteer` 25 exige Node >= 22.12; o CI também roda em Node 22).
+  A geração de PDF dentro da imagem ainda não foi confirmada num build real (nunca houve Docker nesta máquina
+  de desenvolvimento) — confirme no primeiro deploy.
 
 ## 6. Armazenamento
 

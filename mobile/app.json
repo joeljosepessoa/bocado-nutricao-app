@@ -7,15 +7,20 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "extra": {
-      "apiUrl": "http://localhost:3000"
+      "apiUrl": "http://localhost:3000",
+      "eas": {
+        "projectId": "PREENCHER_APOS_EAS_INIT"
+      }
     },
     "ios": {
+      "bundleIdentifier": "com.bocadodenutricao.cliente",
       "supportsTablet": true,
       "infoPlist": {
         "NSUserNotificationsUsageDescription": "Usamos notificações locais apenas para avisar quando o tempo de descanso do treino termina."
       }
     },
     "android": {
+      "package": "com.bocadodenutricao.cliente",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

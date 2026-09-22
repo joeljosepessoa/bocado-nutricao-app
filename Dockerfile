@@ -5,7 +5,7 @@
 # backend/ (database/schema.prisma, STORAGE_LOCAL_DIR default ../storage) —
 # a mesma estrutura relativa precisa existir dentro do container.
 
-FROM node:20-bookworm-slim AS base
+FROM node:22-bookworm-slim AS base
 # Bibliotecas exigidas pelo Chromium baixado pelo pacote `puppeteer`
 # (scripts/render-pdf.js) — lista oficial de troubleshooting do projeto:
 # https://pptr.dev/troubleshooting#chrome-doesnt-launch-on-linux

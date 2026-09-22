@@ -7,9 +7,13 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "extra": {
-      "apiUrl": "http://localhost:3000"
+      "apiUrl": "http://localhost:3000",
+      "eas": {
+        "projectId": "PREENCHER_APOS_EAS_INIT"
+      }
     },
     "ios": {
+      "bundleIdentifier": "com.bocadodenutricao.profissional",
       "supportsTablet": true,
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "Usamos Bluetooth para conectar com a balança de bioimpedância durante a avaliação física.",
@@ -17,6 +21,7 @@
       }
     },
     "android": {
+      "package": "com.bocadodenutricao.profissional",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
