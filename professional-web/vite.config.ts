@@ -24,6 +24,9 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  preview: {
+    allowedHosts: ['ingenious-youth-production-e4db.up.railway.app'],
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/setupTests.ts'],
