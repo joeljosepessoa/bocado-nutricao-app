@@ -17,10 +17,24 @@ import type {
   ProfessionalEvaluationReportData,
   ReportComparison,
   ReportPhoto,
+  ReportPreviousSnapshot,
+  ReportSeriesPoint,
 } from './templates/report-types';
 
 export interface RequestMeta {
   ipAddress?: string;
+}
+
+// Mesma matemática de delta usada em PhysicalEvaluationsService.compare() —
+// reimplementada aqui (não importada) para não acoplar este serviço a um
+// método privado daquele.
+function numericDelta(a: number | null | undefined, b: number | null | undefined): number | null {
+  return a == null || b == null ? null : Math.round((b - a) * 100) / 100;
+}
+
+/** massaKg como % do peso naquele mesmo ponto — derivado de dois valores reais já registrados, nunca uma referência externa inventada. */
+function percentOfWeight(massKg: number | null | undefined, weightKg: number | null | undefined): number | null {
+  return massKg == null || weightKg == null || weightKg === 0 ? null : Math.round((massKg / weightKg) * 1000) / 10;
 }
 
 const REPORT_LIST_SELECT = {
@@ -153,6 +167,19 @@ export class ReportsService {
       let html: string;
       let snapshot: Record<string, unknown>;
 
+      // Campos seguros mesmo fora do allowlist restrito do cliente: idade,
+      // altura e sexo biológico já são atributos que o próprio cliente
+      // conhece, e a relação cintura/quadril é derivada só de duas
+      // circunferências que já estão no allowlist — por isso vêm direto de
+      // fullEvaluation nas duas audiências, como ageAtEvaluation/heightCm
+      // já faziam antes desta mudança.
+      const sharedIdentity = {
+        ageAtEvaluation: fullEvaluation.ageAtEvaluation,
+        heightCm: fullEvaluation.heightCm,
+        biologicalSexForCalculation: fullEvaluation.biologicalSexForCalculation,
+        waistHipRatio: fullEvaluation.calculatedMetrics?.waistHipRatio ?? null,
+      };
+
       if (dto.audience === ReportAudience.client) {
         const summary = await this.evaluations.getReleasedSummaryForClient(clientId, evaluationId);
         if (!summary) {
@@ -165,13 +192,14 @@ export class ReportsService {
           bodyFatPercent: summary.bodyFatPercent,
           leanMassKg: summary.leanMassKg,
           fatMassKg: summary.fatMassKg,
+          muscleMassKg: summary.composition?.muscleMassKg ?? null,
+          skeletalMuscleMassKg: summary.composition?.skeletalMuscleMassKg ?? null,
         });
         const core: EvaluationReportCore = {
           clientName,
           professionalName,
           evaluatedAt: summary.evaluatedAt.toISOString(),
-          ageAtEvaluation: fullEvaluation.ageAtEvaluation,
-          heightCm: fullEvaluation.heightCm,
+          ...sharedIdentity,
           weightKg: summary.weightKg,
           bmi: summary.bmi,
           bmiClassification: summary.bmiClassification,
@@ -186,19 +214,74 @@ export class ReportsService {
         html = renderClientReportHtml(data);
         snapshot = { ...data };
       } else {
-        const photos = await this.loadPhotosForProfessionalReport(evaluationId);
-        const comparison = await this.computePreviousComparison(clientId, fullEvaluation.evaluatedAt, dto.audience, {
-          weightKg: fullEvaluation.weightKg,
-          bodyFatPercent: fullEvaluation.calculatedMetrics?.bodyFatPercent ?? null,
-          leanMassKg: fullEvaluation.calculatedMetrics?.leanMassKg ?? null,
-          fatMassKg: fullEvaluation.calculatedMetrics?.fatMassKg ?? null,
+        const [photos, series] = await Promise.all([
+          this.loadPhotosForProfessionalReport(evaluationId),
+          this.evaluations.getEvolutionSeries(professionalId, clientId),
+        ]);
+        const currentIndex = series.findIndex((point) => point.id === evaluationId);
+        const previousPoint = currentIndex > 0 ? series[currentIndex - 1] : null;
+        // "Geral": desde a primeira avaliação já registrada — só existe
+        // como comparação distinta quando há pelo menos 2 avaliações antes
+        // da atual (senão "primeira" === "anterior" e o dado já está em
+        // `comparison`).
+        const firstPoint = currentIndex > 1 ? series[0] : null;
+
+        const evolutionPointToComparison = (point: (typeof series)[number]): ReportComparison => ({
+          previousEvaluatedAt: point.evaluatedAt.toISOString(),
+          weightKg: numericDelta(point.weightKg, fullEvaluation.weightKg),
+          bodyFatPercent: numericDelta(point.bodyFatPercent, fullEvaluation.calculatedMetrics?.bodyFatPercent),
+          leanMassKg: numericDelta(point.leanMassKg, fullEvaluation.calculatedMetrics?.leanMassKg),
+          fatMassKg: numericDelta(point.fatMassKg, fullEvaluation.calculatedMetrics?.fatMassKg),
+          muscleMassKg: numericDelta(point.bioimpedance?.muscleMassKg, fullEvaluation.bioimpedance?.muscleMassKg),
+          skeletalMuscleMassKg: numericDelta(point.bioimpedance?.skeletalMuscleMassKg, fullEvaluation.bioimpedance?.skeletalMuscleMassKg),
+          musclePercent: numericDelta(
+            percentOfWeight(point.bioimpedance?.muscleMassKg, point.weightKg),
+            percentOfWeight(fullEvaluation.bioimpedance?.muscleMassKg, fullEvaluation.weightKg),
+          ),
+          skeletalMusclePercent: numericDelta(
+            percentOfWeight(point.bioimpedance?.skeletalMuscleMassKg, point.weightKg),
+            percentOfWeight(fullEvaluation.bioimpedance?.skeletalMuscleMassKg, fullEvaluation.weightKg),
+          ),
         });
+        const evolutionPointToSnapshot = (point: (typeof series)[number]): ReportPreviousSnapshot => ({
+          evaluatedAt: point.evaluatedAt.toISOString(),
+          measurements: point.measurements,
+          skinfolds: null, // EvolutionPointDto só traz a soma (skinfoldSumMm), não os valores por local
+          bloodPressureSystolic: point.bloodPressureSystolic,
+          bloodPressureDiastolic: point.bloodPressureDiastolic,
+        });
+
+        const comparison = previousPoint ? evolutionPointToComparison(previousPoint) : null;
+        const previous = previousPoint ? evolutionPointToSnapshot(previousPoint) : null;
+        const overallComparison = firstPoint ? evolutionPointToComparison(firstPoint) : null;
+        const first = firstPoint ? evolutionPointToSnapshot(firstPoint) : null;
+
+        const reportSeries: ReportSeriesPoint[] = series.map((point) => ({
+          evaluatedAt: point.evaluatedAt.toISOString(),
+          ageAtEvaluation: point.ageAtEvaluation,
+          weightKg: point.weightKg,
+          bodyFatPercent: point.bodyFatPercent,
+          fatMassKg: point.fatMassKg,
+          leanMassKg: point.leanMassKg,
+          muscleMassKg: point.bioimpedance?.muscleMassKg ?? null,
+          skeletalMuscleMassKg: point.bioimpedance?.skeletalMuscleMassKg ?? null,
+          bodyWaterPercent: point.bioimpedance?.bodyWaterPercent ?? null,
+          bodyAgeYears: point.bioimpedance?.bodyAgeYears ?? null,
+          boneMassKg: point.bioimpedance?.boneMassKg ?? null,
+        }));
+
+        const skinfoldSiteCount = fullEvaluation.protocol?.requiredSkinfoldSites?.length ?? 0;
+        const protocolLabel = fullEvaluation.protocol
+          ? skinfoldSiteCount > 0
+            ? `Dobras Cutâneas - ${skinfoldSiteCount} dobras`
+            : `${fullEvaluation.protocol.name} (v${fullEvaluation.protocol.version})`
+          : null;
+
         const core: EvaluationReportCore = {
           clientName,
           professionalName,
           evaluatedAt: fullEvaluation.evaluatedAt.toISOString(),
-          ageAtEvaluation: fullEvaluation.ageAtEvaluation,
-          heightCm: fullEvaluation.heightCm,
+          ...sharedIdentity,
           weightKg: fullEvaluation.weightKg,
           bmi: fullEvaluation.calculatedMetrics?.bmi ?? null,
           bmiClassification: fullEvaluation.calculatedMetrics?.bmiClassification ?? null,
@@ -214,9 +297,7 @@ export class ReportsService {
           generatedAt,
           bodyFatPercentSource: fullEvaluation.calculatedMetrics?.bodyFatPercentSource ?? null,
           skinfolds: fullEvaluation.skinfolds,
-          protocolLabel: fullEvaluation.protocol
-            ? `${fullEvaluation.protocol.name} (v${fullEvaluation.protocol.version})`
-            : null,
+          protocolLabel,
           bioimpedanceOrigin: fullEvaluation.bioimpedance?.origin ?? null,
           bloodPressureSystolic: fullEvaluation.bloodPressureSystolic,
           bloodPressureDiastolic: fullEvaluation.bloodPressureDiastolic,
@@ -224,12 +305,17 @@ export class ReportsService {
           glucose: fullEvaluation.glucose,
           notes: fullEvaluation.notes,
           photos,
+          series: reportSeries,
+          previous,
+          first,
+          overallComparison,
         };
         html = renderProfessionalReportHtml(data);
         snapshot = { ...data, photos: data.photos.map((p) => ({ angle: p.angle })) }; // nunca guarda a imagem no snapshot
       }
 
-      const pdfBuffer = await this.pdfQueue.run(() => this.pdf.renderHtmlToPdf(html));
+      const footerDateLabel = `Gerado em ${new Date(generatedAt).toLocaleDateString('pt-BR')}`;
+      const pdfBuffer = await this.pdfQueue.run(() => this.pdf.renderHtmlToPdf(html, footerDateLabel));
       const { storageKey, sizeBytes } = await this.storage.save(pdfBuffer, 'application/pdf');
 
       const updated = await this.prisma.report.update({
@@ -254,9 +340,15 @@ export class ReportsService {
       if (!(error instanceof BadRequestException)) {
         this.logger.error('Falha ao gerar relatório', error instanceof Error ? error.stack : error);
       }
+      // A causa real (ex.: Chromium não lançou, ENOENT do script de
+      // renderização) fica visível para o profissional via GET do relatório
+      // — só a resposta HTTP desta chamada permanece genérica, por baixo
+      // risco de expor detalhe de infraestrutura numa exceção de API.
+      const rawReason = error instanceof Error ? error.message : String(error);
+      const failureReason = rawReason.length > 500 ? `${rawReason.slice(0, 500)}…` : rawReason;
       await this.prisma.report.update({
         where: { id: report.id },
-        data: { status: ReportStatus.failed, failureReason: 'Falha ao gerar o PDF.' },
+        data: { status: ReportStatus.failed, failureReason },
       });
       await this.auditLog.record({
         professionalId,
@@ -405,7 +497,14 @@ export class ReportsService {
     clientId: string,
     beforeEvaluatedAt: Date,
     audience: ReportAudience,
-    current: { weightKg: number | null; bodyFatPercent: number | null; leanMassKg: number | null; fatMassKg: number | null },
+    current: {
+      weightKg: number | null;
+      bodyFatPercent: number | null;
+      leanMassKg: number | null;
+      fatMassKg: number | null;
+      muscleMassKg: number | null;
+      skeletalMuscleMassKg: number | null;
+    },
   ): Promise<ReportComparison | null> {
     const previous = await this.prisma.physicalEvaluation.findFirst({
       where: {
@@ -418,24 +517,29 @@ export class ReportsService {
         evaluatedAt: true,
         weightKg: true,
         calculatedMetrics: { select: { bodyFatPercent: true, leanMassKg: true, fatMassKg: true } },
+        bioimpedance: { select: { muscleMassKg: true, skeletalMuscleMassKg: true } },
       },
     });
     if (!previous) {
       return null;
     }
 
-    // Mesma matemática de delta já usada em PhysicalEvaluationsService.compare()
-    // — reimplementada aqui (3 linhas) em vez de importar, para não acoplar
-    // este serviço a métodos privados daquele.
-    const delta = (a: number | null | undefined, b: number | null | undefined) =>
-      a == null || b == null ? null : Math.round((b - a) * 100) / 100;
-
     return {
       previousEvaluatedAt: previous.evaluatedAt.toISOString(),
-      weightKg: delta(previous.weightKg, current.weightKg),
-      bodyFatPercent: delta(previous.calculatedMetrics?.bodyFatPercent, current.bodyFatPercent),
-      leanMassKg: delta(previous.calculatedMetrics?.leanMassKg, current.leanMassKg),
-      fatMassKg: delta(previous.calculatedMetrics?.fatMassKg, current.fatMassKg),
+      weightKg: numericDelta(previous.weightKg, current.weightKg),
+      bodyFatPercent: numericDelta(previous.calculatedMetrics?.bodyFatPercent, current.bodyFatPercent),
+      leanMassKg: numericDelta(previous.calculatedMetrics?.leanMassKg, current.leanMassKg),
+      fatMassKg: numericDelta(previous.calculatedMetrics?.fatMassKg, current.fatMassKg),
+      muscleMassKg: numericDelta(previous.bioimpedance?.muscleMassKg, current.muscleMassKg),
+      skeletalMuscleMassKg: numericDelta(previous.bioimpedance?.skeletalMuscleMassKg, current.skeletalMuscleMassKg),
+      musclePercent: numericDelta(
+        percentOfWeight(previous.bioimpedance?.muscleMassKg, previous.weightKg),
+        percentOfWeight(current.muscleMassKg, current.weightKg),
+      ),
+      skeletalMusclePercent: numericDelta(
+        percentOfWeight(previous.bioimpedance?.skeletalMuscleMassKg, previous.weightKg),
+        percentOfWeight(current.skeletalMuscleMassKg, current.weightKg),
+      ),
     };
   }
 

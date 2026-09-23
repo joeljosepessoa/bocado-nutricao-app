@@ -89,6 +89,10 @@ export class EvolutionPointDto {
   evaluatedAt!: Date;
   releasedToClientAt!: Date | null;
 
+  ageAtEvaluation!: number | null;
+  bloodPressureSystolic!: number | null;
+  bloodPressureDiastolic!: number | null;
+
   weightKg!: number | null;
   bmi!: number | null;
   bmiClassification!: string | null;
@@ -109,6 +113,9 @@ export class EvolutionPointDto {
     id: string;
     evaluatedAt: Date;
     releasedToClientAt: Date | null;
+    ageAtEvaluation: number | null;
+    bloodPressureSystolic: number | null;
+    bloodPressureDiastolic: number | null;
     weightKg: number | null;
     calculatedMetrics: {
       bmi: number | null;
@@ -127,6 +134,9 @@ export class EvolutionPointDto {
     dto.id = evaluation.id;
     dto.evaluatedAt = evaluation.evaluatedAt;
     dto.releasedToClientAt = evaluation.releasedToClientAt;
+    dto.ageAtEvaluation = evaluation.ageAtEvaluation;
+    dto.bloodPressureSystolic = evaluation.bloodPressureSystolic;
+    dto.bloodPressureDiastolic = evaluation.bloodPressureDiastolic;
 
     dto.weightKg = evaluation.weightKg;
     dto.bmi = evaluation.calculatedMetrics?.bmi ?? null;

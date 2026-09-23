@@ -44,6 +44,30 @@ async function generateReport(
   return res.body;
 }
 
+const TINY_JPEG = Buffer.from(
+  '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAj/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=',
+  'base64',
+);
+
+/** Heurística sem dependência nova: o objeto `/Type /Pages` do PDF sempre anuncia `/Count N` em texto puro, mesmo quando os objetos de página individuais são comprimidos. */
+function countPdfPages(buffer: Buffer): number {
+  const text = buffer.toString('latin1');
+  const match = text.match(/\/Type\s*\/Pages[\s\S]{0,300}?\/Count\s+(\d+)/);
+  if (!match) {
+    throw new Error('Não foi possível localizar /Type /Pages /Count no PDF gerado.');
+  }
+  return Number(match[1]);
+}
+
+async function downloadReportPdf(app: INestApplication, accessToken: string, clientId: string, reportId: string): Promise<Buffer> {
+  const download = await request(app.getHttpServer())
+    .get(`/clients/${clientId}/reports/${reportId}/download-url`)
+    .set('Authorization', `Bearer ${accessToken}`)
+    .expect(200);
+  const pdfRes = await request(app.getHttpServer()).get(download.body.url).expect(200);
+  return Buffer.isBuffer(pdfRes.body) ? pdfRes.body : Buffer.from(pdfRes.body);
+}
+
 describe('Relatórios (e2e)', () => {
   let app: INestApplication;
 
@@ -60,7 +84,7 @@ describe('Relatórios (e2e)', () => {
   });
 
   // 1. Geração — relatório profissional
-  it('gera relatório profissional: status ready, templateVersion 1, arquivo baixável', async () => {
+  it('gera relatório profissional: status ready, templateVersion 2 (redesenho 4 páginas), arquivo baixável', async () => {
     const professional = await registerProfessional(app);
     const { client } = await createClient(app, professional.accessToken);
     const evaluation = await createEvaluation(app, professional.accessToken, client.id, {
@@ -70,7 +94,7 @@ describe('Relatórios (e2e)', () => {
     const report = await generateReport(app, professional.accessToken, client.id, evaluation.id, 'professional');
     expect(report.status).toBe('ready');
     expect(report.audience).toBe('professional');
-    expect(report.templateVersion).toBe(1);
+    expect(report.templateVersion).toBe(2);
     expect(report.sizeBytes).toBeGreaterThan(0);
     expect(report.generatedAt).toBeTruthy();
 
@@ -83,6 +107,118 @@ describe('Relatórios (e2e)', () => {
     const pdfRes = await request(app.getHttpServer()).get(download.body.url).expect(200);
     expect(pdfRes.headers['content-type']).toBe('application/pdf');
     expect(Buffer.isBuffer(pdfRes.body) || pdfRes.body.length !== undefined).toBeTruthy();
+  }, 30_000);
+
+  // 1b. Geração — relatório profissional de uma avaliação SEM histórico (primeira do cliente)
+  it('gera relatório profissional normalmente quando a avaliação não tem histórico anterior (gráficos não quebram)', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+    const evaluation = await createEvaluation(app, professional.accessToken, client.id);
+
+    const report = await generateReport(app, professional.accessToken, client.id, evaluation.id, 'professional');
+    expect(report.status).toBe('ready');
+    expect(report.sizeBytes).toBeGreaterThan(0);
+  }, 30_000);
+
+  // 1c. Geração — relatório profissional de uma avaliação COM histórico (série real de 2+ avaliações)
+  it('gera relatório profissional normalmente quando há histórico (série de avaliações para os gráficos)', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+    await createEvaluation(app, professional.accessToken, client.id, {
+      evaluatedAt: '2025-06-01T00:00:00Z',
+      weightKg: 85,
+      measurements: { waistCm: 90, hipCm: 105 },
+    });
+    const second = await createEvaluation(app, professional.accessToken, client.id, {
+      evaluatedAt: '2026-01-01T00:00:00Z',
+      weightKg: 80,
+      measurements: { waistCm: 85, hipCm: 100 },
+    });
+
+    const report = await generateReport(app, professional.accessToken, client.id, second.id, 'professional');
+    expect(report.status).toBe('ready');
+    expect(report.sizeBytes).toBeGreaterThan(0);
+  }, 30_000);
+
+  // 1d. Geração — relatório profissional com foto anexada (página 4) embutida no PDF
+  it('gera relatório profissional com foto: PDF inclui a imagem embutida (arquivo maior que sem foto)', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+    const evaluation = await createEvaluation(app, professional.accessToken, client.id);
+
+    const withoutPhoto = await generateReport(app, professional.accessToken, client.id, evaluation.id, 'professional');
+    expect(withoutPhoto.status).toBe('ready');
+
+    const jpeg = Buffer.from(
+      '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAj/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=',
+      'base64',
+    );
+    await request(app.getHttpServer())
+      .post(`/clients/${client.id}/evaluations/${evaluation.id}/photos`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .field('angle', 'front')
+      .attach('file', jpeg, { filename: 'foto.jpg', contentType: 'image/jpeg' })
+      .expect(201);
+
+    const withPhoto = await generateReport(app, professional.accessToken, client.id, evaluation.id, 'professional');
+    expect(withPhoto.status).toBe('ready');
+    expect(withPhoto.sizeBytes).toBeGreaterThan(withoutPhoto.sizeBytes);
+  }, 30_000);
+
+  // 1e. Geração — caminho completo: com todos os dados e fotos, o PDF tem exatamente 4 páginas
+  it('com todos os dados (histórico, dobras, sinais vitais, fotos), o PDF profissional tem exatamente 4 páginas', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+
+    await createEvaluation(app, professional.accessToken, client.id, {
+      evaluatedAt: '2025-06-01T00:00:00Z',
+      weightKg: 85,
+      measurements: { waistCm: 90, hipCm: 105, chestCm: 100, abdomenCm: 95 },
+    });
+    const evaluation = await createEvaluation(app, professional.accessToken, client.id, {
+      evaluatedAt: '2026-01-01T00:00:00Z',
+      weightKg: 80,
+      biologicalSexForCalculation: 'male',
+      protocolCode: 'jackson_pollock_7',
+      bloodPressureSystolic: 120,
+      bloodPressureDiastolic: 80,
+      heartRate: 68,
+      glucose: 90,
+      notes: 'Nota interna de acompanhamento.',
+      measurements: {
+        chestCm: 98, waistCm: 86, abdomenCm: 92, hipCm: 102,
+        armRightCm: 30, armLeftCm: 29.5, forearmRightCm: 25, forearmLeftCm: 24.5,
+        thighRightCm: 58, thighLeftCm: 57.5, calfRightCm: 37, calfLeftCm: 36.5,
+        wristCm: 16, femurBicondylarCm: 9,
+      },
+      skinfolds: {
+        chestMm: 10, axillaryMidMm: 12, subscapularMm: 14, tricepsMm: 8,
+        abdominalMm: 18, suprailiacMm: 15, thighMm: 20,
+      },
+      bioimpedance: {
+        muscleMassKg: 34, skeletalMuscleMassKg: 31, bodyWaterPercent: 58,
+        visceralFatLevel: 8, boneMassKg: 3.2, basalMetabolicRateKcal: 1750, bodyAgeYears: 33,
+      },
+    });
+
+    await request(app.getHttpServer())
+      .post(`/clients/${client.id}/evaluations/${evaluation.id}/photos`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .field('angle', 'front')
+      .attach('file', TINY_JPEG, { filename: 'frente.jpg', contentType: 'image/jpeg' })
+      .expect(201);
+    await request(app.getHttpServer())
+      .post(`/clients/${client.id}/evaluations/${evaluation.id}/photos`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .field('angle', 'back')
+      .attach('file', TINY_JPEG, { filename: 'costas.jpg', contentType: 'image/jpeg' })
+      .expect(201);
+
+    const report = await generateReport(app, professional.accessToken, client.id, evaluation.id, 'professional');
+    expect(report.status).toBe('ready');
+
+    const pdf = await downloadReportPdf(app, professional.accessToken, client.id, report.id);
+    expect(countPdfPages(pdf)).toBe(4);
   }, 30_000);
 
   // 2. Geração — relatório cliente, com avaliação liberada

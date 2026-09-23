@@ -22,23 +22,34 @@ const RENDER_TIMEOUT_MS = 60_000;
  * diretamente aqui. Geração é pouco frequente e sob demanda; um processo
  * novo por chamada é simplicidade > a economia de um pool nesta escala.
  */
+interface ExecFileErrorLike {
+  message?: string;
+  stderr?: string;
+}
+
 @Injectable()
 export class PdfService {
-  async renderHtmlToPdf(html: string): Promise<Buffer> {
+  /** `footerDateLabel` vai pro rodapé do PDF (ex.: "Gerado em 23/09/2026") — ver render-pdf.js. */
+  async renderHtmlToPdf(html: string, footerDateLabel = ''): Promise<Buffer> {
     const dir = await mkdtemp(join(tmpdir(), 'bocado-report-'));
     const inputPath = join(dir, 'input.html');
     const outputPath = join(dir, 'output.pdf');
 
     try {
       await writeFile(inputPath, html, 'utf-8');
-      await execFileAsync('node', [RENDER_SCRIPT_PATH, inputPath, outputPath], {
+      const footerArg = Buffer.from(footerDateLabel, 'utf-8').toString('base64');
+      await execFileAsync('node', [RENDER_SCRIPT_PATH, inputPath, outputPath, footerArg], {
         timeout: RENDER_TIMEOUT_MS,
       });
       return await readFile(outputPath);
     } catch (error) {
-      throw new InternalServerErrorException(
-        `Falha ao renderizar PDF: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      // `error.stderr` (anexado pelo Node em falhas de execFile) traz a
+      // causa real (ex.: "Could not find Chrome", ERR_REQUIRE_ESM) — sem
+      // isso, só sobrava uma mensagem genérica "Command failed" que nunca
+      // dizia por que o Chromium não subiu.
+      const err = error as ExecFileErrorLike;
+      const detail = err?.stderr?.trim() || err?.message || String(error);
+      throw new InternalServerErrorException(`Falha ao renderizar PDF: ${detail}`);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }

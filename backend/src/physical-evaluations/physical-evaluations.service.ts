@@ -87,6 +87,9 @@ const EVOLUTION_SERIES_SELECT = {
   id: true,
   evaluatedAt: true,
   releasedToClientAt: true,
+  ageAtEvaluation: true,
+  bloodPressureSystolic: true,
+  bloodPressureDiastolic: true,
   weightKg: true,
   calculatedMetrics: {
     select: {

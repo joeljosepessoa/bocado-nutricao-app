@@ -2,6 +2,9 @@
   "name": "backend",
   "private": true,
   "version": "0.1.0",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "prisma": {
     "schema": "../database/schema.prisma"
   },
