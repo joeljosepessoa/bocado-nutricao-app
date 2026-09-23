@@ -19,6 +19,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       openssl wget xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
+# Caminho fixo e explícito do cache de browsers do Puppeteer — lido
+# nativamente por node_modules/puppeteer/lib/puppeteer/getConfiguration.js,
+# tanto para ONDE baixar o Chrome (durante `npm ci` no estágio builder,
+# via postinstall do pacote `puppeteer`) quanto para ONDE procurá-lo em
+# runtime (`puppeteer.launch()` sem `executablePath`, no render-pdf.js).
+# Sem isso o padrão é $HOME/.cache/puppeteer — /root/.cache/puppeteer só
+# por coincidência dos dois estágios rodarem como root; fixar aqui (na
+# imagem base, herdado pelos dois estágios) remove essa implicitude e é o
+# que faz o `COPY --from=builder` abaixo ser determinístico.
+ENV PUPPETEER_CACHE_DIR=/opt/puppeteer-cache
+
 FROM base AS builder
 WORKDIR /app
 # Só os manifestos primeiro (cache de camada do `npm ci` sobrevive a
@@ -47,6 +58,11 @@ COPY --from=builder /app/backend/dist ./backend/dist
 COPY --from=builder /app/backend/scripts ./backend/scripts
 COPY --from=builder /app/backend/package.json ./backend/package.json
 COPY --from=builder /app/database ./database
+# O Chrome baixado no builder (ver ENV PUPPETEER_CACHE_DIR acima) precisa
+# ser copiado explicitamente — nada nos passos anteriores traz o cache de
+# browsers do Puppeteer pro estágio final, então sem esta linha o
+# `puppeteer.launch()` falha com "Could not find Chrome".
+COPY --from=builder /opt/puppeteer-cache /opt/puppeteer-cache
 
 WORKDIR /app/backend
 EXPOSE 3000
