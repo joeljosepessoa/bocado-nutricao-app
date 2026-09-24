@@ -7,9 +7,9 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "extra": {
-      "apiUrl": "http://localhost:3000",
+      "apiUrl": "https://bocado-nutricao-app-production.up.railway.app",
       "eas": {
-        "projectId": "PREENCHER_APOS_EAS_INIT"
+        "projectId": "794a06d8-05e1-42af-98b3-c1764f9155fe"
       }
     },
     "ios": {
@@ -35,6 +35,7 @@
     "plugins": [
       "expo-secure-store",
       "expo-notifications"
-    ]
+    ],
+    "owner": "bocadodenutricao"
   }
 }

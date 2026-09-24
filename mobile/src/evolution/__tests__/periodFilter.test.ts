@@ -13,6 +13,7 @@ function entryAt(iso: string): EvolutionEntry {
     leanMassKg: 68,
     measurements: null,
     composition: null,
+    photos: [],
   };
 }
 

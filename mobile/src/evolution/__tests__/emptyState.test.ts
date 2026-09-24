@@ -13,6 +13,7 @@ function makeEntry(id: string): EvolutionEntry {
     leanMassKg: 68,
     measurements: null,
     composition: null,
+    photos: [],
   };
 }
 

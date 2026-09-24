@@ -14,6 +14,7 @@ function makeEntry(overrides: Partial<EvolutionEntry>): EvolutionEntry {
     leanMassKg: null,
     measurements: null,
     composition: null,
+    photos: [],
     ...overrides,
   };
 }

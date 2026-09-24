@@ -13,13 +13,13 @@
         "simulator": false
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://SUBSTITUA-PELA-URL-DO-BACKEND"
+        "EXPO_PUBLIC_API_URL": "https://bocado-nutricao-app-production.up.railway.app"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://SUBSTITUA-PELA-URL-DO-BACKEND"
+        "EXPO_PUBLIC_API_URL": "https://bocado-nutricao-app-production.up.railway.app"
       }
     }
   },

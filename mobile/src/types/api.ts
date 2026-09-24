@@ -140,11 +140,18 @@ export interface EvolutionComposition {
   bodyAgeYears: number | null;
 }
 
+export type PhotoAngle = 'front' | 'side_right' | 'back' | 'side_left';
+
+export interface EvaluationPhotoView {
+  id: string;
+  angle: PhotoAngle;
+}
+
 /**
  * Espelha PhysicalEvaluationClientSummaryDto (backend) — allowlist fechado
- * da Fase 8, Decisão 2. Nunca ganha um campo aqui sem o backend já expor,
- * porque este tipo é só o formato do que a API manda, não uma promessa
- * própria do app.
+ * da Fase 8, Decisão 2 (+ fotos, adicionadas na fase de liberação para o
+ * app). Nunca ganha um campo aqui sem o backend já expor, porque este tipo
+ * é só o formato do que a API manda, não uma promessa própria do app.
  */
 export interface EvolutionEntry {
   id: string;
@@ -157,6 +164,20 @@ export interface EvolutionEntry {
   leanMassKg: number | null;
   measurements: EvolutionMeasurements | null;
   composition: EvolutionComposition | null;
+  photos: EvaluationPhotoView[];
+}
+
+/** Espelha ClientReportSummaryDto (backend) — só relatórios audience=client já liberados chegam aqui. */
+export interface ClientReportSummary {
+  id: string;
+  evaluationEvaluatedAt: string;
+  generatedAt: string;
+  sizeBytes: number;
+}
+
+export interface SignedUrl {
+  url: string;
+  expiresAt: string;
 }
 
 export interface PaginatedResult<T> {

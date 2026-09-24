@@ -7,6 +7,7 @@ import { ChangePasswordScreen } from '../screens/ChangePasswordScreen';
 import { PrivacyConsentScreen } from '../screens/PrivacyConsentScreen';
 import { WorkoutExecutionScreen } from '../screens/WorkoutExecutionScreen';
 import { ReportsScreen } from '../screens/ReportsScreen';
+import { ReportDetailScreen } from '../screens/ReportDetailScreen';
 import { ConnectDeviceScreen } from '../screens/ConnectDeviceScreen';
 import { NotificationPreferencesScreen } from '../screens/NotificationPreferencesScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
@@ -68,6 +69,7 @@ export function RootNavigator() {
         options={{ presentation: 'modal', title: 'Execução de treino' }}
       />
       <Stack.Screen name="Reports" component={ReportsScreen} options={{ title: 'Relatórios' }} />
+      <Stack.Screen name="ReportDetail" component={ReportDetailScreen} options={{ title: 'Meu relatório' }} />
       <Stack.Screen name="ConnectDevice" component={ConnectDeviceScreen} options={{ title: 'Conectar dispositivo' }} />
       <Stack.Screen
         name="NotificationPreferences"

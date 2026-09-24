@@ -5,6 +5,7 @@ import type {
   AuthTokenPair,
   AvailabilitySlot,
   ClientDataExport,
+  ClientReportSummary,
   ClientSelf,
   CreateExecutionLogInput,
   DeviceConnection,
@@ -19,6 +20,7 @@ import type {
   NotificationEventType,
   NotificationPreference,
   PaginatedResult,
+  SignedUrl,
   WorkoutClientSummary,
 } from '../types/api';
 
@@ -83,8 +85,19 @@ export async function getEvolution(page = 1, pageSize = 20): Promise<PaginatedRe
   return res.data;
 }
 
-export async function getReports(): Promise<{ items: unknown[]; total: number }> {
-  const res = await apiClient.get('/client/reports');
+export async function getReports(page = 1, pageSize = 20): Promise<PaginatedResult<ClientReportSummary>> {
+  const res = await apiClient.get<PaginatedResult<ClientReportSummary>>('/client/reports', { params: { page, pageSize } });
+  return res.data;
+}
+
+export async function getReportDownloadUrl(reportId: string): Promise<SignedUrl> {
+  const res = await apiClient.get<SignedUrl>(`/client/reports/${reportId}/download-url`);
+  return res.data;
+}
+
+/** URL assinada (curta duração, `/files/:token` público) de uma foto de uma avaliação liberada. */
+export async function getEvaluationPhotoUrl(evaluationId: string, photoId: string): Promise<SignedUrl> {
+  const res = await apiClient.get<SignedUrl>(`/client/evolution/${evaluationId}/photos/${photoId}/download-url`);
   return res.data;
 }
 
