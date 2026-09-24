@@ -44,6 +44,18 @@ COPY shared/package.json shared/package.json
 # instala as dependências do backend (+ raiz) — não baixa a árvore de
 # dependências de Expo/React Native dos outros workspaces.
 RUN npm ci --workspace backend --include-workspace-root
+# `npm ci` já dispara o postinstall do pacote `puppeteer`, que baixa o
+# Chrome sozinho — só que esse postinstall (node_modules/puppeteer/install.mjs)
+# envolve o download inteiro num try/catch que só faz `console.warn` e
+# SEGUE EM FRENTE se a rede falhar, sem nunca derrubar o `npm ci`. Foi
+# assim que a imagem builda "com sucesso" no Railway sem o Chrome de
+# verdade existir depois. Este passo explícito usa o mesmo mecanismo
+# oficial (`puppeteer browsers install`, que resolve a MESMA versão pinada
+# do postinstall — ver node_modules/puppeteer/lib/puppeteer/node/cli.js,
+# nunca "latest") como uma segunda tentativa que FALHA O BUILD de verdade
+# se o Chrome não instalar — sem isso, uma falha de rede vira um "Could
+# not find Chrome" só descoberto em produção, na hora de gerar um relatório.
+RUN npx puppeteer browsers install chrome
 
 COPY . .
 RUN npm run prisma:generate --workspace backend
