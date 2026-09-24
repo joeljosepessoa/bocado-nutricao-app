@@ -15,6 +15,7 @@ import { UpdateWorkoutExerciseDto } from './dto/update-workout-exercise.dto';
 import { CreateWorkoutSetDto } from './dto/create-workout-set.dto';
 import { UpdateWorkoutSetDto } from './dto/update-workout-set.dto';
 import { CreateExecutionLogDto } from './dto/create-execution-log.dto';
+import { CreateWorkoutFromProposalDto } from './dto/create-workout-from-proposal.dto';
 
 function meta(req: Request): RequestMeta {
   return { ipAddress: req.ip };
@@ -28,6 +29,16 @@ export class WorkoutsController {
   @Post()
   create(@CurrentUser() user: AuthenticatedUser, @Param('clientId') clientId: string, @Body() dto: CreateWorkoutDto, @Req() req: Request) {
     return this.workoutsService.create(user.id, clientId, dto, meta(req));
+  }
+
+  @Post('from-proposal')
+  createFromProposal(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('clientId') clientId: string,
+    @Body() dto: CreateWorkoutFromProposalDto,
+    @Req() req: Request,
+  ) {
+    return this.workoutsService.createFromProposal(user.id, clientId, dto, meta(req));
   }
 
   @Get()

@@ -67,6 +67,18 @@ export class ExercisesService {
     });
   }
 
+  /** Mesmo critério de `findVisible`, para vários ids numa consulta só — falha se qualquer um não for visível. */
+  async assertAllVisible(professionalId: string, exerciseIds: string[]): Promise<void> {
+    const ids = [...new Set(exerciseIds)];
+    if (ids.length === 0) {
+      return;
+    }
+    const found = await this.prisma.exercise.count({ where: { id: { in: ids }, ...this.visibilityFilter(professionalId) } });
+    if (found !== ids.length) {
+      throw new NotFoundException('Um ou mais exercícios não foram encontrados no catálogo.');
+    }
+  }
+
   async findVisible(professionalId: string, exerciseId: string): Promise<Exercise> {
     const exercise = await this.prisma.exercise.findFirst({
       where: { id: exerciseId, ...this.visibilityFilter(professionalId) },

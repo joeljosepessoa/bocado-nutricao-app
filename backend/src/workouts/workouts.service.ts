@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { NotificationEventType, WorkoutAuditAction, WorkoutVersionStatus } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { ExercisesService } from '../exercises/exercises.service';
@@ -15,7 +15,16 @@ import { CreateWorkoutSetDto } from './dto/create-workout-set.dto';
 import { UpdateWorkoutSetDto } from './dto/update-workout-set.dto';
 import { CreateExecutionLogDto } from './dto/create-execution-log.dto';
 import { WorkoutClientSummaryDto } from './dto/workout-client-summary.dto';
-import { assertValidRepsPrescription, mergeRepsPrescription } from './workout-set-reps';
+import { assertValidRepsPrescription, mergeRepsPrescription, repsPrescriptionProblem } from './workout-set-reps';
+import { CreateWorkoutFromProposalDto } from './dto/create-workout-from-proposal.dto';
+
+// Criação em lote (até 14 dias × 40 exercícios) — acima do padrão de 5s do Prisma.
+const FROM_PROPOSAL_TX_TIMEOUT_MS = 30_000;
+
+function blankToNull(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
 
 export interface RequestMeta {
   ipAddress?: string;
@@ -110,6 +119,86 @@ export class WorkoutsService {
       });
       return created;
     });
+
+    await this.auditLog.record({
+      professionalId,
+      clientId,
+      workoutId: workout.id,
+      action: WorkoutAuditAction.created,
+      ipAddress: meta.ipAddress,
+    });
+
+    return this.findOne(professionalId, clientId, workout.id, meta, false);
+  }
+
+  /**
+   * Treino NOVO em rascunho a partir de uma proposta revisada (ex.: saída do
+   * Assistente de Treino). Tudo numa transação — erro em qualquer ponto não
+   * deixa treino parcial. Nunca publica: a publicação continua sendo o fluxo
+   * manual de publishVersion.
+   */
+  async createFromProposal(professionalId: string, clientId: string, dto: CreateWorkoutFromProposalDto, meta: RequestMeta = {}) {
+    await this.assertOwnedClient(professionalId, clientId);
+
+    dto.days.forEach((day, d) =>
+      day.exercises.forEach((exercise, e) =>
+        exercise.sets.forEach((set, s) => {
+          const problem = repsPrescriptionProblem(set);
+          if (problem) {
+            throw new BadRequestException(`Dia ${d + 1}, exercício ${e + 1}, série ${s + 1}: ${problem}`);
+          }
+        }),
+      ),
+    );
+    await this.exercisesService.assertAllVisible(
+      professionalId,
+      dto.days.flatMap((day) => day.exercises.map((exercise) => exercise.exerciseId)),
+    );
+
+    const workout = await this.prisma.$transaction(
+      async (tx) => {
+        const created = await tx.workout.create({ data: { clientId, professionalId } });
+        const version = await tx.workoutVersion.create({
+          data: {
+            workoutId: created.id,
+            versionNumber: 1,
+            createdByProfessionalId: professionalId,
+            objective: blankToNull(dto.objective),
+            notes: blankToNull(dto.notes),
+          },
+        });
+        for (const [dayOrder, day] of dto.days.entries()) {
+          const createdDay = await tx.workoutDay.create({
+            data: { workoutVersionId: version.id, name: day.name.trim(), order: dayOrder, notes: blankToNull(day.notes) },
+          });
+          for (const [exerciseOrder, exercise] of day.exercises.entries()) {
+            const workoutExercise = await tx.workoutExercise.create({
+              data: { workoutDayId: createdDay.id, exerciseId: exercise.exerciseId, order: exerciseOrder, notes: blankToNull(exercise.notes) },
+            });
+            if (exercise.sets.length > 0) {
+              await tx.workoutSet.createMany({
+                data: exercise.sets.map((set, setOrder) => ({
+                  workoutExerciseId: workoutExercise.id,
+                  order: setOrder,
+                  reps: set.reps ?? null,
+                  repsMin: set.repsMin ?? null,
+                  repsMax: set.repsMax ?? null,
+                  loadValue: set.loadValue ?? null,
+                  loadUnit: set.loadUnit ?? null,
+                  durationSeconds: set.durationSeconds ?? null,
+                  distanceMeters: set.distanceMeters ?? null,
+                  restSeconds: set.restSeconds ?? null,
+                  tempo: blankToNull(set.tempo),
+                  notes: blankToNull(set.notes),
+                })),
+              });
+            }
+          }
+        }
+        return created;
+      },
+      { timeout: FROM_PROPOSAL_TX_TIMEOUT_MS },
+    );
 
     await this.auditLog.record({
       professionalId,
