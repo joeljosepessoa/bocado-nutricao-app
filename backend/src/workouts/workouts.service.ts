@@ -15,6 +15,7 @@ import { CreateWorkoutSetDto } from './dto/create-workout-set.dto';
 import { UpdateWorkoutSetDto } from './dto/update-workout-set.dto';
 import { CreateExecutionLogDto } from './dto/create-execution-log.dto';
 import { WorkoutClientSummaryDto } from './dto/workout-client-summary.dto';
+import { assertValidRepsPrescription, mergeRepsPrescription } from './workout-set-reps';
 
 export interface RequestMeta {
   ipAddress?: string;
@@ -282,6 +283,8 @@ export class WorkoutsService {
                   workoutExerciseId: clonedExercise.id,
                   order: set.order,
                   reps: set.reps,
+                  repsMin: set.repsMin,
+                  repsMax: set.repsMax,
                   loadValue: set.loadValue,
                   loadUnit: set.loadUnit,
                   durationSeconds: set.durationSeconds,
@@ -664,6 +667,7 @@ export class WorkoutsService {
     await this.assertOwnedWorkout(professionalId, clientId, workoutId);
     await this.assertDraftVersion(workoutId, versionId);
     await this.getWorkoutExerciseOrThrow(dayId, workoutExerciseId);
+    assertValidRepsPrescription(dto);
 
     let order = dto.order;
     if (order == null) {
@@ -676,6 +680,8 @@ export class WorkoutsService {
         workoutExerciseId,
         order,
         reps: dto.reps,
+        repsMin: dto.repsMin,
+        repsMax: dto.repsMax,
         loadValue: dto.loadValue,
         loadUnit: dto.loadUnit,
         durationSeconds: dto.durationSeconds,
@@ -716,12 +722,15 @@ export class WorkoutsService {
     if (!existing) {
       throw new NotFoundException('Série não encontrada.');
     }
+    assertValidRepsPrescription(mergeRepsPrescription(existing, dto));
 
     const set = await this.prisma.workoutSet.update({
       where: { id: setId },
       data: {
         order: dto.order,
         reps: dto.reps,
+        repsMin: dto.repsMin,
+        repsMax: dto.repsMax,
         loadValue: dto.loadValue,
         loadUnit: dto.loadUnit,
         durationSeconds: dto.durationSeconds,

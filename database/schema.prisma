@@ -787,7 +787,12 @@ model WorkoutSet {
   id                String    @id @default(uuid())
   workoutExerciseId String    @map("workout_exercise_id")
   order             Int
+  // Prescrição exata ("12") usa só `reps`; faixa ("6-10") usa só
+  // repsMin+repsMax. Nunca os três ao mesmo tempo — invariante validada
+  // na aplicação (workout-set-reps.ts), não por CHECK no banco.
   reps              Int?
+  repsMin           Int?      @map("reps_min")
+  repsMax           Int?      @map("reps_max")
   loadValue         Float?    @map("load_value")
   loadUnit          LoadUnit? @map("load_unit")
   durationSeconds   Int?      @map("duration_seconds")
