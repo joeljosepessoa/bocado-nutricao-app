@@ -17,6 +17,8 @@ export interface AiGenerationResult {
   model: string;
   tokensUsed?: { input: number; output: number };
   providerRequestId?: string;
+  /** O provedor parou por limite de saída — o texto está incompleto. */
+  truncated?: boolean;
 }
 
 export interface AiProvider {

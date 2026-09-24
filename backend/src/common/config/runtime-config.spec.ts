@@ -58,6 +58,14 @@ describe('checkRuntimeConfig', () => {
     expect(checkRuntimeConfig(getter({ ...base, MERCADOPAGO_WEBHOOK_SECRET: 'x' })).errors).toEqual([]);
   });
 
+  it('AI_PROVIDER=claude sem ANTHROPIC_API_KEY é erro; com a chave, não (e a chave nunca aparece no relatório)', () => {
+    const base = { ...goodProd, AI_PROVIDER: 'claude' };
+    expect(checkRuntimeConfig(getter(base)).errors.join(' ')).toMatch(/ANTHROPIC_API_KEY/);
+    const withKey = checkRuntimeConfig(getter({ ...base, ANTHROPIC_API_KEY: 'sk-ant-segredo-de-teste' }));
+    expect(withKey.errors).toEqual([]);
+    expect(JSON.stringify(withKey)).not.toContain('sk-ant-segredo-de-teste');
+  });
+
   it('avisa sobre PASSWORD_RESET_URL, storage local, TRUST_PROXY e provedores simulados', () => {
     const w = checkRuntimeConfig(getter(goodProd)).warnings.join(' | ');
     for (const k of ['PASSWORD_RESET_URL', 'EMAIL_PROVIDER=console', 'STORAGE_PROVIDER=local', 'TRUST_PROXY', 'AI_PROVIDER=mock-local', 'ERROR_TRACKING_PROVIDER']) {

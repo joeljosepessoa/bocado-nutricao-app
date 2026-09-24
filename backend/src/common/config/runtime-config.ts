@@ -37,6 +37,10 @@ export function checkRuntimeConfig(get: Getter): RuntimeConfigReport {
     report.errors.push('CORS_ORIGIN ausente ou apontando para localhost — informe a(s) origem(ns) reais do painel web.');
   }
 
+  if (get('AI_PROVIDER') === 'claude' && !get('ANTHROPIC_API_KEY')) {
+    report.errors.push('AI_PROVIDER=claude exige ANTHROPIC_API_KEY (sem ela toda geração de IA falha).');
+  }
+
   if ((get('PAYMENT_GATEWAY_PROVIDER') ?? 'mock') === 'mercadopago' && !get('MERCADOPAGO_WEBHOOK_SECRET')) {
     report.errors.push('PAYMENT_GATEWAY_PROVIDER=mercadopago exige MERCADOPAGO_WEBHOOK_SECRET (sem ele todo webhook é rejeitado).');
   }

@@ -5,6 +5,7 @@ import { AiService } from './ai.service';
 import { AiAuditLogService } from './ai-audit-log.service';
 import { AiProviderRegistry } from './providers/ai-provider.registry';
 import { MockAiProvider } from './providers/mock-ai.provider';
+import { ClaudeAiProvider } from './providers/claude-ai.provider';
 import { DraftNoteUseCase } from './use-cases/draft-note.use-case';
 import { ExplainEvaluationUseCase } from './use-cases/explain-evaluation.use-case';
 import { NarrateTrendUseCase } from './use-cases/narrate-trend.use-case';
@@ -17,6 +18,7 @@ import { NarrateTrendUseCase } from './use-cases/narrate-trend.use-case';
     AiAuditLogService,
     AiProviderRegistry,
     MockAiProvider,
+    ClaudeAiProvider,
     DraftNoteUseCase,
     ExplainEvaluationUseCase,
     NarrateTrendUseCase,
