@@ -4,10 +4,13 @@ import { PrismaService } from '../common/prisma/prisma.service';
 import { AiAuditLogService } from './ai-audit-log.service';
 import { AiProviderRegistry } from './providers/ai-provider.registry';
 import { AiTimeoutError, callProviderWithResilience } from './providers/call-with-resilience';
+import type { AiGenerationResult } from './providers/ai-provider.interface';
+import { AiOutputValidationError, AiUnsupportedProviderError } from './ai-errors';
 import { DraftNoteUseCase } from './use-cases/draft-note.use-case';
 import { ExplainEvaluationUseCase } from './use-cases/explain-evaluation.use-case';
 import { NarrateTrendUseCase } from './use-cases/narrate-trend.use-case';
-import type { AiUseCase } from './use-cases/ai-use-case.interface';
+import { OrganizeWorkoutUseCase } from './use-cases/organize-workout/organize-workout.use-case';
+import type { AiUseCase, BuildContextParams } from './use-cases/ai-use-case.interface';
 import { AiGenerationResponseDto } from './dto/ai-generation-response.dto';
 
 export interface RequestMeta {
@@ -45,11 +48,13 @@ export class AiService {
     draftNote: DraftNoteUseCase,
     explainEvaluation: ExplainEvaluationUseCase,
     narrateTrend: NarrateTrendUseCase,
+    organizeWorkout: OrganizeWorkoutUseCase,
   ) {
     this.useCases = new Map<AiFeatureKey, AiUseCase>([
       [draftNote.feature, draftNote],
       [explainEvaluation.feature, explainEvaluation],
       [narrateTrend.feature, narrateTrend],
+      [organizeWorkout.feature, organizeWorkout],
     ]);
   }
 
@@ -144,30 +149,50 @@ export class AiService {
     const provider = this.registry.getActiveProvider();
     let status: AiInteractionStatus = AiInteractionStatus.succeeded;
     let responseText: string | undefined;
+    let structuredData: Record<string, unknown> | undefined;
     let model = provider.id;
     let errorMessage: string | undefined;
 
     try {
+      if (useCase.requiresStructuredOutput && !provider.supportsStructuredOutput) {
+        throw new AiUnsupportedProviderError();
+      }
+
       const result = await callProviderWithResilience(
         provider,
         {
           promptVersion: useCase.promptVersion,
           systemPrompt: built.systemPrompt,
           context: built.context,
-          maxOutputChars: MAX_OUTPUT_CHARS,
+          maxOutputChars: useCase.maxOutputChars ?? MAX_OUTPUT_CHARS,
         },
-        { timeoutMs: AI_TIMEOUT_MS, maxRetries: AI_MAX_RETRIES },
+        { timeoutMs: useCase.timeoutMs ?? AI_TIMEOUT_MS, maxRetries: AI_MAX_RETRIES },
       );
 
       if (!isValidResult(result.text)) {
         status = AiInteractionStatus.invalid_output;
         errorMessage = 'O provedor devolveu uma resposta vazia ou inválida.';
+      } else if (useCase.processOutput) {
+        const processed = await this.runProcessOutput(useCase, result, {
+          professionalId: params.professionalId,
+          clientId: params.clientId,
+          input: params.input,
+        });
+        responseText = processed.text;
+        structuredData = processed.structuredData;
+        model = result.model;
       } else {
         responseText = result.text;
         model = result.model;
       }
     } catch (error) {
-      status = error instanceof AiTimeoutError ? AiInteractionStatus.timeout : AiInteractionStatus.failed;
+      if (error instanceof AiTimeoutError) {
+        status = AiInteractionStatus.timeout;
+      } else if (error instanceof AiOutputValidationError) {
+        status = AiInteractionStatus.invalid_output;
+      } else {
+        status = AiInteractionStatus.failed;
+      }
       errorMessage = error instanceof Error ? error.message : String(error);
     }
 
@@ -206,8 +231,27 @@ export class AiService {
     dto.provider = provider.id;
     dto.model = model;
     dto.text = responseText;
+    if (structuredData) {
+      dto.structuredData = structuredData;
+    }
     dto.generatedAt = new Date();
     return dto;
+  }
+
+  /**
+   * Erro de validação passa adiante como está (mensagem nossa, segura);
+   * qualquer outro erro (ex.: banco) vira mensagem genérica — nunca vaza
+   * detalhe interno para o log de interação nem para a resposta.
+   */
+  private async runProcessOutput(useCase: AiUseCase, result: AiGenerationResult, params: BuildContextParams) {
+    try {
+      return await useCase.processOutput!(result, params);
+    } catch (error) {
+      if (error instanceof AiOutputValidationError) {
+        throw error;
+      }
+      throw new Error('Não foi possível processar a resposta da IA.');
+    }
   }
 
   async recordProfessionalConsent(professionalId: string): Promise<{ aiFeaturesConsentAt: Date }> {

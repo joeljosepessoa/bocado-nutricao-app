@@ -23,5 +23,7 @@ export interface AiGenerationResult {
 
 export interface AiProvider {
   readonly id: string;
+  /** Segue instruções de formato (ex.: "responda só JSON") — o mock local não. */
+  readonly supportsStructuredOutput?: boolean;
   generate(request: AiGenerationRequest): Promise<AiGenerationResult>;
 }

@@ -11,6 +11,8 @@ export class AiGenerationResponseDto {
   provider!: string;
   model!: string;
   text!: string;
+  /** Só em features de saída estruturada — já validada pelo backend. */
+  structuredData?: Record<string, unknown>;
   generatedAt!: Date;
   readonly isAiGenerated = true as const;
 }

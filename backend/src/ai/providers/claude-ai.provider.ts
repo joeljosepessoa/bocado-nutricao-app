@@ -33,6 +33,7 @@ interface AnthropicMessageResponse {
 @Injectable()
 export class ClaudeAiProvider implements AiProvider {
   readonly id = 'claude';
+  readonly supportsStructuredOutput = true;
 
   constructor(private readonly config: ConfigService) {}
 

@@ -1,4 +1,5 @@
 import { AiFeatureKey } from '@prisma/client';
+import type { AiGenerationResult } from '../providers/ai-provider.interface';
 
 export interface AiContextResult {
   systemPrompt: string;
@@ -14,6 +15,12 @@ export interface BuildContextParams {
   input: unknown;
 }
 
+export interface ProcessedAiOutput {
+  /** O que fica em AiInteractionLog.responseText e vai em `text` na resposta. */
+  text: string;
+  structuredData?: Record<string, unknown>;
+}
+
 /**
  * Um Use Case por funcionalidade aprovada (Fase 12, decisão 14). Cada um
  * decide sozinho o que é permitido entrar no contexto — a autorização de
@@ -24,5 +31,15 @@ export interface BuildContextParams {
 export interface AiUseCase {
   readonly feature: AiFeatureKey;
   readonly promptVersion: string;
+  /** Sobrescrevem os limites globais do AiService (ex.: saída estruturada longa). */
+  readonly maxOutputChars?: number;
+  readonly timeoutMs?: number;
+  /** Exige provedor com saída estruturada confiável — o mock local não serve. */
+  readonly requiresStructuredOutput?: boolean;
   buildContext(params: BuildContextParams): Promise<AiContextResult>;
+  /**
+   * Valida/transforma a saída bruta antes de devolvê-la. Lança
+   * AiOutputValidationError quando ela é inutilizável — nada é devolvido.
+   */
+  processOutput?(result: AiGenerationResult, params: BuildContextParams): Promise<ProcessedAiOutput>;
 }

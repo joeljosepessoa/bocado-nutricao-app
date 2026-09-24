@@ -1116,6 +1116,7 @@ enum AiFeatureKey {
   draft_note
   explain_evaluation
   narrate_trend
+  organize_workout
 }
 
 enum AiInteractionStatus {

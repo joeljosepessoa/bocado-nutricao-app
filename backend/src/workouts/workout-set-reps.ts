@@ -8,21 +8,29 @@ export interface RepsPrescription {
 
 const isSet = (value: number | null | undefined): value is number => value !== null && value !== undefined;
 
+/** Mesma regra de assertValidRepsPrescription, sem lançar — `null` quando válida. */
+export function repsPrescriptionProblem({ reps, repsMin, repsMax }: RepsPrescription): string | null {
+  if (isSet(reps) && (isSet(repsMin) || isSet(repsMax))) {
+    return 'Informe repetições exatas ou uma faixa (mínimo e máximo), nunca os dois.';
+  }
+  if (isSet(repsMin) !== isSet(repsMax)) {
+    return 'A faixa de repetições precisa de mínimo e máximo.';
+  }
+  if (isSet(repsMin) && isSet(repsMax) && repsMin > repsMax) {
+    return 'O mínimo da faixa de repetições não pode ser maior que o máximo.';
+  }
+  return null;
+}
+
 /**
  * Prescrição exata usa só `reps`; faixa usa só `repsMin`+`repsMax`. Nunca
  * converte uma forma na outra — só rejeita combinações que não têm leitura
  * única (é o profissional quem decide, não o sistema).
  */
-export function assertValidRepsPrescription({ reps, repsMin, repsMax }: RepsPrescription): void {
-  const hasRange = isSet(repsMin) || isSet(repsMax);
-  if (isSet(reps) && hasRange) {
-    throw new BadRequestException('Informe repetições exatas ou uma faixa (mínimo e máximo), nunca os dois.');
-  }
-  if (isSet(repsMin) !== isSet(repsMax)) {
-    throw new BadRequestException('A faixa de repetições precisa de mínimo e máximo.');
-  }
-  if (isSet(repsMin) && isSet(repsMax) && repsMin > repsMax) {
-    throw new BadRequestException('O mínimo da faixa de repetições não pode ser maior que o máximo.');
+export function assertValidRepsPrescription(prescription: RepsPrescription): void {
+  const problem = repsPrescriptionProblem(prescription);
+  if (problem) {
+    throw new BadRequestException(problem);
   }
 }
 

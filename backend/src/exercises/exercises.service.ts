@@ -4,8 +4,11 @@ import { PrismaService } from '../common/prisma/prisma.service';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
+import type { CatalogExerciseRef } from './exercise-name-matching';
 
 const LOCKED_IDENTITY_FIELDS = ['name', 'muscleGroup', 'equipment', 'type'] as const;
+// Teto de sanidade: acima disso o matching só deixa de achar (vira "não encontrado"), nunca associa errado.
+const CATALOG_MATCHING_LIMIT = 5000;
 
 @Injectable()
 export class ExercisesService {
@@ -51,6 +54,16 @@ export class ExercisesService {
       },
       orderBy: { name: 'asc' },
       take: 100,
+    });
+  }
+
+  /** Catálogo visível ao profissional (mesmo filtro de `list`), só os campos usados no matching por nome. */
+  async listVisibleCatalogRefs(professionalId: string): Promise<CatalogExerciseRef[]> {
+    return this.prisma.exercise.findMany({
+      where: this.visibilityFilter(professionalId),
+      select: { id: true, name: true, muscleGroup: true, equipment: true, imageUrl: true },
+      orderBy: { name: 'asc' },
+      take: CATALOG_MATCHING_LIMIT,
     });
   }
 
