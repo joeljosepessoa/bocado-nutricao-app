@@ -67,6 +67,15 @@ export class ClientAppController {
     );
   }
 
+  @Get('evolution/:evaluationId/photos/:photoId/download-url')
+  getEvaluationPhotoUrl(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('evaluationId') evaluationId: string,
+    @Param('photoId') photoId: string,
+  ) {
+    return this.clientAppService.getEvaluationPhotoUrl(user.id, evaluationId, photoId);
+  }
+
   @Get('reports')
   getReports(
     @CurrentUser() user: AuthenticatedUser,

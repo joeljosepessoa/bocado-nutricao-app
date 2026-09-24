@@ -58,9 +58,11 @@ const BIOIMPEDANCE_RESULT_SELECT = {
 
 /**
  * Fase 8, Decisão 2: o que o cliente pode ver de uma avaliação liberada —
- * composição corporal (resultados) + circunferências. Nunca dobras,
- * protocolo, pressão, glicemia, notas, nem os campos brutos de
- * bioimpedância (`origin`, `recordedAt`, `impedanceData`, `segmentalData`).
+ * composição corporal (resultados) + circunferências + lista de fotos (só
+ * id/ângulo, nunca storageKey/contentType — a URL assinada de cada foto é
+ * obtida à parte, em getPhotoSignedUrlForClient). Nunca dobras, protocolo,
+ * pressão, glicemia, notas, nem os campos brutos de bioimpedância
+ * (`origin`, `recordedAt`, `impedanceData`, `segmentalData`).
  */
 const CLIENT_EVOLUTION_SELECT = {
   id: true,
@@ -81,6 +83,7 @@ const CLIENT_EVOLUTION_SELECT = {
       bodyAgeYears: true,
     },
   },
+  photos: { select: { id: true, angle: true }, orderBy: { createdAt: 'asc' } },
 } as const;
 
 const EVOLUTION_SERIES_SELECT = {
@@ -622,6 +625,34 @@ export class PhysicalEvaluationsService {
       select: CLIENT_EVOLUTION_SELECT,
     });
     return evaluation ? PhysicalEvaluationClientSummaryDto.fromEvaluation(evaluation) : null;
+  }
+
+  /**
+   * URL assinada de uma foto para o PRÓPRIO cliente — só quando a avaliação
+   * é dele e está liberada (mesmo gate de `listReleasedForClient`; não há
+   * flag de liberação por foto no schema, então a liberação da avaliação
+   * cobre as fotos dela também). Nunca loga em `EvaluationAuditLog`
+   * (auditoria daquela tabela é sobre ações do PROFISSIONAL, exige
+   * `professionalId`; leituras do próprio cliente não fazem sentido ali —
+   * mesmo padrão já usado por `listReleasedForClient`/
+   * `getReleasedSummaryForClient`, que também não auditam).
+   */
+  async getPhotoSignedUrlForClient(clientId: string, evaluationId: string, photoId: string) {
+    const evaluation = await this.prisma.physicalEvaluation.findFirst({
+      where: { id: evaluationId, clientId, releasedToClientAt: { not: null } },
+      select: { id: true },
+    });
+    if (!evaluation) {
+      throw new NotFoundException('Avaliação não encontrada.');
+    }
+    const photo = await this.prisma.bodyPhoto.findFirst({
+      where: { id: photoId, evaluationId },
+      select: { storageKey: true, contentType: true },
+    });
+    if (!photo) {
+      throw new NotFoundException('Foto não encontrada.');
+    }
+    return this.storage.getSignedUrl(photo.storageKey, photo.contentType, 'photo-download');
   }
 
   /**

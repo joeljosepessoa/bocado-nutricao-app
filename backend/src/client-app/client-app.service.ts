@@ -71,6 +71,10 @@ export class ClientAppService {
     return this.evaluationsService.listReleasedForClient(clientId, page, pageSize);
   }
 
+  getEvaluationPhotoUrl(clientId: string, evaluationId: string, photoId: string) {
+    return this.evaluationsService.getPhotoSignedUrlForClient(clientId, evaluationId, photoId);
+  }
+
   getReports(clientId: string, page?: number, pageSize?: number) {
     return this.reportsService.listReleasedForClient(clientId, page, pageSize);
   }

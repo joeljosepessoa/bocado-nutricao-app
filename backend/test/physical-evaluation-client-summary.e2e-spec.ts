@@ -58,14 +58,22 @@ describe('PhysicalEvaluationClientSummaryDto', () => {
         segmentalData: { trunk: 1 },
         impedanceData: { raw: [1, 2, 3] },
       },
+      photos: [
+        { id: 'photo-1', angle: 'front', storageKey: 'private/eval-1/front.jpg', contentType: 'image/jpeg' },
+      ],
     };
 
     const dto = PhysicalEvaluationClientSummaryDto.fromEvaluation(fullEvaluation as never);
     const keys = Object.keys(dto).sort();
 
     expect(keys).toEqual(
-      ['bmi', 'bmiClassification', 'bodyFatPercent', 'composition', 'evaluatedAt', 'fatMassKg', 'id', 'leanMassKg', 'measurements', 'weightKg'].sort(),
+      ['bmi', 'bmiClassification', 'bodyFatPercent', 'composition', 'evaluatedAt', 'fatMassKg', 'id', 'leanMassKg', 'measurements', 'photos', 'weightKg'].sort(),
     );
+
+    expect(dto.photos).toEqual([{ id: 'photo-1', angle: 'front' }]);
+    const rawPhoto = dto.photos[0] as unknown as Record<string, unknown>;
+    expect(rawPhoto.storageKey).toBeUndefined();
+    expect(rawPhoto.contentType).toBeUndefined();
 
     expect(dto.bmi).toBe(25.2);
     expect(dto.bmiClassification).toBe('sobrepeso');

@@ -1,17 +1,25 @@
 /**
  * Subconjunto seguro de uma avaliação física para exposição ao próprio
  * cliente (Fase 7 criou a rota `/client/evolution` com 4 campos; Fase 8
- * amplia o conteúdo) — só quando explicitamente liberada pelo profissional
+ * amplia o conteúdo; Fase "liberação para o app do cliente" adiciona a
+ * lista de fotos) — só quando explicitamente liberada pelo profissional
  * (`releasedToClientAt`, filtrado na query do serviço que monta a lista,
  * nunca só aqui no mapper).
  *
- * Allowlist fechado por decisão explícita da Fase 8: composição corporal
- * (peso, IMC, %gordura, massa gorda/magra) e todos os RESULTADOS de
- * bioimpedância já armazenados, mais as 13 circunferências. Nunca dobras
- * em mm, protocolo/fórmula, pressão, glicemia, notas, dado bruto de
- * bioimpedância (`impedanceData`/`segmentalData`), fotos ou auditoria —
- * essas nunca fazem parte do shape de entrada do mapper abaixo.
+ * Allowlist fechado: composição corporal (peso, IMC, %gordura, massa
+ * gorda/magra) e todos os RESULTADOS de bioimpedância já armazenados, as 13
+ * circunferências, e a LISTA de fotos (só id + ângulo — nunca storageKey,
+ * contentType ou qualquer URL; a URL assinada de cada foto é obtida à parte,
+ * via endpoint dedicado, de curta duração). Nunca dobras em mm,
+ * protocolo/fórmula, pressão, glicemia, notas ou dado bruto de bioimpedância
+ * (`impedanceData`/`segmentalData`) — essas nunca fazem parte do shape de
+ * entrada do mapper abaixo.
  */
+export interface EvaluationPhotoClientView {
+  id: string;
+  angle: string;
+}
+
 export interface EvolutionMeasurementsClientView {
   chestCm: number | null;
   waistCm: number | null;
@@ -50,6 +58,7 @@ export class PhysicalEvaluationClientSummaryDto {
   leanMassKg!: number | null;
   measurements!: EvolutionMeasurementsClientView | null;
   composition!: EvolutionCompositionClientView | null;
+  photos!: EvaluationPhotoClientView[];
 
   static fromEvaluation(evaluation: {
     id: string;
@@ -62,6 +71,7 @@ export class PhysicalEvaluationClientSummaryDto {
       fatMassKg: number | null;
       leanMassKg: number | null;
     } | null;
+    photos?: Array<{ id: string; angle: string; [extra: string]: unknown }>;
     measurements: {
       chestCm: number | null;
       waistCm: number | null;
@@ -97,6 +107,10 @@ export class PhysicalEvaluationClientSummaryDto {
     dto.bodyFatPercent = evaluation.calculatedMetrics?.bodyFatPercent ?? null;
     dto.fatMassKg = evaluation.calculatedMetrics?.fatMassKg ?? null;
     dto.leanMassKg = evaluation.calculatedMetrics?.leanMassKg ?? null;
+    // Reconstruído campo-a-campo (não um passthrough) — mesmo padrão de
+    // measurements/composition abaixo: mesmo que o objeto de origem carregue
+    // storageKey/contentType, o DTO nunca os herda por acidente.
+    dto.photos = (evaluation.photos ?? []).map((p) => ({ id: p.id, angle: p.angle }));
 
     dto.measurements = evaluation.measurements
       ? {
