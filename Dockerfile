@@ -44,18 +44,33 @@ COPY shared/package.json shared/package.json
 # instala as dependências do backend (+ raiz) — não baixa a árvore de
 # dependências de Expo/React Native dos outros workspaces.
 RUN npm ci --workspace backend --include-workspace-root
-# `npm ci` já dispara o postinstall do pacote `puppeteer`, que baixa o
-# Chrome sozinho — só que esse postinstall (node_modules/puppeteer/install.mjs)
+# `npm ci` já dispara o postinstall do pacote `puppeteer`, que tenta baixar
+# o Chrome sozinho — só que esse postinstall (node_modules/puppeteer/install.mjs)
 # envolve o download inteiro num try/catch que só faz `console.warn` e
-# SEGUE EM FRENTE se a rede falhar, sem nunca derrubar o `npm ci`. Foi
-# assim que a imagem builda "com sucesso" no Railway sem o Chrome de
-# verdade existir depois. Este passo explícito usa o mesmo mecanismo
-# oficial (`puppeteer browsers install`, que resolve a MESMA versão pinada
-# do postinstall — ver node_modules/puppeteer/lib/puppeteer/node/cli.js,
-# nunca "latest") como uma segunda tentativa que FALHA O BUILD de verdade
-# se o Chrome não instalar — sem isso, uma falha de rede vira um "Could
-# not find Chrome" só descoberto em produção, na hora de gerar um relatório.
+# SEGUE EM FRENTE se a rede falhar, sem nunca derrubar o `npm ci`. Pior:
+# quando a rede cai NO MEIO do download, ele deixa a pasta da versão
+# criada mas sem o executável dentro — um estado "parcialmente instalado"
+# que o instalador oficial se RECUSA a corrigir sozinho (erro real visto
+# em produção: "An earlier install of this build probably did not
+# finish"). Por isso limpamos o cache inteiro (nunca uma versão
+# específica) antes de instalar de novo, do zero, sempre — garante que
+# `browsers install` sempre parte de um estado limpo, nunca de um resto
+# de tentativa anterior.
+RUN rm -rf "$PUPPETEER_CACHE_DIR"
+# Mesmo mecanismo oficial do Puppeteer (`puppeteer browsers install`, que
+# resolve a MESMA versão pinada do postinstall — ver
+# node_modules/puppeteer/lib/puppeteer/node/cli.js, nunca "latest" e nunca
+# hardcoded aqui) — mas como um passo isolado que FALHA O BUILD de
+# verdade se o Chrome não instalar, em vez do postinstall silencioso.
 RUN npx puppeteer browsers install chrome
+# Verificação real do binário — não apenas que a pasta existe (foi
+# exatamente isso que passou batido da vez passada). Pede pro próprio
+# pacote `puppeteer` resolver o caminho do executável (mesma função que
+# `puppeteer.launch()` usa por baixo em runtime, nunca um caminho
+# hardcoded aqui) e EXECUTA `chrome --version` de verdade, com timeout —
+# um binário ausente, incompleto ou sem lib do sistema faz isso falhar e
+# derruba o build aqui, não em produção na hora de gerar um relatório.
+RUN node -e "(async () => { const puppeteer = require('puppeteer'); const { execFileSync } = require('child_process'); const execPath = await puppeteer.executablePath(); console.log('Chrome executable path:', execPath); const output = execFileSync(execPath, ['--version'], { timeout: 30000 }).toString().trim(); console.log('Chrome --version output:', output); })().catch((err) => { console.error('Chrome verification failed:', err); process.exit(1); });"
 
 COPY . .
 RUN npm run prisma:generate --workspace backend
