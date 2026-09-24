@@ -9,6 +9,14 @@ FROM node:22-bookworm-slim AS base
 # Bibliotecas exigidas pelo Chromium baixado pelo pacote `puppeteer`
 # (scripts/render-pdf.js) — lista oficial de troubleshooting do projeto:
 # https://pptr.dev/troubleshooting#chrome-doesnt-launch-on-linux
+# `unzip` é categoria diferente das demais: não é lib de runtime do
+# Chromium, é a ferramenta que `npx puppeteer browsers install chrome`
+# usa pra EXTRAIR o .zip baixado (ver estágio builder, abaixo) — sem ela,
+# node:22-bookworm-slim não tem nenhum extrator de zip instalado por
+# padrão, e o download "funciona" mas a instalação falha com "no zip
+# archiver is available". Preferido a adicionar a dependência opcional
+# `yauzl` do puppeteer: resolver via SO mantém a mesma superfície de
+# dependências do Node (package.json/lockfile) intocada.
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates fonts-liberation libasound2 libatk-bridge2.0-0 \
       libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 \
@@ -16,7 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libnss3 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 \
       libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 \
       libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 \
-      openssl wget xdg-utils \
+      openssl unzip wget xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Caminho fixo e explícito do cache de browsers do Puppeteer — lido
