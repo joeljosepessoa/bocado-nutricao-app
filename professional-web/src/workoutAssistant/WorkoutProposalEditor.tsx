@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type React from 'react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
-import { ExercisePreview } from '../components/ExercisePreview';
+import { ExerciseGif } from '../components/ExerciseGif';
 import { describeExercise } from '../lib/exerciseMedia';
 import type { CatalogExerciseRef } from '../types/api';
 import {
@@ -97,7 +97,6 @@ function ExerciseCard({
   onRemove: () => void;
   onOpenPicker: () => void;
 }) {
-  const [showDemo, setShowDemo] = useState(false);
   const badge = matchBadge(exercise);
   const title = exercise.exercise?.name ?? exercise.rawName ?? 'Exercício';
   const detail = exercise.exercise ? describeExercise(exercise.exercise) : exercise.muscleGroupHint;
@@ -114,21 +113,11 @@ function ExerciseCard({
           {exercise.rawName && exercise.exercise && exercise.rawName !== exercise.exercise.name ? (
             <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Lido no texto: “{exercise.rawName}”</div>
           ) : null}
-          <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap', fontSize: 12, fontWeight: 700 }}>
+          <div style={{ marginTop: 4, fontSize: 12, fontWeight: 700 }}>
             <span style={{ color: badge.color }}>{badge.label}</span>
-            {exercise.exercise ? (
-              <span style={{ color: 'var(--color-text-secondary)' }}>
-                {exercise.exercise.imageUrl ? 'GIF disponível' : 'GIF não disponível para este exercício.'}
-              </span>
-            ) : null}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-          {exercise.exercise ? (
-            <Button size="small" variant="ghost" onClick={() => setShowDemo((v) => !v)}>
-              {showDemo ? 'Ocultar demonstração' : 'Ver demonstração'}
-            </Button>
-          ) : null}
           <Button size="small" variant="secondary" onClick={onOpenPicker}>
             {exercise.exercise ? 'Trocar exercício' : 'Selecionar do catálogo'}
           </Button>
@@ -144,21 +133,32 @@ function ExerciseCard({
         </div>
       </div>
 
+      {exercise.exercise ? (
+        <div aria-label={`GIF de ${exercise.exercise.name}`}>
+          <ExerciseGif exercise={exercise.exercise} />
+        </div>
+      ) : null}
+
       {!exercise.exercise && exercise.candidates.length > 0 ? (
         <div style={{ fontSize: 12.5 }}>
-          <div style={{ fontWeight: 600, marginBottom: 4 }}>Possíveis correspondências no catálogo:</div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>Possíveis correspondências no catálogo — escolha uma:</div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {exercise.candidates.map((candidate: CatalogExerciseRef) => (
-              <Button key={candidate.id} size="small" variant="secondary" onClick={() => onChange(selectExercise(exercise, candidate))}>
-                Usar “{candidate.name}”{describeExercise(candidate) ? ` (${describeExercise(candidate)})` : ''}
-                {candidate.imageUrl ? ' · GIF' : ''}
-              </Button>
+              <div
+                key={candidate.id}
+                role="group"
+                aria-label={`Opção: ${candidate.name}`}
+                style={{ border: '1px solid var(--color-border)', borderRadius: 8, padding: 8, display: 'flex', flexDirection: 'column', gap: 6, width: 238 }}
+              >
+                <ExerciseGif exercise={candidate} />
+                <Button size="small" variant="secondary" onClick={() => onChange(selectExercise(exercise, candidate))}>
+                  Usar “{candidate.name}”{describeExercise(candidate) ? ` (${describeExercise(candidate)})` : ''}
+                </Button>
+              </div>
             ))}
           </div>
         </div>
       ) : null}
-
-      {showDemo && exercise.exercise ? <ExercisePreview key={exercise.exercise.id} exercise={exercise.exercise} /> : null}
 
       <label style={{ display: 'flex', flexDirection: 'column', gap: 2, fontSize: 12, color: 'var(--color-text-secondary)' }}>
         Observações / técnica

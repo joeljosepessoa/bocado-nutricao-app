@@ -9,6 +9,7 @@ import { EmptyState } from '../../components/EmptyState';
 import { TextField } from '../../components/TextField';
 import { Modal } from '../../components/Modal';
 import { ExercisePreview } from '../../components/ExercisePreview';
+import { ExerciseGif } from '../../components/ExerciseGif';
 import { describeExercise } from '../../lib/exerciseMedia';
 import { formatDate } from '../../lib/format';
 import { summarizeSets } from '../../lib/workoutFormat';
@@ -120,14 +121,21 @@ export function WorkoutTab() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {day.exercises.map((ex) => (
-                    <div key={ex.id} style={{ borderTop: '1px solid var(--color-border)', paddingTop: 6 }}>
-                      <div style={{ fontWeight: 600, fontSize: 13.5 }}>{ex.exercise.name}</div>
-                      {summarizeSets(ex.sets).map((line) => (
-                        <div key={line} style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-                          {line}
-                        </div>
-                      ))}
-                      {ex.notes ? <div style={{ fontSize: 12, fontStyle: 'italic' }}>{ex.notes}</div> : null}
+                    <div
+                      key={ex.id}
+                      aria-label={`Exercício do treino: ${ex.exercise.name}`}
+                      style={{ borderTop: '1px solid var(--color-border)', paddingTop: 6, display: 'flex', gap: 12, flexWrap: 'wrap' }}
+                    >
+                      <div style={{ flex: 1, minWidth: 180 }}>
+                        <div style={{ fontWeight: 600, fontSize: 13.5 }}>{ex.exercise.name}</div>
+                        {summarizeSets(ex.sets).map((line) => (
+                          <div key={line} style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                            {line}
+                          </div>
+                        ))}
+                        {ex.notes ? <div style={{ fontSize: 12, fontStyle: 'italic' }}>{ex.notes}</div> : null}
+                      </div>
+                      <ExerciseGif exercise={ex.exercise} />
                     </div>
                   ))}
                 </div>

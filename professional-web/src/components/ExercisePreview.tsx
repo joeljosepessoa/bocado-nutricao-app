@@ -48,13 +48,17 @@ function useApiMedia(imageUrl: string | null) {
   return { enabled, objectUrl, loading: enabled && query.isLoading, failed: enabled && query.isError };
 }
 
-export function ExercisePreview({ exercise }: { exercise: PreviewExercise }) {
+/** `compact`: só a mídia, em tamanho reduzido — para listas onde o nome já aparece ao lado. */
+export function ExercisePreview({ exercise, compact = false }: { exercise: PreviewExercise; compact?: boolean }) {
   const media = useApiMedia(exercise.imageUrl);
   const external = isExternalImageUrl(exercise.imageUrl) ? exercise.imageUrl : null;
   const detail = describeExercise(exercise);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }} data-testid="exercise-preview">
+    <div
+      style={{ display: 'flex', flexDirection: 'column', gap: 8, ...(compact ? { width: 220, maxWidth: '100%' } : {}) }}
+      data-testid="exercise-preview"
+    >
       <div style={frame}>
         {media.loading ? (
           <span>Carregando demonstração…</span>
@@ -70,10 +74,12 @@ export function ExercisePreview({ exercise }: { exercise: PreviewExercise }) {
           <span>Sem demonstração para este exercício</span>
         )}
       </div>
-      <div>
-        <div style={{ fontWeight: 600 }}>{exercise.name}</div>
-        {detail ? <div style={{ fontSize: 13, color: 'var(--color-text-secondary, #6b7a72)' }}>{detail}</div> : null}
-      </div>
+      {compact ? null : (
+        <div>
+          <div style={{ fontWeight: 600 }}>{exercise.name}</div>
+          {detail ? <div style={{ fontSize: 13, color: 'var(--color-text-secondary, #6b7a72)' }}>{detail}</div> : null}
+        </div>
+      )}
     </div>
   );
 }

@@ -30,10 +30,37 @@ const set = (overrides: Partial<ProposalSet> = {}): ProposalSet => ({
   ...overrides,
 });
 
-const supino = { id: 'ex-supino', name: 'Supino reto com barra', muscleGroup: 'Peito', equipment: 'Barra', imageUrl: '/exercise-media/abc' };
+const supino = { id: 'ex-supino', name: 'Supino reto com barra', muscleGroup: 'Peito', equipment: 'Barra', imageUrl: '/exercise-media/supino' };
 const tricepsA = { id: 'ex-tri-a', name: 'Tríceps pulley', muscleGroup: 'Tríceps', equipment: 'Corda', imageUrl: null };
-const tricepsB = { id: 'ex-tri-b', name: 'Tríceps pulley', muscleGroup: 'Tríceps', equipment: 'Barra reta', imageUrl: null };
-const crucifixo = { id: 'ex-cruc', name: 'Crucifixo inclinado', muscleGroup: 'Peito', equipment: 'Halteres', imageUrl: null, videoUrl: null, type: 'strength', scope: 'global' as const };
+const tricepsB = { id: 'ex-tri-b', name: 'Tríceps pulley', muscleGroup: 'Tríceps', equipment: 'Barra reta', imageUrl: '/exercise-media/triceps-barra' };
+const crucifixo = {
+  id: 'ex-cruc',
+  name: 'Crucifixo inclinado',
+  muscleGroup: 'Peito',
+  equipment: 'Halteres',
+  imageUrl: '/exercise-media/crucifixo',
+  videoUrl: null,
+  type: 'strength',
+  scope: 'global' as const,
+};
+
+// Cada blob "lembra" de qual mídia veio, para o teste saber QUAL GIF está na tela.
+const blobSource = new WeakMap<Blob, string>();
+function mockMedia() {
+  vi.mocked(api.fetchExerciseMedia).mockImplementation(async (path: string) => {
+    const blob = new Blob([path], { type: 'image/gif' });
+    blobSource.set(blob, path);
+    return blob;
+  });
+  URL.createObjectURL = vi.fn((blob: Blob) => `blob:${blobSource.get(blob)}`) as typeof URL.createObjectURL;
+  URL.revokeObjectURL = vi.fn();
+}
+
+/** src do GIF exibido dentro de `container`, ou null se não houver. */
+async function gifShownIn(container: HTMLElement, exerciseName: string) {
+  const img = await within(container).findByRole('img', { name: `Demonstração: ${exerciseName}` });
+  return img.getAttribute('src');
+}
 
 const proposal: OrganizedWorkoutProposal = {
   warnings: [],
@@ -115,6 +142,7 @@ const section = (name: RegExp) => screen.getByRole('region', { name });
 describe('WorkoutAssistantPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockMedia();
   });
 
   it('abre o assistente no modo "Organizar treino existente" e só organiza com texto', async () => {
@@ -140,7 +168,7 @@ describe('WorkoutAssistantPage', () => {
 
     const supinoCard = section(/Exercício 1: Supino reto com barra/);
     expect(within(supinoCard).getByText('✓ Encontrado no catálogo')).toBeInTheDocument();
-    expect(within(supinoCard).getByText('GIF disponível')).toBeInTheDocument();
+    expect(await gifShownIn(supinoCard, 'Supino reto com barra')).toBe('blob:/exercise-media/supino');
     expect(within(supinoCard).getAllByRole('group', { name: /Série \d/ })).toHaveLength(4);
     expect(within(supinoCard).getByLabelText('Série 1 — repetições mínimas')).toHaveValue(6);
     expect(within(supinoCard).getByLabelText('Série 1 — repetições máximas')).toHaveValue(10);
@@ -200,8 +228,82 @@ describe('WorkoutAssistantPage', () => {
 
     const replaced = section(/Exercício 3: Crucifixo inclinado/);
     expect(within(replaced).getByText('Lido no texto: “Crucifixo xyz”')).toBeInTheDocument();
-    expect(within(replaced).getByText('GIF não disponível para este exercício.')).toBeInTheDocument();
+    expect(await gifShownIn(replaced, 'Crucifixo inclinado')).toBe('blob:/exercise-media/crucifixo');
     expect(within(replaced).queryByText(/Exercício não encontrado no catálogo/)).not.toBeInTheDocument();
+  });
+
+  describe('GIF de cada exercício (requisito obrigatório)', () => {
+    it('1. exercício casado mostra o GIF do próprio exercício, sem clique', async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await organizeProposal(user);
+
+      expect(await gifShownIn(section(/Exercício 1: Supino reto com barra/), 'Supino reto com barra')).toBe('blob:/exercise-media/supino');
+      expect(api.fetchExerciseMedia).toHaveBeenCalledWith('/exercise-media/supino');
+    });
+
+    it('2. ambíguo: cada opção mostra o próprio GIF (ou "não disponível"), nada é escolhido sozinho, e o escolhido passa a exibir o GIF certo', async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await organizeProposal(user);
+
+      const card = section(/Exercício 2: Tríceps pulley/);
+      const [optionA, optionB] = within(card).getAllByRole('group', { name: 'Opção: Tríceps pulley' });
+      expect(within(optionA).getByText('GIF não disponível para este exercício.')).toBeInTheDocument();
+      expect(await gifShownIn(optionB, 'Tríceps pulley')).toBe('blob:/exercise-media/triceps-barra');
+      expect(within(card).getByText('⚠ Correspondência ambígua')).toBeInTheDocument();
+
+      await user.click(within(optionB).getByRole('button', { name: /Usar “Tríceps pulley” \(Tríceps · Barra reta\)/ }));
+      const chosen = within(card).getByLabelText('GIF de Tríceps pulley');
+      expect(await gifShownIn(chosen, 'Tríceps pulley')).toBe('blob:/exercise-media/triceps-barra');
+      expect(within(card).queryAllByRole('group', { name: /Opção:/ })).toHaveLength(0);
+    });
+
+    it('3. trocar o exercício troca o GIF — o anterior não permanece', async () => {
+      const user = userEvent.setup();
+      vi.mocked(api.listExercises).mockResolvedValue([crucifixo]);
+      renderPage();
+      await organizeProposal(user);
+
+      const supinoCard = section(/Exercício 1: Supino reto com barra/);
+      expect(await gifShownIn(supinoCard, 'Supino reto com barra')).toBe('blob:/exercise-media/supino');
+
+      await user.click(within(supinoCard).getByRole('button', { name: 'Trocar exercício' }));
+      const dialog = await screen.findByRole('dialog');
+      await user.click(await within(dialog).findByRole('option', { name: /Crucifixo inclinado/ }));
+      await user.click(within(dialog).getByRole('button', { name: 'Usar este exercício' }));
+
+      const swapped = section(/Exercício 1: Crucifixo inclinado/);
+      expect(await gifShownIn(swapped, 'Crucifixo inclinado')).toBe('blob:/exercise-media/crucifixo');
+      expect(within(swapped).queryByRole('img', { name: 'Demonstração: Supino reto com barra' })).not.toBeInTheDocument();
+    });
+
+    it('4. exercício sem GIF mostra "GIF não disponível" e nenhuma imagem substituta', async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await organizeProposal(user);
+
+      const card = section(/Exercício 2: Tríceps pulley/);
+      await user.click(within(card).getByRole('button', { name: /Usar “Tríceps pulley” \(Tríceps · Corda\)/ }));
+      const chosen = within(card).getByLabelText('GIF de Tríceps pulley');
+      expect(within(chosen).getByText('GIF não disponível para este exercício.')).toBeInTheDocument();
+      expect(within(chosen).queryByRole('img')).not.toBeInTheDocument();
+    });
+
+    it('5. o payload salvo leva o Exercise.id do catálogo escolhido (é por ele que o GIF é recuperado depois)', async () => {
+      const user = userEvent.setup();
+      vi.mocked(api.createWorkoutFromProposal).mockResolvedValue({} as never);
+      renderPage();
+      await organizeProposal(user);
+
+      await user.click(within(section(/Exercício 2: Tríceps pulley/)).getByRole('button', { name: /Usar “Tríceps pulley” \(Tríceps · Barra reta\)/ }));
+      await user.click(within(section(/Exercício 3: Crucifixo xyz/)).getByRole('button', { name: 'Remover exercício' }));
+      await user.click(screen.getByRole('button', { name: 'Criar treino como rascunho' }));
+      await screen.findByText('Aba treino');
+
+      const [, payload] = vi.mocked(api.createWorkoutFromProposal).mock.calls[0];
+      expect(payload.days[0].exercises.map((e) => e.exerciseId)).toEqual(['ex-supino', 'ex-tri-b']);
+    });
   });
 
   it('observação da IA pode ser marcada como revisada', async () => {
