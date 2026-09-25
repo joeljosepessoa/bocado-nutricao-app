@@ -165,6 +165,7 @@ export class AiService {
           systemPrompt: built.systemPrompt,
           context: built.context,
           maxOutputChars: useCase.maxOutputChars ?? MAX_OUTPUT_CHARS,
+          responseSchema: useCase.responseSchema,
         },
         { timeoutMs: useCase.timeoutMs ?? AI_TIMEOUT_MS, maxRetries: AI_MAX_RETRIES },
       );

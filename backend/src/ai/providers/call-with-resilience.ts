@@ -12,9 +12,12 @@ export interface ResilienceOptions {
   maxRetries: number;
 }
 
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, onTimeout: () => void): Promise<T> {
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new AiTimeoutError()), timeoutMs);
+    const timer = setTimeout(() => {
+      onTimeout();
+      reject(new AiTimeoutError());
+    }, timeoutMs);
     promise.then(
       (value) => {
         clearTimeout(timer);
@@ -42,8 +45,11 @@ export async function callProviderWithResilience(
   const attempts = 1 + Math.max(0, options.maxRetries);
 
   for (let attempt = 0; attempt < attempts; attempt++) {
+    // Uma tentativa abandonada por timeout é cancelada de fato — sem isso a
+    // chamada ao provedor seguiria rodando (e sendo cobrada) em segundo plano.
+    const controller = new AbortController();
     try {
-      return await withTimeout(provider.generate(request), options.timeoutMs);
+      return await withTimeout(provider.generate({ ...request, signal: controller.signal }), options.timeoutMs, () => controller.abort());
     } catch (error) {
       lastError = error;
     }

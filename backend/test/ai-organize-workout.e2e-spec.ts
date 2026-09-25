@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client';
 import { AppModule } from '../src/app.module';
 import { MockAiProvider } from '../src/ai/providers/mock-ai.provider';
 import type { AiGenerationRequest, AiGenerationResult } from '../src/ai/providers/ai-provider.interface';
+import { ORGANIZED_WORKOUT_JSON_SCHEMA } from '../src/ai/use-cases/organize-workout/organized-workout.schema';
 import { createClient, createExercise, registerProfessional } from './helpers';
 
 const prisma = new PrismaClient();
@@ -149,6 +150,8 @@ describe('IA — organizar treino existente (e2e)', () => {
 
     const sent = fakeProvider.generate.mock.calls[0][0];
     expect(sent.context).toEqual({ workoutText: 'Agachamento 1x10' });
+    expect(sent.responseSchema).toEqual(ORGANIZED_WORKOUT_JSON_SCHEMA);
+    expect(sent.signal).toBeInstanceOf(AbortSignal);
     expect(JSON.stringify(sent)).not.toContain(client.user.email);
   });
 

@@ -12,7 +12,7 @@ import { AiOutputValidationError } from '../../ai-errors';
 import type { AiGenerationResult } from '../../providers/ai-provider.interface';
 import type { GenerateAiContentDto } from '../../dto/generate-ai-content.dto';
 import type { AiContextResult, AiUseCase, BuildContextParams, ProcessedAiOutput } from '../ai-use-case.interface';
-import { AiExercise, AiSetGroup, parseOrganizedWorkout } from './organized-workout.schema';
+import { AiExercise, AiSetGroup, ORGANIZED_WORKOUT_JSON_SCHEMA, parseOrganizedWorkout } from './organized-workout.schema';
 
 export const WARNINGS = {
   exerciseNotFound: 'Exercício não encontrado no catálogo.',
@@ -135,8 +135,10 @@ export class OrganizeWorkoutUseCase implements AiUseCase {
   readonly feature = AiFeatureKey.organize_workout;
   readonly promptVersion = 'organize_workout@v1';
   readonly maxOutputChars = 24000;
-  readonly timeoutMs = 90_000;
+  // Treino semanal inteiro em JSON com thinking adaptativo pode passar de 1 min.
+  readonly timeoutMs = 120_000;
   readonly requiresStructuredOutput = true;
+  readonly responseSchema = ORGANIZED_WORKOUT_JSON_SCHEMA;
 
   constructor(private readonly exercisesService: ExercisesService) {}
 

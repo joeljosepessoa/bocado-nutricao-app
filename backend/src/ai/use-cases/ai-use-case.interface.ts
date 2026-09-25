@@ -36,6 +36,8 @@ export interface AiUseCase {
   readonly timeoutMs?: number;
   /** Exige provedor com saída estruturada confiável — o mock local não serve. */
   readonly requiresStructuredOutput?: boolean;
+  /** JSON Schema imposto ao provedor; a validação do backend continua valendo por cima. */
+  readonly responseSchema?: Record<string, unknown>;
   buildContext(params: BuildContextParams): Promise<AiContextResult>;
   /**
    * Valida/transforma a saída bruta antes de devolvê-la. Lança

@@ -26,6 +26,7 @@
     "email:test": "ts-node src/auth/email/send-test-email.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
     "@aws-sdk/client-s3": "^3.1134.0",
     "@nestjs/common": "^10.4.0",
     "@nestjs/config": "^3.3.0",

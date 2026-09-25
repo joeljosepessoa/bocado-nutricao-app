@@ -37,6 +37,56 @@ export interface AiOrganizedWorkout {
   warnings: string[];
 }
 
+const nullable = (schema: Record<string, unknown>) => ({ anyOf: [schema, { type: 'null' }] });
+const strictObject = (properties: Record<string, unknown>) => ({
+  type: 'object',
+  additionalProperties: false,
+  required: Object.keys(properties),
+  properties,
+});
+
+/**
+ * Mesmo formato de AiOrganizedWorkout, como JSON Schema para a saída
+ * estruturada do provedor. Limites numéricos/de tamanho não entram aqui
+ * (não suportados por ela) — ficam em parseOrganizedWorkout, que valida
+ * tudo de novo no backend.
+ */
+export const ORGANIZED_WORKOUT_JSON_SCHEMA: Record<string, unknown> = strictObject({
+  days: {
+    type: 'array',
+    items: strictObject({
+      name: nullable({ type: 'string' }),
+      notes: nullable({ type: 'string' }),
+      exercises: {
+        type: 'array',
+        items: strictObject({
+          name: { type: 'string' },
+          muscleGroup: nullable({ type: 'string' }),
+          notes: nullable({ type: 'string' }),
+          setGroups: {
+            type: 'array',
+            items: strictObject({
+              count: { type: 'integer' },
+              reps: nullable({ type: 'integer' }),
+              repsMin: nullable({ type: 'integer' }),
+              repsMax: nullable({ type: 'integer' }),
+              restSeconds: nullable({ type: 'integer' }),
+              loadValue: nullable({ type: 'number' }),
+              loadUnit: nullable({ type: 'string', enum: Object.values(LoadUnit) }),
+              durationSeconds: nullable({ type: 'integer' }),
+              distanceMeters: nullable({ type: 'number' }),
+              tempo: nullable({ type: 'string' }),
+              notes: nullable({ type: 'string' }),
+            }),
+          },
+          warnings: { type: 'array', items: { type: 'string' } },
+        }),
+      },
+    }),
+  },
+  warnings: { type: 'array', items: { type: 'string' } },
+});
+
 const MAX_WARNINGS = 10;
 const MAX_WARNING_LENGTH = 300;
 const LOAD_UNITS = Object.values(LoadUnit) as string[];

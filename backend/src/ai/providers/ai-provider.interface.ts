@@ -10,6 +10,10 @@ export interface AiGenerationRequest {
   /** Só o que o Context Builder do use case liberou — nunca uma consulta livre ao banco. */
   context: Record<string, unknown>;
   maxOutputChars: number;
+  /** JSON Schema da resposta — provedores com saída estruturada o impõem; os demais ignoram. */
+  responseSchema?: Record<string, unknown>;
+  /** Abortado quando o pipeline desiste da tentativa (timeout) — provedores de rede devem cancelar a chamada. */
+  signal?: AbortSignal;
 }
 
 export interface AiGenerationResult {
