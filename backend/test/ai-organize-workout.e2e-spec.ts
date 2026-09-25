@@ -96,8 +96,8 @@ describe('IA — organizar treino existente (e2e)', () => {
     // O caminho relativo do GIF só entra pelo importador de mídia (direto no banco) — a API aceita só URL absoluta.
     await prisma.exercise.update({ where: { id: catalogExercise.id }, data: { imageUrl: '/exercise-media/' + 'a'.repeat(64) } });
     const ambiguousName = `Remada ambígua ${Date.now()}`;
-    await createExercise(app, professional.accessToken, { name: ambiguousName, scope: 'private' });
-    await createExercise(app, professional.accessToken, { name: ambiguousName, scope: 'private' });
+    await createExercise(app, professional.accessToken, { name: ambiguousName, scope: 'private', equipment: 'Barra' });
+    await createExercise(app, professional.accessToken, { name: ambiguousName, scope: 'private', equipment: 'Halteres' });
 
     reply({
       days: [

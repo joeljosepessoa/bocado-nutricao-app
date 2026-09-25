@@ -48,14 +48,29 @@ export function buildCatalogIndex(catalog: CatalogExerciseRef[]): CatalogIndex {
   });
 }
 
+/** Como a sugestão aparece para o profissional — duas iguais aqui são indistinguíveis na tela. */
+const visibleIdentity = (ref: CatalogExerciseRef) => [ref.name, ref.muscleGroup, ref.equipment, ref.imageUrl].join('\u0000');
+
+/**
+ * Só ordena/enxuga SUGESTÕES (nunca decide associação): uma por aparência
+ * visível, as com demonstração (GIF) primeiro, depois a mais próxima do nome.
+ */
 function rank(entries: IndexedExercise[], target: string): CatalogExerciseRef[] {
-  return [...entries]
-    .sort(
-      (a, b) =>
-        Math.abs(a.normalized.length - target.length) - Math.abs(b.normalized.length - target.length) ||
-        a.ref.name.localeCompare(b.ref.name) ||
-        a.ref.id.localeCompare(b.ref.id),
-    )
+  const sorted = [...entries].sort(
+    (a, b) =>
+      Number(Boolean(b.ref.imageUrl)) - Number(Boolean(a.ref.imageUrl)) ||
+      Math.abs(a.normalized.length - target.length) - Math.abs(b.normalized.length - target.length) ||
+      a.ref.name.localeCompare(b.ref.name) ||
+      a.ref.id.localeCompare(b.ref.id),
+  );
+  const seen = new Set<string>();
+  return sorted
+    .filter((entry) => {
+      const identity = visibleIdentity(entry.ref);
+      if (seen.has(identity)) return false;
+      seen.add(identity);
+      return true;
+    })
     .slice(0, MAX_MATCH_CANDIDATES)
     .map((entry) => entry.ref);
 }

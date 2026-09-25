@@ -38,7 +38,8 @@ describe('matchExerciseName', () => {
     const match = matchExerciseName('Rosca direta', index);
     expect(match.status).toBe('ambiguous');
     expect(match.exercise).toBeNull();
-    expect(match.candidates.map((c) => c.id).sort()).toEqual(['5', '6']);
+    // As duas são idênticas na tela → uma sugestão só (a escolha continua do profissional).
+    expect(match.candidates.map((c) => c.id)).toEqual(['5']);
   });
 
   it('nome parcial com duas possibilidades → ambiguous com sugestões', () => {
@@ -60,6 +61,17 @@ describe('matchExerciseName', () => {
 
   it('nome vazio ou só pontuação → not_found', () => {
     expect(matchExerciseName('  --  ', index).status).toBe('not_found');
+  });
+
+  it('duplicatas visualmente idênticas viram uma só sugestão, e a com GIF vem primeiro (continua ambíguo)', () => {
+    const dupes = buildCatalogIndex([
+      ...Array.from({ length: 8 }, (_, i) => ({ id: `dup-${i}`, name: 'Agachamento livre', muscleGroup: 'quadríceps', equipment: 'barra', imageUrl: null })),
+      { id: 'real', name: 'Agachamento livre', muscleGroup: 'Quadríceps, glúteos', equipment: 'Barra e anilhas', imageUrl: '/exercise-media/xyz' },
+    ]);
+    const match = matchExerciseName('Agachamento livre', dupes);
+    expect(match.status).toBe('ambiguous');
+    expect(match.exercise).toBeNull();
+    expect(match.candidates.map((c) => c.id)).toEqual(['real', 'dup-0']);
   });
 
   it('limita o número de sugestões', () => {
