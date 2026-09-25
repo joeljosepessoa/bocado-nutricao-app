@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import * as api from '../../api/endpoints';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
@@ -11,11 +11,16 @@ import { Modal } from '../../components/Modal';
 import { ExercisePreview } from '../../components/ExercisePreview';
 import { describeExercise } from '../../lib/exerciseMedia';
 import { formatDate } from '../../lib/format';
+import { summarizeSets } from '../../lib/workoutFormat';
 
 export function WorkoutTab() {
   const { clientId } = useParams<{ clientId: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const createdByAssistant = (location.state as { assistantCreated?: boolean } | null)?.assistantCreated === true;
   const queryClient = useQueryClient();
   const [showAddExercise, setShowAddExercise] = useState<string | null>(null);
+  const openAssistant = () => navigate(`/clients/${clientId}/workout/assistant`);
 
   const { data: workoutList, isLoading: loadingList } = useQuery({
     queryKey: ['workouts', clientId],
@@ -63,7 +68,16 @@ export function WorkoutTab() {
     return (
       <EmptyState
         title="Nenhum treino criado ainda"
-        action={<Button onClick={() => createWorkoutMutation.mutate()} loading={createWorkoutMutation.isPending}>Criar treino</Button>}
+        action={
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <Button onClick={() => createWorkoutMutation.mutate()} loading={createWorkoutMutation.isPending}>
+              Criar treino
+            </Button>
+            <Button variant="secondary" onClick={openAssistant}>
+              🤖 Assistente de Treino
+            </Button>
+          </div>
+        }
       />
     );
   }
@@ -73,16 +87,26 @@ export function WorkoutTab() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {createdByAssistant && isDraft ? (
+        <div role="status" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 8, background: 'var(--color-primary-light)' }}>
+          Treino criado como rascunho pelo Assistente. Revise e publique quando quiser — nada foi enviado ao cliente.
+        </div>
+      ) : null}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <h2 style={{ fontSize: 17, margin: 0 }}>Treino — versão {version?.versionNumber}</h2>
           {version ? <StatusBadge status={version.status} /> : null}
         </div>
-        {isDraft ? (
-          <Button onClick={() => publishMutation.mutate()} loading={publishMutation.isPending}>
-            Publicar versão
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button variant="secondary" onClick={openAssistant}>
+            🤖 Assistente de Treino
           </Button>
-        ) : null}
+          {isDraft ? (
+            <Button onClick={() => publishMutation.mutate()} loading={publishMutation.isPending}>
+              Publicar versão
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {!version ? (
@@ -98,7 +122,12 @@ export function WorkoutTab() {
                   {day.exercises.map((ex) => (
                     <div key={ex.id} style={{ borderTop: '1px solid var(--color-border)', paddingTop: 6 }}>
                       <div style={{ fontWeight: 600, fontSize: 13.5 }}>{ex.exercise.name}</div>
-                      <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{ex.sets.length} série(s) prescrita(s)</div>
+                      {summarizeSets(ex.sets).map((line) => (
+                        <div key={line} style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                          {line}
+                        </div>
+                      ))}
+                      {ex.notes ? <div style={{ fontSize: 12, fontStyle: 'italic' }}>{ex.notes}</div> : null}
                     </div>
                   ))}
                 </div>

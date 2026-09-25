@@ -11,6 +11,7 @@ import type {
   ClientListItem,
   ClientStatus,
   CreateClientInput,
+  CreateWorkoutFromProposalInput,
   CreateEvaluationInput,
   DashboardSummary,
   Diet,
@@ -23,6 +24,7 @@ import type {
   Exercise,
   Food,
   Message,
+  OrganizedWorkoutProposal,
   PaginatedResult,
   Plan,
   PlatformMetrics,
@@ -365,6 +367,12 @@ export async function addWorkoutSet(
   return res.data;
 }
 
+/** Proposta já revisada → treino NOVO em rascunho. Nunca publica. */
+export async function createWorkoutFromProposal(clientId: string, input: CreateWorkoutFromProposalInput): Promise<Workout> {
+  const res = await apiClient.post<Workout>(`/clients/${clientId}/workouts/from-proposal`, input);
+  return res.data;
+}
+
 export async function listExecutionLogs(clientId: string, workoutId: string): Promise<PaginatedResult<ExecutionLog>> {
   const res = await apiClient.get(`/clients/${clientId}/workouts/${workoutId}/execution-logs`);
   return res.data;
@@ -430,6 +438,18 @@ export async function explainEvaluation(clientId: string, evaluationId: string):
 
 export async function narrateTrend(clientId: string): Promise<AiGenerationResult> {
   const res = await apiClient.post<AiGenerationResult>(`/clients/${clientId}/ai/generate`, { feature: 'narrate_trend' });
+  return res.data;
+}
+
+/** Assistente de Treino: organiza texto colado em proposta estruturada (nada é gravado). */
+export async function organizeWorkout(
+  clientId: string,
+  workoutText: string,
+): Promise<AiGenerationResult & { structuredData: OrganizedWorkoutProposal }> {
+  const res = await apiClient.post<AiGenerationResult & { structuredData: OrganizedWorkoutProposal }>(
+    `/clients/${clientId}/ai/generate`,
+    { feature: 'organize_workout', workoutText },
+  );
   return res.data;
 }
 

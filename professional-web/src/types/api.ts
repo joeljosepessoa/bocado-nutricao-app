@@ -292,16 +292,22 @@ export interface Food {
 
 export type WorkoutVersionStatus = 'draft' | 'published' | 'superseded';
 
+export type LoadUnit = 'kg' | 'lb' | 'bodyweight' | 'band_level' | 'other';
+
 export interface WorkoutSet {
   id: string;
   order: number;
+  /** Prescrição exata; faixa usa repsMin/repsMax — nunca os dois. */
   reps: number | null;
+  repsMin: number | null;
+  repsMax: number | null;
   loadValue: number | null;
   loadUnit: string | null;
   durationSeconds: number | null;
   distanceMeters: number | null;
   restSeconds: number | null;
   tempo: string | null;
+  notes?: string | null;
 }
 
 export interface WorkoutExercise {
@@ -409,7 +415,7 @@ export interface SignedUrl {
 
 // --- IA assistiva (Fase 12) -----------------------------------------------
 
-export type AiFeatureKey = 'draft_note' | 'explain_evaluation' | 'narrate_trend';
+export type AiFeatureKey = 'draft_note' | 'explain_evaluation' | 'narrate_trend' | 'organize_workout';
 
 /** Sempre rotulado como conteúdo assistivo — nunca um dado original do sistema. */
 export interface AiGenerationResult {
@@ -418,8 +424,68 @@ export interface AiGenerationResult {
   provider: string;
   model: string;
   text: string;
+  /** Só em features de saída estruturada (já validada pelo backend). */
+  structuredData?: unknown;
   generatedAt: string;
   isAiGenerated: true;
+}
+
+// --- Assistente de Treino (organizar treino existente) ---------------------
+
+export interface CatalogExerciseRef {
+  id: string;
+  name: string;
+  muscleGroup: string | null;
+  equipment: string | null;
+  imageUrl: string | null;
+}
+
+export type ExerciseMatchStatus = 'matched' | 'ambiguous' | 'not_found';
+
+export interface ProposalSet {
+  reps: number | null;
+  repsMin: number | null;
+  repsMax: number | null;
+  loadValue: number | null;
+  loadUnit: LoadUnit | null;
+  durationSeconds: number | null;
+  distanceMeters: number | null;
+  restSeconds: number | null;
+  tempo: string | null;
+  notes: string | null;
+}
+
+export interface ProposalExercise {
+  rawName: string;
+  muscleGroupHint: string | null;
+  notes: string | null;
+  matchStatus: ExerciseMatchStatus;
+  matchedExercise: CatalogExerciseRef | null;
+  candidates: CatalogExerciseRef[];
+  sets: ProposalSet[];
+  warnings: string[];
+}
+
+export interface ProposalDay {
+  name: string;
+  notes: string | null;
+  exercises: ProposalExercise[];
+  warnings: string[];
+}
+
+export interface OrganizedWorkoutProposal {
+  days: ProposalDay[];
+  warnings: string[];
+}
+
+export interface CreateWorkoutFromProposalInput {
+  objective?: string;
+  notes?: string;
+  days: Array<{
+    name: string;
+    notes: string | null;
+    exercises: Array<{ exerciseId: string; notes: string | null; sets: ProposalSet[] }>;
+  }>;
 }
 
 export interface AiInteractionSummary {
