@@ -88,6 +88,32 @@ describe('Treino a partir de proposta revisada (e2e)', () => {
     expect(version.days[1].exercises).toEqual([]);
   });
 
+  it('reabrir o rascunho mantém o exercício do catálogo e o GIF dele; publicado MANUALMENTE, o app do cliente recebe o mesmo GIF', async () => {
+    const { client, temporaryPassword, supino, triceps, auth } = await setup();
+    // O caminho do GIF só entra pelo importador de mídia (direto no banco), como em produção.
+    await prisma.exercise.update({ where: { id: supino.id }, data: { imageUrl: '/exercise-media/' + 'b'.repeat(64) } });
+
+    const created = await request(app.getHttpServer())
+      .post(`/clients/${client.id}/workouts/from-proposal`)
+      .set(auth)
+      .send(proposal(supino.id, triceps.id))
+      .expect(201);
+
+    const reopened = await request(app.getHttpServer()).get(`/clients/${client.id}/workouts/${created.body.id}`).set(auth).expect(200);
+    const [supinoEx, tricepsEx] = reopened.body.currentVersion.days[0].exercises;
+    expect(supinoEx.exercise).toMatchObject({ id: supino.id, imageUrl: '/exercise-media/' + 'b'.repeat(64) });
+    expect(tricepsEx.exercise).toMatchObject({ id: triceps.id, imageUrl: null });
+
+    await request(app.getHttpServer())
+      .post(`/clients/${client.id}/workouts/${created.body.id}/versions/${created.body.currentVersion.id}/publish`)
+      .set(auth)
+      .expect(200);
+    const session = await login(app, client.user.email, temporaryPassword);
+    const clientView = await request(app.getHttpServer()).get('/client/workout').set('Authorization', `Bearer ${session.accessToken}`).expect(200);
+    expect(clientView.body.workout.days[0].exercises[0]).toMatchObject({ exerciseName: supino.name, imageUrl: '/exercise-media/' + 'b'.repeat(64) });
+    expect(clientView.body.workout.days[0].exercises[1].imageUrl).toBeNull();
+  });
+
   it('não publica nem notifica o cliente — o cliente não vê o treino', async () => {
     const { client, temporaryPassword, supino, triceps, auth } = await setup();
     const dispatch = jest.spyOn(app.get(NotificationDispatchService), 'dispatch');
@@ -105,7 +131,7 @@ describe('Treino a partir de proposta revisada (e2e)', () => {
 
     const session = await login(app, client.user.email, temporaryPassword);
     const clientView = await request(app.getHttpServer()).get('/client/workout').set('Authorization', `Bearer ${session.accessToken}`).expect(200);
-    expect(clientView.body?.versionId).toBeUndefined();
+    expect(clientView.body).toEqual({ workout: null });
   });
 
   it('falha no meio da transação não deixa treino parcial', async () => {
