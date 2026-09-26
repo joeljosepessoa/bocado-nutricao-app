@@ -1,4 +1,5 @@
-import type { AiGenerationRequest, AiGenerationResult, AiProvider } from './ai-provider.interface';
+import { AiProviderError } from '../ai-errors';
+import type { AiGenerationRequest, AiGenerationResult, AiProvider, AiProviderCredentials } from './ai-provider.interface';
 
 export class AiTimeoutError extends Error {
   constructor() {
@@ -40,6 +41,7 @@ export async function callProviderWithResilience(
   provider: AiProvider,
   request: AiGenerationRequest,
   options: ResilienceOptions,
+  credentials?: AiProviderCredentials,
 ): Promise<AiGenerationResult> {
   let lastError: unknown;
   const attempts = 1 + Math.max(0, options.maxRetries);
@@ -49,9 +51,15 @@ export async function callProviderWithResilience(
     // chamada ao provedor seguiria rodando (e sendo cobrada) em segundo plano.
     const controller = new AbortController();
     try {
-      return await withTimeout(provider.generate({ ...request, signal: controller.signal }), options.timeoutMs, () => controller.abort());
+      return await withTimeout(
+        provider.generate({ ...request, signal: controller.signal }, credentials),
+        options.timeoutMs,
+        () => controller.abort(),
+      );
     } catch (error) {
       lastError = error;
+      // Credencial, modelo ou pedido errados não melhoram com nova tentativa.
+      if (error instanceof AiProviderError && !error.retryable) break;
     }
   }
 

@@ -25,9 +25,24 @@ export interface AiGenerationResult {
   truncated?: boolean;
 }
 
+/**
+ * Credencial de UMA chamada, entregue pelo AiCredentialsResolver (hoje: ENV
+ * do servidor). Nunca é logada, persistida nem devolvida em resposta.
+ */
+export interface AiProviderCredentials {
+  apiKey?: string;
+  model?: string;
+  baseUrl?: string;
+}
+
+/**
+ * Contrato comum a todos os provedores (mock-local, Anthropic e, no futuro,
+ * OpenAI/Gemini). Falhas saem SEMPRE como AiProviderError; a saída é sempre
+ * AiGenerationResult — o resto do sistema não sabe qual provedor respondeu.
+ */
 export interface AiProvider {
   readonly id: string;
   /** Segue instruções de formato (ex.: "responda só JSON") — o mock local não. */
   readonly supportsStructuredOutput?: boolean;
-  generate(request: AiGenerationRequest): Promise<AiGenerationResult>;
+  generate(request: AiGenerationRequest, credentials?: AiProviderCredentials): Promise<AiGenerationResult>;
 }

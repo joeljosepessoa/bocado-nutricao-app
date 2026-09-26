@@ -58,12 +58,28 @@ describe('checkRuntimeConfig', () => {
     expect(checkRuntimeConfig(getter({ ...base, MERCADOPAGO_WEBHOOK_SECRET: 'x' })).errors).toEqual([]);
   });
 
-  it('AI_PROVIDER=claude sem ANTHROPIC_API_KEY é erro; com a chave, não (e a chave nunca aparece no relatório)', () => {
-    const base = { ...goodProd, AI_PROVIDER: 'claude' };
-    expect(checkRuntimeConfig(getter(base)).errors.join(' ')).toMatch(/ANTHROPIC_API_KEY/);
-    const withKey = checkRuntimeConfig(getter({ ...base, ANTHROPIC_API_KEY: 'sk-ant-segredo-de-teste' }));
-    expect(withKey.errors).toEqual([]);
-    expect(JSON.stringify(withKey)).not.toContain('sk-ant-segredo-de-teste');
+  it('AI_PROVIDER=anthropic (ou o alias claude) sem ANTHROPIC_API_KEY é erro; com a chave, não (e a chave nunca aparece no relatório)', () => {
+    for (const aiProvider of ['anthropic', 'claude']) {
+      const base = { ...goodProd, AI_PROVIDER: aiProvider };
+      expect(checkRuntimeConfig(getter(base)).errors.join(' ')).toMatch(/ANTHROPIC_API_KEY/);
+      const withKey = checkRuntimeConfig(getter({ ...base, ANTHROPIC_API_KEY: 'sk-ant-segredo-de-teste', ANTHROPIC_MODEL: 'claude-opus-5' }));
+      expect(withKey.errors).toEqual([]);
+      expect(JSON.stringify(withKey)).not.toContain('sk-ant-segredo-de-teste');
+    }
+  });
+
+  it('anthropic sem ANTHROPIC_MODEL avisa qual modelo padrão (do catálogo) será usado', () => {
+    const report = checkRuntimeConfig(getter({ ...goodProd, AI_PROVIDER: 'anthropic', ANTHROPIC_API_KEY: 'x' }));
+    expect(report.errors).toEqual([]);
+    expect(report.warnings.join(' ')).toMatch(/ANTHROPIC_MODEL não definido: usando o modelo padrão claude-haiku-4-5-20251001/);
+  });
+
+  it('provedor desconhecido ou ainda não implementado (openai/gemini) impede o boot', () => {
+    expect(checkRuntimeConfig(getter({ ...goodProd, AI_PROVIDER: 'xyz' })).errors.join(' ')).toMatch(
+      /não é um provedor de IA conhecido — use: anthropic, mock-local/,
+    );
+    expect(checkRuntimeConfig(getter({ ...goodProd, AI_PROVIDER: 'openai' })).errors.join(' ')).toMatch(/openai ainda não está implementado/);
+    expect(checkRuntimeConfig(getter({ ...goodProd, AI_PROVIDER: 'gemini' })).errors.join(' ')).toMatch(/gemini ainda não está implementado/);
   });
 
   it('avisa sobre PASSWORD_RESET_URL, storage local, TRUST_PROXY e provedores simulados', () => {
@@ -82,7 +98,9 @@ describe('checkRuntimeConfig', () => {
       EMAIL_PROVIDER: 'smtp',
       STORAGE_PROVIDER: 's3',
       ERROR_TRACKING_PROVIDER: 'sentry',
-      AI_PROVIDER: 'openai',
+      AI_PROVIDER: 'anthropic',
+      ANTHROPIC_API_KEY: 'x',
+      ANTHROPIC_MODEL: 'claude-opus-5',
       TRUST_PROXY: '1',
     };
     expect(checkRuntimeConfig(getter(env))).toEqual({ errors: [], warnings: [] });

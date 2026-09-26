@@ -53,7 +53,13 @@ node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 | `PAYMENT_WEBHOOK_SECRET` | outro segredo gerado como acima |
 | `EMAIL_PROVIDER` | `console` por enquanto (troca no passo 2) |
 | `ERROR_TRACKING_PROVIDER` | `console` |
-| `AI_PROVIDER` | `mock-local` |
+| `AI_PROVIDER` | `mock-local` (IA simulada) — ou `anthropic` para o Claude real (abaixo) |
+
+**IA real (Claude) — opcional, só no serviço do backend:** `AI_PROVIDER=anthropic`,
+`ANTHROPIC_API_KEY=<chave do Claude Console>` e `ANTHROPIC_MODEL=claude-haiku-4-5-20251001` (se
+omitido, é o padrão do catálogo e o boot avisa). Opcional: `AI_TIMEOUT_MS` (padrão 10000; organizar treino usa 120000 próprio). A chave nunca vai
+no painel web nem no app; assinatura Claude Pro/Max não serve para isso. `openai`/`gemini` ainda
+não estão implementados.
 
 O Railway expõe automaticamente uma URL pública tipo `https://SEU-SERVICO.up.railway.app` (aba
 **Settings → Networking → Generate Domain**). Confirme `GET https://SEU-SERVICO.up.railway.app/health`

@@ -207,7 +207,7 @@ describe('IA — organizar treino existente (e2e)', () => {
     fakeProvider.supportsStructuredOutput = false;
 
     const res = await organize(professional.accessToken, client.id).expect(503);
-    expect(res.body.message).toMatch(/AI_PROVIDER=claude/);
+    expect(res.body.message).toMatch(/AI_PROVIDER=anthropic/);
     expect(fakeProvider.generate).not.toHaveBeenCalled();
     const log = await prisma.aiInteractionLog.findFirstOrThrow({ where: { clientId: client.id, feature: 'organize_workout' } });
     expect(log.status).toBe('failed');

@@ -1,15 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AiProviderError } from '../ai-errors';
 import type { AiProvider } from './ai-provider.interface';
-import { ClaudeAiProvider } from './claude-ai.provider';
+import { resolveAiProviderId } from './ai-provider-catalog';
+import { AnthropicAiProvider } from './anthropic-ai.provider';
 import { MockAiProvider } from './mock-ai.provider';
 
 /**
  * Mesmo papel do ScaleDriverRegistry/WearableDriverRegistry — a aplicação
  * pede "o provedor ativo" a este registry, nunca importa um provedor
- * concreto diretamente. Escolhe por configuração (`AI_PROVIDER`), não por
- * descoberta em tempo real (não há "vários provedores ao mesmo tempo" aqui,
- * diferente do BLE). Registrados: `mock-local` (padrão, sem rede) e `claude`.
+ * concreto diretamente. Escolhe por configuração (`AI_PROVIDER`).
+ * Registrados: `mock-local` (padrão, sem rede) e `anthropic` (alias `claude`).
+ * `openai`/`gemini` estão previstos em ai-provider-catalog: um novo provedor
+ * entra aqui sem tocar em AiService nem nos use cases.
  */
 @Injectable()
 export class AiProviderRegistry {
@@ -18,10 +21,10 @@ export class AiProviderRegistry {
   constructor(
     private readonly config: ConfigService,
     mockAiProvider: MockAiProvider,
-    claudeAiProvider: ClaudeAiProvider,
+    anthropicAiProvider: AnthropicAiProvider,
   ) {
     this.register(mockAiProvider);
-    this.register(claudeAiProvider);
+    this.register(anthropicAiProvider);
   }
 
   register(provider: AiProvider): void {
@@ -29,11 +32,20 @@ export class AiProviderRegistry {
   }
 
   getActiveProvider(): AiProvider {
-    const activeId = this.config.get<string>('AI_PROVIDER') ?? 'mock-local';
-    const provider = this.providers.get(activeId);
+    const resolution = resolveAiProviderId(this.config.get<string>('AI_PROVIDER'));
+    if (resolution.kind === 'unknown') {
+      throw new AiProviderError('invalid_provider');
+    }
+    const provider = resolution.kind === 'available' ? this.providers.get(resolution.id) : undefined;
     if (!provider) {
-      throw new Error(`Provedor de IA "${activeId}" não está registrado.`);
+      throw new AiProviderError('provider_not_implemented');
     }
     return provider;
+  }
+
+  /** Id configurado, para o log de interação mesmo quando a resolução falha (nunca o texto cru do ENV). */
+  configuredProviderLabel(): string {
+    const resolution = resolveAiProviderId(this.config.get<string>('AI_PROVIDER'));
+    return resolution.kind === 'unknown' ? 'invalid' : resolution.id;
   }
 }

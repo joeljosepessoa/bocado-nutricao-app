@@ -1,3 +1,5 @@
+import { AI_PROVIDER_IDS, AI_PROVIDERS, resolveAiProviderId } from '../../ai/providers/ai-provider-catalog';
+
 export interface RuntimeConfigReport {
   /** Impedem o boot em produção (segurança/funcionamento). */
   errors: string[];
@@ -37,8 +39,25 @@ export function checkRuntimeConfig(get: Getter): RuntimeConfigReport {
     report.errors.push('CORS_ORIGIN ausente ou apontando para localhost — informe a(s) origem(ns) reais do painel web.');
   }
 
-  if (get('AI_PROVIDER') === 'claude' && !get('ANTHROPIC_API_KEY')) {
-    report.errors.push('AI_PROVIDER=claude exige ANTHROPIC_API_KEY (sem ela toda geração de IA falha).');
+  const ai = resolveAiProviderId(get('AI_PROVIDER'));
+  const available = AI_PROVIDER_IDS.filter((id) => AI_PROVIDERS[id].status === 'available').join(', ');
+  if (ai.kind === 'unknown') {
+    report.errors.push(`AI_PROVIDER="${ai.raw}" não é um provedor de IA conhecido — use: ${available}.`);
+  } else if (ai.kind === 'planned') {
+    report.errors.push(`AI_PROVIDER=${ai.id} ainda não está implementado — use: ${available}.`);
+  } else {
+    // Genérico pelo catálogo: vale para qualquer provedor com credencial.
+    const { env, defaultModel } = AI_PROVIDERS[ai.id];
+    if (env && !get(env.apiKey)?.trim()) {
+      report.errors.push(`AI_PROVIDER=${ai.id} exige ${env.apiKey} (sem ela toda geração de IA falha).`);
+    }
+    if (env && !get(env.model)?.trim()) {
+      if (defaultModel) {
+        report.warnings.push(`${env.model} não definido: usando o modelo padrão ${defaultModel}.`);
+      } else {
+        report.errors.push(`AI_PROVIDER=${ai.id} exige ${env.model}.`);
+      }
+    }
   }
 
   if ((get('PAYMENT_GATEWAY_PROVIDER') ?? 'mock') === 'mercadopago' && !get('MERCADOPAGO_WEBHOOK_SECRET')) {
@@ -68,7 +87,7 @@ export function checkRuntimeConfig(get: Getter): RuntimeConfigReport {
   if ((get('ERROR_TRACKING_PROVIDER') ?? 'console') === 'console') {
     report.warnings.push('ERROR_TRACKING_PROVIDER=console: erros só vão para o log (sem Sentry).');
   }
-  if ((get('AI_PROVIDER') ?? 'mock-local') === 'mock-local') {
+  if (ai.kind === 'available' && ai.id === 'mock-local') {
     report.warnings.push('AI_PROVIDER=mock-local: IA simulada (nenhum provedor real).');
   }
   if (!get('TRUST_PROXY')) {

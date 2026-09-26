@@ -1,11 +1,13 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AiAuditAction, AiFeatureKey, AiInteractionStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { AiAuditLogService } from './ai-audit-log.service';
 import { AiProviderRegistry } from './providers/ai-provider.registry';
+import { AiCredentialsResolver } from './providers/ai-credentials.resolver';
 import { AiTimeoutError, callProviderWithResilience } from './providers/call-with-resilience';
 import type { AiGenerationResult } from './providers/ai-provider.interface';
-import { AiOutputValidationError, AiUnsupportedProviderError } from './ai-errors';
+import { AiOutputValidationError, AiProviderError, AiUnsupportedProviderError } from './ai-errors';
 import { DraftNoteUseCase } from './use-cases/draft-note.use-case';
 import { ExplainEvaluationUseCase } from './use-cases/explain-evaluation.use-case';
 import { NarrateTrendUseCase } from './use-cases/narrate-trend.use-case';
@@ -18,8 +20,33 @@ export interface RequestMeta {
 }
 
 const MAX_OUTPUT_CHARS = 4000;
-const AI_TIMEOUT_MS = 10_000;
+// Padrão quando AI_TIMEOUT_MS não é definido (o mesmo da Fase 12). Use cases
+// mais pesados declaram o próprio timeoutMs (ex.: organize_workout).
+export const DEFAULT_AI_TIMEOUT_MS = 10_000;
 const AI_MAX_RETRIES = 1;
+
+function interactionStatusFor(error: unknown): AiInteractionStatus {
+  if (error instanceof AiTimeoutError || (error instanceof AiProviderError && error.kind === 'timeout')) {
+    return AiInteractionStatus.timeout;
+  }
+  if (error instanceof AiOutputValidationError || (error instanceof AiProviderError && error.kind === 'invalid_response')) {
+    return AiInteractionStatus.invalid_output;
+  }
+  return AiInteractionStatus.failed;
+}
+
+/** Só mensagens escritas por nós seguem para log e resposta; o resto vira texto genérico. */
+function safeErrorMessage(error: unknown): string {
+  if (
+    error instanceof AiProviderError ||
+    error instanceof AiOutputValidationError ||
+    error instanceof AiUnsupportedProviderError ||
+    error instanceof AiTimeoutError
+  ) {
+    return error.message;
+  }
+  return 'Não foi possível gerar o conteúdo agora.';
+}
 
 export interface GenerateParams {
   professionalId: string;
@@ -40,11 +67,15 @@ export interface GenerateParams {
 @Injectable()
 export class AiService {
   private readonly useCases: Map<AiFeatureKey, AiUseCase>;
+  private readonly logger = new Logger(AiService.name);
+  private readonly defaultTimeoutMs: number;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly registry: AiProviderRegistry,
     private readonly auditLog: AiAuditLogService,
+    private readonly credentials: AiCredentialsResolver,
+    config: ConfigService,
     draftNote: DraftNoteUseCase,
     explainEvaluation: ExplainEvaluationUseCase,
     narrateTrend: NarrateTrendUseCase,
@@ -56,6 +87,8 @@ export class AiService {
       [narrateTrend.feature, narrateTrend],
       [organizeWorkout.feature, organizeWorkout],
     ]);
+    const configuredTimeout = Number(config.get<string>('AI_TIMEOUT_MS'));
+    this.defaultTimeoutMs = Number.isFinite(configuredTimeout) && configuredTimeout > 0 ? configuredTimeout : DEFAULT_AI_TIMEOUT_MS;
   }
 
   /**
@@ -146,18 +179,27 @@ export class AiService {
       input: params.input,
     });
 
-    const provider = this.registry.getActiveProvider();
+    // Resolução do provedor também dentro do fluxo controlado: provedor
+    // inválido/não implementado vira interação registrada + 503 com mensagem
+    // segura, nunca um 500 genérico.
+    let providerId = this.registry.configuredProviderLabel();
     let status: AiInteractionStatus = AiInteractionStatus.succeeded;
     let responseText: string | undefined;
     let structuredData: Record<string, unknown> | undefined;
-    let model = provider.id;
+    let model = providerId;
     let errorMessage: string | undefined;
+    let tokensUsed: AiGenerationResult['tokensUsed'];
+    const startedAt = Date.now();
 
     try {
+      const provider = this.registry.getActiveProvider();
+      providerId = provider.id;
+      model = provider.id;
       if (useCase.requiresStructuredOutput && !provider.supportsStructuredOutput) {
         throw new AiUnsupportedProviderError();
       }
 
+      const credentials = await this.credentials.resolve(provider.id, { professionalId: params.professionalId });
       const result = await callProviderWithResilience(
         provider,
         {
@@ -167,8 +209,10 @@ export class AiService {
           maxOutputChars: useCase.maxOutputChars ?? MAX_OUTPUT_CHARS,
           responseSchema: useCase.responseSchema,
         },
-        { timeoutMs: useCase.timeoutMs ?? AI_TIMEOUT_MS, maxRetries: AI_MAX_RETRIES },
+        { timeoutMs: useCase.timeoutMs ?? this.defaultTimeoutMs, maxRetries: AI_MAX_RETRIES },
+        credentials,
       );
+      tokensUsed = result.tokensUsed;
 
       if (!isValidResult(result.text)) {
         status = AiInteractionStatus.invalid_output;
@@ -187,22 +231,22 @@ export class AiService {
         model = result.model;
       }
     } catch (error) {
-      if (error instanceof AiTimeoutError) {
-        status = AiInteractionStatus.timeout;
-      } else if (error instanceof AiOutputValidationError) {
-        status = AiInteractionStatus.invalid_output;
-      } else {
-        status = AiInteractionStatus.failed;
-      }
-      errorMessage = error instanceof Error ? error.message : String(error);
+      status = interactionStatusFor(error);
+      errorMessage = safeErrorMessage(error);
     }
+
+    // Métrica de uso/custo — só metadados, nunca prompt, contexto, resposta ou credencial.
+    this.logger.log(
+      `ai_generation feature=${params.feature} provider=${providerId} model=${model} status=${status} ` +
+        `durationMs=${Date.now() - startedAt} inputTokens=${tokensUsed?.input ?? '-'} outputTokens=${tokensUsed?.output ?? '-'}`,
+    );
 
     await this.prisma.aiInteractionLog.create({
       data: {
         professionalId: params.professionalId,
         clientId: params.clientId,
         feature: params.feature,
-        provider: provider.id,
+        provider: providerId,
         model,
         promptVersion: useCase.promptVersion,
         contextRef: built.contextRef,
@@ -229,7 +273,7 @@ export class AiService {
     const dto = new AiGenerationResponseDto();
     dto.feature = params.feature;
     dto.promptVersion = useCase.promptVersion;
-    dto.provider = provider.id;
+    dto.provider = providerId;
     dto.model = model;
     dto.text = responseText;
     if (structuredData) {
