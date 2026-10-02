@@ -24,7 +24,7 @@ export class ExercisesController {
 
   @Get(':id')
   findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
-    return this.exercisesService.findVisible(user.id, id);
+    return this.exercisesService.findVisibleForDisplay(user.id, id);
   }
 
   @Patch(':id')

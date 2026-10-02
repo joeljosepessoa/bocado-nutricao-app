@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AiFeatureKey, LoadUnit } from '@prisma/client';
 import { ExercisesService } from '../../../exercises/exercises.service';
+import { withoutPresignedUrls } from '../../../exercises/exercise-media-storage.service';
 import {
   buildCatalogIndex,
   CatalogExerciseRef,
@@ -173,6 +174,7 @@ export class OrganizeWorkoutUseCase implements AiUseCase {
       warnings: unique(organized.warnings),
     };
 
-    return { text: JSON.stringify(proposal), structuredData: proposal as unknown as Record<string, unknown> };
+    // `text` vai para o log de interação (banco): sem as URLs temporárias dos GIFs.
+    return { text: JSON.stringify(proposal, withoutPresignedUrls), structuredData: proposal as unknown as Record<string, unknown> };
   }
 }

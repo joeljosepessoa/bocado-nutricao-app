@@ -10,6 +10,26 @@ const goodProd = {
 };
 
 describe('checkRuntimeConfig', () => {
+  it('mídia de exercício (R2): opcional — desativada só avisa; pela metade impede o boot sem citar valores', () => {
+    expect(checkRuntimeConfig(getter(goodProd)).warnings.join(' ')).toMatch(/EXERCISE_MEDIA_S3_/);
+
+    const partial = checkRuntimeConfig(getter({ ...goodProd, EXERCISE_MEDIA_S3_SECRET_ACCESS_KEY: 'segredo-r2-teste' }));
+    expect(partial.errors.join(' ')).toMatch(/EXERCISE_MEDIA_S3_BUCKET ausente/);
+    expect(partial.errors.join(' ')).not.toContain('segredo-r2-teste');
+
+    const complete = checkRuntimeConfig(
+      getter({
+        ...goodProd,
+        EXERCISE_MEDIA_S3_BUCKET: 'bocado-nutricao-gifs',
+        EXERCISE_MEDIA_S3_ENDPOINT: 'https://conta-teste.r2.cloudflarestorage.com',
+        EXERCISE_MEDIA_S3_ACCESS_KEY_ID: 'id',
+        EXERCISE_MEDIA_S3_SECRET_ACCESS_KEY: 'segredo',
+      }),
+    );
+    expect(complete.errors).toEqual([]);
+    expect(complete.warnings.join(' ')).not.toMatch(/EXERCISE_MEDIA_S3_/);
+  });
+
   it('fora de produção não exige nada (dev/teste continuam livres)', () => {
     expect(checkRuntimeConfig(getter({}))).toEqual({ errors: [], warnings: [] });
     expect(checkRuntimeConfig(getter({ NODE_ENV: 'test', JWT_ACCESS_SECRET: 'curto' })).errors).toEqual([]);
@@ -102,6 +122,10 @@ describe('checkRuntimeConfig', () => {
       ANTHROPIC_API_KEY: 'x',
       ANTHROPIC_MODEL: 'claude-opus-5',
       TRUST_PROXY: '1',
+      EXERCISE_MEDIA_S3_BUCKET: 'bocado-nutricao-gifs',
+      EXERCISE_MEDIA_S3_ENDPOINT: 'https://conta-teste.r2.cloudflarestorage.com',
+      EXERCISE_MEDIA_S3_ACCESS_KEY_ID: 'x',
+      EXERCISE_MEDIA_S3_SECRET_ACCESS_KEY: 'x',
     };
     expect(checkRuntimeConfig(getter(env))).toEqual({ errors: [], warnings: [] });
   });

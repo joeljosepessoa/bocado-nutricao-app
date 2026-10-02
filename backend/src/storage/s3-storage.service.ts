@@ -8,6 +8,7 @@ import {
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { createS3Client } from './s3-client';
 import { buildStorageKey, StorageService } from './storage.service';
 
 /**
@@ -34,15 +35,11 @@ export class S3StorageService extends StorageService {
       // "bucket padrão" possível de assumir.
       throw new Error('STORAGE_PROVIDER=s3 requer S3_BUCKET configurado (.env).');
     }
-    const region = this.config.get<string>('S3_REGION') ?? 'us-east-1';
-    const endpoint = this.config.get<string>('S3_ENDPOINT');
-    const accessKeyId = this.config.get<string>('S3_ACCESS_KEY_ID');
-    const secretAccessKey = this.config.get<string>('S3_SECRET_ACCESS_KEY');
-
-    this.client = new S3Client({
-      region,
-      ...(endpoint ? { endpoint, forcePathStyle: true } : {}),
-      ...(accessKeyId && secretAccessKey ? { credentials: { accessKeyId, secretAccessKey } } : {}),
+    this.client = createS3Client({
+      region: this.config.get<string>('S3_REGION') ?? 'us-east-1',
+      endpoint: this.config.get<string>('S3_ENDPOINT'),
+      accessKeyId: this.config.get<string>('S3_ACCESS_KEY_ID'),
+      secretAccessKey: this.config.get<string>('S3_SECRET_ACCESS_KEY'),
     });
   }
 

@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { NotificationEventType, WorkoutAuditAction, WorkoutVersionStatus } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { ExercisesService } from '../exercises/exercises.service';
+import { PRIMARY_EXERCISE_MEDIA_QUERY } from '../exercises/exercise-media-storage.service';
 import { NotificationDispatchService } from '../notifications/notification-dispatch.service';
 import { WorkoutAuditLogService } from './workout-audit-log.service';
 import { CreateWorkoutDto } from './dto/create-workout.dto';
@@ -36,7 +37,16 @@ const VERSION_DETAIL_INCLUDE = {
       exercises: {
         include: {
           exercise: {
-            select: { id: true, name: true, type: true, muscleGroup: true, equipment: true, videoUrl: true, imageUrl: true },
+            select: {
+              id: true,
+              name: true,
+              type: true,
+              muscleGroup: true,
+              equipment: true,
+              videoUrl: true,
+              imageUrl: true,
+              media: PRIMARY_EXERCISE_MEDIA_QUERY,
+            },
           },
           sets: true,
         },
@@ -67,6 +77,21 @@ export class WorkoutsService {
     private readonly auditLog: WorkoutAuditLogService,
     private readonly notifications: NotificationDispatchService,
   ) {}
+
+  /** `imageUrl` de cada exercício resolvido (mídia do R2 → imageUrl gravado), sem expor a relação `media`. */
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  private async withDisplayMedia(version: any) {
+    const days = await Promise.all(
+      version.days.map(async (day: any) => ({
+        ...day,
+        exercises: await Promise.all(
+          day.exercises.map(async (ex: any) => ({ ...ex, exercise: await this.exercisesService.toDisplay(ex.exercise) })),
+        ),
+      })),
+    );
+    return { ...version, days };
+  }
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   private async assertOwnedClient(professionalId: string, clientId: string) {
     const client = await this.prisma.client.findFirst({ where: { id: clientId, professionalId } });
@@ -314,7 +339,7 @@ export class WorkoutsService {
       });
     }
 
-    return sortVersionDetail(version);
+    return this.withDisplayMedia(sortVersionDetail(version));
   }
 
   async createVersion(professionalId: string, clientId: string, workoutId: string, meta: RequestMeta = {}) {
@@ -968,7 +993,7 @@ export class WorkoutsService {
     if (!version) {
       return null;
     }
-    return WorkoutClientSummaryDto.fromPublishedVersion(sortVersionDetail(version));
+    return WorkoutClientSummaryDto.fromPublishedVersion(await this.withDisplayMedia(sortVersionDetail(version)));
   }
 
   /**

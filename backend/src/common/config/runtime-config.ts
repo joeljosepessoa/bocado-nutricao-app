@@ -1,4 +1,5 @@
 import { AI_PROVIDER_IDS, AI_PROVIDERS, resolveAiProviderId } from '../../ai/providers/ai-provider-catalog';
+import { readExerciseMediaStorageConfig } from '../../exercises/exercise-media-storage.service';
 
 export interface RuntimeConfigReport {
   /** Impedem o boot em produção (segurança/funcionamento). */
@@ -72,6 +73,12 @@ export function checkRuntimeConfig(get: Getter): RuntimeConfigReport {
     );
   }
 
+  // Mídia de exercício (R2) é opcional; configurada pela metade, não.
+  const exerciseMedia = readExerciseMediaStorageConfig(get);
+  if (exerciseMedia.status === 'invalid') {
+    report.errors.push(`Mídia de exercício (R2) com configuração incompleta: ${exerciseMedia.problems.join('; ')}.`);
+  }
+
   if (!get('PASSWORD_RESET_URL')) {
     report.warnings.push('PASSWORD_RESET_URL não definida: o link de redefinição de senha apontará para localhost.');
   }
@@ -89,6 +96,9 @@ export function checkRuntimeConfig(get: Getter): RuntimeConfigReport {
   }
   if (ai.kind === 'available' && ai.id === 'mock-local') {
     report.warnings.push('AI_PROVIDER=mock-local: IA simulada (nenhum provedor real).');
+  }
+  if (exerciseMedia.status === 'disabled') {
+    report.warnings.push('EXERCISE_MEDIA_S3_* não configurado: GIFs do catálogo no R2 não são exibidos (só imageUrl gravado).');
   }
   if (!get('TRUST_PROXY')) {
     report.warnings.push('TRUST_PROXY não definido: atrás de proxy/load balancer o rate limit e os IPs de auditoria usarão o IP do proxy.');

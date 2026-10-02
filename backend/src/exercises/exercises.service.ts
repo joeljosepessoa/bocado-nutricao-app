@@ -5,6 +5,7 @@ import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import type { CatalogExerciseRef } from './exercise-name-matching';
+import { ExerciseMediaStorage, PRIMARY_EXERCISE_MEDIA_QUERY } from './exercise-media-storage.service';
 
 const LOCKED_IDENTITY_FIELDS = ['name', 'muscleGroup', 'equipment', 'type'] as const;
 // Teto de sanidade: acima disso o matching só deixa de achar (vira "não encontrado"), nunca associa errado.
@@ -12,7 +13,10 @@ const CATALOG_MATCHING_LIMIT = 5000;
 
 @Injectable()
 export class ExercisesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mediaStorage: ExerciseMediaStorage,
+  ) {}
 
   // Fase 15: mesma regra de foods.service.ts — global só é visível a outros
   // depois de aprovado; o próprio criador vê o que criou enquanto pendente.
@@ -27,8 +31,9 @@ export class ExercisesService {
   }
 
   async create(professionalId: string, dto: CreateExerciseDto) {
+    this.mediaStorage.assertPersistableImageUrl(dto.imageUrl);
     const scope = dto.scope ?? ExerciseScope.global;
-    return this.prisma.exercise.create({
+    const exercise = await this.prisma.exercise.create({
       data: {
         name: dto.name,
         description: dto.description,
@@ -43,28 +48,49 @@ export class ExercisesService {
         createdByProfessionalId: professionalId,
       },
     });
+    return this.mediaStorage.toDisplay(exercise);
   }
 
   async list(professionalId: string, search?: string, type?: string) {
-    return this.prisma.exercise.findMany({
+    const exercises = await this.prisma.exercise.findMany({
       where: {
         ...this.visibilityFilter(professionalId),
         ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
         ...(type ? { type: type as never } : {}),
       },
+      include: { media: PRIMARY_EXERCISE_MEDIA_QUERY },
       orderBy: { name: 'asc' },
       take: 100,
     });
+    return Promise.all(exercises.map((exercise) => this.mediaStorage.toDisplay(exercise)));
   }
 
   /** Catálogo visível ao profissional (mesmo filtro de `list`), só os campos usados no matching por nome. */
   async listVisibleCatalogRefs(professionalId: string): Promise<CatalogExerciseRef[]> {
-    return this.prisma.exercise.findMany({
+    const refs = await this.prisma.exercise.findMany({
       where: this.visibilityFilter(professionalId),
-      select: { id: true, name: true, muscleGroup: true, equipment: true, imageUrl: true },
+      select: { id: true, name: true, muscleGroup: true, equipment: true, imageUrl: true, media: PRIMARY_EXERCISE_MEDIA_QUERY },
       orderBy: { name: 'asc' },
       take: CATALOG_MATCHING_LIMIT,
     });
+    return Promise.all(refs.map((ref) => this.mediaStorage.toDisplay(ref)));
+  }
+
+  /** `imageUrl` para exibição (mídia do R2 → imageUrl gravado) de um exercício já carregado com `media`. */
+  toDisplay<T extends { imageUrl: string | null; media?: Array<{ storageKey: string }> }>(exercise: T) {
+    return this.mediaStorage.toDisplay(exercise);
+  }
+
+  /** `findVisible` para a resposta HTTP: com a mídia resolvida. Uso interno segue com `findVisible`. */
+  async findVisibleForDisplay(professionalId: string, exerciseId: string) {
+    const exercise = await this.prisma.exercise.findFirst({
+      where: { id: exerciseId, ...this.visibilityFilter(professionalId) },
+      include: { media: PRIMARY_EXERCISE_MEDIA_QUERY },
+    });
+    if (!exercise) {
+      throw new NotFoundException('Exercício não encontrado.');
+    }
+    return this.mediaStorage.toDisplay(exercise);
   }
 
   /** Mesmo critério de `findVisible`, para vários ids numa consulta só — falha se qualquer um não for visível. */
@@ -90,6 +116,7 @@ export class ExercisesService {
   }
 
   async update(user: AuthenticatedUser, exerciseId: string, dto: UpdateExerciseDto) {
+    this.mediaStorage.assertPersistableImageUrl(dto.imageUrl);
     const exercise = await this.findVisible(user.id, exerciseId);
 
     const isOwner = exercise.scope === ExerciseScope.private && exercise.ownerProfessionalId === user.id;
@@ -116,7 +143,7 @@ export class ExercisesService {
       }
     }
 
-    return this.prisma.exercise.update({
+    const updated = await this.prisma.exercise.update({
       where: { id: exerciseId },
       data: {
         name: dto.name,
@@ -128,6 +155,8 @@ export class ExercisesService {
         videoUrl: dto.videoUrl,
         imageUrl: dto.imageUrl,
       },
+      include: { media: PRIMARY_EXERCISE_MEDIA_QUERY },
     });
+    return this.mediaStorage.toDisplay(updated);
   }
 }
