@@ -703,10 +703,32 @@ model Exercise {
   createdBy Professional  @relation("ExerciseCreatedBy", fields: [createdByProfessionalId], references: [id], onDelete: Restrict)
 
   workoutExercises WorkoutExercise[]
+  media            ExerciseMedia[]
 
   @@index([name])
   @@index([scope, ownerProfessionalId])
   @@map("exercises")
+}
+
+// Mídia de demonstração (GIF) guardada em object storage dedicado (R2 privado),
+// separado do storage de fotos/PDFs. Só a chave fica no banco — a URL de acesso
+// é temporária e gerada pelo backend. Exercise.imageUrl segue para URLs externas.
+model ExerciseMedia {
+  id          String   @id @default(uuid())
+  exerciseId  String   @map("exercise_id")
+  storageKey  String   @map("storage_key")
+  contentType String   @map("content_type")
+  sizeBytes   Int      @map("size_bytes")
+  sha256      String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+
+  @@index([exerciseId])
+  @@index([storageKey])
+  @@index([sha256])
+  @@map("exercise_media")
 }
 
 model Workout {
