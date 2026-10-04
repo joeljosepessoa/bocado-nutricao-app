@@ -6,6 +6,7 @@ import {
   buildMatchContext,
   buildReport,
   buildReviewCsv,
+  decodeTextFile,
   parseBucketListing,
   parseInventoryCsv,
   PilotEntry,
@@ -41,10 +42,13 @@ function main() {
   const aliases = readJson<{ exercises: AliasEntry[] }>('exercise-media-aliases.json').exercises;
   const pilot = readJson<PilotEntry[]>('exercise-media-pilot.json');
   const context = buildMatchContext(aliases, pilot, catalogNames);
-  const listing = listingPath ? parseBucketListing(readFileSync(listingPath, 'utf-8')) : undefined;
+  const listing = listingPath ? parseBucketListing(decodeTextFile(readFileSync(listingPath))) : undefined;
+  if (listing && listing.objects.length === 0) {
+    throw new Error(`Listagem do bucket sem nenhuma chave exercises/...gif reconhecida: ${listingPath}`);
+  }
 
   const manifest = buildManifest(rows, context, listing);
-  const report = buildReport(manifest, catalogNames);
+  const report = buildReport(manifest, catalogNames, listing);
 
   writeFileSync(join(DATA_DIR, 'exercise-media-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
   writeFileSync(join(DATA_DIR, 'exercise-media-match-report.json'), `${JSON.stringify(report, null, 2)}\n`);
@@ -57,8 +61,14 @@ function main() {
       `Exercícios com GIF: ${report.exercisesWithGif.length}/${report.catalogExercises}. ` +
       `Chaves: ${report.storageKeys.verifiedByListing} conferidas na listagem do bucket, ${report.storageKeys.derived} deduzidas.`,
   );
-  if (listing && listing.size > 0 && report.storageKeys.derived > 0) {
-    console.warn(`Atenção: ${report.storageKeys.derived} GIF(s) do inventário não aparecem (com o mesmo tamanho) na listagem do bucket.`);
+  if (report.r2Listing) {
+    const r2 = report.r2Listing;
+    console.log(
+      `Listagem do R2: ${r2.objectsInBucket} objeto(s); ${r2.inventoryConfirmed} confirmados no inventário; ` +
+        `ausentes ${r2.missingInBucket.length}, tamanho divergente ${r2.sizeMismatch.length}, ambíguos ${r2.ambiguousInBucket.length}, ` +
+        `no bucket e fora do inventário ${r2.bucketObjectsNotInInventory.length}. ` +
+        `Vínculos seguros confirmados: ${r2.safeLinks.confirmed}; rebaixados para REVIEW: ${r2.safeLinks.rejected.length}.`,
+    );
   }
 }
 

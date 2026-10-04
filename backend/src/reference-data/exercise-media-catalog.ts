@@ -63,6 +63,30 @@ export interface ManifestEntry {
   confidence: MatchConfidence;
   reason: string;
   candidates: string[];
+  /** Só com listagem do bucket: resultado da conferência da chave real. */
+  r2Check?: R2Check;
+  /** Vínculo seguro rebaixado para REVIEW porque a chave não foi confirmada na listagem real. */
+  unconfirmedMatch?: { status: 'EXACT' | 'MATCHED'; exerciseName: string };
+}
+
+export type R2Check = 'confirmed' | 'missing' | 'size-mismatch' | 'ambiguous';
+
+// --- Leitura de arquivo texto -----------------------------------------------
+
+/**
+ * Texto de arquivo gerado no Windows: UTF-16 (padrão do `>` do PowerShell),
+ * UTF-8 com ou sem BOM.
+ */
+export function decodeTextFile(buffer: Buffer): string {
+  if (buffer[0] === 0xff && buffer[1] === 0xfe) {
+    return buffer.subarray(2).toString('utf16le');
+  }
+  if (buffer[0] === 0xfe && buffer[1] === 0xff) {
+    const swapped = Buffer.from(buffer.subarray(2));
+    swapped.swap16();
+    return swapped.toString('utf16le');
+  }
+  return buffer.toString('utf-8').replace(/^﻿/, '');
 }
 
 // --- CSV do inventário ------------------------------------------------------
@@ -289,35 +313,58 @@ export function matchGif(row: InventoryRow, normalizedName: string, context: Mat
 
 // --- Listagem real do bucket (opcional) -------------------------------------
 
+export interface ListedObject {
+  storageKey: string;
+  sizeBytes: number;
+}
+
+export interface BucketListing {
+  objects: ListedObject[];
+  /** Nome do arquivo → objeto(s) com esse nome (mais de um = ambíguo, nunca escolhe). */
+  byFileName: Map<string, ListedObject[]>;
+}
+
 /**
  * Lê a saída de `aws s3 ls s3://<bucket>/exercises/ --recursive` (data, hora,
  * tamanho, chave). Só chaves e tamanhos — nenhuma credencial passa por aqui.
  */
-export function parseBucketListing(text: string): Map<string, { storageKey: string; sizeBytes: number }> {
-  const byFileName = new Map<string, { storageKey: string; sizeBytes: number }>();
+export function parseBucketListing(text: string): BucketListing {
+  const objects: ListedObject[] = [];
+  const byFileName = new Map<string, ListedObject[]>();
   for (const line of text.split(/\r?\n/)) {
     const match = /^\S+\s+\S+\s+(\d+)\s+(exercises\/.+\.gif)\s*$/i.exec(line.trim());
     if (!match) continue;
-    const storageKey = match[2];
-    byFileName.set(storageKey.slice(storageKey.lastIndexOf('/') + 1), { storageKey, sizeBytes: Number(match[1]) });
+    const object = { storageKey: match[2], sizeBytes: Number(match[1]) };
+    objects.push(object);
+    const fileName = object.storageKey.slice(object.storageKey.lastIndexOf('/') + 1);
+    byFileName.set(fileName, [...(byFileName.get(fileName) ?? []), object]);
   }
-  return byFileName;
+  return { objects, byFileName };
+}
+
+function checkAgainstListing(row: InventoryRow, listing: BucketListing): { check: R2Check; object?: ListedObject } {
+  const listed = listing.byFileName.get(row.fileName) ?? [];
+  if (listed.length === 0) return { check: 'missing' };
+  if (listed.length > 1) return { check: 'ambiguous' };
+  if (listed[0].sizeBytes !== row.sizeBytes) return { check: 'size-mismatch' };
+  return { check: 'confirmed', object: listed[0] };
 }
 
 // --- Manifesto e relatório --------------------------------------------------
 
-export function buildManifest(
-  rows: InventoryRow[],
-  context: MatchContext,
-  listing?: Map<string, { storageKey: string; sizeBytes: number }>,
-): ManifestEntry[] {
+/**
+ * Com listagem do bucket, a chave do manifesto é a chave REAL (mesmo arquivo,
+ * mesmo tamanho) e um vínculo seguro só continua EXACT/MATCHED se a chave foi
+ * confirmada — senão vira REVIEW, com o motivo.
+ */
+export function buildManifest(rows: InventoryRow[], context: MatchContext, listing?: BucketListing): ManifestEntry[] {
   return rows.map((row) => {
     const normalizedName = normalizeGifName(row.fileName);
-    const listed = listing?.get(row.fileName);
-    const fromListing = listed && listed.sizeBytes === row.sizeBytes ? listed : undefined;
-    return {
-      storageKey: fromListing?.storageKey ?? deriveStorageKey(row),
-      storageKeySource: fromListing ? 'r2-listing' : 'derived',
+    const match = matchGif(row, normalizedName, context);
+    const listed = listing ? checkAgainstListing(row, listing) : undefined;
+    const entry: ManifestEntry = {
+      storageKey: listed?.object?.storageKey ?? deriveStorageKey(row),
+      storageKeySource: listed?.object ? 'r2-listing' : 'derived',
       fileName: row.fileName,
       equipment: equipmentSlug(row.equipmentFolder),
       muscleGroup: slugify(row.muscleGroupFolder),
@@ -325,9 +372,57 @@ export function buildManifest(
       sha256: row.sha256,
       sizeBytes: row.sizeBytes,
       contentType: GIF_CONTENT_TYPE,
-      ...matchGif(row, normalizedName, context),
+      ...match,
+      ...(listed ? { r2Check: listed.check } : {}),
     };
+    const safe = match.matchStatus === 'EXACT' || match.matchStatus === 'MATCHED';
+    if (listed && listed.check !== 'confirmed' && safe) {
+      return {
+        ...entry,
+        exerciseName: null,
+        matchStatus: 'REVIEW',
+        confidence: 'low',
+        reason: `vínculo ${match.matchStatus} não confirmado na listagem real do R2 (${listed.check})`,
+        candidates: [match.exerciseName!],
+        unconfirmedMatch: { status: match.matchStatus as 'EXACT' | 'MATCHED', exerciseName: match.exerciseName! },
+      };
+    }
+    return entry;
   });
+}
+
+export interface ListingReport {
+  objectsInBucket: number;
+  inventoryConfirmed: number;
+  missingInBucket: string[];
+  sizeMismatch: string[];
+  ambiguousInBucket: string[];
+  bucketObjectsNotInInventory: string[];
+  safeLinks: { confirmed: number; rejected: { fileName: string; exerciseName: string; status: string; check: R2Check }[] };
+}
+
+export function buildListingReport(manifest: ManifestEntry[], listing: BucketListing): ListingReport {
+  const confirmedKeys = new Set(manifest.filter((entry) => entry.r2Check === 'confirmed').map((entry) => entry.storageKey));
+  const files = (check: R2Check) => manifest.filter((entry) => entry.r2Check === check).map((entry) => entry.fileName);
+  return {
+    objectsInBucket: listing.objects.length,
+    inventoryConfirmed: confirmedKeys.size,
+    missingInBucket: files('missing'),
+    sizeMismatch: files('size-mismatch'),
+    ambiguousInBucket: files('ambiguous'),
+    bucketObjectsNotInInventory: listing.objects.filter((object) => !confirmedKeys.has(object.storageKey)).map((object) => object.storageKey),
+    safeLinks: {
+      confirmed: manifest.filter((entry) => (entry.matchStatus === 'EXACT' || entry.matchStatus === 'MATCHED') && entry.r2Check === 'confirmed').length,
+      rejected: manifest
+        .filter((entry) => entry.unconfirmedMatch)
+        .map((entry) => ({
+          fileName: entry.fileName,
+          exerciseName: entry.unconfirmedMatch!.exerciseName,
+          status: entry.unconfirmedMatch!.status,
+          check: entry.r2Check!,
+        })),
+    },
+  };
 }
 
 export interface MatchReport {
@@ -344,6 +439,7 @@ export interface MatchReport {
   reviewCandidates: { exerciseName: string; gifs: number }[];
   topReviewNames: { normalizedName: string; count: number; candidates: string[] }[];
   topUnmatchedNames: { normalizedName: string; count: number }[];
+  r2Listing?: ListingReport;
 }
 
 function countBy<T>(items: T[], key: (item: T) => string): Map<string, number> {
@@ -354,7 +450,7 @@ function countBy<T>(items: T[], key: (item: T) => string): Map<string, number> {
 
 const sortedCounts = (counts: Map<string, number>) => [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 
-export function buildReport(manifest: ManifestEntry[], catalogNames: string[]): MatchReport {
+export function buildReport(manifest: ManifestEntry[], catalogNames: string[], listing?: BucketListing): MatchReport {
   const linked = manifest.filter((entry) => entry.exerciseName && (entry.matchStatus === 'EXACT' || entry.matchStatus === 'MATCHED'));
   const perExercise = countBy(linked, (entry) => entry.exerciseName!);
   const review = manifest.filter((entry) => entry.matchStatus === 'REVIEW');
@@ -400,6 +496,7 @@ export function buildReport(manifest: ManifestEntry[], catalogNames: string[]): 
     topUnmatchedNames: sortedCounts(countBy(unmatched, (entry) => entry.normalizedName))
       .slice(0, 60)
       .map(([normalizedName, count]) => ({ normalizedName, count })),
+    ...(listing ? { r2Listing: buildListingReport(manifest, listing) } : {}),
   };
 }
 

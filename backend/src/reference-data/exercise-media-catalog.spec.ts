@@ -6,6 +6,7 @@ import {
   buildMatchContext,
   buildReport,
   buildReviewCsv,
+  decodeTextFile,
   deriveStorageKey,
   InventoryRow,
   ManifestEntry,
@@ -155,6 +156,60 @@ describe('inventário, listagem do bucket, manifesto e relatório', () => {
   it('recusa inventário com cabeçalho ou linha inválidos', () => {
     expect(() => parseInventoryCsv('"a","b"\n"1","2"')).toThrow(/cabeçalho/);
     expect(() => parseInventoryCsv(csv.replace(SHA('b'), 'nao-e-sha'))).toThrow(/linha 4/);
+  });
+
+  it('lê a listagem salva em UTF-16 pelo PowerShell (e UTF-8 com/sem BOM)', () => {
+    const line = '2026-10-02 11:35:15    100 exercises/barras/perna/Barbell-Full-Squat_Thighs.gif\r\n';
+    const utf16 = Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(line, 'utf16le')]);
+    for (const buffer of [utf16, Buffer.from(`﻿${line}`, 'utf-8'), Buffer.from(line, 'utf-8')]) {
+      expect(parseBucketListing(decodeTextFile(buffer)).objects).toEqual([
+        { storageKey: 'exercises/barras/perna/Barbell-Full-Squat_Thighs.gif', sizeBytes: 100 },
+      ]);
+    }
+  });
+
+  it('com listagem: vínculo seguro só continua EXACT/MATCHED com a chave confirmada; senão vira REVIEW com o motivo', () => {
+    const listing = parseBucketListing(
+      [
+        // primeiro arquivo: tamanho diferente do inventário
+        '2026-10-01 20:40:12        999 exercises/barras/perna/Barbell-Full-Squat_Thighs.gif',
+        // segundo: confirmado
+        '2026-10-01 20:40:12        100 exercises/barras/perna/Barbell-Full-Squat-(female)_Thighs.gif',
+        // objeto do bucket fora do inventário
+        '2026-10-01 20:40:12         50 exercises/barras/perna/Extra.gif',
+      ].join('\n'),
+    );
+    const manifest = buildManifest(parseInventoryCsv(csv), context(), listing);
+    expect(manifest[0]).toMatchObject({
+      matchStatus: 'REVIEW',
+      exerciseName: null,
+      r2Check: 'size-mismatch',
+      candidates: ['Agachamento livre'],
+      unconfirmedMatch: { status: 'MATCHED', exerciseName: 'Agachamento livre' },
+      storageKeySource: 'derived',
+    });
+    expect(manifest[1]).toMatchObject({ matchStatus: 'MATCHED', r2Check: 'confirmed', storageKeySource: 'r2-listing' });
+    expect(manifest[3]).toMatchObject({ matchStatus: 'UNMATCHED', r2Check: 'missing' });
+    expect(() => validateManifest(manifest)).not.toThrow();
+
+    const report = buildReport(manifest, CATALOG, listing).r2Listing!;
+    expect(report).toMatchObject({ objectsInBucket: 3, inventoryConfirmed: 1, sizeMismatch: ['Barbell-Full-Squat_Thighs.gif'] });
+    expect(report.missingInBucket).toEqual(['Barbell-Preacher-Curl_Arms.gif', 'Kettlebell-Halo_Shoulders.gif']);
+    expect(report.bucketObjectsNotInInventory).toEqual(['exercises/barras/perna/Barbell-Full-Squat_Thighs.gif', 'exercises/barras/perna/Extra.gif']);
+    expect(report.safeLinks).toEqual({
+      confirmed: 1,
+      rejected: [{ fileName: 'Barbell-Full-Squat_Thighs.gif', exerciseName: 'Agachamento livre', status: 'MATCHED', check: 'size-mismatch' }],
+    });
+  });
+
+  it('mesmo nome de arquivo em duas pastas do bucket é ambíguo — nunca escolhe uma', () => {
+    const listing = parseBucketListing(
+      [
+        '2026-10-01 20:40:12        100 exercises/barras/perna/Barbell-Full-Squat-(female)_Thighs.gif',
+        '2026-10-01 20:40:12        100 exercises/maquinas/perna/Barbell-Full-Squat-(female)_Thighs.gif',
+      ].join('\n'),
+    );
+    expect(buildManifest(parseInventoryCsv(csv), context(), listing)[1]).toMatchObject({ matchStatus: 'REVIEW', r2Check: 'ambiguous' });
   });
 
   it('listagem real do bucket substitui a chave deduzida (mesmo arquivo e tamanho)', () => {

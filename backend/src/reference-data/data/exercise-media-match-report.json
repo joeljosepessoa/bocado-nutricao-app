@@ -7,8 +7,8 @@
     "UNMATCHED": 1451
   },
   "storageKeys": {
-    "derived": 2092,
-    "verifiedByListing": 0
+    "derived": 0,
+    "verifiedByListing": 2092
   },
   "catalogExercises": 36,
   "exercisesWithGif": [
@@ -1074,5 +1074,17 @@
       "normalizedName": "cable donkey kickback",
       "count": 2
     }
-  ]
+  ],
+  "r2Listing": {
+    "objectsInBucket": 2092,
+    "inventoryConfirmed": 2092,
+    "missingInBucket": [],
+    "sizeMismatch": [],
+    "ambiguousInBucket": [],
+    "bucketObjectsNotInInventory": [],
+    "safeLinks": {
+      "confirmed": 50,
+      "rejected": []
+    }
+  }
 }
