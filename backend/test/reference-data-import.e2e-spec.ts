@@ -10,9 +10,10 @@ const SYSTEM_EMAIL = 'sistema.catalogo@bocadodenutricao.com.br';
 const FOODS_COUNT = (
   JSON.parse(readFileSync(join(__dirname, '../src/reference-data/data/foods.json'), 'utf-8')) as unknown[]
 ).length;
-const EXERCISES_COUNT = (
-  JSON.parse(readFileSync(join(__dirname, '../src/reference-data/data/exercises.json'), 'utf-8')) as unknown[]
-).length;
+const EXERCISE_NAMES = (
+  JSON.parse(readFileSync(join(__dirname, '../src/reference-data/data/exercises.json'), 'utf-8')) as { name: string }[]
+).map((exercise) => exercise.name);
+const EXERCISES_COUNT = EXERCISE_NAMES.length;
 
 describe('Importação de dados de referência (F14)', () => {
   afterAll(async () => {
@@ -78,6 +79,61 @@ describe('Importação de dados de referência (F14)', () => {
 
     const totalExercises = await prisma.exercise.count({ where: { createdByProfessionalId: first.systemProfessionalId } });
     expect(totalExercises).toBe(EXERCISES_COUNT);
+  });
+
+  it('os 36 exercícios do catálogo oficial ficam aprovados (visíveis aos profissionais); pendente oficial é aprovado, aprovação existente não muda', async () => {
+    const { systemProfessionalId } = await importReferenceData(prisma);
+    const official = await prisma.exercise.findMany({ where: { createdByProfessionalId: systemProfessionalId, name: { in: EXERCISE_NAMES } } });
+    expect(official).toHaveLength(EXERCISES_COUNT);
+    expect(official.every((exercise) => exercise.approvedAt !== null)).toBe(true);
+
+    // Um oficial que ficou pendente (ex.: importado antes desta regra) é aprovado na próxima execução.
+    const target = official[0];
+    await prisma.exercise.update({ where: { id: target.id }, data: { approvedAt: null } });
+    const rerun = await importReferenceData(prisma);
+    expect(rerun.exercises).toMatchObject({ created: 0, skipped: EXERCISES_COUNT, approved: 1 });
+    const reapproved = await prisma.exercise.findUniqueOrThrow({ where: { id: target.id } });
+    expect(reapproved.approvedAt).not.toBeNull();
+
+    // Aprovação já existente é preservada (não sobrescreve a data).
+    const again = await importReferenceData(prisma);
+    expect(again.exercises.approved).toBe(0);
+    expect((await prisma.exercise.findUniqueOrThrow({ where: { id: target.id } })).approvedAt).toEqual(reapproved.approvedAt);
+  });
+
+  it('não aprova nada fora do catálogo oficial, não importa ExerciseMedia e não grava URL', async () => {
+    const { systemProfessionalId } = await importReferenceData(prisma);
+    const tag = Date.now();
+    // Mesmo nome de um oficial, mas de um profissional; e um exercício do sistema fora de exercises.json.
+    const professional = await prisma.user.create({
+      data: { email: `prof.ref.${tag}@teste.com`, passwordHash: 'x', fullName: 'Prof teste', role: 'professional', professional: { create: {} } },
+    });
+    const sameNameOtherOwner = await prisma.exercise.create({
+      data: { name: 'Rosca direta', type: 'strength', scope: ExerciseScope.global, createdByProfessionalId: professional.id },
+    });
+    const systemOutsideCatalog = await prisma.exercise.create({
+      data: { name: `Variação não catalogada ${tag}`, type: 'strength', scope: ExerciseScope.global, createdByProfessionalId: systemProfessionalId },
+    });
+    const mediaBefore = await prisma.exerciseMedia.count();
+
+    try {
+      const summary = await importReferenceData(prisma);
+      expect(summary.exercises.created).toBe(0);
+
+      expect((await prisma.exercise.findUniqueOrThrow({ where: { id: sameNameOtherOwner.id } })).approvedAt).toBeNull();
+      expect((await prisma.exercise.findUniqueOrThrow({ where: { id: systemOutsideCatalog.id } })).approvedAt).toBeNull();
+      expect(await prisma.exerciseMedia.count()).toBe(mediaBefore);
+
+      const official = await prisma.exercise.findMany({ where: { createdByProfessionalId: systemProfessionalId, name: { in: EXERCISE_NAMES } } });
+      expect(official).toHaveLength(EXERCISES_COUNT);
+      for (const exercise of official) {
+        expect(`${exercise.imageUrl ?? ''}${exercise.videoUrl ?? ''}`).not.toMatch(/X-Amz|r2\.cloudflarestorage/i);
+      }
+    } finally {
+      await prisma.exercise.deleteMany({ where: { id: { in: [sameNameOtherOwner.id, systemOutsideCatalog.id] } } });
+      await prisma.professional.delete({ where: { id: professional.id } });
+      await prisma.user.delete({ where: { id: professional.id } });
+    }
   });
 
   it('alimento importado tem valores nutricionais reais e rastreáveis (Arroz, tipo 1, cozido)', async () => {

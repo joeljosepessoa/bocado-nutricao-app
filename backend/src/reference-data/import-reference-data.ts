@@ -38,7 +38,7 @@ interface ExerciseSeed {
 export interface ImportSummary {
   systemProfessionalId: string;
   foods: { created: number; skipped: number };
-  exercises: { created: number; skipped: number };
+  exercises: { created: number; skipped: number; approved: number };
 }
 
 async function ensureSystemProfessional(prisma: PrismaClient): Promise<string> {
@@ -98,9 +98,19 @@ async function importFoods(prisma: PrismaClient, systemProfessionalId: string): 
   return { created, skipped };
 }
 
-async function importExercises(prisma: PrismaClient, systemProfessionalId: string): Promise<{ created: number; skipped: number }> {
+/**
+ * Os exercícios de exercises.json SÃO o catálogo oficial: entram já aprovados
+ * (Fase 15 — global só é visível a outros profissionais com approvedAt). Um
+ * oficial que já existia pendente é aprovado; aprovação existente nunca é
+ * sobrescrita. Nada fora desta lista (conta do sistema + nome oficial) é tocado.
+ */
+async function importExercises(
+  prisma: PrismaClient,
+  systemProfessionalId: string,
+): Promise<{ created: number; skipped: number; approved: number }> {
   let created = 0;
   let skipped = 0;
+  let approved = 0;
 
   const exercisesData = loadJson<ExerciseSeed[]>('exercises.json');
   for (const entry of exercisesData) {
@@ -109,6 +119,10 @@ async function importExercises(prisma: PrismaClient, systemProfessionalId: strin
     });
     if (existing) {
       skipped += 1;
+      if (!existing.approvedAt) {
+        await prisma.exercise.update({ where: { id: existing.id }, data: { approvedAt: new Date() } });
+        approved += 1;
+      }
       continue;
     }
 
@@ -121,12 +135,13 @@ async function importExercises(prisma: PrismaClient, systemProfessionalId: strin
         instructions: entry.instructions,
         scope: ExerciseScope.global,
         createdByProfessionalId: systemProfessionalId,
+        approvedAt: new Date(),
       },
     });
     created += 1;
   }
 
-  return { created, skipped };
+  return { created, skipped, approved };
 }
 
 export async function importReferenceData(prisma: PrismaClient): Promise<ImportSummary> {
@@ -142,7 +157,8 @@ async function main() {
     const summary = await importReferenceData(prisma);
     console.log(
       `Alimentos: ${summary.foods.created} criados, ${summary.foods.skipped} já existiam. ` +
-        `Exercícios: ${summary.exercises.created} criados, ${summary.exercises.skipped} já existiam.`,
+        `Exercícios: ${summary.exercises.created} criados, ${summary.exercises.skipped} já existiam ` +
+        `(${summary.exercises.approved} pendente(s) aprovado(s)).`,
     );
   } finally {
     await prisma.$disconnect();
