@@ -1,0 +1,1078 @@
+{
+  "totalGifs": 2092,
+  "byStatus": {
+    "EXACT": 18,
+    "MATCHED": 32,
+    "REVIEW": 591,
+    "UNMATCHED": 1451
+  },
+  "storageKeys": {
+    "derived": 2092,
+    "verifiedByListing": 0
+  },
+  "catalogExercises": 36,
+  "exercisesWithGif": [
+    {
+      "exerciseName": "Panturrilha em pé",
+      "gifs": 7
+    },
+    {
+      "exerciseName": "Remada baixa (polia)",
+      "gifs": 6
+    },
+    {
+      "exerciseName": "Agachamento livre",
+      "gifs": 5
+    },
+    {
+      "exerciseName": "Leg press 45°",
+      "gifs": 4
+    },
+    {
+      "exerciseName": "Levantamento terra",
+      "gifs": 4
+    },
+    {
+      "exerciseName": "Cadeira extensora",
+      "gifs": 3
+    },
+    {
+      "exerciseName": "Afundo (passada)",
+      "gifs": 2
+    },
+    {
+      "exerciseName": "Desenvolvimento militar",
+      "gifs": 2
+    },
+    {
+      "exerciseName": "Elevação pélvica (hip thrust)",
+      "gifs": 2
+    },
+    {
+      "exerciseName": "Remada curvada com barra",
+      "gifs": 2
+    },
+    {
+      "exerciseName": "Rosca direta",
+      "gifs": 2
+    },
+    {
+      "exerciseName": "Supino reto com barra",
+      "gifs": 2
+    },
+    {
+      "exerciseName": "Tríceps corda (polia)",
+      "gifs": 2
+    },
+    {
+      "exerciseName": "Barra fixa (pull-up)",
+      "gifs": 1
+    },
+    {
+      "exerciseName": "Crucifixo com halteres",
+      "gifs": 1
+    },
+    {
+      "exerciseName": "Elevação lateral",
+      "gifs": 1
+    },
+    {
+      "exerciseName": "Mergulho no banco (bench dip)",
+      "gifs": 1
+    },
+    {
+      "exerciseName": "Mesa flexora",
+      "gifs": 1
+    },
+    {
+      "exerciseName": "Puxada frontal (pulley)",
+      "gifs": 1
+    },
+    {
+      "exerciseName": "Supino inclinado com halteres",
+      "gifs": 1
+    }
+  ],
+  "exercisesWithoutGif": [
+    "Flexão de braço",
+    "Prancha abdominal",
+    "Abdominal supra",
+    "Agachamento livre (peso corporal)",
+    "Burpee",
+    "Escalador (mountain climber)",
+    "Corrida na esteira",
+    "Bicicleta ergométrica",
+    "Pular corda",
+    "Elíptico",
+    "Remo ergométrico",
+    "Alongamento de posterior de coxa",
+    "Alongamento de panturrilha",
+    "Alongamento de peitoral em porta",
+    "Mobilidade de quadril (90/90)",
+    "Rotação de tronco"
+  ],
+  "gifsWithoutExercise": 2042,
+  "exercisesWithMultipleGifs": [
+    {
+      "exerciseName": "Panturrilha em pé",
+      "gifs": 7
+    },
+    {
+      "exerciseName": "Remada baixa (polia)",
+      "gifs": 6
+    },
+    {
+      "exerciseName": "Agachamento livre",
+      "gifs": 5
+    },
+    {
+      "exerciseName": "Leg press 45°",
+      "gifs": 4
+    },
+    {
+      "exerciseName": "Levantamento terra",
+      "gifs": 4
+    },
+    {
+      "exerciseName": "Cadeira extensora",
+      "gifs": 3
+    },
+    {
+      "exerciseName": "Afundo (passada)",
+      "gifs": 2
+    },
+    {
+      "exerciseName": "Desenvolvimento militar",
+      "gifs": 2
+    },
+    {
+      "exerciseName": "Elevação pélvica (hip thrust)",
+      "gifs": 2
+    },
+    {
+      "exerciseName": "Remada curvada com barra",
+      "gifs": 2
+    },
+    {
+      "exerciseName": "Rosca direta",
+      "gifs": 2
+    },
+    {
+      "exerciseName": "Supino reto com barra",
+      "gifs": 2
+    },
+    {
+      "exerciseName": "Tríceps corda (polia)",
+      "gifs": 2
+    }
+  ],
+  "duplicateContent": [
+    {
+      "sha256": "729aa9f747ea207d2d66c5cb014d89aa3dac18f4d1e3f4686d8e1890a3d2a769",
+      "files": [
+        "exercises/halteres/biceps/Dumbbell-Preacher-Curl-over-Exercise-Ball-(female)_Upper-Arms_converted 2.gif",
+        "exercises/halteres/biceps/Dumbbell-Preacher-Curl-over-Exercise-Ball-(female)_Upper-Arms_converted.gif"
+      ]
+    },
+    {
+      "sha256": "afa66ce6b7513e2ca1e7c2039d0facf4cf3bb1f663ed1fc42df652138041b051",
+      "files": [
+        "exercises/halteres/biceps/Dumbbell-Standing-Inner-Biceps-Curl-(version-2)-(f_converted 2.gif",
+        "exercises/halteres/biceps/Dumbbell-Standing-Inner-Biceps-Curl-(version-2)-(f_converted.gif"
+      ]
+    },
+    {
+      "sha256": "3215e74eddf4c06caa4d6302030ec24ff3c562cd633d5585145bab01bd9b58b2",
+      "files": [
+        "exercises/halteres/biceps/Dumbbell-Standing-Single-Arm-Biceps-Curl-(female)__converted 2.gif",
+        "exercises/halteres/biceps/Dumbbell-Standing-Single-Arm-Biceps-Curl-(female)__converted.gif"
+      ]
+    },
+    {
+      "sha256": "2a0be88a72729c8b7d6df4b2b13294478a03e5e828ff95f047e5aa3c74378d4b",
+      "files": [
+        "exercises/halteres/perna/Dumbbell-Plank-Jack-(female)_Plyometrics__converted 2.gif",
+        "exercises/halteres/perna/Dumbbell-Plank-Jack-(female)_Plyometrics__converted.gif"
+      ]
+    },
+    {
+      "sha256": "45f7d4ea4f3dd4a6851867bad8adb4cf53bb6a18f5495bec5956e4994eb40493",
+      "files": [
+        "exercises/halteres/perna/Dumbbell-Staggered-Stance-Romanian-Deadlift-(femal_converted 2.gif",
+        "exercises/halteres/perna/Dumbbell-Staggered-Stance-Romanian-Deadlift-(femal_converted.gif"
+      ]
+    },
+    {
+      "sha256": "edada90fbc527957f363393b40ddcf3f5c9d4811a87e40a65119167cecf7962c",
+      "files": [
+        "exercises/halteres/perna/Dumbell-Glute-Dominant-Bulgarian-Split-Squat-(fema_converted 2.gif",
+        "exercises/halteres/perna/Dumbell-Glute-Dominant-Bulgarian-Split-Squat-(fema_converted.gif"
+      ]
+    },
+    {
+      "sha256": "8499b991429404dd62da3163ab72e5b1cc6b165d3cad823ead8a3e6c35e8d76e",
+      "files": [
+        "exercises/barras/biceps/EZ-Barbell-Close-grip-Curl-(female)_Upper-Arms_converted 2.gif",
+        "exercises/barras/biceps/EZ-Barbell-Close-grip-Curl-(female)_Upper-Arms_converted.gif"
+      ]
+    },
+    {
+      "sha256": "d21a122eac6a6caaa531754d1979de850a5f4c0cec12ef51c07a4032006e9429",
+      "files": [
+        "exercises/barras/biceps/EZ-Barbell-Close-grip-Curl_Upper-Arms__converted 2.gif",
+        "exercises/barras/biceps/EZ-Barbell-Close-grip-Curl_Upper-Arms__converted.gif"
+      ]
+    },
+    {
+      "sha256": "4efa6a71dae046f64d14b9d342dc254c92bf69c06b19cf7c31122d8796c594fc",
+      "files": [
+        "exercises/barras/biceps/EZ-Barbell-Close-Grip-Preacher-Curl_Upper-Arms_converted 2.gif",
+        "exercises/barras/biceps/EZ-Barbell-Close-Grip-Preacher-Curl_Upper-Arms_converted.gif"
+      ]
+    },
+    {
+      "sha256": "cb583b7f1ed141218c05636924c51ae2669fe7338a6ce5a9b5e297cd13d2f19f",
+      "files": [
+        "exercises/barras/costas/Isometric-Hold-Close-Grip-Chin-Up-(female)_Back__converted 2.gif",
+        "exercises/barras/costas/Isometric-Hold-Close-Grip-Chin-Up-(female)_Back__converted.gif"
+      ]
+    },
+    {
+      "sha256": "5bf2f51dc2c72f4416cfb9cd9a3af95baa4eb392f8352f706ca535f073e2298c",
+      "files": [
+        "exercises/maquinas/abdominais/Front-Lever_Waist__converted 2.gif",
+        "exercises/maquinas/abdominais/Front-Lever_Waist__converted.gif"
+      ]
+    },
+    {
+      "sha256": "70c1a42de675f86591ff4ebf872f10ddc571584d5d020e8911419745ab3689ad",
+      "files": [
+        "exercises/maquinas/peito/Smith-Close-Grip-Bench-Press_Upper-Arms_ copy_converted 2.gif",
+        "exercises/maquinas/peito/Smith-Close-Grip-Bench-Press_Upper-Arms_ copy_converted.gif",
+        "exercises/maquinas/peito/Smith-Close-Grip-Bench-Press_Upper-Arms__converted 2.gif",
+        "exercises/maquinas/peito/Smith-Close-Grip-Bench-Press_Upper-Arms__converted.gif"
+      ]
+    },
+    {
+      "sha256": "fd3b247d4c9a59b66c92a681d5fde2bea4ae586a46c21b0c1c13b56155deb222",
+      "files": [
+        "exercises/maquinas/perna/Smith-Chair-Squat_Thighs-FIX__converted 2.gif",
+        "exercises/maquinas/perna/Smith-Chair-Squat_Thighs-FIX__converted.gif"
+      ]
+    },
+    {
+      "sha256": "91f9aa4512a8dfbb80bed482d6f5fee8ecc1505af8f6e9c7bf8aec999e2b4887",
+      "files": [
+        "exercises/kettlebell/perna/Kettlebell-Goblet-Marching-on-Spot-(female)_Cardio_converted 2.gif",
+        "exercises/kettlebell/perna/Kettlebell-Goblet-Marching-on-Spot-(female)_Cardio_converted.gif"
+      ]
+    }
+  ],
+  "muscleGroupFolders": {
+    "barras/perna": 197,
+    "halteres/perna": 191,
+    "maquinas/perna": 166,
+    "cabo-polia/costas": 115,
+    "halteres/peito": 110,
+    "maquinas/costas": 105,
+    "kettlebell/perna": 95,
+    "maquinas/abdominais": 73,
+    "halteres/biceps": 60,
+    "halteres/triceps": 56,
+    "barras/peito": 55,
+    "halteres/costas": 52,
+    "cabo-polia/triceps": 50,
+    "halteres/ombro": 48,
+    "cabo-polia/perna": 47,
+    "maquinas/peito": 47,
+    "barras/biceps": 45,
+    "cabo-polia/abdominais": 44,
+    "cabo-polia/peito": 42,
+    "cabo-polia/biceps": 39,
+    "barras/costas": 37,
+    "cabo-polia/ombro": 34,
+    "kettlebell/ombro": 33,
+    "kettlebell/abdominais": 28,
+    "maquinas/ombro": 27,
+    "barras/ombros": 25,
+    "maquinas/triceps": 25,
+    "barras/antebraco": 22,
+    "halteres/antebraco": 22,
+    "kettlebell/peito": 21,
+    "kettlebell/costas": 18,
+    "maquinas/panturrilha": 17,
+    "barras/triceps": 15,
+    "barras/abdominais": 14,
+    "barras/ombro": 14,
+    "halteres/abdominais": 13,
+    "halteres/trapezio": 13,
+    "cabo-polia/andebraco": 12,
+    "maquinas/biceps": 11,
+    "kettlebell/biceps": 9,
+    "barras/trapezio": 7,
+    "halteres/panturrilhas": 6,
+    "maquinas/trapezio": 6,
+    "barras/panturrilhas": 5,
+    "cabo-polia/trapezio": 5,
+    "kettlebell/trapezio": 5,
+    "kettlebell/triceps": 4,
+    "kettlebell/antebraco": 3,
+    "cabo-polia/antebraco": 2,
+    "kettlebell/panturrilha": 1,
+    "maquinas/antebraco": 1
+  },
+  "reviewCandidates": [
+    {
+      "exerciseName": "Barra fixa (pull-up)",
+      "gifs": 65
+    },
+    {
+      "exerciseName": "Rosca direta",
+      "gifs": 63
+    },
+    {
+      "exerciseName": "Afundo (passada)",
+      "gifs": 56
+    },
+    {
+      "exerciseName": "Agachamento livre",
+      "gifs": 55
+    },
+    {
+      "exerciseName": "Desenvolvimento militar",
+      "gifs": 49
+    },
+    {
+      "exerciseName": "Remada baixa (polia)",
+      "gifs": 31
+    },
+    {
+      "exerciseName": "Elevação lateral",
+      "gifs": 30
+    },
+    {
+      "exerciseName": "Remada curvada com barra",
+      "gifs": 29
+    },
+    {
+      "exerciseName": "Leg press 45°",
+      "gifs": 28
+    },
+    {
+      "exerciseName": "Levantamento terra",
+      "gifs": 28
+    },
+    {
+      "exerciseName": "Puxada frontal (pulley)",
+      "gifs": 28
+    },
+    {
+      "exerciseName": "Supino reto com barra",
+      "gifs": 26
+    },
+    {
+      "exerciseName": "Crucifixo com halteres",
+      "gifs": 25
+    },
+    {
+      "exerciseName": "Elevação pélvica (hip thrust)",
+      "gifs": 20
+    },
+    {
+      "exerciseName": "Flexão de braço",
+      "gifs": 15
+    },
+    {
+      "exerciseName": "Mesa flexora",
+      "gifs": 13
+    },
+    {
+      "exerciseName": "Supino inclinado com halteres",
+      "gifs": 12
+    },
+    {
+      "exerciseName": "Panturrilha em pé",
+      "gifs": 9
+    },
+    {
+      "exerciseName": "Cadeira extensora",
+      "gifs": 8
+    },
+    {
+      "exerciseName": "Mergulho no banco (bench dip)",
+      "gifs": 2
+    },
+    {
+      "exerciseName": "Tríceps corda (polia)",
+      "gifs": 2
+    },
+    {
+      "exerciseName": "Abdominal supra",
+      "gifs": 1
+    }
+  ],
+  "topReviewNames": [
+    {
+      "normalizedName": "barbell rear lunge",
+      "count": 3,
+      "candidates": [
+        "Afundo (passada)"
+      ]
+    },
+    {
+      "normalizedName": "barbell split squat",
+      "count": 3,
+      "candidates": [
+        "Agachamento livre"
+      ]
+    },
+    {
+      "normalizedName": "dumbbell bent over row",
+      "count": 3,
+      "candidates": [
+        "Remada curvada com barra"
+      ]
+    },
+    {
+      "normalizedName": "dumbbell hip thrust",
+      "count": 3,
+      "candidates": [
+        "Elevação pélvica (hip thrust)"
+      ]
+    },
+    {
+      "normalizedName": "assisted pull up",
+      "count": 2,
+      "candidates": [
+        "Barra fixa (pull-up)"
+      ]
+    },
+    {
+      "normalizedName": "barbell bench squat",
+      "count": 2,
+      "candidates": [
+        "Agachamento livre"
+      ]
+    },
+    {
+      "normalizedName": "barbell clean grip front squat",
+      "count": 2,
+      "candidates": [
+        "Agachamento livre"
+      ]
+    },
+    {
+      "normalizedName": "barbell close grip bench press",
+      "count": 2,
+      "candidates": [
+        "Supino reto com barra"
+      ]
+    },
+    {
+      "normalizedName": "barbell curtsey lunge",
+      "count": 2,
+      "candidates": [
+        "Afundo (passada)"
+      ]
+    },
+    {
+      "normalizedName": "barbell decline bench press",
+      "count": 2,
+      "candidates": [
+        "Supino reto com barra"
+      ]
+    },
+    {
+      "normalizedName": "barbell drag curl",
+      "count": 2,
+      "candidates": [
+        "Rosca direta"
+      ]
+    },
+    {
+      "normalizedName": "barbell forward backward lunge",
+      "count": 2,
+      "candidates": [
+        "Afundo (passada)"
+      ]
+    },
+    {
+      "normalizedName": "barbell front rack lunge",
+      "count": 2,
+      "candidates": [
+        "Afundo (passada)"
+      ]
+    },
+    {
+      "normalizedName": "barbell front squat",
+      "count": 2,
+      "candidates": [
+        "Agachamento livre"
+      ]
+    },
+    {
+      "normalizedName": "barbell full zercher squat",
+      "count": 2,
+      "candidates": [
+        "Agachamento livre"
+      ]
+    },
+    {
+      "normalizedName": "barbell incline bench press",
+      "count": 2,
+      "candidates": [
+        "Supino reto com barra"
+      ]
+    },
+    {
+      "normalizedName": "barbell lateral lunge",
+      "count": 2,
+      "candidates": [
+        "Afundo (passada)"
+      ]
+    },
+    {
+      "normalizedName": "barbell low bar squat",
+      "count": 2,
+      "candidates": [
+        "Agachamento livre"
+      ]
+    },
+    {
+      "normalizedName": "barbell lunge",
+      "count": 2,
+      "candidates": [
+        "Afundo (passada)"
+      ]
+    },
+    {
+      "normalizedName": "barbell narrow stance squat",
+      "count": 2,
+      "candidates": [
+        "Agachamento livre"
+      ]
+    },
+    {
+      "normalizedName": "barbell preacher curl",
+      "count": 2,
+      "candidates": [
+        "Rosca direta"
+      ]
+    },
+    {
+      "normalizedName": "barbell prone incline curl",
+      "count": 2,
+      "candidates": [
+        "Rosca direta"
+      ]
+    },
+    {
+      "normalizedName": "barbell reverse curl",
+      "count": 2,
+      "candidates": [
+        "Rosca direta"
+      ]
+    },
+    {
+      "normalizedName": "barbell reverse wrist curl",
+      "count": 2,
+      "candidates": [
+        "Rosca direta"
+      ]
+    },
+    {
+      "normalizedName": "barbell romanian deadlift",
+      "count": 2,
+      "candidates": [
+        "Levantamento terra"
+      ]
+    },
+    {
+      "normalizedName": "barbell seated behind head military press",
+      "count": 2,
+      "candidates": [
+        "Desenvolvimento militar"
+      ]
+    },
+    {
+      "normalizedName": "barbell seated overhead press",
+      "count": 2,
+      "candidates": [
+        "Desenvolvimento militar"
+      ]
+    },
+    {
+      "normalizedName": "barbell single leg split squat",
+      "count": 2,
+      "candidates": [
+        "Agachamento livre"
+      ]
+    },
+    {
+      "normalizedName": "barbell standing back wrist curl",
+      "count": 2,
+      "candidates": [
+        "Rosca direta"
+      ]
+    },
+    {
+      "normalizedName": "barbell standing close grip curl",
+      "count": 2,
+      "candidates": [
+        "Rosca direta"
+      ]
+    },
+    {
+      "normalizedName": "barbell standing close grip military press",
+      "count": 2,
+      "candidates": [
+        "Desenvolvimento militar"
+      ]
+    },
+    {
+      "normalizedName": "barbell standing wide grip curl",
+      "count": 2,
+      "candidates": [
+        "Rosca direta"
+      ]
+    },
+    {
+      "normalizedName": "barbell stiff legged deadlift",
+      "count": 2,
+      "candidates": [
+        "Levantamento terra"
+      ]
+    },
+    {
+      "normalizedName": "barbell straight leg deadlift",
+      "count": 2,
+      "candidates": [
+        "Levantamento terra"
+      ]
+    },
+    {
+      "normalizedName": "barbell sumo deadlift",
+      "count": 2,
+      "candidates": [
+        "Levantamento terra"
+      ]
+    },
+    {
+      "normalizedName": "barbell sumo romanian deadlift",
+      "count": 2,
+      "candidates": [
+        "Levantamento terra"
+      ]
+    },
+    {
+      "normalizedName": "barbell sumo squat",
+      "count": 2,
+      "candidates": [
+        "Agachamento livre"
+      ]
+    },
+    {
+      "normalizedName": "barbell wide bench press",
+      "count": 2,
+      "candidates": [
+        "Supino reto com barra"
+      ]
+    },
+    {
+      "normalizedName": "barbell wide squat",
+      "count": 2,
+      "candidates": [
+        "Agachamento livre"
+      ]
+    },
+    {
+      "normalizedName": "barbell wrist curl",
+      "count": 2,
+      "candidates": [
+        "Rosca direta"
+      ]
+    },
+    {
+      "normalizedName": "cable assisted inverse leg curl",
+      "count": 2,
+      "candidates": [
+        "Mesa flexora"
+      ]
+    },
+    {
+      "normalizedName": "cable close grip front lat pulldown",
+      "count": 2,
+      "candidates": [
+        "Puxada frontal (pulley)"
+      ]
+    },
+    {
+      "normalizedName": "cable incline single arm lat pulldown",
+      "count": 2,
+      "candidates": [
+        "Puxada frontal (pulley)"
+      ]
+    },
+    {
+      "normalizedName": "cable lateral raise",
+      "count": 2,
+      "candidates": [
+        "Elevação lateral"
+      ]
+    },
+    {
+      "normalizedName": "cable neutral grip wide pulldown",
+      "count": 2,
+      "candidates": [
+        "Puxada frontal (pulley)"
+      ]
+    },
+    {
+      "normalizedName": "cable one arm lat pulldown",
+      "count": 2,
+      "candidates": [
+        "Puxada frontal (pulley)"
+      ]
+    },
+    {
+      "normalizedName": "cable one arm lateral raise",
+      "count": 2,
+      "candidates": [
+        "Elevação lateral"
+      ]
+    },
+    {
+      "normalizedName": "cable one arm twisting seated row",
+      "count": 2,
+      "candidates": [
+        "Remada baixa (polia)"
+      ]
+    },
+    {
+      "normalizedName": "cable seated high row v bar",
+      "count": 2,
+      "candidates": [
+        "Remada baixa (polia)"
+      ]
+    },
+    {
+      "normalizedName": "cable seated wide grip row",
+      "count": 2,
+      "candidates": [
+        "Remada baixa (polia)"
+      ]
+    },
+    {
+      "normalizedName": "cable shoulder press",
+      "count": 2,
+      "candidates": [
+        "Desenvolvimento militar"
+      ]
+    },
+    {
+      "normalizedName": "cable straight back seated row",
+      "count": 2,
+      "candidates": [
+        "Remada baixa (polia)"
+      ]
+    },
+    {
+      "normalizedName": "chest dip on dip pull up cage",
+      "count": 2,
+      "candidates": [
+        "Barra fixa (pull-up)"
+      ]
+    },
+    {
+      "normalizedName": "chin up",
+      "count": 2,
+      "candidates": [
+        "Barra fixa (pull-up)"
+      ]
+    },
+    {
+      "normalizedName": "close grip chin up",
+      "count": 2,
+      "candidates": [
+        "Barra fixa (pull-up)"
+      ]
+    },
+    {
+      "normalizedName": "commando pull up",
+      "count": 2,
+      "candidates": [
+        "Barra fixa (pull-up)"
+      ]
+    },
+    {
+      "normalizedName": "dumbbell alternate shoulder press",
+      "count": 2,
+      "candidates": [
+        "Desenvolvimento militar"
+      ]
+    },
+    {
+      "normalizedName": "dumbbell curtsey lunge",
+      "count": 2,
+      "candidates": [
+        "Afundo (passada)"
+      ]
+    },
+    {
+      "normalizedName": "dumbbell decline fly",
+      "count": 2,
+      "candidates": [
+        "Crucifixo com halteres"
+      ]
+    },
+    {
+      "normalizedName": "dumbbell decline twist fly",
+      "count": 2,
+      "candidates": [
+        "Crucifixo com halteres"
+      ]
+    }
+  ],
+  "topUnmatchedNames": [
+    {
+      "normalizedName": "dumbbell standing scapular external rotation",
+      "count": 6
+    },
+    {
+      "normalizedName": "lever triceps extension",
+      "count": 6
+    },
+    {
+      "normalizedName": "lever chest press",
+      "count": 5
+    },
+    {
+      "normalizedName": "cable kneeling crunch",
+      "count": 4
+    },
+    {
+      "normalizedName": "dumbbell close grip press",
+      "count": 4
+    },
+    {
+      "normalizedName": "dumbbell stiff leg deadlift",
+      "count": 4
+    },
+    {
+      "normalizedName": "45 degree hyperextension arms in front of chest",
+      "count": 3
+    },
+    {
+      "normalizedName": "barbell wide grip upright row",
+      "count": 3
+    },
+    {
+      "normalizedName": "cable kneeling triceps extension",
+      "count": 3
+    },
+    {
+      "normalizedName": "cable side bend",
+      "count": 3
+    },
+    {
+      "normalizedName": "cable twist up down",
+      "count": 3
+    },
+    {
+      "normalizedName": "cable upright row",
+      "count": 3
+    },
+    {
+      "normalizedName": "dumbbell goblet split squat front foot elevated",
+      "count": 3
+    },
+    {
+      "normalizedName": "dumbbell hyperextension",
+      "count": 3
+    },
+    {
+      "normalizedName": "dumbbell lying hammer press",
+      "count": 3
+    },
+    {
+      "normalizedName": "dumbbell lying triceps extension",
+      "count": 3
+    },
+    {
+      "normalizedName": "dumbbell pullover",
+      "count": 3
+    },
+    {
+      "normalizedName": "dumbbell seated triceps extension",
+      "count": 3
+    },
+    {
+      "normalizedName": "dumbbell single leg calf raise",
+      "count": 3
+    },
+    {
+      "normalizedName": "dumbbell single leg deadlift",
+      "count": 3
+    },
+    {
+      "normalizedName": "dumbbell single leg squat",
+      "count": 3
+    },
+    {
+      "normalizedName": "dumbbell squat",
+      "count": 3
+    },
+    {
+      "normalizedName": "dumbbell step up",
+      "count": 3
+    },
+    {
+      "normalizedName": "dumbbell straight arm pullover",
+      "count": 3
+    },
+    {
+      "normalizedName": "hyperextension",
+      "count": 3
+    },
+    {
+      "normalizedName": "kettlebell bent press",
+      "count": 3
+    },
+    {
+      "normalizedName": "lever high row plate loaded",
+      "count": 3
+    },
+    {
+      "normalizedName": "lever squat plate loaded",
+      "count": 3
+    },
+    {
+      "normalizedName": "45 degree bycicle twisting crunch",
+      "count": 2
+    },
+    {
+      "normalizedName": "45 degree hip extension glute focused",
+      "count": 2
+    },
+    {
+      "normalizedName": "45 degree twisting hyperextension",
+      "count": 2
+    },
+    {
+      "normalizedName": "assisted triceps dip kneeling",
+      "count": 2
+    },
+    {
+      "normalizedName": "back forward leg swings",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell clean and press",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell decline pullover",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell front raise",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell full clean",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell glute bridge hands on bar",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell good morning",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell incline row",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell rack pull",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell rear delt raise",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell seated calf raise",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell seated good morning",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell seated overhead triceps extension",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell seated twist on stability ball",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell shrug",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell standing twist",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell step up",
+      "count": 2
+    },
+    {
+      "normalizedName": "barbell upright row",
+      "count": 2
+    },
+    {
+      "normalizedName": "cable bar lateral pulldown",
+      "count": 2
+    },
+    {
+      "normalizedName": "cable biceps curl sz bar",
+      "count": 2
+    },
+    {
+      "normalizedName": "cable concentration extension on knee",
+      "count": 2
+    },
+    {
+      "normalizedName": "cable cross over lateral pulldown",
+      "count": 2
+    },
+    {
+      "normalizedName": "cable cross over revers fly",
+      "count": 2
+    },
+    {
+      "normalizedName": "cable curl",
+      "count": 2
+    },
+    {
+      "normalizedName": "cable deadlift",
+      "count": 2
+    },
+    {
+      "normalizedName": "cable decline fly",
+      "count": 2
+    },
+    {
+      "normalizedName": "cable donkey diagonal kickback",
+      "count": 2
+    },
+    {
+      "normalizedName": "cable donkey kickback",
+      "count": 2
+    }
+  ]
+}

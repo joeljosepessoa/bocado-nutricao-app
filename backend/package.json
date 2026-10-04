@@ -22,6 +22,8 @@
     "prisma:seed": "ts-node ../database/seed.ts",
     "reference-data:import": "ts-node src/reference-data/import-reference-data.ts",
     "reference-data:import-exercise-media-pilot": "ts-node src/reference-data/import-exercise-media-pilot.ts",
+    "reference-data:build-exercise-media-manifest": "ts-node src/reference-data/build-exercise-media-manifest.ts",
+    "reference-data:import-exercise-media": "ts-node src/reference-data/import-exercise-media.ts",
     "admin:bootstrap": "ts-node src/admin-bootstrap/bootstrap-admin.ts",
     "email:test": "ts-node src/auth/email/send-test-email.ts"
   },
