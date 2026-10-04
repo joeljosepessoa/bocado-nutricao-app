@@ -11,6 +11,7 @@
   "scripts": {
     "prebuild": "npm run prisma:generate",
     "build": "nest build",
+    "postbuild": "node dist/reference-data/check-reference-data-assets.js",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "lint": "eslint \"src/**/*.ts\"",
