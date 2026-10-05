@@ -696,6 +696,8 @@ model Exercise {
   // Fase 15 — mesmo papel de Food.approvedAt (ver comentário lá).
   approvedAt              DateTime?     @map("approved_at")
   createdByProfessionalId String        @map("created_by_professional_id")
+  // Identificador canônico legível (ex.: "puxada-frontal-pulley"); nulo até a curadoria.
+  slug                    String?       @unique
   createdAt               DateTime      @default(now()) @map("created_at")
   updatedAt               DateTime      @default(now()) @updatedAt @map("updated_at")
 
@@ -704,6 +706,7 @@ model Exercise {
 
   workoutExercises WorkoutExercise[]
   media            ExerciseMedia[]
+  aliases          ExerciseAlias[]
 
   @@index([name])
   @@index([scope, ownerProfessionalId])
@@ -714,21 +717,76 @@ model Exercise {
 // separado do storage de fotos/PDFs. Só a chave fica no banco — a URL de acesso
 // é temporária e gerada pelo backend. Exercise.imageUrl segue para URLs externas.
 model ExerciseMedia {
-  id          String   @id @default(uuid())
-  exerciseId  String   @map("exercise_id")
-  storageKey  String   @map("storage_key")
-  contentType String   @map("content_type")
-  sizeBytes   Int      @map("size_bytes")
-  sha256      String
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+  id              String                      @id @default(uuid())
+  exerciseId      String                      @map("exercise_id")
+  storageKey      String                      @map("storage_key")
+  contentType     String                      @map("content_type")
+  sizeBytes       Int                         @map("size_bytes")
+  sha256          String
+  // Curadoria (o movimento mostrado foi conferido por uma pessoa?). O filename
+  // nunca decide nada — é só `sourceFileName`, informativo.
+  curationStatus  ExerciseMediaCurationStatus @default(pending) @map("curation_status")
+  // Mídia exibida primeiro para o exercício (no máximo uma por exercício —
+  // regra garantida pela aplicação) e ordem das demais.
+  isPrimary       Boolean                     @default(false) @map("is_primary")
+  sortOrder       Int                         @default(0) @map("sort_order")
+  sex             ExerciseMediaSex            @default(unspecified)
+  view            ExerciseMediaView           @default(unspecified)
+  equipment       String?
+  variation       String?
+  sourceFileName  String?                     @map("source_file_name")
+  reviewedAt      DateTime?                   @map("reviewed_at")
+  rejectionReason String?                     @map("rejection_reason")
+  createdAt       DateTime                    @default(now()) @map("created_at")
+  updatedAt       DateTime                    @default(now()) @updatedAt @map("updated_at")
 
   exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
 
   @@index([exerciseId])
   @@index([storageKey])
   @@index([sha256])
+  @@index([exerciseId, curationStatus])
   @@map("exercise_media")
+}
+
+enum ExerciseMediaCurationStatus {
+  pending
+  approved
+  rejected
+}
+
+enum ExerciseMediaSex {
+  male
+  female
+  unspecified
+}
+
+enum ExerciseMediaView {
+  side
+  front
+  back
+  unspecified
+}
+
+// Sinônimos do EXERCÍCIO (não do arquivo), usados para casar o nome escrito
+// pelo profissional ("puxada alta", "lat pulldown") com o exercício oficial.
+// O mesmo alias em dois exercícios não associa sozinho — vira sugestão.
+model ExerciseAlias {
+  id              String   @id @default(uuid())
+  exerciseId      String   @map("exercise_id")
+  alias           String
+  // Forma usada na comparação (sem acento/caixa/pontuação).
+  normalizedAlias String   @map("normalized_alias")
+  locale          String   @default("pt-BR")
+  source          String   @default("curated")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+
+  @@unique([exerciseId, normalizedAlias])
+  @@index([normalizedAlias])
+  @@map("exercise_aliases")
 }
 
 model Workout {

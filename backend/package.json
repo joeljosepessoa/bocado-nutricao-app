@@ -25,6 +25,7 @@
     "reference-data:import-exercise-media-pilot": "ts-node src/reference-data/import-exercise-media-pilot.ts",
     "reference-data:build-exercise-media-manifest": "ts-node src/reference-data/build-exercise-media-manifest.ts",
     "reference-data:import-exercise-media": "ts-node src/reference-data/import-exercise-media.ts",
+    "reference-data:apply-exercise-media-curation": "ts-node src/reference-data/apply-exercise-media-curation.ts",
     "admin:bootstrap": "ts-node src/admin-bootstrap/bootstrap-admin.ts",
     "email:test": "ts-node src/auth/email/send-test-email.ts"
   },
