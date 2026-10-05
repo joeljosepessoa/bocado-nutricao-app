@@ -12,6 +12,7 @@ interação grava a política aplicada em `AiInteractionLog.processingPolicy`.
 | Recurso | Quem usa | O que vai ao provedor | Consentimento da cliente | Política |
 |---|---|---|---|---|
 | `organize_workout` | profissional (painel) | **só** o texto de treino colado pelo profissional | não exigido | `professional_material` |
+| `organize_diet` | profissional (painel) | **só** o texto de dieta colado pelo profissional | não exigido | `professional_material` |
 | `draft_note` | profissional | primeiro nome da cliente + instruções do profissional | exigido | `client_consent` |
 | `explain_evaluation` | cliente (app) e profissional | métricas da avaliação liberada (peso, IMC, % gordura, massas, medidas) | exigido | `client_consent` |
 | `narrate_trend` | cliente (app) | variação das métricas entre as duas últimas avaliações liberadas | exigido | `client_consent` |
@@ -26,6 +27,18 @@ O contexto é montado só com `workoutText` (o use case nem lê o cliente). O si
 não acrescenta nome, id, avaliação, dieta nem histórico. **Limite conhecido:** se o
 profissional colar dado pessoal no próprio texto (nome, diagnóstico), ele segue para
 o provedor — não há anonimização automática do texto livre.
+
+### Minimização e fidelidade do `organize_diet`
+
+Mesma minimização do `organize_workout`: o contexto é só `dietText` — peso, IMC,
+gordura, exames, avaliações e histórico do cliente nunca são lidos nem enviados.
+A resposta passa por conferência determinística contra o texto colado
+(`organize-diet/diet-fidelity.ts`): alimento, quantidade, unidade, refeição e
+horário que não estejam escritos no texto fazem a resposta inteira ser recusada;
+o que a IA deixar de fora vira aviso de revisão. Calorias e macros são sempre
+calculadas pelo backend, nunca pela IA. O resultado é só um rascunho — publicar
+continua sendo ação manual do profissional. Mesmo limite conhecido: dado pessoal
+colado no próprio texto segue para o provedor.
 
 ## Consentimento da cliente
 

@@ -15,8 +15,9 @@ export interface AiFeatureConsentPolicy {
  * - client_consent: o contexto enviado ao provedor contém dado do cliente
  *   (nome, avaliação física, evolução) → só com consentimento específico.
  * - professional_material: o contexto é EXCLUSIVAMENTE o material escrito
- *   pelo profissional (organize_workout envia só o texto do treino; o sistema
- *   não acrescenta nome, id, avaliação, dieta nem histórico do cliente). Se o
+ *   pelo profissional (organize_workout/organize_diet enviam só o texto do
+ *   treino/da dieta; o sistema não acrescenta nome, id, avaliação, peso,
+ *   exames nem histórico do cliente). Se o
  *   próprio texto colado contiver dado pessoal, isso não é detectado aqui —
  *   o painel orienta a não incluir.
  *
@@ -25,6 +26,7 @@ export interface AiFeatureConsentPolicy {
  */
 export const AI_CONSENT_POLICY: Readonly<Record<AiFeatureKey, AiFeatureConsentPolicy>> = {
   organize_workout: { clientConsentRequired: false, processingPolicy: AiProcessingPolicy.professional_material },
+  organize_diet: { clientConsentRequired: false, processingPolicy: AiProcessingPolicy.professional_material },
   draft_note: { clientConsentRequired: true, processingPolicy: AiProcessingPolicy.client_consent },
   explain_evaluation: { clientConsentRequired: true, processingPolicy: AiProcessingPolicy.client_consent },
   narrate_trend: { clientConsentRequired: true, processingPolicy: AiProcessingPolicy.client_consent },

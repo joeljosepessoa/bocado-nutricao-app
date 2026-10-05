@@ -1,11 +1,12 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { DietAuditAction, DietVersionStatus, NotificationEventType, NutritionUnit } from '@prisma/client';
+import { DietAuditAction, DietStatus, DietVersionStatus, NotificationEventType, NutritionUnit } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { FoodsService } from '../foods/foods.service';
 import { NutritionCalculationService } from '../foods/nutrition-calculation.service';
 import { NotificationDispatchService } from '../notifications/notification-dispatch.service';
 import { DietAuditLogService } from './diet-audit-log.service';
 import { CreateDietDto } from './dto/create-diet.dto';
+import { CreateDietFromProposalDto } from './dto/create-diet-from-proposal.dto';
 import { UpdateDietDto } from './dto/update-diet.dto';
 import { UpdateDietVersionDto } from './dto/update-diet-version.dto';
 import { CreateMealDto } from './dto/create-meal.dto';
@@ -64,6 +65,15 @@ export class DietsService {
     const diet = await this.prisma.diet.findFirst({ where: { id: dietId, clientId } });
     if (!diet) {
       throw new NotFoundException('Dieta não encontrada.');
+    }
+    return diet;
+  }
+
+  /** Dieta excluída (arquivada) fica só para histórico: nenhuma alteração, versão ou publicação nova. */
+  private async assertActiveDiet(professionalId: string, clientId: string, dietId: string) {
+    const diet = await this.assertOwnedDiet(professionalId, clientId, dietId);
+    if (diet.status !== DietStatus.active) {
+      throw new ConflictException('Esta dieta foi excluída e não pode mais ser alterada.');
     }
     return diet;
   }
@@ -153,6 +163,140 @@ export class DietsService {
     });
 
     return this.findOne(professionalId, clientId, diet.id, meta, false);
+  }
+
+  /**
+   * Rascunho a partir de uma proposta revisada (ex.: Assistente de Dieta).
+   * Respeita o versionamento: sem dieta ativa → dieta nova (versão 1); com
+   * dieta ativa → nova versão em rascunho (a publicada fica intacta e segue
+   * valendo para o cliente). Um rascunho já aberto só é substituído com
+   * `replaceDraft` (confirmação explícita). Nunca publica. Calorias/macros
+   * vêm do mesmo cálculo da inclusão manual — nunca da IA.
+   */
+  async createFromProposal(professionalId: string, clientId: string, dto: CreateDietFromProposalDto, meta: RequestMeta = {}) {
+    await this.assertOwnedClient(professionalId, clientId);
+
+    // Visibilidade + snapshot nutricional antes da transação (mesma regra de createMealFood).
+    const snapshots = new Map<string, Awaited<ReturnType<NutritionCalculationService['calculate']>>>();
+    const foodsById = new Map<string, Awaited<ReturnType<FoodsService['findVisible']>>>();
+    for (const [m, meal] of dto.meals.entries()) {
+      for (const [f, item] of meal.foods.entries()) {
+        let food = foodsById.get(item.foodId);
+        if (!food) {
+          food = await this.foodsService.findVisible(professionalId, item.foodId);
+          foodsById.set(item.foodId, food);
+        }
+        snapshots.set(`${m}:${f}`, await this.calculation.calculate(food, item.quantity, item.unit));
+      }
+    }
+
+    const activeDiet = await this.prisma.diet.findFirst({
+      where: { clientId, status: DietStatus.active },
+      orderBy: { createdAt: 'desc' },
+    });
+    const existingDraft = activeDiet
+      ? await this.prisma.dietVersion.findFirst({ where: { dietId: activeDiet.id, status: DietVersionStatus.draft } })
+      : null;
+    if (existingDraft && !dto.replaceDraft) {
+      throw new ConflictException(
+        `Já existe um rascunho em aberto (versão ${existingDraft.versionNumber}). Confirme a substituição do rascunho para continuar.`,
+      );
+    }
+
+    const blank = (value: string | null | undefined) => (value && value.trim() ? value.trim() : null);
+
+    const result = await this.prisma.$transaction(
+      async (tx) => {
+        let dietId: string;
+        let versionId: string;
+        let action: DietAuditAction;
+        if (!activeDiet) {
+          const diet = await tx.diet.create({ data: { clientId, professionalId } });
+          const version = await tx.dietVersion.create({
+            data: { dietId: diet.id, versionNumber: 1, createdByProfessionalId: professionalId, objective: blank(dto.objective), notes: blank(dto.notes) },
+          });
+          dietId = diet.id;
+          versionId = version.id;
+          action = DietAuditAction.created;
+        } else if (existingDraft) {
+          // Só o RASCUNHO (nunca publicado) tem o conteúdo trocado — mesma operação de excluir refeição.
+          const meals = await tx.meal.findMany({ where: { dietVersionId: existingDraft.id }, select: { id: true } });
+          await tx.mealFood.deleteMany({ where: { mealId: { in: meals.map((m) => m.id) } } });
+          await tx.meal.deleteMany({ where: { dietVersionId: existingDraft.id } });
+          await tx.dietVersion.update({
+            where: { id: existingDraft.id },
+            data: {
+              ...(dto.objective !== undefined ? { objective: blank(dto.objective) } : {}),
+              ...(dto.notes !== undefined ? { notes: blank(dto.notes) } : {}),
+            },
+          });
+          dietId = activeDiet.id;
+          versionId = existingDraft.id;
+          action = DietAuditAction.version_updated;
+        } else {
+          const [published, last] = await Promise.all([
+            tx.dietVersion.findFirst({ where: { dietId: activeDiet.id, status: DietVersionStatus.published } }),
+            tx.dietVersion.findFirst({ where: { dietId: activeDiet.id }, orderBy: { versionNumber: 'desc' } }),
+          ]);
+          const version = await tx.dietVersion.create({
+            data: {
+              dietId: activeDiet.id,
+              versionNumber: (last?.versionNumber ?? 0) + 1,
+              createdByProfessionalId: professionalId,
+              startDate: published?.startDate,
+              endDate: published?.endDate,
+              objective: dto.objective !== undefined ? blank(dto.objective) : published?.objective,
+              notes: dto.notes !== undefined ? blank(dto.notes) : published?.notes,
+              targetCalories: published?.targetCalories,
+              targetProteinG: published?.targetProteinG,
+              targetCarbG: published?.targetCarbG,
+              targetFatG: published?.targetFatG,
+            },
+          });
+          dietId = activeDiet.id;
+          versionId = version.id;
+          action = DietAuditAction.version_created;
+        }
+
+        for (const [m, meal] of dto.meals.entries()) {
+          const createdMeal = await tx.meal.create({
+            data: { dietVersionId: versionId, name: meal.name.trim(), order: m, time: meal.time ?? null, notes: blank(meal.notes) },
+          });
+          for (const [f, item] of meal.foods.entries()) {
+            const snapshot = snapshots.get(`${m}:${f}`);
+            await tx.mealFood.create({
+              data: {
+                mealId: createdMeal.id,
+                foodId: item.foodId,
+                order: f,
+                quantity: item.quantity,
+                unit: item.unit,
+                gramsEquivalent: snapshot?.gramsEquivalent,
+                kcal: snapshot?.kcal,
+                proteinG: snapshot?.proteinG,
+                carbG: snapshot?.carbG,
+                fatG: snapshot?.fatG,
+                fiberG: snapshot?.fiberG,
+                notes: blank(item.notes),
+              },
+            });
+          }
+        }
+        return { dietId, versionId, action };
+      },
+      { timeout: 30_000 },
+    );
+
+    await this.auditLog.record({
+      professionalId,
+      clientId,
+      dietId: result.dietId,
+      dietVersionId: result.versionId,
+      action: result.action,
+      ipAddress: meta.ipAddress,
+    });
+
+    return this.findOne(professionalId, clientId, result.dietId, meta, false);
   }
 
   async list(professionalId: string, clientId: string, page = 1, pageSize = 20, meta: RequestMeta = {}) {
@@ -265,7 +409,7 @@ export class DietsService {
   }
 
   async createVersion(professionalId: string, clientId: string, dietId: string, meta: RequestMeta = {}) {
-    await this.assertOwnedDiet(professionalId, clientId, dietId);
+    await this.assertActiveDiet(professionalId, clientId, dietId);
 
     const existingDraft = await this.prisma.dietVersion.findFirst({
       where: { dietId, status: DietVersionStatus.draft },
@@ -358,7 +502,7 @@ export class DietsService {
     dto: UpdateDietVersionDto,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedDiet(professionalId, clientId, dietId);
+    await this.assertActiveDiet(professionalId, clientId, dietId);
     const version = await this.getVersionOrThrow(dietId, versionId);
     if (version.status !== DietVersionStatus.draft) {
       throw new ConflictException('Só é possível editar uma versão em rascunho. Crie uma nova versão.');
@@ -397,7 +541,7 @@ export class DietsService {
     versionId: string,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedDiet(professionalId, clientId, dietId);
+    await this.assertActiveDiet(professionalId, clientId, dietId);
     const version = await this.getVersionOrThrow(dietId, versionId);
     if (version.status !== DietVersionStatus.draft) {
       throw new ConflictException('Só é possível publicar uma versão em rascunho.');
@@ -449,7 +593,7 @@ export class DietsService {
     dto: CreateMealDto,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedDiet(professionalId, clientId, dietId);
+    await this.assertActiveDiet(professionalId, clientId, dietId);
     await this.assertDraftVersion(dietId, versionId);
 
     let order = dto.order;
@@ -483,7 +627,7 @@ export class DietsService {
     dto: UpdateMealDto,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedDiet(professionalId, clientId, dietId);
+    await this.assertActiveDiet(professionalId, clientId, dietId);
     await this.assertDraftVersion(dietId, versionId);
     await this.getMealOrThrow(versionId, mealId);
 
@@ -512,7 +656,7 @@ export class DietsService {
     mealId: string,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedDiet(professionalId, clientId, dietId);
+    await this.assertActiveDiet(professionalId, clientId, dietId);
     await this.assertDraftVersion(dietId, versionId);
     await this.getMealOrThrow(versionId, mealId);
 
@@ -546,7 +690,7 @@ export class DietsService {
     dto: CreateMealFoodDto,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedDiet(professionalId, clientId, dietId);
+    await this.assertActiveDiet(professionalId, clientId, dietId);
     await this.assertDraftVersion(dietId, versionId);
     await this.getMealOrThrow(versionId, mealId);
 
@@ -596,7 +740,7 @@ export class DietsService {
     dto: UpdateMealFoodDto,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedDiet(professionalId, clientId, dietId);
+    await this.assertActiveDiet(professionalId, clientId, dietId);
     await this.assertDraftVersion(dietId, versionId);
     const existing = await this.prisma.mealFood.findFirst({ where: { id: mealFoodId, mealId } });
     if (!existing) {
@@ -645,7 +789,7 @@ export class DietsService {
     mealFoodId: string,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedDiet(professionalId, clientId, dietId);
+    await this.assertActiveDiet(professionalId, clientId, dietId);
     await this.assertDraftVersion(dietId, versionId);
     const existing = await this.prisma.mealFood.findFirst({ where: { id: mealFoodId, mealId } });
     if (!existing) {

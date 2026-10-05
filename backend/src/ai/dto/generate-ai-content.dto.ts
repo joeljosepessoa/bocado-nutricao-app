@@ -2,11 +2,12 @@ import { IsEnum, IsIn, IsOptional, IsString, IsUUID, Matches, MaxLength, MinLeng
 import { AiFeatureKey } from '@prisma/client';
 
 export const MAX_WORKOUT_TEXT_LENGTH = 12000;
+export const MAX_DIET_TEXT_LENGTH = 12000;
 
 /**
  * Usado só pelo endpoint do profissional. O do cliente
  * (GenerateClientAiContentDto) tem allowlist própria e não aceita
- * organize_workout.
+ * organize_workout nem organize_diet.
  */
 export class GenerateAiContentDto {
   @IsEnum(AiFeatureKey)
@@ -34,4 +35,11 @@ export class GenerateAiContentDto {
   @Matches(/\S/, { message: 'Cole o treino a ser organizado.' })
   @MaxLength(MAX_WORKOUT_TEXT_LENGTH)
   workoutText?: string;
+
+  // Só exigido/aceito para organize_diet: a dieta colada pelo profissional.
+  @ValidateIf((o) => o.feature === AiFeatureKey.organize_diet)
+  @IsString()
+  @Matches(/\S/, { message: 'Cole a dieta a ser organizada.' })
+  @MaxLength(MAX_DIET_TEXT_LENGTH)
+  dietText?: string;
 }

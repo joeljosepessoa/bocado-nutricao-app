@@ -1197,6 +1197,8 @@ enum AiFeatureKey {
   explain_evaluation
   narrate_trend
   organize_workout
+  // Organiza uma dieta JÁ escrita pelo profissional (nunca prescreve) — desenho/aprovação próprios.
+  organize_diet
 }
 
 // Por que um recurso de IA pôde processar o pedido: com consentimento

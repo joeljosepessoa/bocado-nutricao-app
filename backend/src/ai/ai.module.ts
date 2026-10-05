@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ExercisesModule } from '../exercises/exercises.module';
+import { FoodsModule } from '../foods/foods.module';
 import { PhysicalEvaluationsModule } from '../physical-evaluations/physical-evaluations.module';
 import { ClientAiController, ProfessionalAiConsentController, ProfessionalClientAiController } from './ai.controller';
 import { AiService } from './ai.service';
@@ -12,9 +13,10 @@ import { DraftNoteUseCase } from './use-cases/draft-note.use-case';
 import { ExplainEvaluationUseCase } from './use-cases/explain-evaluation.use-case';
 import { NarrateTrendUseCase } from './use-cases/narrate-trend.use-case';
 import { OrganizeWorkoutUseCase } from './use-cases/organize-workout/organize-workout.use-case';
+import { OrganizeDietUseCase } from './use-cases/organize-diet/organize-diet.use-case';
 
 @Module({
-  imports: [PhysicalEvaluationsModule, ExercisesModule],
+  imports: [PhysicalEvaluationsModule, ExercisesModule, FoodsModule],
   controllers: [ProfessionalAiConsentController, ClientAiController, ProfessionalClientAiController],
   providers: [
     AiService,
@@ -28,6 +30,7 @@ import { OrganizeWorkoutUseCase } from './use-cases/organize-workout/organize-wo
     ExplainEvaluationUseCase,
     NarrateTrendUseCase,
     OrganizeWorkoutUseCase,
+    OrganizeDietUseCase,
   ],
 })
 export class AiModule {}

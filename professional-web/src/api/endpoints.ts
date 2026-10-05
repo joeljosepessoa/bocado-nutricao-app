@@ -12,6 +12,7 @@ import type {
   ClientStatus,
   CreateClientInput,
   CreateWorkoutFromProposalInput,
+  CreateDietFromProposalInput,
   CreateEvaluationInput,
   DashboardSummary,
   Diet,
@@ -25,6 +26,7 @@ import type {
   Food,
   Message,
   OrganizedWorkoutProposal,
+  OrganizedDietProposal,
   PaginatedResult,
   Plan,
   PlatformMetrics,
@@ -251,6 +253,41 @@ export async function publishDietVersion(clientId: string, dietId: string, versi
 
 export async function createMeal(clientId: string, dietId: string, versionId: string, input: { name: string; time?: string; notes?: string }) {
   const res = await apiClient.post(`/clients/${clientId}/diets/${dietId}/versions/${versionId}/meals`, input);
+  return res.data;
+}
+
+/** Proposta revisada do Assistente de Dieta → rascunho (nova dieta ou nova versão). Nunca publica. */
+export async function createDietFromProposal(clientId: string, input: CreateDietFromProposalInput): Promise<Diet> {
+  const res = await apiClient.post<Diet>(`/clients/${clientId}/diets/from-proposal`, input);
+  return res.data;
+}
+
+/** "Excluir dieta" = arquivar: some do painel e do app, histórico preservado. */
+export async function archiveDiet(clientId: string, dietId: string): Promise<Diet> {
+  const res = await apiClient.patch<Diet>(`/clients/${clientId}/diets/${dietId}`, { status: 'archived' });
+  return res.data;
+}
+
+export async function updateMeal(
+  clientId: string,
+  dietId: string,
+  versionId: string,
+  mealId: string,
+  input: { name?: string; time?: string; notes?: string },
+) {
+  const res = await apiClient.patch(`/clients/${clientId}/diets/${dietId}/versions/${versionId}/meals/${mealId}`, input);
+  return res.data;
+}
+
+export async function updateMealFood(
+  clientId: string,
+  dietId: string,
+  versionId: string,
+  mealId: string,
+  mealFoodId: string,
+  input: { quantity?: number; unit?: string; notes?: string },
+) {
+  const res = await apiClient.patch(`/clients/${clientId}/diets/${dietId}/versions/${versionId}/meals/${mealId}/foods/${mealFoodId}`, input);
   return res.data;
 }
 
@@ -529,6 +566,18 @@ export async function organizeWorkout(
   const res = await apiClient.post<AiGenerationResult & { structuredData: OrganizedWorkoutProposal }>(
     `/clients/${clientId}/ai/generate`,
     { feature: 'organize_workout', workoutText },
+  );
+  return res.data;
+}
+
+/** Assistente de Dieta: organiza a dieta colada em proposta conferida (nada é gravado). */
+export async function organizeDiet(
+  clientId: string,
+  dietText: string,
+): Promise<AiGenerationResult & { structuredData: OrganizedDietProposal }> {
+  const res = await apiClient.post<AiGenerationResult & { structuredData: OrganizedDietProposal }>(
+    `/clients/${clientId}/ai/generate`,
+    { feature: 'organize_diet', dietText },
   );
   return res.data;
 }

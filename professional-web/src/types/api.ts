@@ -219,11 +219,14 @@ export interface EvaluationComparison {
 
 export type DietVersionStatus = 'draft' | 'published' | 'superseded';
 
+export type NutritionUnit = 'g' | 'ml' | 'unit' | 'tablespoon' | 'teaspoon' | 'cup' | 'slice';
+
 export interface MealFood {
   id: string;
   foodId: string;
   quantity: number;
   unit: string;
+  notes?: string | null;
   kcal: number | null;
   proteinG: number | null;
   carbG: number | null;
@@ -286,6 +289,54 @@ export interface Food {
   carbGPer100: number;
   fatGPer100: number;
   fiberGPer100: number | null;
+}
+
+// --- Assistente de Dieta ---------------------------------------------------
+
+export type FoodMatchStatus = 'matched' | 'ambiguous' | 'not_found';
+
+export interface CatalogFoodRef {
+  id: string;
+  name: string;
+}
+
+/** Item organizado pela IA e já conferido contra o texto (nada gravado ainda). */
+export interface ProposalDietItem {
+  sourceText: string;
+  rawFood: string;
+  quantity: number | null;
+  unitText: string | null;
+  unit: NutritionUnit | null;
+  notes: string | null;
+  matchStatus: FoodMatchStatus;
+  matchedFood: CatalogFoodRef | null;
+  candidates: CatalogFoodRef[];
+  warnings: string[];
+}
+
+export interface ProposalMeal {
+  name: string | null;
+  time: string | null;
+  notes: string | null;
+  items: ProposalDietItem[];
+  warnings: string[];
+}
+
+export interface OrganizedDietProposal {
+  meals: ProposalMeal[];
+  warnings: string[];
+}
+
+export interface CreateDietFromProposalInput {
+  objective?: string;
+  notes?: string;
+  replaceDraft?: boolean;
+  meals: Array<{
+    name: string;
+    time?: string | null;
+    notes?: string | null;
+    foods: Array<{ foodId: string; quantity: number; unit: NutritionUnit; notes?: string | null }>;
+  }>;
 }
 
 // --- Treinos --------------------------------------------------------------

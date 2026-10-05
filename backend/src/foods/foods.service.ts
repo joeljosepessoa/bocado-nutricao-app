@@ -67,6 +67,15 @@ export class FoodsService {
     });
   }
 
+  /** Id e nome de todo alimento visível ao profissional — base do matching do Assistente de Dieta. */
+  async listVisibleRefs(professionalId: string): Promise<{ id: string; name: string }[]> {
+    return this.prisma.food.findMany({
+      where: this.visibilityFilter(professionalId),
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    });
+  }
+
   /** Busca um alimento garantindo visibilidade (404 se privado de outro profissional). */
   async findVisible(professionalId: string, foodId: string): Promise<Food & { unitConversions: { unit: string; gramsEquivalent: number }[] }> {
     const food = await this.prisma.food.findFirst({

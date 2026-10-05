@@ -6,6 +6,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { DietsService, RequestMeta } from './diets.service';
 import { CreateDietDto } from './dto/create-diet.dto';
+import { CreateDietFromProposalDto } from './dto/create-diet-from-proposal.dto';
 import { UpdateDietDto } from './dto/update-diet.dto';
 import { UpdateDietVersionDto } from './dto/update-diet-version.dto';
 import { CreateMealDto } from './dto/create-meal.dto';
@@ -30,6 +31,17 @@ export class DietsController {
     @Req() req: Request,
   ) {
     return this.dietsService.create(user.id, clientId, dto, meta(req));
+  }
+
+  // Proposta revisada (Assistente de Dieta) → rascunho; nunca publica.
+  @Post('from-proposal')
+  createFromProposal(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('clientId') clientId: string,
+    @Body() dto: CreateDietFromProposalDto,
+    @Req() req: Request,
+  ) {
+    return this.dietsService.createFromProposal(user.id, clientId, dto, meta(req));
   }
 
   @Get()
