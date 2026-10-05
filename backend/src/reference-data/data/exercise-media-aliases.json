@@ -1,12 +1,15 @@
 {
-  "_doc": "Equivalências CURADAS entre o nome normalizado do GIF (inglês) e um exercício do catálogo do sistema (exercises.json). 'aliases' = o MESMO exercício (só muda ângulo, gênero do modelo ou versão do vídeo) -> MATCHED. 'reviewWhen' = conjuntos de 2+ palavras que indicam uma VARIAÇÃO ou parente -> REVIEW (decisão humana), nunca vínculo automático. 'equipmentFolders' = pastas do inventário compatíveis com o equipamento do exercício; fora delas vira REVIEW.",
+  "_doc": "'rejected' = GIFs conferidos por uma pessoa e RECUSADOS para o exercício: nunca são vinculados (vence até o piloto) e o importador remove o vínculo se ele já existir. Equivalências CURADAS entre o nome normalizado do GIF (inglês) e um exercício do catálogo do sistema (exercises.json). 'aliases' = o MESMO exercício (só muda ângulo, gênero do modelo ou versão do vídeo) -> MATCHED. 'reviewWhen' = conjuntos de 2+ palavras que indicam uma VARIAÇÃO ou parente -> REVIEW (decisão humana), nunca vínculo automático. 'equipmentFolders' = pastas do inventário compatíveis com o equipamento do exercício; fora delas vira REVIEW.",
+  "rejected": [
+    { "sha256": "f52cb313b7f10d911bda930144c3497981b320dc8b0f22194042cfb51f47c0e7", "exerciseName": "Puxada frontal (pulley)", "reason": "Cable-Lat-Pulldown-Full-Range-Of-Motion mostra o movimento em pé entre duas torres de polia, não a puxada sentada na máquina (revisão 2026-10-05)." }
+  ],
   "exercises": [
     { "exerciseName": "Agachamento livre", "equipmentFolders": ["barras"], "aliases": ["barbell full squat", "barbell squat"], "reviewWhen": [["barbell", "squat"]] },
     { "exerciseName": "Levantamento terra", "equipmentFolders": ["barras"], "aliases": ["barbell deadlift"], "reviewWhen": [["barbell", "deadlift"]] },
     { "exerciseName": "Supino reto com barra", "equipmentFolders": ["barras"], "aliases": ["barbell bench press"], "reviewWhen": [["barbell", "bench", "press"]] },
     { "exerciseName": "Supino inclinado com halteres", "equipmentFolders": ["halteres"], "aliases": ["dumbbell incline bench press"], "reviewWhen": [["dumbbell", "incline", "press"]] },
     { "exerciseName": "Remada curvada com barra", "equipmentFolders": ["barras"], "aliases": ["barbell bent over row"], "reviewWhen": [["bent", "over", "row"]] },
-    { "exerciseName": "Puxada frontal (pulley)", "equipmentFolders": ["cabo-polia"], "aliases": ["cable lat pulldown full range of motion"], "reviewWhen": [["lat", "pulldown"], ["front", "pulldown"], ["wide", "pulldown"]] },
+    { "exerciseName": "Puxada frontal (pulley)", "equipmentFolders": ["cabo-polia"], "aliases": ["cable bar lateral pulldown"], "reviewWhen": [["lat", "pulldown"], ["front", "pulldown"], ["wide", "pulldown"]] },
     { "exerciseName": "Desenvolvimento militar", "equipmentFolders": ["barras", "halteres"], "aliases": ["barbell standing military press without rack"], "reviewWhen": [["military", "press"], ["shoulder", "press"], ["overhead", "press"]] },
     { "exerciseName": "Rosca direta", "equipmentFolders": ["barras", "halteres"], "aliases": ["barbell curl"], "reviewWhen": [["barbell", "curl"], ["ez", "curl"]] },
     { "exerciseName": "Tríceps corda (polia)", "equipmentFolders": ["cabo-polia"], "aliases": ["cable pushdown with rope attachment"], "reviewWhen": [["pushdown", "rope"]] },

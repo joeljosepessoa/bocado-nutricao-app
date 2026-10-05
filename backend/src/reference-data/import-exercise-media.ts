@@ -70,6 +70,8 @@ export interface ImportExerciseMediaSummary {
   verification: 'r2-head' | 'listing-only';
   safeEntries: number;
   created: number;
+  /** Vínculos removidos por estarem recusados na revisão humana (só a linha; o arquivo no R2 fica). */
+  removedRejected: number;
   skipped: Record<SkipReason, number>;
   problems: string[];
 }
@@ -85,6 +87,7 @@ export async function importExerciseMedia(
     verification: options.verifier ? 'r2-head' : 'listing-only',
     safeEntries: safe.length,
     created: 0,
+    removedRejected: 0,
     skipped: {
       'already-imported': 0,
       'exercise-not-found': 0,
@@ -181,6 +184,16 @@ export async function importExerciseMedia(
     summary.created += 1;
   }
 
+  // GIF recusado na revisão humana: remove o vínculo que já exista no catálogo do
+  // sistema (ex.: importado antes da recusa). Nunca apaga o objeto no R2.
+  const rejectedKeys = manifest.filter((entry) => entry.rejectedByReview).map((entry) => entry.storageKey);
+  if (rejectedKeys.length > 0) {
+    const where = { storageKey: { in: rejectedKeys }, exercise: { createdByProfessionalId: system.id } };
+    summary.removedRejected = options.dryRun
+      ? await prisma.exerciseMedia.count({ where })
+      : (await prisma.exerciseMedia.deleteMany({ where })).count;
+  }
+
   return summary;
 }
 
@@ -204,7 +217,8 @@ async function main() {
       .join(', ');
     console.log(
       `${dryRun ? '[dry-run] ' : ''}Mídia de exercício: ${summary.safeEntries} registro(s) EXACT/MATCHED, ` +
-        `${summary.created} ${dryRun ? 'seriam criados' : 'criados'}, ignorados: ${skipped || 'nenhum'} ` +
+        `${summary.created} ${dryRun ? 'seriam criados' : 'criados'}, ` +
+        `${summary.removedRejected} vínculo(s) recusado(s) ${dryRun ? 'seriam removidos' : 'removidos'}, ignorados: ${skipped || 'nenhum'} ` +
         `(conferência: ${summary.verification}).`,
     );
     if (summary.problems.length > 0) {

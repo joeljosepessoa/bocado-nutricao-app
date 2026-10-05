@@ -112,6 +112,21 @@ describe('matchGif — níveis de confiança', () => {
     expect(match(row({ fileName: 'Cable-Woodchopper_Waist.gif' }))).toMatchObject({ matchStatus: 'UNMATCHED', exerciseName: null, confidence: 'none' });
   });
 
+  it('recusa da revisão humana vence até o EXACT do piloto: vira REVIEW marcado, sem vínculo', () => {
+    const ctx = buildMatchContext(ALIASES, [{ exerciseName: 'Rosca direta', sha256: SHA('e') }], CATALOG, [
+      { sha256: SHA('e'), exerciseName: 'Rosca direta', reason: 'mostra outro movimento' },
+    ]);
+    const r = row({ fileName: 'Barbell-Curl_Arms.gif', sha256: SHA('e') });
+    expect(matchGif(r, normalizeGifName(r.fileName), ctx)).toEqual({
+      exerciseName: null,
+      matchStatus: 'REVIEW',
+      confidence: 'low',
+      reason: 'recusado na revisão humana para "Rosca direta": mostra outro movimento',
+      candidates: ['Rosca direta'],
+      rejectedByReview: true,
+    });
+  });
+
   it('uma palavra genérica sozinha ("curl", "press") nunca sugere exercício', () => {
     expect(match(row({ fileName: 'Lever-Curl_Arms.gif' })).matchStatus).toBe('UNMATCHED');
     expect(match(row({ fileName: 'Cable-Press_Chest.gif' })).matchStatus).toBe('UNMATCHED');
@@ -124,6 +139,9 @@ describe('buildMatchContext — a tabela de aliases é validada', () => {
     expect(() => buildMatchContext([ALIASES[0], { ...ALIASES[1], aliases: ['barbell full squat'] }], [], CATALOG)).toThrow(/ambíguo/);
     expect(() => buildMatchContext([{ ...ALIASES[1], reviewWhen: [['curl']] }], [], CATALOG)).toThrow(/2\+ palavras/);
     expect(() => buildMatchContext(ALIASES, [{ exerciseName: 'Inventado', sha256: SHA('p') }], CATALOG)).toThrow(/Piloto/);
+    expect(() => buildMatchContext(ALIASES, [], CATALOG, [{ sha256: SHA('e'), exerciseName: 'Inventado', reason: 'x' }])).toThrow(/Recusa/);
+    expect(() => buildMatchContext(ALIASES, [], CATALOG, [{ sha256: 'abc', exerciseName: 'Rosca direta', reason: 'x' }])).toThrow(/sha256/);
+    expect(() => buildMatchContext(ALIASES, [], CATALOG, [{ sha256: SHA('e'), exerciseName: 'Rosca direta', reason: ' ' }])).toThrow(/motivo/);
   });
 
   it('a tabela real de aliases é coerente com o catálogo real', () => {
@@ -133,6 +151,7 @@ describe('buildMatchContext — a tabela de aliases é validada', () => {
         data('exercise-media-aliases.json').exercises,
         data('exercise-media-pilot.json'),
         data('exercises.json').map((e: { name: string }) => e.name),
+        data('exercise-media-aliases.json').rejected,
       ),
     ).not.toThrow();
   });
@@ -277,6 +296,7 @@ describe('validateManifest', () => {
     ['MATCHED sem exercício', { exerciseName: null }],
     ['REVIEW com exercício (vínculo só em EXACT/MATCHED)', { matchStatus: 'REVIEW' }],
     ['status desconhecido', { matchStatus: 'MAYBE' }],
+    ['recusado marcado como vínculo seguro', { rejectedByReview: true }],
   ])('recusa o manifesto: %s', (_label, patch) => {
     expect(() => validateManifest([{ ...valid(), ...(patch as object) }])).toThrow(/Manifesto inválido/);
   });

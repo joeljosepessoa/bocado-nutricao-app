@@ -122,6 +122,31 @@ describe('Importador de mídia de exercício (e2e, banco real)', () => {
     expect(summary.skipped['key-size-mismatch']).toBe(1);
   });
 
+  it('GIF recusado na revisão humana: o vínculo existente é removido (dry-run só conta) e não volta', async () => {
+    const { verifier } = verifierWith();
+    await importExerciseMedia(prisma, [entry('h1.gif', { sha256: '7'.repeat(64) })], { verifier, dryRun: false });
+    expect(await prisma.exerciseMedia.count({ where: { storageKey: `${PREFIX}biceps/h1.gif` } })).toBe(1);
+
+    const rejected = entry('h1.gif', {
+      sha256: '7'.repeat(64),
+      matchStatus: 'REVIEW',
+      exerciseName: null,
+      candidates: ['Rosca direta'],
+      rejectedByReview: true,
+    });
+    const dry = await importExerciseMedia(prisma, [rejected], { verifier, dryRun: true });
+    expect(dry.removedRejected).toBe(1);
+    expect(await prisma.exerciseMedia.count({ where: { storageKey: `${PREFIX}biceps/h1.gif` } })).toBe(1);
+
+    const real = await importExerciseMedia(prisma, [rejected], { verifier, dryRun: false });
+    expect(real.removedRejected).toBe(1);
+    expect(real.created).toBe(0);
+    expect(await prisma.exerciseMedia.count({ where: { storageKey: `${PREFIX}biceps/h1.gif` } })).toBe(0);
+    // O exercício fica intacto; rodar de novo não remove nada.
+    expect(await prisma.exercise.count({ where: { id: roscaId } })).toBe(1);
+    expect((await importExerciseMedia(prisma, [rejected], { verifier, dryRun: false })).removedRejected).toBe(0);
+  });
+
   it('sem credenciais do R2: chave deduzida é ignorada; só chave conferida na listagem real do bucket é gravada', async () => {
     const summary = await importExerciseMedia(
       prisma,

@@ -1,10 +1,10 @@
 {
   "totalGifs": 2092,
   "byStatus": {
-    "EXACT": 18,
-    "MATCHED": 32,
-    "REVIEW": 591,
-    "UNMATCHED": 1451
+    "EXACT": 17,
+    "MATCHED": 34,
+    "REVIEW": 592,
+    "UNMATCHED": 1449
   },
   "storageKeys": {
     "derived": 0,
@@ -49,6 +49,10 @@
       "gifs": 2
     },
     {
+      "exerciseName": "Puxada frontal (pulley)",
+      "gifs": 2
+    },
+    {
       "exerciseName": "Remada curvada com barra",
       "gifs": 2
     },
@@ -85,10 +89,6 @@
       "gifs": 1
     },
     {
-      "exerciseName": "Puxada frontal (pulley)",
-      "gifs": 1
-    },
-    {
       "exerciseName": "Supino inclinado com halteres",
       "gifs": 1
     }
@@ -111,7 +111,7 @@
     "Mobilidade de quadril (90/90)",
     "Rotação de tronco"
   ],
-  "gifsWithoutExercise": 2042,
+  "gifsWithoutExercise": 2041,
   "exercisesWithMultipleGifs": [
     {
       "exerciseName": "Panturrilha em pé",
@@ -147,6 +147,10 @@
     },
     {
       "exerciseName": "Elevação pélvica (hip thrust)",
+      "gifs": 2
+    },
+    {
+      "exerciseName": "Puxada frontal (pulley)",
       "gifs": 2
     },
     {
@@ -351,6 +355,10 @@
       "gifs": 30
     },
     {
+      "exerciseName": "Puxada frontal (pulley)",
+      "gifs": 29
+    },
+    {
       "exerciseName": "Remada curvada com barra",
       "gifs": 29
     },
@@ -360,10 +368,6 @@
     },
     {
       "exerciseName": "Levantamento terra",
-      "gifs": 28
-    },
-    {
-      "exerciseName": "Puxada frontal (pulley)",
       "gifs": 28
     },
     {
@@ -1035,10 +1039,6 @@
       "count": 2
     },
     {
-      "normalizedName": "cable bar lateral pulldown",
-      "count": 2
-    },
-    {
       "normalizedName": "cable biceps curl sz bar",
       "count": 2
     },
@@ -1073,6 +1073,10 @@
     {
       "normalizedName": "cable donkey kickback",
       "count": 2
+    },
+    {
+      "normalizedName": "cable forearm pronation",
+      "count": 2
     }
   ],
   "r2Listing": {
@@ -1083,7 +1087,7 @@
     "ambiguousInBucket": [],
     "bucketObjectsNotInInventory": [],
     "safeLinks": {
-      "confirmed": 50,
+      "confirmed": 51,
       "rejected": []
     }
   }

@@ -10,6 +10,7 @@ import {
   parseBucketListing,
   parseInventoryCsv,
   PilotEntry,
+  RejectedEntry,
 } from './exercise-media-catalog';
 
 /**
@@ -39,9 +40,9 @@ function main() {
 
   const rows = parseInventoryCsv(readFileSync(inventoryPath, 'utf-8'));
   const catalogNames = readJson<{ name: string }[]>('exercises.json').map((exercise) => exercise.name);
-  const aliases = readJson<{ exercises: AliasEntry[] }>('exercise-media-aliases.json').exercises;
+  const aliasFile = readJson<{ exercises: AliasEntry[]; rejected?: RejectedEntry[] }>('exercise-media-aliases.json');
   const pilot = readJson<PilotEntry[]>('exercise-media-pilot.json');
-  const context = buildMatchContext(aliases, pilot, catalogNames);
+  const context = buildMatchContext(aliasFile.exercises, pilot, catalogNames, aliasFile.rejected ?? []);
   const listing = listingPath ? parseBucketListing(decodeTextFile(readFileSync(listingPath))) : undefined;
   if (listing && listing.objects.length === 0) {
     throw new Error(`Listagem do bucket sem nenhuma chave exercises/...gif reconhecida: ${listingPath}`);

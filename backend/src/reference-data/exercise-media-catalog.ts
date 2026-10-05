@@ -46,6 +46,13 @@ export interface PilotEntry {
   sha256: string;
 }
 
+/** GIF conferido por uma pessoa e RECUSADO para um exercício (mostra outro movimento). */
+export interface RejectedEntry {
+  sha256: string;
+  exerciseName: string;
+  reason: string;
+}
+
 export interface ManifestEntry {
   storageKey: string;
   /** derived = montada pela regra do upload (não conferida); r2-listing = conferida na listagem real do bucket. */
@@ -63,6 +70,8 @@ export interface ManifestEntry {
   confidence: MatchConfidence;
   reason: string;
   candidates: string[];
+  /** Recusado na revisão humana: nunca é vinculado, e o importador remove o vínculo se ele existir. */
+  rejectedByReview?: true;
   /** Só com listagem do bucket: resultado da conferência da chave real. */
   r2Check?: R2Check;
   /** Vínculo seguro rebaixado para REVIEW porque a chave não foi confirmada na listagem real. */
@@ -217,11 +226,18 @@ export interface MatchContext {
   aliases: AliasEntry[];
   /** sha256 → exercício: GIFs já revisados e aprovados no piloto (exercise-media-pilot.json). */
   pilotBySha: Map<string, string>;
+  /** sha256 → recusa da revisão humana (exercise-media-aliases.json → rejected). Vence até o piloto. */
+  rejectedBySha: Map<string, RejectedEntry>;
   catalogNames: Set<string>;
 }
 
 /** Valida a tabela de aliases contra o catálogo: nome existente, alias único, regras de revisão com 2+ palavras. */
-export function buildMatchContext(aliases: AliasEntry[], pilot: PilotEntry[], catalogNames: string[]): MatchContext {
+export function buildMatchContext(
+  aliases: AliasEntry[],
+  pilot: PilotEntry[],
+  catalogNames: string[],
+  rejected: RejectedEntry[] = [],
+): MatchContext {
   const catalog = new Set(catalogNames);
   const seenAlias = new Map<string, string>();
   for (const entry of aliases) {
@@ -249,7 +265,17 @@ export function buildMatchContext(aliases: AliasEntry[], pilot: PilotEntry[], ca
     }
     pilotBySha.set(entry.sha256.toLowerCase(), entry.exerciseName);
   }
-  return { aliases, pilotBySha, catalogNames: catalog };
+  const rejectedBySha = new Map<string, RejectedEntry>();
+  for (const entry of rejected) {
+    if (!catalog.has(entry.exerciseName)) {
+      throw new Error(`Recusa aponta para exercício fora do catálogo: "${entry.exerciseName}".`);
+    }
+    if (!/^[0-9a-f]{64}$/i.test(entry.sha256) || !entry.reason?.trim()) {
+      throw new Error(`Recusa de "${entry.exerciseName}" precisa de sha256 válido e de um motivo.`);
+    }
+    rejectedBySha.set(entry.sha256.toLowerCase(), entry);
+  }
+  return { aliases, pilotBySha, rejectedBySha, catalogNames: catalog };
 }
 
 export interface MatchResult {
@@ -258,10 +284,23 @@ export interface MatchResult {
   confidence: MatchConfidence;
   reason: string;
   candidates: string[];
+  rejectedByReview?: true;
 }
 
 export function matchGif(row: InventoryRow, normalizedName: string, context: MatchContext): MatchResult {
   const equipment = equipmentSlug(row.equipmentFolder);
+
+  const rejection = context.rejectedBySha.get(row.sha256);
+  if (rejection) {
+    return {
+      exerciseName: null,
+      matchStatus: 'REVIEW',
+      confidence: 'low',
+      reason: `recusado na revisão humana para "${rejection.exerciseName}": ${rejection.reason}`,
+      candidates: [rejection.exerciseName],
+      rejectedByReview: true,
+    };
+  }
 
   const pilotExercise = context.pilotBySha.get(row.sha256);
   if (pilotExercise) {
@@ -562,6 +601,9 @@ export function validateManifest(data: unknown): ManifestEntry[] {
     const safe = entry.matchStatus === 'EXACT' || entry.matchStatus === 'MATCHED';
     if (safe && (typeof entry.exerciseName !== 'string' || entry.exerciseName.trim() === '')) {
       throw new Error(`${where}: ${entry.matchStatus} sem exerciseName.`);
+    }
+    if (entry.rejectedByReview !== undefined && (entry.rejectedByReview !== true || entry.matchStatus !== 'REVIEW')) {
+      throw new Error(`${where}: rejectedByReview só vale em registro REVIEW.`);
     }
     if (!safe && entry.exerciseName !== null) {
       throw new Error(`${where}: ${entry.matchStatus} não pode ter exerciseName (vínculo só em EXACT/MATCHED).`);
