@@ -16,6 +16,7 @@ import { CreateWorkoutSetDto } from './dto/create-workout-set.dto';
 import { UpdateWorkoutSetDto } from './dto/update-workout-set.dto';
 import { CreateExecutionLogDto } from './dto/create-execution-log.dto';
 import { CreateWorkoutFromProposalDto } from './dto/create-workout-from-proposal.dto';
+import { ReorderWorkoutDaysDto, ReorderWorkoutExercisesDto } from './dto/reorder-workout.dto';
 
 function meta(req: Request): RequestMeta {
   return { ipAddress: req.ip };
@@ -150,6 +151,31 @@ export class WorkoutsController {
     @Req() req: Request,
   ) {
     return this.workoutsService.updateDay(user.id, clientId, workoutId, versionId, dayId, dto, meta(req));
+  }
+
+  @Patch(':workoutId/versions/:versionId/days-order')
+  reorderDays(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('clientId') clientId: string,
+    @Param('workoutId') workoutId: string,
+    @Param('versionId') versionId: string,
+    @Body() dto: ReorderWorkoutDaysDto,
+    @Req() req: Request,
+  ) {
+    return this.workoutsService.reorderDays(user.id, clientId, workoutId, versionId, dto.dayIds, meta(req));
+  }
+
+  @Patch(':workoutId/versions/:versionId/days/:dayId/exercises-order')
+  reorderExercises(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('clientId') clientId: string,
+    @Param('workoutId') workoutId: string,
+    @Param('versionId') versionId: string,
+    @Param('dayId') dayId: string,
+    @Body() dto: ReorderWorkoutExercisesDto,
+    @Req() req: Request,
+  ) {
+    return this.workoutsService.reorderExercises(user.id, clientId, workoutId, versionId, dayId, dto.workoutExerciseIds, meta(req));
   }
 
   @Delete(':workoutId/versions/:versionId/days/:dayId')

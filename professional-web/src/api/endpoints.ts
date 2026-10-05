@@ -352,18 +352,98 @@ export async function deleteWorkoutExercise(clientId: string, workoutId: string,
   await apiClient.delete(`/clients/${clientId}/workouts/${workoutId}/versions/${versionId}/days/${dayId}/exercises/${weId}`);
 }
 
+export interface WorkoutSetInput {
+  reps?: number | null;
+  repsMin?: number | null;
+  repsMax?: number | null;
+  loadValue?: number | null;
+  loadUnit?: string | null;
+  restSeconds?: number | null;
+  tempo?: string;
+  notes?: string;
+}
+
 export async function addWorkoutSet(
   clientId: string,
   workoutId: string,
   versionId: string,
   dayId: string,
   weId: string,
-  input: { reps?: number; loadValue?: number; loadUnit?: string; restSeconds?: number },
+  input: WorkoutSetInput,
 ): Promise<WorkoutSet> {
   const res = await apiClient.post(
     `/clients/${clientId}/workouts/${workoutId}/versions/${versionId}/days/${dayId}/exercises/${weId}/sets`,
     input,
   );
+  return res.data;
+}
+
+export async function updateWorkoutSet(
+  clientId: string,
+  workoutId: string,
+  versionId: string,
+  dayId: string,
+  weId: string,
+  setId: string,
+  input: WorkoutSetInput,
+): Promise<WorkoutSet> {
+  const res = await apiClient.patch(
+    `/clients/${clientId}/workouts/${workoutId}/versions/${versionId}/days/${dayId}/exercises/${weId}/sets/${setId}`,
+    input,
+  );
+  return res.data;
+}
+
+export async function deleteWorkoutSet(clientId: string, workoutId: string, versionId: string, dayId: string, weId: string, setId: string) {
+  await apiClient.delete(`/clients/${clientId}/workouts/${workoutId}/versions/${versionId}/days/${dayId}/exercises/${weId}/sets/${setId}`);
+}
+
+export async function updateWorkoutDay(
+  clientId: string,
+  workoutId: string,
+  versionId: string,
+  dayId: string,
+  input: { name?: string; notes?: string },
+): Promise<WorkoutDay> {
+  const res = await apiClient.patch(`/clients/${clientId}/workouts/${workoutId}/versions/${versionId}/days/${dayId}`, input);
+  return res.data;
+}
+
+export async function reorderWorkoutDays(clientId: string, workoutId: string, versionId: string, dayIds: string[]): Promise<WorkoutVersion> {
+  const res = await apiClient.patch(`/clients/${clientId}/workouts/${workoutId}/versions/${versionId}/days-order`, { dayIds });
+  return res.data;
+}
+
+/** `exerciseId` troca o exercício por outro do catálogo (o backend confere a visibilidade). */
+export async function updateWorkoutExercise(
+  clientId: string,
+  workoutId: string,
+  versionId: string,
+  dayId: string,
+  weId: string,
+  input: { notes?: string; exerciseId?: string },
+): Promise<WorkoutExercise> {
+  const res = await apiClient.patch(`/clients/${clientId}/workouts/${workoutId}/versions/${versionId}/days/${dayId}/exercises/${weId}`, input);
+  return res.data;
+}
+
+export async function reorderWorkoutExercises(
+  clientId: string,
+  workoutId: string,
+  versionId: string,
+  dayId: string,
+  workoutExerciseIds: string[],
+): Promise<WorkoutVersion> {
+  const res = await apiClient.patch(
+    `/clients/${clientId}/workouts/${workoutId}/versions/${versionId}/days/${dayId}/exercises-order`,
+    { workoutExerciseIds },
+  );
+  return res.data;
+}
+
+/** "Excluir treino": arquiva — some do painel e do app, histórico e auditoria preservados. */
+export async function archiveWorkout(clientId: string, workoutId: string): Promise<Workout> {
+  const res = await apiClient.patch<Workout>(`/clients/${clientId}/workouts/${workoutId}`, { status: 'archived' });
   return res.data;
 }
 

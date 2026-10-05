@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { NotificationEventType, WorkoutAuditAction, WorkoutVersionStatus } from '@prisma/client';
+import { NotificationEventType, WorkoutAuditAction, WorkoutStatus, WorkoutVersionStatus } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { ExercisesService } from '../exercises/exercises.service';
 import { PRIMARY_EXERCISE_MEDIA_QUERY } from '../exercises/exercise-media-storage.service';
@@ -25,6 +25,16 @@ const FROM_PROPOSAL_TX_TIMEOUT_MS = 30_000;
 function blankToNull(value: string | null | undefined): string | null {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
+}
+
+function assertSamePermutation(existing: string[], requested: string[], label: string) {
+  const same =
+    existing.length === requested.length &&
+    new Set(requested).size === requested.length &&
+    requested.every((id) => existing.includes(id));
+  if (!same) {
+    throw new BadRequestException(`A nova ordem precisa conter exatamente os ${label} atuais, sem repetição.`);
+  }
 }
 
 export interface RequestMeta {
@@ -106,6 +116,18 @@ export class WorkoutsService {
     const workout = await this.prisma.workout.findFirst({ where: { id: workoutId, clientId } });
     if (!workout) {
       throw new NotFoundException('Treino não encontrado.');
+    }
+    return workout;
+  }
+
+  /**
+   * Treino excluído (arquivado) continua legível — histórico de execução e
+   * auditoria apontam para ele —, mas não aceita mais nenhuma alteração.
+   */
+  private async assertActiveWorkout(professionalId: string, clientId: string, workoutId: string) {
+    const workout = await this.assertOwnedWorkout(professionalId, clientId, workoutId);
+    if (workout.status !== WorkoutStatus.active) {
+      throw new ConflictException('Este treino foi excluído e não pode mais ser alterado.');
     }
     return workout;
   }
@@ -284,8 +306,17 @@ export class WorkoutsService {
     return { ...workout, versions, currentVersion };
   }
 
+  /**
+   * "Excluir treino" = arquivar (status archived): o treino some do painel e
+   * do app do cliente, mas versões, histórico de execução e auditoria — que
+   * referenciam o treino com RESTRICT — ficam preservados. Nada fora do
+   * treino (cliente, dieta, avaliação, catálogo, GIFs) é tocado.
+   */
   async update(professionalId: string, clientId: string, workoutId: string, dto: UpdateWorkoutDto, meta: RequestMeta = {}) {
-    await this.assertOwnedWorkout(professionalId, clientId, workoutId);
+    const current = await this.assertOwnedWorkout(professionalId, clientId, workoutId);
+    if (dto.status === WorkoutStatus.archived && current.status === WorkoutStatus.archived) {
+      throw new ConflictException('Este treino já foi excluído.');
+    }
     await this.prisma.workout.update({ where: { id: workoutId }, data: { status: dto.status } });
 
     await this.auditLog.record({
@@ -343,7 +374,7 @@ export class WorkoutsService {
   }
 
   async createVersion(professionalId: string, clientId: string, workoutId: string, meta: RequestMeta = {}) {
-    await this.assertOwnedWorkout(professionalId, clientId, workoutId);
+    await this.assertActiveWorkout(professionalId, clientId, workoutId);
 
     const existingDraft = await this.prisma.workoutVersion.findFirst({
       where: { workoutId, status: WorkoutVersionStatus.draft },
@@ -436,7 +467,7 @@ export class WorkoutsService {
     dto: UpdateWorkoutVersionDto,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedWorkout(professionalId, clientId, workoutId);
+    await this.assertActiveWorkout(professionalId, clientId, workoutId);
     const version = await this.getVersionOrThrow(workoutId, versionId);
     if (version.status !== WorkoutVersionStatus.draft) {
       throw new ConflictException('Só é possível editar uma versão em rascunho. Crie uma nova versão.');
@@ -465,7 +496,7 @@ export class WorkoutsService {
   }
 
   async publishVersion(professionalId: string, clientId: string, workoutId: string, versionId: string, meta: RequestMeta = {}) {
-    await this.assertOwnedWorkout(professionalId, clientId, workoutId);
+    await this.assertActiveWorkout(professionalId, clientId, workoutId);
     const version = await this.getVersionOrThrow(workoutId, versionId);
     if (version.status !== WorkoutVersionStatus.draft) {
       throw new ConflictException('Só é possível publicar uma versão em rascunho.');
@@ -573,7 +604,7 @@ export class WorkoutsService {
     dto: CreateWorkoutDayDto,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedWorkout(professionalId, clientId, workoutId);
+    await this.assertActiveWorkout(professionalId, clientId, workoutId);
     await this.assertDraftVersion(workoutId, versionId);
 
     let order = dto.order;
@@ -615,7 +646,7 @@ export class WorkoutsService {
     dto: UpdateWorkoutDayDto,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedWorkout(professionalId, clientId, workoutId);
+    await this.assertActiveWorkout(professionalId, clientId, workoutId);
     await this.assertDraftVersion(workoutId, versionId);
     await this.getDayOrThrow(versionId, dayId);
 
@@ -644,9 +675,10 @@ export class WorkoutsService {
     dayId: string,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedWorkout(professionalId, clientId, workoutId);
+    await this.assertActiveWorkout(professionalId, clientId, workoutId);
     await this.assertDraftVersion(workoutId, versionId);
     await this.getDayOrThrow(versionId, dayId);
+    await this.assertNoExecutionHistory({ workoutDayId: dayId }, 'Este dia já tem execuções registradas e não pode ser removido.');
 
     const exercises = await this.prisma.workoutExercise.findMany({ where: { workoutDayId: dayId } });
     await this.prisma.workoutSet.deleteMany({ where: { workoutExerciseId: { in: exercises.map((e) => e.id) } } });
@@ -672,7 +704,7 @@ export class WorkoutsService {
     dto: CreateWorkoutExerciseDto,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedWorkout(professionalId, clientId, workoutId);
+    await this.assertActiveWorkout(professionalId, clientId, workoutId);
     await this.assertDraftVersion(workoutId, versionId);
     await this.getDayOrThrow(versionId, dayId);
 
@@ -721,13 +753,25 @@ export class WorkoutsService {
     dto: UpdateWorkoutExerciseDto,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedWorkout(professionalId, clientId, workoutId);
+    await this.assertActiveWorkout(professionalId, clientId, workoutId);
     await this.assertDraftVersion(workoutId, versionId);
-    await this.getWorkoutExerciseOrThrow(dayId, workoutExerciseId);
+    const current = await this.getWorkoutExerciseOrThrow(dayId, workoutExerciseId);
+
+    // Troca do exercício do catálogo: só um exercício visível ao profissional
+    // (id estruturado; GIF/mídia vêm do próprio Exercise), e nunca por baixo de
+    // execuções já registradas — o histórico continuaria apontando para ele.
+    let exerciseId: string | undefined;
+    if (dto.exerciseId && dto.exerciseId !== current.exerciseId) {
+      exerciseId = (await this.exercisesService.findVisible(professionalId, dto.exerciseId)).id;
+      await this.assertNoExecutionHistory(
+        { workoutExerciseId },
+        'Este exercício já tem execuções registradas — remova-o e adicione o novo exercício.',
+      );
+    }
 
     const workoutExercise = await this.prisma.workoutExercise.update({
       where: { id: workoutExerciseId },
-      data: { order: dto.order, notes: dto.notes },
+      data: { order: dto.order, notes: dto.notes, exerciseId },
     });
 
     await this.auditLog.record({
@@ -751,9 +795,10 @@ export class WorkoutsService {
     workoutExerciseId: string,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedWorkout(professionalId, clientId, workoutId);
+    await this.assertActiveWorkout(professionalId, clientId, workoutId);
     await this.assertDraftVersion(workoutId, versionId);
     await this.getWorkoutExerciseOrThrow(dayId, workoutExerciseId);
+    await this.assertNoExecutionHistory({ workoutExerciseId }, 'Este exercício já tem execuções registradas e não pode ser removido.');
 
     await this.prisma.workoutSet.deleteMany({ where: { workoutExerciseId } });
     await this.prisma.workoutExercise.delete({ where: { id: workoutExerciseId } });
@@ -768,6 +813,86 @@ export class WorkoutsService {
     });
   }
 
+  /** Execução registrada (pelo cliente ou profissional) referencia dia/exercício com RESTRICT. */
+  private async assertNoExecutionHistory(where: { workoutDayId: string } | { workoutExerciseId: string }, message: string) {
+    const used =
+      'workoutDayId' in where
+        ? (await this.prisma.workoutExecutionLog.count({ where: { workoutDayId: where.workoutDayId } })) +
+          (await this.prisma.workoutExecutionSet.count({ where: { workoutExercise: { workoutDayId: where.workoutDayId } } }))
+        : await this.prisma.workoutExecutionSet.count({ where: { workoutExerciseId: where.workoutExerciseId } });
+    if (used > 0) {
+      throw new ConflictException(message);
+    }
+  }
+
+  /** Nova ordem dos dias numa transação; a lista precisa ser exatamente os dias da versão. */
+  async reorderDays(
+    professionalId: string,
+    clientId: string,
+    workoutId: string,
+    versionId: string,
+    dayIds: string[],
+    meta: RequestMeta = {},
+  ) {
+    await this.assertActiveWorkout(professionalId, clientId, workoutId);
+    await this.assertDraftVersion(workoutId, versionId);
+    const days = await this.prisma.workoutDay.findMany({ where: { workoutVersionId: versionId }, select: { id: true } });
+    assertSamePermutation(
+      days.map((d) => d.id),
+      dayIds,
+      'dias',
+    );
+
+    await this.prisma.$transaction(dayIds.map((id, order) => this.prisma.workoutDay.update({ where: { id }, data: { order } })));
+
+    await this.auditLog.record({
+      professionalId,
+      clientId,
+      workoutId,
+      workoutVersionId: versionId,
+      action: WorkoutAuditAction.day_updated,
+      ipAddress: meta.ipAddress,
+    });
+
+    return this.findVersion(professionalId, clientId, workoutId, versionId, meta, false);
+  }
+
+  /** Nova ordem dos exercícios de um dia numa transação. */
+  async reorderExercises(
+    professionalId: string,
+    clientId: string,
+    workoutId: string,
+    versionId: string,
+    dayId: string,
+    workoutExerciseIds: string[],
+    meta: RequestMeta = {},
+  ) {
+    await this.assertActiveWorkout(professionalId, clientId, workoutId);
+    await this.assertDraftVersion(workoutId, versionId);
+    await this.getDayOrThrow(versionId, dayId);
+    const exercises = await this.prisma.workoutExercise.findMany({ where: { workoutDayId: dayId }, select: { id: true } });
+    assertSamePermutation(
+      exercises.map((e) => e.id),
+      workoutExerciseIds,
+      'exercícios',
+    );
+
+    await this.prisma.$transaction(
+      workoutExerciseIds.map((id, order) => this.prisma.workoutExercise.update({ where: { id }, data: { order } })),
+    );
+
+    await this.auditLog.record({
+      professionalId,
+      clientId,
+      workoutId,
+      workoutVersionId: versionId,
+      action: WorkoutAuditAction.exercise_updated,
+      ipAddress: meta.ipAddress,
+    });
+
+    return this.findVersion(professionalId, clientId, workoutId, versionId, meta, false);
+  }
+
   async createSet(
     professionalId: string,
     clientId: string,
@@ -778,7 +903,7 @@ export class WorkoutsService {
     dto: CreateWorkoutSetDto,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedWorkout(professionalId, clientId, workoutId);
+    await this.assertActiveWorkout(professionalId, clientId, workoutId);
     await this.assertDraftVersion(workoutId, versionId);
     await this.getWorkoutExerciseOrThrow(dayId, workoutExerciseId);
     assertValidRepsPrescription(dto);
@@ -829,7 +954,7 @@ export class WorkoutsService {
     dto: UpdateWorkoutSetDto,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedWorkout(professionalId, clientId, workoutId);
+    await this.assertActiveWorkout(professionalId, clientId, workoutId);
     await this.assertDraftVersion(workoutId, versionId);
     await this.getWorkoutExerciseOrThrow(dayId, workoutExerciseId);
     const existing = await this.prisma.workoutSet.findFirst({ where: { id: setId, workoutExerciseId } });
@@ -877,7 +1002,7 @@ export class WorkoutsService {
     setId: string,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedWorkout(professionalId, clientId, workoutId);
+    await this.assertActiveWorkout(professionalId, clientId, workoutId);
     await this.assertDraftVersion(workoutId, versionId);
     await this.getWorkoutExerciseOrThrow(dayId, workoutExerciseId);
     const existing = await this.prisma.workoutSet.findFirst({ where: { id: setId, workoutExerciseId } });
@@ -904,7 +1029,7 @@ export class WorkoutsService {
     dto: CreateExecutionLogDto,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedWorkout(professionalId, clientId, workoutId);
+    await this.assertActiveWorkout(professionalId, clientId, workoutId);
 
     const day = await this.prisma.workoutDay.findFirst({
       where: { id: dto.workoutDayId, workoutVersion: { workoutId } },
@@ -1005,7 +1130,7 @@ export class WorkoutsService {
    */
   async createExecutionLogAsClient(clientId: string, dto: CreateExecutionLogDto) {
     const day = await this.prisma.workoutDay.findFirst({
-      where: { id: dto.workoutDayId, workoutVersion: { workout: { clientId } } },
+      where: { id: dto.workoutDayId, workoutVersion: { workout: { clientId, status: WorkoutStatus.active } } },
     });
     if (!day) {
       throw new NotFoundException('Dia de treino não encontrado.');
