@@ -4,6 +4,7 @@ import { Card } from './Card';
 import { Button } from './Button';
 import * as api from '../api/endpoints';
 import type { AiGenerationResult } from '../types/api';
+import { setAiConsent } from '../privacy/aiConsent';
 import { colors, typography } from '../theme/tokens';
 
 type Status = 'idle' | 'loading' | 'needsConsent' | 'ready' | 'error';
@@ -48,7 +49,8 @@ export function AiAssistPanel({ title, helperText, generate }: Props) {
   async function handleAcceptConsent() {
     setConsenting(true);
     try {
-      await api.acceptAiConsent();
+      // Mesma lógica da tela Privacidade e dados (onde também dá para revogar).
+      await setAiConsent(api, true);
       await handleGenerate();
     } finally {
       setConsenting(false);
@@ -71,7 +73,7 @@ export function AiAssistPanel({ title, helperText, generate }: Props) {
         <>
           <Text style={styles.helper}>
             Para usar este recurso, você precisa concordar com o uso de IA sobre os seus próprios dados já liberados
-            pelo seu profissional.
+            pelo seu profissional. Você pode revogar depois em Privacidade e dados.
           </Text>
           <Button title="Concordar e continuar" onPress={handleAcceptConsent} loading={consenting} />
         </>

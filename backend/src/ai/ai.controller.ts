@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, Req } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { Role } from '@prisma/client';
 import { Request } from 'express';
@@ -36,9 +36,20 @@ export class ProfessionalAiConsentController {
 export class ClientAiController {
   constructor(private readonly aiService: AiService) {}
 
+  // Consentimento de IA do PRÓPRIO cliente (o papel `client` garante que nunca é dado pelo profissional).
+  @Get('consent')
+  getConsent(@CurrentUser() user: AuthenticatedUser) {
+    return this.aiService.getClientConsent(user.id);
+  }
+
   @Post('consent')
   recordConsent(@CurrentUser() user: AuthenticatedUser) {
     return this.aiService.recordClientConsent(user.id);
+  }
+
+  @Delete('consent')
+  revokeConsent(@CurrentUser() user: AuthenticatedUser) {
+    return this.aiService.revokeClientConsent(user.id);
   }
 
   @Throttle({ default: { limit: AI_GENERATE_THROTTLE_LIMIT, ttl: 60_000 } })

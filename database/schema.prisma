@@ -1141,6 +1141,13 @@ enum AiFeatureKey {
   organize_workout
 }
 
+// Por que um recurso de IA pôde processar o pedido: com consentimento
+// específico do cliente, ou só com material escrito pelo profissional.
+enum AiProcessingPolicy {
+  client_consent
+  professional_material
+}
+
 enum AiInteractionStatus {
   succeeded
   failed
@@ -1152,6 +1159,7 @@ enum AiInteractionStatus {
 enum AiAuditAction {
   consent_granted_professional
   consent_granted_client
+  consent_revoked_client
   generation_requested
   generation_succeeded
   generation_failed
@@ -1162,20 +1170,23 @@ enum AiAuditAction {
 // guarda o que foi enviado/recebido porque, sem isso, não é possível
 // prestar contas do que um processador de IA recebeu. Nunca secret/token.
 model AiInteractionLog {
-  id             String              @id @default(uuid())
-  professionalId String              @map("professional_id")
-  clientId       String?             @map("client_id")
-  feature        AiFeatureKey
-  provider       String
-  model          String
-  promptVersion  String              @map("prompt_version")
-  contextRef     String?             @map("context_ref") // ex.: evaluationId, quando aplicável
-  status         AiInteractionStatus
-  systemPrompt   String              @map("system_prompt") @db.Text
-  contextSummary Json                @map("context_summary")
-  responseText   String?             @map("response_text") @db.Text
-  errorMessage   String?             @map("error_message")
-  createdAt      DateTime            @default(now()) @map("created_at")
+  id               String              @id @default(uuid())
+  professionalId   String              @map("professional_id")
+  clientId         String?             @map("client_id")
+  feature          AiFeatureKey
+  provider         String
+  model            String
+  promptVersion    String              @map("prompt_version")
+  contextRef       String?             @map("context_ref") // ex.: evaluationId, quando aplicável
+  status           AiInteractionStatus
+  systemPrompt     String              @map("system_prompt") @db.Text
+  contextSummary   Json                @map("context_summary")
+  responseText     String?             @map("response_text") @db.Text
+  errorMessage     String?             @map("error_message")
+  // Regra que liberou a chamada (ver ai-consent-policy.ts). Nulo nas
+  // interações anteriores à política por recurso.
+  processingPolicy AiProcessingPolicy? @map("processing_policy")
+  createdAt        DateTime            @default(now()) @map("created_at")
 
   professional Professional @relation(fields: [professionalId], references: [id], onDelete: Restrict)
   client       Client?      @relation(fields: [clientId], references: [id], onDelete: Restrict)

@@ -143,6 +143,14 @@ export class OrganizeWorkoutUseCase implements AiUseCase {
 
   constructor(private readonly exercisesService: ExercisesService) {}
 
+  /**
+   * Minimização estrutural (política `professional_material`, sem consentimento
+   * do cliente — ver ai-consent-policy.ts): o provedor recebe SÓ o texto do
+   * treino escrito pelo profissional. Este método nem lê o cliente — nada de
+   * nome, id, avaliação, dieta ou histórico entra no contexto. O que o próprio
+   * profissional colar no texto não é filtrado aqui (sem anonimização
+   * automática por enquanto); o painel orienta a não incluir dados pessoais.
+   */
   async buildContext({ input }: BuildContextParams): Promise<AiContextResult> {
     const dto = input as GenerateAiContentDto;
     return {

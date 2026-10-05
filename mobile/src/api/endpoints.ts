@@ -156,8 +156,22 @@ export async function listOwnDeviceMetrics(connectionId: string): Promise<Pagina
 // Fase 12 — IA assistiva
 // ---------------------------------------------------------------------------
 
+export interface AiConsentState {
+  /** ISO da data/hora da autorização; null = não autorizado. */
+  aiDataProcessingConsentAt: string | null;
+}
+
+export async function getAiConsent(): Promise<AiConsentState> {
+  const res = await apiClient.get<AiConsentState>('/client/ai/consent');
+  return res.data;
+}
+
 export async function acceptAiConsent(): Promise<void> {
   await apiClient.post('/client/ai/consent');
+}
+
+export async function revokeAiConsent(): Promise<void> {
+  await apiClient.delete('/client/ai/consent');
 }
 
 export async function explainEvaluation(evaluationId: string): Promise<AiGenerationResult> {

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { AiAuditAction, AiFeatureKey, AiInteractionStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { AiAuditLogService } from './ai-audit-log.service';
+import { AI_CONSENT_POLICY } from './ai-consent-policy';
 import { AiProviderRegistry } from './providers/ai-provider.registry';
 import { AiCredentialsResolver } from './providers/ai-credentials.resolver';
 import { AiTimeoutError, callProviderWithResilience } from './providers/call-with-resilience';
@@ -20,6 +21,10 @@ export interface RequestMeta {
 }
 
 const MAX_OUTPUT_CHARS = 4000;
+
+export const CLIENT_AI_CONSENT_MISSING_MESSAGE =
+  'O cliente ainda não autorizou o processamento de dados por IA. Peça ao cliente que acesse Privacidade e dados no ' +
+  'aplicativo e autorize o uso de inteligência artificial.';
 // Padrão quando AI_TIMEOUT_MS não é definido (o mesmo da Fase 12). Use cases
 // mais pesados declaram o próprio timeoutMs (ex.: organize_workout).
 export const DEFAULT_AI_TIMEOUT_MS = 10_000;
@@ -117,13 +122,15 @@ export class AiService {
     professionalId: string,
     clientId: string,
     requireProfessionalConsent: boolean,
+    clientConsentRequired: boolean,
   ): Promise<{ ok: true } | { ok: false; reason: string }> {
     const client = await this.prisma.client.findUniqueOrThrow({
       where: { id: clientId },
       select: { aiDataProcessingConsentAt: true },
     });
-    if (!client.aiDataProcessingConsentAt) {
-      return { ok: false, reason: 'O cliente ainda não consentiu com o processamento de dados por IA.' };
+    if (clientConsentRequired && !client.aiDataProcessingConsentAt) {
+      // Só o próprio cliente concede (app → Privacidade e dados); o profissional nunca consente por ele.
+      return { ok: false, reason: CLIENT_AI_CONSENT_MISSING_MESSAGE };
     }
 
     if (requireProfessionalConsent) {
@@ -150,7 +157,14 @@ export class AiService {
       await this.assertOwnedClient(params.professionalId, params.clientId);
     }
 
-    const consent = await this.checkConsent(params.professionalId, params.clientId, params.requireProfessionalConsent);
+    // Política por recurso (ai-consent-policy.ts): única fonte da exigência de consentimento do cliente.
+    const policy = AI_CONSENT_POLICY[params.feature];
+    const consent = await this.checkConsent(
+      params.professionalId,
+      params.clientId,
+      params.requireProfessionalConsent,
+      policy.clientConsentRequired,
+    );
     if (!consent.ok) {
       await this.auditLog.record({
         professionalId: params.professionalId,
@@ -245,6 +259,7 @@ export class AiService {
       data: {
         professionalId: params.professionalId,
         clientId: params.clientId,
+        processingPolicy: policy.processingPolicy,
         feature: params.feature,
         provider: providerId,
         model,
@@ -327,6 +342,35 @@ export class AiService {
       });
     }
     return { aiDataProcessingConsentAt };
+  }
+
+  /** Estado atual do consentimento do próprio cliente (null = não autorizado). */
+  async getClientConsent(clientId: string): Promise<{ aiDataProcessingConsentAt: Date | null }> {
+    return this.prisma.client.findUniqueOrThrow({
+      where: { id: clientId },
+      select: { aiDataProcessingConsentAt: true },
+    });
+  }
+
+  /**
+   * Revogação pelo próprio cliente: bloqueia novos usos de IA a partir de
+   * agora. Não apaga nada (interações anteriores, treino, dieta e conta ficam
+   * como estão) — só limpa o consentimento e registra a revogação na auditoria.
+   */
+  async revokeClientConsent(clientId: string): Promise<{ aiDataProcessingConsentAt: null }> {
+    const client = await this.prisma.client.findUniqueOrThrow({
+      where: { id: clientId },
+      select: { aiDataProcessingConsentAt: true, professionalId: true },
+    });
+    if (client.aiDataProcessingConsentAt) {
+      await this.prisma.client.update({ where: { id: clientId }, data: { aiDataProcessingConsentAt: null } });
+      await this.auditLog.record({
+        professionalId: client.professionalId,
+        clientId,
+        action: AiAuditAction.consent_revoked_client,
+      });
+    }
+    return { aiDataProcessingConsentAt: null };
   }
 
   async listInteractionsForProfessional(professionalId: string, clientId: string, page = 1, pageSize = 20) {

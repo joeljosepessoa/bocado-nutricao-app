@@ -222,12 +222,26 @@ describe('IA — organizar treino existente (e2e)', () => {
     expect(fakeProvider.generate).not.toHaveBeenCalled();
   });
 
-  it('sem consentimento do cliente ou do profissional: 403, provedor nunca chamado', async () => {
-    const noClient = await setup({ clientConsent: false });
-    await organize(noClient.professional.accessToken, noClient.client.id).expect(403);
+  it('sem consentimento do profissional: 403, provedor nunca chamado', async () => {
     const noPro = await setup({ professionalConsent: false });
     await organize(noPro.professional.accessToken, noPro.client.id).expect(403);
     expect(fakeProvider.generate).not.toHaveBeenCalled();
+  });
+
+  it('sem consentimento do cliente: funciona (política professional_material) e o provedor só recebe o texto do profissional', async () => {
+    const { professional, client } = await setup({ clientConsent: false });
+    reply({
+      days: [{ name: 'Dia A', notes: null, exercises: [{ name: 'Supino', muscleGroup: null, notes: null, setGroups: [group({ count: 3, reps: 10 })], warnings: [] }] }],
+      warnings: [],
+    });
+    await organize(professional.accessToken, client.id, 'Dia A\nSupino 3x10').expect(201);
+    expect(fakeProvider.generate).toHaveBeenCalledTimes(1);
+    const sent = fakeProvider.generate.mock.calls[0][0];
+    expect(sent.context).toEqual({ workoutText: 'Dia A\nSupino 3x10' });
+    const payload = JSON.stringify({ system: sent.systemPrompt, context: sent.context });
+    expect(payload).not.toContain(client.id);
+    expect(payload).not.toContain(client.user.email);
+    expect(payload).not.toContain(client.user.fullName);
   });
 
   it('cliente não consegue chamar a organização de treino (fora da allowlist) nem sem login', async () => {

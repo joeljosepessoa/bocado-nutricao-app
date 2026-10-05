@@ -37,6 +37,16 @@ export interface ClientDataExport {
   appointments: unknown[];
   devices: unknown;
   notificationPreferences: unknown[];
+  /** Estado do consentimento de IA da própria cliente (null = não autorizado). */
+  aiConsent: { aiDataProcessingConsentAt: Date | null };
+  /**
+   * Interações de IA que envolveram a cliente — só METADADOS (recurso, data,
+   * situação, provedor, modelo e política aplicada). Prompt, contexto e
+   * resposta ficam fora por ora: parte é material interno do profissional
+   * (ex.: rascunhos) e a regra de exportação desse conteúdo ainda será
+   * definida (docs/IA-PRIVACIDADE.md).
+   */
+  aiInteractions: unknown[];
 }
 
 @Injectable()
@@ -78,6 +88,15 @@ export class LgpdService {
       orderBy: { createdAt: 'asc' },
     });
 
+    const [aiConsent, aiInteractions] = await Promise.all([
+      this.prisma.client.findUniqueOrThrow({ where: { id: clientId }, select: { aiDataProcessingConsentAt: true } }),
+      this.prisma.aiInteractionLog.findMany({
+        where: { clientId },
+        select: { feature: true, createdAt: true, status: true, provider: true, model: true, processingPolicy: true },
+        orderBy: { createdAt: 'asc' },
+      }),
+    ]);
+
     const request = await this.prisma.dataExportRequest.create({ data: { clientId } });
 
     return {
@@ -92,6 +111,8 @@ export class LgpdService {
       appointments,
       devices,
       notificationPreferences,
+      aiConsent,
+      aiInteractions,
     };
   }
 
