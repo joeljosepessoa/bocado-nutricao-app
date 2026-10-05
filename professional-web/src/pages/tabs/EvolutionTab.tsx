@@ -91,7 +91,7 @@ export function EvolutionTab() {
                 <XAxis dataKey="dateLabel" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} unit={selectedMetric?.unit} />
                 <Tooltip formatter={(value) => [`${value}${selectedMetric?.unit ?? ''}`, selectedMetric?.label ?? '']} />
-                <Line type="monotone" dataKey="value" stroke="#1f7a5c" strokeWidth={2.5} dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="value" stroke="var(--color-primary)" strokeWidth={2.5} dot={{ r: 4 }} />
               </LineChart>
             </ResponsiveContainer>
           )}

@@ -1,43 +1,187 @@
 .shell {
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 256px minmax(0, 1fr);
   min-height: 100vh;
 }
 
+/* --- Barra lateral --------------------------------------------------- */
+
 .sidebar {
-  background: var(--color-primary-dark);
-  color: var(--color-text-inverse);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  background: var(--color-sidebar);
+  color: var(--color-sidebar-text);
   display: flex;
   flex-direction: column;
-  padding: var(--space-md);
-  gap: var(--space-lg);
+  z-index: 50;
 }
 
 .brand {
-  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.45);
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.brandName {
+  color: #fff;
   font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+.brandSub {
+  color: var(--color-sidebar-muted);
+  font-size: 11.5px;
+}
+
+.drawerClose {
+  display: none;
+  background: transparent;
+  border: 0;
+  color: var(--color-sidebar-muted);
+  cursor: pointer;
+  padding: 4px;
 }
 
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  padding: 16px 12px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .navLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  color: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  color: var(--color-sidebar-text);
   text-decoration: none;
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 600;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.navLink:hover,
-.navLinkActive {
-  background: rgba(255, 255, 255, 0.12);
+.navLink:hover {
+  background: var(--color-sidebar-hover);
   color: #fff;
 }
+
+.navLinkActive,
+.navLinkActive:hover {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: var(--shadow-action);
+}
+
+.navLabel {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.navLinkSoon,
+.navLinkSoon:hover {
+  color: rgba(203, 213, 225, 0.45);
+  background: transparent;
+  cursor: default;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.userBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.avatar,
+.avatarSmall {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  font-size: 13px;
+}
+
+.userText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.userName {
+  color: #fff;
+  font-weight: 600;
+  font-size: 13.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userRole {
+  color: var(--color-sidebar-muted);
+  font-size: 11.5px;
+}
+
+.logout {
+  background: transparent;
+  border: 0;
+  color: var(--color-sidebar-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.logout:hover {
+  color: #fff;
+  background: var(--color-sidebar-hover);
+}
+
+/* --- Área principal ---------------------------------------------------- */
 
 .main {
   display: flex;
@@ -46,35 +190,142 @@
 }
 
 .header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: var(--space-md) var(--space-lg);
+  gap: 16px;
+  padding: 12px 32px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--color-border);
+}
+
+.menuButton {
+  display: none;
+  background: transparent;
+  border: 0;
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 440px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.search:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
   background: var(--color-surface);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  padding: 10px 0;
+  color: var(--color-text);
+}
+
+.headerSpacer {
+  flex: 1;
+}
+
+.headerProfile {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatarSmall {
+  width: 32px;
+  height: 32px;
+  font-size: 12px;
+}
+
+.headerName {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
 }
 
 .content {
   flex: 1;
-  padding: var(--space-lg);
+  padding: 32px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-  max-width: 1100px;
+  gap: var(--space-lg);
+  max-width: 1440px;
   width: 100%;
   margin: 0 auto;
 }
 
-@media (max-width: 800px) {
+.overlay {
+  display: none;
+}
+
+/* --- Tablet e celular: a barra lateral vira gaveta --------------------- */
+
+@media (max-width: 960px) {
   .shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
+
   .sidebar {
-    flex-direction: row;
-    align-items: center;
-    overflow-x: auto;
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 272px;
+    max-width: 85vw;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
   }
-  .nav {
-    flex-direction: row;
+
+  .sidebarOpen {
+    transform: translateX(0);
+    box-shadow: 0 10px 40px rgba(15, 23, 42, 0.35);
+  }
+
+  .drawerClose,
+  .menuButton {
+    display: inline-flex;
+  }
+
+  .overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 45;
+  }
+
+  .header {
+    padding: 10px 16px;
+    gap: 10px;
+  }
+
+  .content {
+    padding: 20px 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .headerName {
+    display: none;
   }
 }

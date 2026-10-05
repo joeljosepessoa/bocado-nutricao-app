@@ -13,8 +13,8 @@
 }
 
 .positive {
-  background: var(--color-primary-light);
-  color: var(--color-primary-dark);
+  background: var(--color-success-light);
+  color: #15803d;
 }
 
 .warning {

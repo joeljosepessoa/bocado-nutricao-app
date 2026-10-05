@@ -1,0 +1,396 @@
+/* --- Cabeçalho ---------------------------------------------------------- */
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.greeting {
+  font-size: 30px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.welcome {
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: var(--color-text-secondary);
+}
+
+.primaryAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: 14.5px;
+  cursor: pointer;
+  box-shadow: var(--shadow-action);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.primaryAction:hover {
+  background: var(--color-primary-dark);
+}
+
+/* --- Indicadores -------------------------------------------------------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.statCard {
+  background: var(--color-surface);
+  border: 1px solid #eef0f3;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.statTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.statIcon,
+.activityIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.statIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+}
+
+.statValue {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--color-text);
+}
+
+.statLabel {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.statHint {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+
+.trend {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.trendUp {
+  background: var(--color-success-light);
+  color: #15803d;
+}
+
+.trendDown {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+/* Tons dos ícones — saturados, mas da mesma família. */
+.blue {
+  background: #3b82f6;
+}
+.green {
+  background: #10b981;
+}
+.violet {
+  background: #8b5cf6;
+}
+.orange {
+  background: #f97316;
+}
+.pink {
+  background: #ec4899;
+}
+.amber {
+  background: #f59e0b;
+}
+
+/* --- Painéis -------------------------------------------------------------- */
+
+.middle {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.panel {
+  background: var(--color-surface);
+  border: 1px solid #eef0f3;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 24px;
+  min-width: 0;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.panelSub {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+}
+
+.chartControls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  appearance: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  max-width: 220px;
+  text-overflow: ellipsis;
+}
+
+select.pill {
+  padding-right: 28px;
+  background-image: linear-gradient(45deg, transparent 50%, #64748b 50%), linear-gradient(135deg, #64748b 50%, transparent 50%);
+  background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.pillActive {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+.chartArea {
+  margin: 0 -8px;
+}
+
+.chartNote {
+  margin: 8px 8px 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.activityList {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.activityList li + li {
+  border-top: 1px solid #f1f3f5;
+}
+
+.activityItem {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 0;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.activityItem:hover .activityText > span:first-child {
+  color: var(--color-primary-dark);
+}
+
+.activityIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.activityText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13.5px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.activityTime {
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+
+/* --- Últimos pacientes ---------------------------------------------------- */
+
+.seeAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.patients {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.patientCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 12px;
+  border: 1px solid #eef0f3;
+  border-radius: 14px;
+  background: var(--color-bg);
+  text-decoration: none;
+  color: var(--color-text);
+  text-align: center;
+  min-width: 0;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.patientCard:hover {
+  border-color: #fed7aa;
+  box-shadow: var(--shadow-md);
+}
+
+.patientAvatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.patientName {
+  font-weight: 600;
+  font-size: 13.5px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.patientMeta {
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+}
+
+/* --- Botão flutuante ------------------------------------------------------ */
+
+.fab {
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  border: 0;
+  background: var(--color-primary);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-action);
+  z-index: 30;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.fab:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+/* --- Responsivo ------------------------------------------------------------- */
+
+@media (max-width: 1280px) {
+  .stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .middle {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .statCard {
+    padding: 16px;
+  }
+  .greeting {
+    font-size: 24px;
+  }
+  .primaryAction {
+    width: 100%;
+    justify-content: center;
+  }
+  .panel {
+    padding: 18px;
+  }
+  .fab {
+    right: 16px;
+    bottom: 16px;
+  }
+}
