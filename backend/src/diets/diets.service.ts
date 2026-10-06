@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { DietAuditAction, DietStatus, DietVersionStatus, NotificationEventType, NutritionUnit } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { FoodsService } from '../foods/foods.service';
@@ -14,6 +14,15 @@ import { UpdateMealDto } from './dto/update-meal.dto';
 import { CreateMealFoodDto } from './dto/create-meal-food.dto';
 import { UpdateMealFoodDto } from './dto/update-meal-food.dto';
 import { DietClientSummaryDto, SubstitutionOption } from './dto/diet-client-summary.dto';
+import { buildDietTree, isSimpleStructure, MealRow, roundTree, structureProblems } from './diet-structure';
+import {
+  clearDraftMeals,
+  cloneVersionContent,
+  createMealWithFixedGroup,
+  deleteMealCascade,
+  ensureDefaultDay,
+  fixedChoiceForMeal,
+} from './diet-structure.writer';
 
 export interface RequestMeta {
   ipAddress?: string;
@@ -25,8 +34,11 @@ const VERSION_DETAIL_INCLUDE = {
       foods: {
         include: { food: { select: { id: true, name: true, baseUnit: true } } },
       },
+      groups: { include: { choices: true } },
     },
   },
+  days: true,
+  supplements: true,
 } as const;
 
 function round(value: number, decimals = 1): number {
@@ -118,16 +130,34 @@ export class DietsService {
     };
   }
 
+  /**
+   * Detalhe da versão: `days` (árvore nova, nutrição em FAIXA por escolha,
+   * grupo, refeição e dia) + o formato antigo (`meals`, `dayTotals`,
+   * `percentageDistribution`) para o painel atual. Na dieta simples o formato
+   * antigo sai exatamente como antes; com opções/alternativas, somar tudo
+   * seria errado, então os totais antigos dessas refeições/do dia vêm null.
+   */
   /* eslint-disable @typescript-eslint/no-explicit-any */
   private buildVersionDetail(version: any) {
+    const tree = buildDietTree(version.days ?? [], version.meals as MealRow[]);
+    const simple = isSimpleStructure(tree);
+    const fixedOnly = new Set(tree.flatMap((d) => d.meals.filter((m) => m.groups.every((g) => g.kind === 'fixed')).map((m) => m.id)));
     const meals = [...version.meals]
       .sort((a: any, b: any) => a.order - b.order)
-      .map((meal: any) => {
+      .map(({ groups: _groups, ...meal }: any) => {
         const foods = [...meal.foods].sort((a: any, b: any) => a.order - b.order);
-        return { ...meal, foods, totals: this.sumNutrition(foods) };
+        return { ...meal, foods, totals: fixedOnly.has(meal.id) ? this.sumNutrition(foods) : null };
       });
-    const dayTotals = this.sumNutrition(meals.flatMap((m: any) => m.foods));
-    return { ...version, meals, dayTotals, percentageDistribution: this.percentageDistribution(dayTotals) };
+    const dayTotals = simple ? this.sumNutrition(meals.flatMap((m: any) => m.foods)) : null;
+    const supplements = [...(version.supplements ?? [])].sort((a: any, b: any) => a.order - b.order);
+    return {
+      ...version,
+      meals,
+      dayTotals,
+      percentageDistribution: dayTotals ? this.percentageDistribution(dayTotals) : null,
+      days: roundTree(tree),
+      supplements,
+    };
   }
   /* eslint-enable @typescript-eslint/no-explicit-any */
 
@@ -136,7 +166,7 @@ export class DietsService {
 
     const diet = await this.prisma.$transaction(async (tx) => {
       const created = await tx.diet.create({ data: { clientId, professionalId } });
-      await tx.dietVersion.create({
+      const version = await tx.dietVersion.create({
         data: {
           dietId: created.id,
           versionNumber: 1,
@@ -145,12 +175,14 @@ export class DietsService {
           endDate: dto.endDate ? new Date(dto.endDate) : undefined,
           notes: dto.notes,
           objective: dto.objective,
+          patientGuidelines: dto.patientGuidelines,
           targetCalories: dto.targetCalories,
           targetProteinG: dto.targetProteinG,
           targetCarbG: dto.targetCarbG,
           targetFatG: dto.targetFatG,
         },
       });
+      await ensureDefaultDay(tx, version.id);
       return created;
     });
 
@@ -220,9 +252,7 @@ export class DietsService {
           action = DietAuditAction.created;
         } else if (existingDraft) {
           // Só o RASCUNHO (nunca publicado) tem o conteúdo trocado — mesma operação de excluir refeição.
-          const meals = await tx.meal.findMany({ where: { dietVersionId: existingDraft.id }, select: { id: true } });
-          await tx.mealFood.deleteMany({ where: { mealId: { in: meals.map((m) => m.id) } } });
-          await tx.meal.deleteMany({ where: { dietVersionId: existingDraft.id } });
+          await clearDraftMeals(tx, existingDraft.id);
           await tx.dietVersion.update({
             where: { id: existingDraft.id },
             data: {
@@ -258,15 +288,22 @@ export class DietsService {
           action = DietAuditAction.version_created;
         }
 
+        const dietDayId = await ensureDefaultDay(tx, versionId);
         for (const [m, meal] of dto.meals.entries()) {
-          const createdMeal = await tx.meal.create({
-            data: { dietVersionId: versionId, name: meal.name.trim(), order: m, time: meal.time ?? null, notes: blank(meal.notes) },
+          const { meal: createdMeal, choiceId } = await createMealWithFixedGroup(tx, {
+            dietVersionId: versionId,
+            dietDayId,
+            name: meal.name.trim(),
+            order: m,
+            time: meal.time ?? null,
+            notes: blank(meal.notes),
           });
           for (const [f, item] of meal.foods.entries()) {
             const snapshot = snapshots.get(`${m}:${f}`);
             await tx.mealFood.create({
               data: {
                 mealId: createdMeal.id,
+                mealChoiceId: choiceId,
                 foodId: item.foodId,
                 order: f,
                 quantity: item.quantity,
@@ -440,6 +477,7 @@ export class DietsService {
           endDate: publishedVersion?.endDate,
           notes: publishedVersion?.notes,
           objective: publishedVersion?.objective,
+          patientGuidelines: publishedVersion?.patientGuidelines,
           targetCalories: publishedVersion?.targetCalories,
           targetProteinG: publishedVersion?.targetProteinG,
           targetCarbG: publishedVersion?.targetCarbG,
@@ -447,40 +485,15 @@ export class DietsService {
         },
       });
 
+      // Cópia profunda (dias, refeições, grupos, escolhas, itens com o snapshot gravado, suplementos).
       if (publishedVersion) {
-        for (const meal of publishedVersion.meals as any[]) {
-          const clonedMeal = await tx.meal.create({
-            data: {
-              dietVersionId: created.id,
-              name: meal.name,
-              order: meal.order,
-              time: meal.time,
-              notes: meal.notes,
-            },
-          });
-          for (const food of meal.foods as any[]) {
-            await tx.mealFood.create({
-              data: {
-                mealId: clonedMeal.id,
-                foodId: food.foodId,
-                order: food.order,
-                quantity: food.quantity,
-                unit: food.unit,
-                gramsEquivalent: food.gramsEquivalent,
-                kcal: food.kcal,
-                proteinG: food.proteinG,
-                carbG: food.carbG,
-                fatG: food.fatG,
-                fiberG: food.fiberG,
-                notes: food.notes,
-              },
-            });
-          }
-        }
+        await cloneVersionContent(tx, publishedVersion.id, created.id);
+      } else {
+        await ensureDefaultDay(tx, created.id);
       }
 
       return created;
-    });
+    }, { timeout: 30_000 });
 
     await this.auditLog.record({
       professionalId,
@@ -515,6 +528,7 @@ export class DietsService {
         endDate: dto.endDate ? new Date(dto.endDate) : undefined,
         notes: dto.notes,
         objective: dto.objective,
+        patientGuidelines: dto.patientGuidelines,
         targetCalories: dto.targetCalories,
         targetProteinG: dto.targetProteinG,
         targetCarbG: dto.targetCarbG,
@@ -545,6 +559,11 @@ export class DietsService {
     const version = await this.getVersionOrThrow(dietId, versionId);
     if (version.status !== DietVersionStatus.draft) {
       throw new ConflictException('Só é possível publicar uma versão em rascunho.');
+    }
+    const full = await this.prisma.dietVersion.findUniqueOrThrow({ where: { id: versionId }, include: VERSION_DETAIL_INCLUDE });
+    const problems = structureProblems(buildDietTree(full.days, full.meals as MealRow[]));
+    if (problems.length > 0) {
+      throw new ConflictException(`Corrija a estrutura antes de publicar: ${problems.join(' ')}`);
     }
 
     await this.prisma.$transaction(async (tx) => {
@@ -577,6 +596,12 @@ export class DietsService {
     return this.findVersion(professionalId, clientId, dietId, versionId, meta, false);
   }
 
+  /** Dono + dieta ativa + versão em rascunho — mesma trava de toda edição de conteúdo. */
+  async assertEditableDraft(professionalId: string, clientId: string, dietId: string, versionId: string) {
+    await this.assertActiveDiet(professionalId, clientId, dietId);
+    return this.assertDraftVersion(dietId, versionId);
+  }
+
   private async assertDraftVersion(dietId: string, versionId: string) {
     const version = await this.getVersionOrThrow(dietId, versionId);
     if (version.status !== DietVersionStatus.draft) {
@@ -596,14 +621,26 @@ export class DietsService {
     await this.assertActiveDiet(professionalId, clientId, dietId);
     await this.assertDraftVersion(dietId, versionId);
 
-    let order = dto.order;
-    if (order == null) {
-      const last = await this.prisma.meal.findFirst({ where: { dietVersionId: versionId }, orderBy: { order: 'desc' } });
-      order = (last?.order ?? -1) + 1;
+    if (dto.dietDayId) {
+      const day = await this.prisma.dietDay.findFirst({ where: { id: dto.dietDayId, dietVersionId: versionId } });
+      if (!day) {
+        throw new NotFoundException('Dia da dieta não encontrado nesta versão.');
+      }
     }
 
-    const meal = await this.prisma.meal.create({
-      data: { dietVersionId: versionId, name: dto.name, order, time: dto.time, notes: dto.notes },
+    // Refeição já nasce com o grupo fixo + escolha única (onde os alimentos "normais" entram).
+    const meal = await this.prisma.$transaction(async (tx) => {
+      const dietDayId = dto.dietDayId ?? (await ensureDefaultDay(tx, versionId));
+      let order = dto.order;
+      if (order == null) {
+        const last = await tx.meal.findFirst({
+          where: dto.dietDayId ? { dietDayId } : { dietVersionId: versionId },
+          orderBy: { order: 'desc' },
+        });
+        order = (last?.order ?? -1) + 1;
+      }
+      const created = await createMealWithFixedGroup(tx, { dietVersionId: versionId, dietDayId, name: dto.name, order, time: dto.time, notes: dto.notes });
+      return created.meal;
     });
 
     await this.auditLog.record({
@@ -660,8 +697,7 @@ export class DietsService {
     await this.assertDraftVersion(dietId, versionId);
     await this.getMealOrThrow(versionId, mealId);
 
-    await this.prisma.mealFood.deleteMany({ where: { mealId } });
-    await this.prisma.meal.delete({ where: { id: mealId } });
+    await this.prisma.$transaction((tx) => deleteMealCascade(tx, mealId));
 
     await this.auditLog.record({
       professionalId,
@@ -697,12 +733,15 @@ export class DietsService {
     const food = await this.foodsService.findVisible(professionalId, dto.foodId);
     const snapshot = await this.calculation.calculate(food, dto.quantity, dto.unit);
 
-    const last = await this.prisma.mealFood.findFirst({ where: { mealId }, orderBy: { order: 'desc' } });
+    // Endpoint antigo: o alimento entra no grupo fixo da refeição.
+    const mealChoiceId = await this.prisma.$transaction((tx) => fixedChoiceForMeal(tx, mealId));
+    const last = await this.prisma.mealFood.findFirst({ where: { mealChoiceId }, orderBy: { order: 'desc' } });
     const order = (last?.order ?? -1) + 1;
 
     const mealFood = await this.prisma.mealFood.create({
       data: {
         mealId,
+        mealChoiceId,
         foodId: food.id,
         order,
         quantity: dto.quantity,
@@ -747,15 +786,25 @@ export class DietsService {
       throw new NotFoundException('Item não encontrado.');
     }
 
-    const quantity = dto.quantity ?? existing.quantity;
+    const isFreeQuantity = dto.isFreeQuantity ?? existing.isFreeQuantity;
+    const quantity = isFreeQuantity ? null : (dto.quantity ?? existing.quantity);
+    const quantityMax = isFreeQuantity ? null : dto.quantityMax !== undefined ? dto.quantityMax : existing.quantityMax;
     const unit = dto.unit ?? existing.unit;
-    const food = await this.foodsService.findVisible(professionalId, existing.foodId);
-    const snapshot = await this.calculation.calculate(food, quantity, unit);
+    if (quantityMax !== null && (quantity === null || quantityMax < quantity)) {
+      throw new BadRequestException('A quantidade máxima precisa ser maior ou igual à quantidade.');
+    }
+    // Só item do catálogo, com quantidade e unidade, tem cálculo — nunca valor inventado.
+    const snapshot =
+      existing.foodId && quantity !== null && unit !== null
+        ? await this.calculation.calculate(await this.foodsService.findVisible(professionalId, existing.foodId), quantity, unit)
+        : null;
 
     const mealFood = await this.prisma.mealFood.update({
       where: { id: mealFoodId },
       data: {
         quantity,
+        quantityMax,
+        isFreeQuantity,
         unit,
         notes: dto.notes ?? existing.notes,
         gramsEquivalent: snapshot?.gramsEquivalent ?? null,
@@ -826,7 +875,7 @@ export class DietsService {
       return null;
     }
 
-    const foodIds = [...new Set(version.meals.flatMap((meal) => meal.foods.map((f) => f.foodId)))];
+    const foodIds = [...new Set(version.meals.flatMap((meal) => meal.foods.map((f) => f.foodId)).filter((id): id is string => id !== null))];
     const substitutions = foodIds.length
       ? await this.prisma.foodSubstitution.findMany({
           where: { originalFoodId: { in: foodIds } },

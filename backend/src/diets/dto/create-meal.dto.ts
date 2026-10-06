@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString, Matches, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Matches, Min } from 'class-validator';
 
 export class CreateMealDto {
   @IsString()
@@ -17,4 +17,9 @@ export class CreateMealDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  /** Dia da dieta (tipo de dia). Sem ele, a refeição vai para o primeiro dia da versão. */
+  @IsOptional()
+  @IsUUID()
+  dietDayId?: string;
 }

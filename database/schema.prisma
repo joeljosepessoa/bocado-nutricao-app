@@ -556,9 +556,14 @@ model DietVersion {
   createdAt               DateTime          @default(now()) @map("created_at")
   updatedAt               DateTime          @default(now()) @updatedAt @map("updated_at")
 
-  diet      Diet           @relation(fields: [dietId], references: [id], onDelete: Restrict)
-  meals     Meal[]
-  auditLogs DietAuditLog[]
+  // Orientações gerais VISÍVEIS ao paciente (≠ notes, que é interno e nunca sai do painel).
+  patientGuidelines String? @map("patient_guidelines") @db.Text
+
+  diet        Diet             @relation(fields: [dietId], references: [id], onDelete: Restrict)
+  meals       Meal[]
+  days        DietDay[]
+  supplements DietSupplement[]
+  auditLogs   DietAuditLog[]
 
   @@unique([dietId, versionNumber])
   @@index([dietId, status])
@@ -568,37 +573,139 @@ model DietVersion {
 model Meal {
   id            String  @id @default(uuid())
   dietVersionId String  @map("diet_version_id")
+  // Opcional durante a compatibilidade (P1); a migration liga as refeições antigas ao dia único.
+  dietDayId     String? @map("diet_day_id")
   name          String
   order         Int
   time          String?
   notes         String?
 
   dietVersion DietVersion @relation(fields: [dietVersionId], references: [id], onDelete: Restrict)
+  dietDay     DietDay?    @relation(fields: [dietDayId], references: [id], onDelete: Restrict)
   foods       MealFood[]
+  groups      MealGroup[]
 
   @@index([dietVersionId, order])
+  @@index([dietDayId, order])
   @@map("meals")
 }
 
-model MealFood {
-  id              String        @id @default(uuid())
-  mealId          String        @map("meal_id")
-  foodId          String        @map("food_id")
-  order           Int
-  quantity        Float
-  unit            NutritionUnit
-  gramsEquivalent Float?        @map("grams_equivalent")
-  kcal            Float?
-  proteinG        Float?        @map("protein_g")
-  carbG           Float?        @map("carb_g")
-  fatG            Float?        @map("fat_g")
-  fiberG          Float?        @map("fiber_g")
-  notes           String?
+enum DietDayKind {
+  training
+  rest
+  other
+}
 
-  meal Meal @relation(fields: [mealId], references: [id], onDelete: Restrict)
-  food Food @relation(fields: [foodId], references: [id], onDelete: Restrict)
+// Tipo de dia da dieta ("Dia de treino", "Dia de descanso"…). label nulo = dia único
+// (dietas antigas/simples). Cada dia tem as próprias refeições; dias diferentes
+// nunca são somados entre si.
+model DietDay {
+  id            String      @id @default(uuid())
+  dietVersionId String      @map("diet_version_id")
+  label         String?
+  kind          DietDayKind @default(other)
+  usageNotes    String?     @map("usage_notes") @db.Text
+  order         Int
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @default(now()) @updatedAt @map("updated_at")
+
+  dietVersion DietVersion @relation(fields: [dietVersionId], references: [id], onDelete: Restrict)
+  meals       Meal[]
+
+  @@index([dietVersionId, order])
+  @@map("diet_days")
+}
+
+// fixed: tudo é consumido. meal_options: opções COMPLETAS da refeição ("escolha 1
+// opção"; único grupo da refeição). alternatives: bloco "escolher 1" dentro da
+// refeição (ex.: Carboidrato). Opções/alternativas nunca são somadas.
+enum MealGroupKind {
+  fixed
+  meal_options
+  alternatives
+}
+
+model MealGroup {
+  id        String        @id @default(uuid())
+  mealId    String        @map("meal_id")
+  kind      MealGroupKind
+  label     String?
+  order     Int
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @default(now()) @updatedAt @map("updated_at")
+
+  meal    Meal         @relation(fields: [mealId], references: [id], onDelete: Restrict)
+  choices MealChoice[]
 
   @@index([mealId, order])
+  @@map("meal_groups")
+}
+
+// Uma escolha do grupo ("Opção 1", "Arroz"…); pode ter vários alimentos
+// (ex.: "135 g de frango + 10 g de azeite"). Grupo fixed tem exatamente uma.
+model MealChoice {
+  id          String   @id @default(uuid())
+  mealGroupId String   @map("meal_group_id")
+  label       String?
+  order       Int
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  group MealGroup  @relation(fields: [mealGroupId], references: [id], onDelete: Restrict)
+  foods MealFood[]
+
+  @@index([mealGroupId, order])
+  @@map("meal_choices")
+}
+
+// SUPLEMENTAÇÃO — texto livre (não exige catálogo), sem cálculo nutricional.
+model DietSupplement {
+  id            String   @id @default(uuid())
+  dietVersionId String   @map("diet_version_id")
+  name          String
+  quantity      Float?
+  quantityMax   Float?   @map("quantity_max")
+  unitText      String?  @map("unit_text")
+  timing        String?
+  notes         String?
+  order         Int
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  dietVersion DietVersion @relation(fields: [dietVersionId], references: [id], onDelete: Restrict)
+
+  @@index([dietVersionId, order])
+  @@map("diet_supplements")
+}
+
+model MealFood {
+  id              String         @id @default(uuid())
+  mealId          String         @map("meal_id")
+  // Opcional durante a compatibilidade (P1); a migration liga os itens antigos à escolha única.
+  mealChoiceId    String?        @map("meal_choice_id")
+  // Catálogo OU nome livre (sem cálculo nutricional) — nunca os dois vazios (CHECK no banco).
+  foodId          String?        @map("food_id")
+  customFoodName  String?        @map("custom_food_name")
+  order           Int
+  // Vazia em item "à vontade" ou sem quantidade numérica.
+  quantity        Float?
+  quantityMax     Float?         @map("quantity_max")
+  isFreeQuantity  Boolean        @default(false) @map("is_free_quantity")
+  unit            NutritionUnit?
+  gramsEquivalent Float?         @map("grams_equivalent")
+  kcal            Float?
+  proteinG        Float?         @map("protein_g")
+  carbG           Float?         @map("carb_g")
+  fatG            Float?         @map("fat_g")
+  fiberG          Float?         @map("fiber_g")
+  notes           String?
+
+  meal       Meal        @relation(fields: [mealId], references: [id], onDelete: Restrict)
+  mealChoice MealChoice? @relation(fields: [mealChoiceId], references: [id], onDelete: Restrict)
+  food       Food?       @relation(fields: [foodId], references: [id], onDelete: Restrict)
+
+  @@index([mealId, order])
+  @@index([mealChoiceId, order])
   @@map("meal_foods")
 }
 
