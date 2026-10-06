@@ -221,17 +221,21 @@ export type DietVersionStatus = 'draft' | 'published' | 'superseded';
 
 export type NutritionUnit = 'g' | 'ml' | 'unit' | 'tablespoon' | 'teaspoon' | 'cup' | 'slice';
 
+/** Item de refeição. Na estrutura nova pode ser nome livre (sem catálogo), "à vontade" ou faixa de quantidade. */
 export interface MealFood {
   id: string;
-  foodId: string;
-  quantity: number;
-  unit: string;
+  foodId: string | null;
+  customFoodName?: string | null;
+  quantity: number | null;
+  quantityMax?: number | null;
+  isFreeQuantity?: boolean;
+  unit: string | null;
   notes?: string | null;
   kcal: number | null;
   proteinG: number | null;
   carbG: number | null;
   fatG: number | null;
-  food?: { name: string };
+  food?: { name: string } | null;
 }
 
 export interface Meal {
@@ -241,7 +245,78 @@ export interface Meal {
   time: string | null;
   notes: string | null;
   foods: MealFood[];
-  totals?: { kcal: number; proteinG: number; carbG: number; fatG: number };
+  totals?: { kcal: number; proteinG: number; carbG: number; fatG: number } | null;
+}
+
+// Estrutura nova (P1): dia → refeição → grupo → escolha → itens. A nutrição
+// vem PRONTA da API, em faixa: opções/alternativas nunca são somadas entre si
+// e dias diferentes nunca são somados. `partial` = algum item ficou fora da
+// soma (à vontade, sem catálogo, sem quantidade ou sem conversão).
+
+export type DietDayKind = 'training' | 'rest' | 'other';
+export type MealGroupKind = 'fixed' | 'meal_options' | 'alternatives';
+
+export interface Nutrients {
+  kcal: number;
+  proteinG: number;
+  carbG: number;
+  fatG: number;
+  fiberG: number;
+}
+
+export interface NutritionRange {
+  min: Nutrients;
+  max: Nutrients;
+  partial: boolean;
+}
+
+/** `id` nulo = nó montado pela API para dado ainda não convertido (não editável). */
+export interface DietChoiceNode {
+  id: string | null;
+  label: string | null;
+  order: number;
+  foods: MealFood[];
+  nutrition: NutritionRange;
+}
+
+export interface DietGroupNode {
+  id: string | null;
+  kind: MealGroupKind;
+  label: string | null;
+  order: number;
+  choices: DietChoiceNode[];
+  nutrition: NutritionRange;
+}
+
+export interface DietMealNode {
+  id: string;
+  name: string;
+  order: number;
+  time: string | null;
+  notes: string | null;
+  groups: DietGroupNode[];
+  nutrition: NutritionRange;
+}
+
+export interface DietDayNode {
+  id: string | null;
+  label: string | null;
+  kind: DietDayKind;
+  usageNotes: string | null;
+  order: number;
+  meals: DietMealNode[];
+  nutrition: NutritionRange;
+}
+
+export interface DietSupplement {
+  id: string;
+  name: string;
+  quantity: number | null;
+  quantityMax: number | null;
+  unitText: string | null;
+  timing: string | null;
+  notes: string | null;
+  order: number;
 }
 
 export interface DietVersion {
@@ -259,7 +334,12 @@ export interface DietVersion {
   targetFatG: number | null;
   publishedAt: string | null;
   supersededAt: string | null;
+  /** Formato antigo (achatado), mantido pela API por compatibilidade. */
   meals: Meal[];
+  /** Texto ao paciente — `notes` continua interno/profissional. */
+  patientGuidelines?: string | null;
+  days?: DietDayNode[];
+  supplements?: DietSupplement[];
 }
 
 export interface DietVersionSummary {

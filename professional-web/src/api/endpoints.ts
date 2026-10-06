@@ -16,6 +16,7 @@ import type {
   CreateEvaluationInput,
   DashboardSummary,
   Diet,
+  DietDayKind,
   DietVersionSummary,
   EvaluationComparison,
   EvaluationDetail,
@@ -24,7 +25,9 @@ import type {
   ExecutionLog,
   Exercise,
   Food,
+  MealGroupKind,
   Message,
+  NutritionUnit,
   OrganizedWorkoutProposal,
   OrganizedDietProposal,
   PaginatedResult,
@@ -251,7 +254,12 @@ export async function publishDietVersion(clientId: string, dietId: string, versi
   return res.data;
 }
 
-export async function createMeal(clientId: string, dietId: string, versionId: string, input: { name: string; time?: string; notes?: string }) {
+export async function createMeal(
+  clientId: string,
+  dietId: string,
+  versionId: string,
+  input: { name: string; time?: string; notes?: string; dietDayId?: string },
+) {
   const res = await apiClient.post(`/clients/${clientId}/diets/${dietId}/versions/${versionId}/meals`, input);
   return res.data;
 }
@@ -273,7 +281,7 @@ export async function updateMeal(
   dietId: string,
   versionId: string,
   mealId: string,
-  input: { name?: string; time?: string; notes?: string },
+  input: { name?: string; time?: string; notes?: string; order?: number },
 ) {
   const res = await apiClient.patch(`/clients/${clientId}/diets/${dietId}/versions/${versionId}/meals/${mealId}`, input);
   return res.data;
@@ -285,7 +293,7 @@ export async function updateMealFood(
   versionId: string,
   mealId: string,
   mealFoodId: string,
-  input: { quantity?: number; unit?: string; notes?: string },
+  input: { quantity?: number; unit?: string; notes?: string; quantityMax?: number | null; isFreeQuantity?: boolean },
 ) {
   const res = await apiClient.patch(`/clients/${clientId}/diets/${dietId}/versions/${versionId}/meals/${mealId}/foods/${mealFoodId}`, input);
   return res.data;
@@ -308,6 +316,106 @@ export async function addMealFood(
 
 export async function deleteMealFood(clientId: string, dietId: string, versionId: string, mealId: string, mealFoodId: string) {
   await apiClient.delete(`/clients/${clientId}/diets/${dietId}/versions/${versionId}/meals/${mealId}/foods/${mealFoodId}`);
+}
+
+// --- Estrutura do rascunho (P1): dias, grupos, escolhas, itens, suplementos --
+
+/** Referência ao rascunho em edição — toda mutação de estrutura é sobre ele. */
+export interface DraftRef {
+  clientId: string;
+  dietId: string;
+  versionId: string;
+}
+
+const draftBase = (ref: DraftRef) => `/clients/${ref.clientId}/diets/${ref.dietId}/versions/${ref.versionId}`;
+
+export interface DietDayInput {
+  label?: string;
+  kind?: DietDayKind;
+  usageNotes?: string;
+  order?: number;
+}
+
+export async function createDietDay(ref: DraftRef, input: DietDayInput) {
+  const res = await apiClient.post(`${draftBase(ref)}/days`, input);
+  return res.data;
+}
+
+export async function updateDietDay(ref: DraftRef, dayId: string, input: DietDayInput) {
+  const res = await apiClient.patch(`${draftBase(ref)}/days/${dayId}`, input);
+  return res.data;
+}
+
+export async function deleteDietDay(ref: DraftRef, dayId: string) {
+  await apiClient.delete(`${draftBase(ref)}/days/${dayId}`);
+}
+
+export async function createMealGroup(ref: DraftRef, mealId: string, input: { kind: MealGroupKind; label?: string; order?: number }) {
+  const res = await apiClient.post(`${draftBase(ref)}/meals/${mealId}/groups`, input);
+  return res.data;
+}
+
+export async function updateMealGroup(ref: DraftRef, mealId: string, groupId: string, input: { kind?: MealGroupKind; label?: string; order?: number }) {
+  const res = await apiClient.patch(`${draftBase(ref)}/meals/${mealId}/groups/${groupId}`, input);
+  return res.data;
+}
+
+export async function deleteMealGroup(ref: DraftRef, mealId: string, groupId: string) {
+  await apiClient.delete(`${draftBase(ref)}/meals/${mealId}/groups/${groupId}`);
+}
+
+export async function createMealChoice(ref: DraftRef, mealId: string, groupId: string, input: { label?: string; order?: number }): Promise<{ id: string }> {
+  const res = await apiClient.post(`${draftBase(ref)}/meals/${mealId}/groups/${groupId}/choices`, input);
+  return res.data;
+}
+
+export async function updateMealChoice(ref: DraftRef, mealId: string, groupId: string, choiceId: string, input: { label?: string; order?: number }) {
+  const res = await apiClient.patch(`${draftBase(ref)}/meals/${mealId}/groups/${groupId}/choices/${choiceId}`, input);
+  return res.data;
+}
+
+export async function deleteMealChoice(ref: DraftRef, mealId: string, groupId: string, choiceId: string) {
+  await apiClient.delete(`${draftBase(ref)}/meals/${mealId}/groups/${groupId}/choices/${choiceId}`);
+}
+
+/** Item da escolha: do catálogo (foodId) OU nome livre (customFoodName, sem cálculo). */
+export interface ChoiceFoodInput {
+  foodId?: string;
+  customFoodName?: string;
+  quantity?: number;
+  quantityMax?: number;
+  unit?: NutritionUnit;
+  isFreeQuantity?: boolean;
+  notes?: string;
+}
+
+export async function addChoiceFood(ref: DraftRef, mealId: string, groupId: string, choiceId: string, input: ChoiceFoodInput) {
+  const res = await apiClient.post(`${draftBase(ref)}/meals/${mealId}/groups/${groupId}/choices/${choiceId}/foods`, input);
+  return res.data;
+}
+
+export interface DietSupplementInput {
+  name?: string;
+  quantity?: number;
+  quantityMax?: number;
+  unitText?: string;
+  timing?: string;
+  notes?: string;
+  order?: number;
+}
+
+export async function createDietSupplement(ref: DraftRef, input: DietSupplementInput & { name: string }) {
+  const res = await apiClient.post(`${draftBase(ref)}/supplements`, input);
+  return res.data;
+}
+
+export async function updateDietSupplement(ref: DraftRef, supplementId: string, input: DietSupplementInput) {
+  const res = await apiClient.patch(`${draftBase(ref)}/supplements/${supplementId}`, input);
+  return res.data;
+}
+
+export async function deleteDietSupplement(ref: DraftRef, supplementId: string) {
+  await apiClient.delete(`${draftBase(ref)}/supplements/${supplementId}`);
 }
 
 // --- Exercícios -----------------------------------------------------------

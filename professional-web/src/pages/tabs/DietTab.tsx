@@ -8,7 +8,9 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { StatusBadge } from '../../components/StatusBadge';
 import { EmptyState } from '../../components/EmptyState';
 import { DietVersionEditor } from '../../dietEditor/DietVersionEditor';
-import { unitLabel } from '../../dietAssistant/draft';
+import { DietDaysView } from '../../dietEditor/DietStructure';
+import { GuidelinesSection, SupplementsSection } from '../../dietEditor/DietExtras';
+import { structureProblems } from '../../dietEditor/structure';
 import type { DietVersion } from '../../types/api';
 
 function errorMessage(err: unknown, fallback: string): string {
@@ -75,6 +77,7 @@ export function DietTab() {
     onError: (err) => setActionError(errorMessage(err, 'Não foi possível abrir a edição da dieta.')),
   });
 
+  // A UI confere a estrutura antes (mesmas regras do backend, que continua sendo a autoridade final).
   const publishMutation = useMutation({
     mutationFn: () => api.publishDietVersion(clientId!, dietId!, draft!.id),
     onMutate: () => setActionError(null),
@@ -134,7 +137,17 @@ export function DietTab() {
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {draft ? (
-            <Button onClick={() => publishMutation.mutate()} loading={publishMutation.isPending}>
+            <Button
+              onClick={() => {
+                const problems = structureProblems(draft.days ?? []);
+                if (problems.length > 0) {
+                  setActionError(`Corrija antes de publicar: ${problems.join(' ')}`);
+                  return;
+                }
+                publishMutation.mutate();
+              }}
+              loading={publishMutation.isPending}
+            >
               Publicar versão
             </Button>
           ) : (
@@ -198,37 +211,19 @@ export function DietTab() {
   );
 }
 
-/** Versão publicada: só leitura — alterar passa por "Editar" (novo rascunho). */
+/** Versão publicada: só leitura (sem contexto de edição) — alterar passa por "Editar" (novo rascunho). */
 function PublishedVersion({ version }: { version: DietVersion }) {
   return (
     <>
       {version.objective || version.notes ? (
         <Card title="Dados da dieta">
           {version.objective ? <div style={{ fontSize: 13.5 }}>Objetivo: {version.objective}</div> : null}
-          {version.notes ? <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{version.notes}</div> : null}
+          {version.notes ? <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Observações internas: {version.notes}</div> : null}
         </Card>
       ) : null}
-      {version.meals.map((meal) => (
-        <Card key={meal.id} title={`${meal.name}${meal.time ? ` · ${meal.time}` : ''}`}>
-          {meal.foods.length === 0 ? (
-            <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Nenhum alimento.</div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <tbody>
-                {meal.foods.map((food) => (
-                  <tr key={food.id} style={{ borderTop: '1px solid var(--color-border)' }}>
-                    <td style={{ padding: '6px 4px', fontSize: 13.5 }}>{food.food?.name ?? food.foodId}</td>
-                    <td style={{ padding: '6px 4px', fontSize: 13, color: 'var(--color-text-secondary)' }}>
-                      {food.quantity} {unitLabel(food.unit)}
-                    </td>
-                    <td style={{ padding: '6px 4px', fontSize: 12, color: 'var(--color-text-secondary)' }}>{food.kcal ?? '—'} kcal</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </Card>
-      ))}
+      <DietDaysView days={version.days ?? []} />
+      <SupplementsSection supplements={version.supplements ?? []} />
+      <GuidelinesSection guidelines={version.patientGuidelines} />
     </>
   );
 }
