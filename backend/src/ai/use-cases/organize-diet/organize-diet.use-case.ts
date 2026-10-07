@@ -27,7 +27,7 @@ const SYSTEM_PROMPT = [
   '   - "alternatives": um bloco "escolher 1" ("Carboidrato (escolher 1): 65 g de arroz / 160 g de batata"). "label" = nome do bloco como escrito ("Carboidrato"). Cada alternativa separada por "/" ou "ou" é uma escolha com "label": null; se a alternativa tem mais de um alimento ("135 g de frango + 10 g de azeite"), todos ficam na MESMA escolha.',
   '   Nunca misture itens de opções diferentes, nunca coloque alternativas ("/", "ou") como itens fixos e nunca separe em escolhas diferentes itens ligados por "+".',
   '4. ITENS: um item por alimento. "sourceText" = o trecho MÍNIMO do texto daquele alimento, copiado letra por letra ("3 claras", "10 g de aveia", "salada de folhas à vontade") — nunca a linha inteira.',
-  '   "food": o nome do alimento como escrito (pode ir para o singular, sem trocar por outro: "fruta" continua "fruta").',
+  '   "food": o nome do alimento EXATAMENTE como escrito no trecho, sem a quantidade e a unidade ("ovos", "claras", "Danone natural", "salada de folhas"). Não passe para o singular, não complete e nunca troque por outro: "fruta" continua "fruta".',
   '   "quantity": só o número escrito junto do alimento ("150g" → 150; "1/2" ou "meia" → 0.5); faixa "3 a 5 g" → "quantity": 3 e "quantityMax": 5; sem número → null. Nunca estime, arredonde ou converta.',
   '   "unit": a unidade como escrita ("g", "ml", "fatias", "colher de sopa", "unidades"), ou null. Nunca converta (kg continua kg).',
   '   "freeQuantity": true só quando o texto diz "à vontade" para aquele alimento (então "quantity": null).',
@@ -115,7 +115,7 @@ function toProposalItem(item: CheckedDietItem, index: FoodCatalogIndex): Proposa
 @Injectable()
 export class OrganizeDietUseCase implements AiUseCase {
   readonly feature = AiFeatureKey.organize_diet;
-  readonly promptVersion = 'organize_diet@v2';
+  readonly promptVersion = 'organize_diet@v2.1';
   readonly maxOutputChars = 60000;
   readonly timeoutMs = 180_000;
   readonly requiresStructuredOutput = true;

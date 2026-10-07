@@ -172,6 +172,17 @@ describe('v2 — a dieta real do profissional (dia de treino/descanso, opções,
     expect(checked.guidelines).toHaveLength(8);
   });
 
+  it('texto copiado de PDF com linha quebrada no meio do alimento ("120 g de" ↵ "polenta") não gera aviso de trecho não organizado', () => {
+    const wrapped = USER_EXAMPLE_DIET.replace(/\* /g, '• ')
+      .replace(/\/ 120 g de polenta\./g, '/ 120 g de\npolenta.')
+      .replace(/\/ 150 g de sobrecoxa sem pele\./g, '/ 150 g\nde sobrecoxa sem pele.')
+      .replace(/\/ 145 g de filé mignon suíno \+ 8 g de azeite/g, '/ 145\ng de filé mignon suíno + 8 g de azeite');
+    expect(wrapped).toContain('120 g de\npolenta');
+    expect(checkDietFidelity(wrapped, faithfulUserDiet()).warnings).toEqual([]);
+    // Texto estranho de verdade (ex.: rodapé do PDF) continua sendo avisado.
+    expect(checkDietFidelity(`${wrapped}\nBOCADODENUTRIÇÃO`, faithfulUserDiet()).warnings).toEqual([DIET_WARNINGS.uncovered('BOCADODENUTRIÇÃO')]);
+  });
+
   it('regressão do falso positivo: a linha inteira em cada item e "2 ovos" repetido no café e no lanche são aceitos', () => {
     expect(() => checkDietFidelity(USER_EXAMPLE_DIET, wholeLineUserDiet())).not.toThrow();
   });

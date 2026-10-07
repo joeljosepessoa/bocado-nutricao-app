@@ -18,6 +18,22 @@ function errorMessage(err: unknown, fallback: string): string {
   return typeof message === 'string' ? message : fallback;
 }
 
+const modeStyle = (active: boolean) =>
+  ({
+    flex: 1,
+    minWidth: 240,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+    fontSize: 13,
+    padding: '10px 12px',
+    borderRadius: 10,
+    border: `1px solid ${active ? 'var(--color-primary)' : 'var(--color-border)'}`,
+    background: active ? 'var(--color-primary-light)' : 'var(--color-surface)',
+    opacity: active ? 1 : 0.6,
+  }) as const;
+const modeHint = { fontSize: 12, color: 'var(--color-text-secondary)' } as const;
+
 function httpStatus(err: unknown): number | undefined {
   return (err as { response?: { status?: number } })?.response?.status;
 }
@@ -119,6 +135,16 @@ export function DietAssistantPage() {
       {step === 'input' || step === 'organizing' || step === 'needsConsent' ? (
         <Card>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div role="radiogroup" aria-label="Como a IA deve tratar a dieta" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <label style={modeStyle(true)}>
+                <input type="radio" name="diet-mode" checked readOnly /> <strong>Manter exatamente como escrevi</strong>
+                <span style={modeHint}>A IA só organiza em dias, refeições, opções e blocos. Nomes, quantidades e alimentos ficam iguais ao texto.</span>
+              </label>
+              <label style={modeStyle(false)} title="Em breve">
+                <input type="radio" name="diet-mode" disabled /> <strong>Deixar a IA montar/ajustar</strong>
+                <span style={modeHint}>Em breve: a IA propõe a dieta com alimentos do catálogo e dados do paciente (com o consentimento dele).</span>
+              </label>
+            </div>
             <label htmlFor="diet-text" style={{ fontWeight: 600, fontSize: 13 }}>
               Cole aqui a dieta que você já elaborou
             </label>

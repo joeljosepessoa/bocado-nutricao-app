@@ -17,8 +17,8 @@ const blank = (value: string | null | undefined) => (value && value.trim() ? val
 /**
  * Regras da estrutura de uma proposta revisada (mesmas do editor e da
  * publicação): opções completas são o único grupo da refeição, itens fixos
- * formam uma lista só, toda escolha tem alimento, item é catálogo OU nome
- * livre, "à vontade" não tem quantidade e a faixa é válida.
+ * formam uma lista só, toda escolha tem alimento, item tem nome escrito
+ * e/ou catálogo, "à vontade" não tem quantidade e a faixa é válida.
  */
 export function proposalStructureProblems(days: ProposalDayDto[], supplements: ProposalSupplementDto[]): string[] {
   const problems: string[] = [];
@@ -37,7 +37,7 @@ export function proposalStructureProblems(days: ProposalDayDto[], supplements: P
           if (choice.foods.length === 0) problems.push(`${where}: ${choice.label || `escolha ${c + 1}`} sem alimentos.`);
           for (const food of choice.foods) {
             const name = food.customFoodName?.trim() || 'alimento';
-            if (!!food.foodId === !!food.customFoodName?.trim()) problems.push(`${where}: cada item precisa de um alimento do catálogo OU de um nome livre.`);
+            if (!food.foodId && !food.customFoodName?.trim()) problems.push(`${where}: item sem nome e sem alimento do catálogo.`);
             if (food.isFreeQuantity && (food.quantity != null || food.quantityMax != null)) problems.push(`${where}: ${name} "à vontade" não tem quantidade.`);
             if (food.quantityMax != null && (food.quantity == null || food.quantityMax < food.quantity)) {
               problems.push(`${where}: ${name} com quantidade máxima menor que a mínima.`);
@@ -80,7 +80,7 @@ export async function writeProposalContent(
                 mealId: createdMeal.id,
                 mealChoiceId: createdChoice.id,
                 foodId: item.foodId ?? null,
-                customFoodName: item.foodId ? null : blank(item.customFoodName),
+                customFoodName: blank(item.customFoodName),
                 order: f,
                 quantity: free ? null : (item.quantity ?? null),
                 quantityMax: free ? null : (item.quantityMax ?? null),

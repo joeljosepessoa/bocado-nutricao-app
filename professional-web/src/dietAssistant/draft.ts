@@ -25,17 +25,18 @@ export function unitLabel(unit: string): string {
   return UNIT_LABELS[unit as NutritionUnit] ?? unit;
 }
 
-/** `manual` = escolhido no catálogo na revisão; `custom` = usado como nome livre (sem cálculo). */
-export type DraftFoodMatch = FoodMatchStatus | 'manual' | 'custom';
+/** `manual` = ligado ao catálogo pelo profissional na revisão. */
+export type DraftFoodMatch = FoodMatchStatus | 'manual';
 
 export interface DraftFood {
   key: string;
   /** Trecho do texto original de onde a IA tirou o item — null quando adicionado à mão. */
   sourceText: string | null;
   rawFood: string | null;
+  /** Nome COMO ESCRITO no texto — é o que o paciente vê. */
+  name: string;
+  /** Alimento do catálogo ligado ao item — só para o sistema calcular kcal/macros (null = sem cálculo). */
   food: CatalogFoodRef | null;
-  /** Nome livre (fora do catálogo, sem cálculo) — alternativa a `food`. */
-  customName: string | null;
   match: DraftFoodMatch;
   candidates: CatalogFoodRef[];
   quantity: number | null;
@@ -103,10 +104,8 @@ export interface DietDraft {
  * Os textos equivalentes vindos do backend não são repetidos como observação.
  */
 export const LIVE_WARNINGS = {
-  foodNotSelected: 'Escolha o alimento no catálogo ou use como nome livre.',
-  customNameBlank: 'Informe o nome do alimento.',
-  quantityMissing: 'Informe a quantidade (ou marque "à vontade").',
-  unitMissing: 'Escolha a unidade.',
+  nameBlank: 'Informe o nome do alimento.',
+  quantityInvalid: 'A quantidade precisa ser maior que zero.',
   rangeInvalid: 'A quantidade máxima não pode ser menor que a mínima.',
   mealNameBlank: 'Informe o nome da refeição.',
   timeInvalid: 'Horário deve estar no formato HH:mm.',
@@ -135,8 +134,9 @@ function itemToFood(item: ProposalDietItem): DraftFood {
     key: nextKey('food'),
     sourceText: item.sourceText,
     rawFood: item.rawFood,
-    food: item.matchedFood,
-    customName: null,
+    name: item.rawFood,
+    // Só liga ao catálogo quando o nome bate exatamente; senão fica como escrito, sem cálculo.
+    food: item.matchStatus === 'matched' ? item.matchedFood : null,
     match: item.matchStatus,
     candidates: item.candidates,
     quantity: item.freeQuantity ? null : item.quantity,
@@ -190,8 +190,8 @@ export function manualFood(food: CatalogFoodRef): DraftFood {
     key: nextKey('food'),
     sourceText: null,
     rawFood: null,
+    name: food.name,
     food,
-    customName: null,
     match: 'manual',
     candidates: [],
     quantity: null,
@@ -222,19 +222,23 @@ export function emptySupplement(): DraftSupplement {
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 export function foodDisplayName(food: DraftFood): string {
-  return food.food?.name ?? food.customName ?? food.rawFood ?? 'Alimento';
+  return food.name.trim() || food.food?.name || 'Alimento';
 }
 
 export function foodWarnings(food: DraftFood): string[] {
   const warnings: string[] = [];
-  if (!food.food && food.customName === null) warnings.push(LIVE_WARNINGS.foodNotSelected);
-  if (!food.food && food.customName !== null && !food.customName.trim()) warnings.push(LIVE_WARNINGS.customNameBlank);
+  if (!food.name.trim() && !food.food) warnings.push(LIVE_WARNINGS.nameBlank);
   if (food.freeQuantity) return warnings;
-  // Item do catálogo precisa de quantidade e unidade para o sistema calcular; nome livre não tem cálculo.
-  if (food.food && (food.quantity === null || !(food.quantity > 0))) warnings.push(LIVE_WARNINGS.quantityMissing);
-  if (food.food && !food.unit) warnings.push(LIVE_WARNINGS.unitMissing);
+  if (food.quantity !== null && !(food.quantity > 0)) warnings.push(LIVE_WARNINGS.quantityInvalid);
   if (food.quantityMax !== null && (food.quantity === null || food.quantityMax < food.quantity)) warnings.push(LIVE_WARNINGS.rangeInvalid);
   return warnings;
+}
+
+/** Observações que NÃO impedem criar: o item fica sem cálculo (nunca valor inventado). */
+export function foodHints(food: DraftFood): string[] {
+  if (!food.food || food.freeQuantity) return [];
+  if (food.quantity === null || !food.unit) return ['Sem quantidade ou unidade, o sistema não consegue calcular este item.'];
+  return [];
 }
 
 export function mealWarnings(meal: DraftMeal): string[] {
@@ -286,7 +290,11 @@ export function draftProblems(draft: DietDraft): string[] {
 const text = (value: string) => value.trim() || null;
 
 function foodPayload(food: DraftFood): ProposalChoiceFoodInput {
-  const base: ProposalChoiceFoodInput = food.food ? { foodId: food.food.id } : { customFoodName: food.customName!.trim() };
+  // Nome como escrito (o que o paciente vê) + catálogo quando ligado (só para o cálculo).
+  const base: ProposalChoiceFoodInput = {
+    ...(food.name.trim() ? { customFoodName: food.name.trim() } : {}),
+    ...(food.food ? { foodId: food.food.id } : {}),
+  };
   const notes = text(food.notes);
   if (food.freeQuantity) return { ...base, isFreeQuantity: true, notes };
   return {
@@ -363,12 +371,35 @@ export function updateSupplement(draft: DietDraft, key: string, fn: (s: DraftSup
 }
 
 export function selectFood(food: DraftFood, chosen: CatalogFoodRef): DraftFood {
-  return { ...food, food: chosen, customName: null, match: 'manual' };
+  return { ...food, food: chosen, match: 'manual' };
 }
 
-/** Usa o nome escrito como item fora do catálogo ("Sem cálculo"). */
-export function asCustomName(food: DraftFood): DraftFood {
-  return { ...food, food: null, customName: food.customName ?? food.rawFood ?? '', match: 'custom' };
+const normalizeName = (x: string) =>
+  x
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/s+/g, ' ')
+    .trim();
+
+/**
+ * Liga o item ao catálogo (para calcular) e faz o MESMO com todos os itens de
+ * mesmo nome escrito que ainda não estão ligados — uma escolha vale para a
+ * dieta inteira. O nome exibido não muda.
+ */
+export function linkCatalog(draft: DietDraft, foodKey: string, chosen: CatalogFoodRef): DietDraft {
+  const target = draft.days.flatMap((d) => d.meals.flatMap((m) => m.groups.flatMap((g) => g.choices.flatMap((c) => c.foods)))).find((f) => f.key === foodKey);
+  if (!target) return draft;
+  const name = normalizeName(target.name);
+  return mapChoices(draft, (choice) => ({
+    ...choice,
+    foods: choice.foods.map((food) => (food.key === foodKey || (!food.food && name && normalizeName(food.name) === name) ? selectFood(food, chosen) : food)),
+  }));
+}
+
+/** Tira a ligação com o catálogo: o item fica como escrito, sem cálculo. */
+export function unlinkCatalog(food: DraftFood): DraftFood {
+  return { ...food, food: null };
 }
 
 export function removeFood(draft: DietDraft, foodKey: string): DietDraft {

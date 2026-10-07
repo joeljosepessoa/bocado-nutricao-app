@@ -11,6 +11,7 @@ import {
   emptyMeal,
   emptySupplement,
   foodDisplayName,
+  foodHints,
   foodWarnings,
   groupWarnings,
   manualFood,
@@ -21,14 +22,14 @@ import {
   removeGroup,
   removeMeal,
   removeSupplement,
-  selectFood,
   updateChoice,
   updateDay,
   updateFood,
   updateGroup,
   updateMeal,
   updateSupplement,
-  asCustomName,
+  linkCatalog,
+  unlinkCatalog,
   UNIT_LABELS,
   UNITS,
   withoutNotice,
@@ -180,7 +181,8 @@ export function DietProposalEditor({ draft, onChange }: { draft: DietDraft; onCh
           initialSearch={picker.search}
           onClose={() => setPicker(null)}
           onSelect={(chosen) => {
-            if (picker.foodKey) onChange(updateFood(draft, picker.foodKey, (food) => selectFood(food, chosen)));
+            // Uma escolha vale para todos os itens com o mesmo nome escrito.
+            if (picker.foodKey) onChange(linkCatalog(draft, picker.foodKey, chosen));
             else onChange(updateChoice(draft, picker.choiceKey, (choice) => ({ ...choice, foods: [...choice.foods, manualFood(chosen)] })));
           }}
         />
@@ -376,30 +378,39 @@ function FoodReview({ draft, choiceKey, food, onChange, onPick }: { draft: DietD
         )}
       </div>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+        <input
+          aria-label={`Nome de ${food.rawFood ?? food.name ?? 'alimento'}`}
+          className={styles.input}
+          style={{ flex: 1, minWidth: 160, fontWeight: 600 }}
+          value={food.name}
+          onChange={(e) => set({ name: e.target.value })}
+        />
         {food.food ? (
-          <strong style={{ fontSize: 13.5 }}>{food.food.name}</strong>
-        ) : food.customName !== null ? (
           <>
-            <input aria-label={`Nome livre de ${food.rawFood ?? 'alimento'}`} className={styles.input} value={food.customName} onChange={(e) => set({ customName: e.target.value })} />
-            <span className={styles.noCalc}>Sem cálculo</span>
+            <span className={styles.muted} title="Usado só para o sistema calcular kcal e macros — o paciente vê o nome escrito.">
+              Catálogo: {food.food.name}
+            </span>
+            <Button size="small" variant="ghost" onClick={() => onPick(choiceKey, food.key, food.name)}>
+              Trocar
+            </Button>
+            <Button size="small" variant="ghost" onClick={() => onChange(updateFood(draft, food.key, unlinkCatalog))}>
+              Desligar
+            </Button>
           </>
         ) : (
-          <span style={{ fontSize: 13.5, color: 'var(--color-danger)' }}>{food.rawFood ?? 'Alimento'} — não identificado</span>
+          <>
+            <span className={styles.noCalc}>Sem cálculo</span>
+            <Button size="small" variant="ghost" onClick={() => onPick(choiceKey, food.key, food.name)}>
+              Ligar ao catálogo
+            </Button>
+          </>
         )}
-        <Button size="small" variant="secondary" onClick={() => onPick(choiceKey, food.key, food.rawFood ?? '')}>
-          {food.food ? 'Trocar' : 'Escolher no catálogo'}
-        </Button>
-        {!food.food && food.customName === null ? (
-          <Button size="small" variant="ghost" onClick={() => onChange(updateFood(draft, food.key, asCustomName))}>
-            Usar como nome livre
-          </Button>
-        ) : null}
       </div>
-      {!food.food && food.customName === null && food.candidates.length > 0 ? (
+      {!food.food && food.candidates.length > 0 ? (
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-          <span className={styles.muted}>Sugestões do catálogo:</span>
+          <span className={styles.muted}>Calcular com:</span>
           {food.candidates.map((candidate) => (
-            <Button key={candidate.id} size="small" variant="secondary" onClick={() => onChange(updateFood(draft, food.key, (x) => selectFood(x, candidate)))}>
+            <Button key={candidate.id} size="small" variant="secondary" onClick={() => onChange(linkCatalog(draft, food.key, candidate))}>
               {candidate.name}
             </Button>
           ))}
@@ -449,6 +460,11 @@ function FoodReview({ draft, choiceKey, food, onChange, onPick }: { draft: DietD
         </Button>
       </div>
       <input aria-label="Observação do alimento" placeholder="Observação (opcional)" className={styles.input} value={food.notes} onChange={(e) => set({ notes: e.target.value })} />
+      {foodHints(food).map((hint) => (
+        <div key={hint} className={styles.muted}>
+          {hint}
+        </div>
+      ))}
       <Warnings live={foodWarnings(food)} notices={food.notices} onDismiss={(w) => set({ notices: withoutNotice(food.notices, w) })} />
     </div>
   );

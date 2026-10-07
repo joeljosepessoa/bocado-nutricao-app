@@ -166,21 +166,22 @@ async function organizeSample() {
 describe('Assistente de Dieta', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('deixa claro que a IA não altera a prescrição', () => {
+  it('deixa claro que a IA não altera a prescrição; o modo "manter exatamente como escrevi" é o escolhido', () => {
     renderPage();
     expect(screen.getByRole('note').textContent).toMatch(/A IA não altera quantidades, alimentos ou prescrição/);
+    expect(screen.getByRole('radio', { name: /Manter exatamente como escrevi/ })).toBeChecked();
+    expect(screen.getByRole('radio', { name: /Deixar a IA montar\/ajustar/ })).toBeDisabled();
   });
 
-  it('mostra a proposta com o texto original e as quantidades intactas; não cria com alimento pendente', async () => {
-    const user = await organizeSample();
+  it('mostra a proposta com o nome COMO ESCRITO, o texto original e as quantidades intactas; fora do catálogo fica "Sem cálculo"', async () => {
+    await organizeSample();
     expect(api.organizeDiet).toHaveBeenCalledWith('c1', expect.stringContaining('150 g de fruta'));
     expect(screen.getByText('150 g de fruta')).toBeTruthy();
+    expect((screen.getByLabelText('Nome de Fruta') as HTMLInputElement).value).toBe('Fruta');
     expect((screen.getByLabelText('Quantidade de Fruta') as HTMLInputElement).value).toBe('150');
     expect((screen.getByLabelText('Quantidade de Pão integral') as HTMLInputElement).value).toBe('2');
-
-    await user.click(screen.getByRole('button', { name: 'Criar dieta como rascunho' }));
-    expect(await screen.findByText(/Escolha o alimento no catálogo/, { selector: 'li' })).toBeTruthy();
-    expect(api.createDietFromProposal).not.toHaveBeenCalled();
+    expect(screen.getByText('Sem cálculo')).toBeTruthy();
+    expect(screen.getByText('Catálogo: Pão integral')).toBeTruthy();
   });
 
   it('o profissional escolhe a sugestão e cria RASCUNHO; rascunho existente só é substituído após confirmação', async () => {
@@ -211,8 +212,8 @@ describe('Assistente de Dieta', () => {
                     {
                       label: null,
                       foods: [
-                        { foodId: 'f-pao', quantity: 2, unit: 'slice', notes: null },
-                        { foodId: 'f-mamao', quantity: 150, unit: 'g', notes: null },
+                        { customFoodName: 'Pão integral', foodId: 'f-pao', quantity: 2, unit: 'slice', notes: null },
+                        { customFoodName: 'Fruta', foodId: 'f-mamao', quantity: 150, unit: 'g', notes: null },
                       ],
                     },
                   ],
@@ -248,11 +249,7 @@ describe('Assistente de Dieta', () => {
     expect(within(within(almoco).getByRole('region', { name: 'Carboidrato' })).getByText('Escolha 1')).toBeInTheDocument();
     expect((screen.getByLabelText('À vontade: salada de folhas') as HTMLInputElement).checked).toBe(true);
 
-    // Item fora do catálogo: não cria até o profissional decidir; "Usar como nome livre" resolve (sem cálculo).
-    await user.click(screen.getByRole('button', { name: 'Criar dieta como rascunho' }));
-    expect(await screen.findByText(/salada de folhas: Escolha o alimento no catálogo/, { selector: 'li' })).toBeInTheDocument();
-    expect(api.createDietFromProposal).not.toHaveBeenCalled();
-    await user.click(within(almoco).getByRole('button', { name: 'Usar como nome livre' }));
+    // Item fora do catálogo fica como escrito, sem cálculo — e não impede criar.
     expect(within(almoco).getByText('Sem cálculo')).toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: 'DIA DE DESCANSO' }));

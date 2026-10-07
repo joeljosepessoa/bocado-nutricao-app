@@ -44,7 +44,8 @@ export function isRange(range: NutritionRange): boolean {
 }
 
 export function foodName(food: MealFood): string {
-  return food.food?.name ?? food.customFoodName ?? 'Alimento';
+  // O nome escrito pelo profissional vem primeiro; o do catálogo só quando não há nome escrito.
+  return food.customFoodName ?? food.food?.name ?? 'Alimento';
 }
 
 /** "110 g", "3–5 g", "2 fatia(s)", "à vontade" — vazio quando não há quantidade. */

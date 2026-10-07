@@ -380,28 +380,45 @@ const STRUCTURE_WORDS = new Set([
 ]);
 const SECTION_TITLES = new Set(['suplementacao', 'suplementos', 'orientacoes', 'orientacao', 'orientacoes gerais', 'observacoes', 'dicas']);
 
+/**
+ * Linhas com texto que nenhum item/rótulo/orientação cobriu. A conferência é
+ * feita no texto CORRIDO: um alimento partido em duas linhas ("… / 120 g de"
+ * + "polenta.", comum em texto copiado de PDF) conta como coberto nas duas.
+ */
 function uncoveredLines(input: string, covered: string[]): string[] {
-  const phrases = [...new Set(covered.filter(Boolean))].sort((a, b) => b.length - a.length);
-  const result: string[] = [];
-  for (const rawLine of input.split(/\r?\n/)) {
-    const normalized = normalizeDietText(rawLine);
-    if (!normalized || SECTION_TITLES.has(normalized)) continue;
-    let line = ` ${normalized} `;
-    let removed = false;
-    for (const phrase of phrases) {
-      const next = line.split(` ${phrase} `).join('  ');
-      if (next !== line) removed = true;
-      line = next;
-    }
-    const leftover = line
-      .split(' ')
-      .filter((token) => token && !COVERAGE_IGNORED.has(token))
-      .filter((token) => !(removed && (/^\d{1,2}$/.test(token) || STRUCTURE_WORDS.has(token))));
-    if (leftover.length > 0) {
-      const original = rawLine.trim();
-      result.push(original.length > 120 ? `${original.slice(0, 117)}...` : original);
+  const phrases = [...new Set(covered.filter(Boolean))].map((phrase) => phrase.split(' '));
+  const lines = input.split(/\r?\n/);
+  const tokens: Array<{ text: string; line: number }> = [];
+  lines.forEach((raw, line) => {
+    for (const text of normalizeDietText(raw).split(' ').filter(Boolean)) tokens.push({ text, line });
+  });
+
+  const isCovered = new Array<boolean>(tokens.length).fill(false);
+  const linesWithCoverage = new Set<number>();
+  for (const phrase of phrases) {
+    for (let i = 0; i + phrase.length <= tokens.length; i++) {
+      if (!phrase.every((t, k) => tokens[i + k].text === t)) continue;
+      for (let k = 0; k < phrase.length; k++) {
+        isCovered[i + k] = true;
+        linesWithCoverage.add(tokens[i + k].line);
+      }
     }
   }
+
+  const result: string[] = [];
+  lines.forEach((raw, line) => {
+    const normalized = normalizeDietText(raw);
+    if (!normalized || SECTION_TITLES.has(normalized)) return;
+    const removed = linesWithCoverage.has(line);
+    const leftover = tokens
+      .map((token, i) => ({ ...token, covered: isCovered[i] }))
+      .filter((token) => token.line === line && !token.covered && !COVERAGE_IGNORED.has(token.text))
+      .filter((token) => !(removed && (/^\d{1,2}$/.test(token.text) || STRUCTURE_WORDS.has(token.text))));
+    if (leftover.length > 0) {
+      const original = raw.trim();
+      result.push(original.length > 120 ? `${original.slice(0, 117)}...` : original);
+    }
+  });
   return result;
 }
 

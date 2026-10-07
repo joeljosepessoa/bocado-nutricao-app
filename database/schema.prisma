@@ -683,7 +683,7 @@ model MealFood {
   mealId          String         @map("meal_id")
   // Obrigatório desde o P5 (os itens antigos foram ligados à escolha única no P1).
   mealChoiceId    String         @map("meal_choice_id")
-  // Catálogo OU nome livre (sem cálculo nutricional) — nunca os dois vazios (CHECK no banco).
+  // Nome escrito (o que o paciente vê) e/ou catálogo (só para o cálculo) — nunca os dois vazios (CHECK no banco).
   foodId          String?        @map("food_id")
   customFoodName  String?        @map("custom_food_name")
   order           Int

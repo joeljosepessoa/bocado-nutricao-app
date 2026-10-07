@@ -648,6 +648,12 @@ function FoodLine({ mealId, food }: { mealId: string; food: MealFood }) {
         {qty ? <span className={styles.foodQty}>{qty} </span> : null}
         {name}
         {food.notes ? <span className={styles.muted}> · {food.notes}</span> : null}
+        {edit && food.customFoodName && food.food ? (
+          <span className={styles.muted} title="Usado só para calcular kcal e macros — o paciente vê o nome escrito.">
+            {' '}
+            · catálogo: {food.food.name}
+          </span>
+        ) : null}
       </span>
       {status ? (
         <span className={styles.noCalc}>{status}</span>

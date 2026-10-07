@@ -152,7 +152,7 @@ describe('Dieta a partir de proposta + editar/excluir (e2e)', () => {
               {
                 kind: 'meal_options',
                 choices: [
-                  { label: 'Opção 1', foods: [{ foodId: riceId, quantity: 100, unit: 'g' }] },
+                  { label: 'Opção 1', foods: [{ foodId: riceId, customFoodName: 'arroz', quantity: 100, unit: 'g' }] },
                   { label: 'Opção 2', foods: [{ foodId: riceId, quantity: 200, unit: 'g' }] },
                 ],
               },
@@ -199,6 +199,8 @@ describe('Dieta a partir de proposta + editar/excluir (e2e)', () => {
       ['Opção 2', 260],
     ]);
     expect([cafe.nutrition.min.kcal, cafe.nutrition.max.kcal]).toEqual([130, 260]);
+    // Nome escrito + catálogo: guarda os dois (nome do texto para exibir, catálogo para calcular).
+    expect(cafe.groups[0].choices[0].foods[0]).toMatchObject({ foodId: rice.id, customFoodName: 'arroz', kcal: 130 });
     // Bloco: arroz 150 g (195 kcal) OU aipim sem catálogo (sem cálculo) → total parcial, sem inventar valor.
     const [carbo, fixos] = almoco.groups;
     expect(carbo).toMatchObject({ kind: 'alternatives', label: 'Carboidrato' });
@@ -223,8 +225,8 @@ describe('Dieta a partir de proposta + editar/excluir (e2e)', () => {
 
     // Opções completas junto com itens fixos.
     await send(withMeal({ name: 'Café', groups: [{ kind: 'meal_options', choices: [{ foods: [rice100] }] }, { kind: 'fixed', choices: [{ foods: [rice100] }] }] })).expect(400);
-    // Item com catálogo E nome livre; "à vontade" com quantidade; faixa invertida; bloco sem opção; escolha vazia.
-    await send(withMeal({ name: 'Almoço', groups: [{ kind: 'fixed', choices: [{ foods: [{ ...rice100, customFoodName: 'Arroz' }] }] }] })).expect(400);
+    // Item sem nome e sem catálogo; "à vontade" com quantidade; faixa invertida; bloco sem opção; escolha vazia.
+    await send(withMeal({ name: 'Almoço', groups: [{ kind: 'fixed', choices: [{ foods: [{ quantity: 100, unit: 'g' }] }] }] })).expect(400);
     await send(withMeal({ name: 'Almoço', groups: [{ kind: 'fixed', choices: [{ foods: [{ customFoodName: 'Salada', isFreeQuantity: true, quantity: 1 }] }] }] })).expect(400);
     await send(withMeal({ name: 'Almoço', groups: [{ kind: 'fixed', choices: [{ foods: [{ ...rice100, quantityMax: 50 }] }] }] })).expect(400);
     await send(withMeal({ name: 'Almoço', groups: [{ kind: 'alternatives', label: 'Carboidrato', choices: [] }] })).expect(400);

@@ -171,7 +171,7 @@ export class DietClientSummaryDto {
             order: choice.order,
             nutrition: roundRange(choice.nutrition),
             foods: choice.foods.map((f) => ({
-              foodName: f.food?.name ?? f.customFoodName ?? foodDisplayName(f),
+              foodName: f.customFoodName ?? f.food?.name ?? foodDisplayName(f),
               isCustom: f.foodId === null,
               quantity: f.quantity,
               quantityMax: f.quantityMax,

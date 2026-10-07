@@ -149,7 +149,7 @@ describe('Estrutura nova da dieta — dias, opções, alternativas, suplementos 
     ]);
   });
 
-  it('regras: opções completas são o único grupo; grupo fixo tem 1 escolha; item precisa de catálogo OU nome; à vontade sem quantidade', async () => {
+  it('regras: opções completas são o único grupo; grupo fixo tem 1 escolha; item precisa de nome e/ou catálogo; à vontade sem quantidade', async () => {
     const { auth, base, cafe, almoco, almocoFixed, addFood } = await setup();
     await http().post(`${base}/meals/${cafe}/groups`).set(auth).send({ kind: 'alternatives', label: 'X' }).expect(409);
     await http().post(`${base}/meals/${almoco}/groups`).set(auth).send({ kind: 'fixed' }).expect(409);
@@ -161,13 +161,16 @@ describe('Estrutura nova da dieta — dias, opções, alternativas, suplementos 
     await http().post(`${base}/meals/${cafe}/foods`).set(auth).send({ foodId: anyFood.id, quantity: 1, unit: 'g' }).expect(409);
 
     const fixedChoice = almocoFixed.choices[0].id;
-    await addFood(almoco, almocoFixed.id, fixedChoice, { foodId: anyFood.id, customFoodName: 'Duplo' }).expect(400);
     await addFood(almoco, almocoFixed.id, fixedChoice, { quantity: 10, unit: 'g' }).expect(400);
     await addFood(almoco, almocoFixed.id, fixedChoice, { customFoodName: 'Legumes', isFreeQuantity: true, quantity: 100 }).expect(400);
     await addFood(almoco, almocoFixed.id, fixedChoice, { customFoodName: 'Legumes', quantity: 100, quantityMax: 50, unit: 'g' }).expect(400);
     // Item livre com quantidade é aceito, mas sem cálculo (nunca valor inventado).
     const legumes = await addFood(almoco, almocoFixed.id, fixedChoice, { customFoodName: 'Legumes', quantity: 100, unit: 'g' }).expect(201);
     expect(legumes.body).toMatchObject({ foodId: null, kcal: null, hasReliableConversion: false });
+    // Nome escrito + catálogo: o nome é o do texto; o catálogo só calcula.
+    const ligado = await addFood(almoco, almocoFixed.id, fixedChoice, { foodId: anyFood.id, customFoodName: 'meu alimento', quantity: 100, unit: anyFood.baseUnit }).expect(201);
+    expect(ligado.body).toMatchObject({ foodId: anyFood.id, customFoodName: 'meu alimento', hasReliableConversion: true });
+    expect(ligado.body.kcal).toBeCloseTo(anyFood.kcalPer100, 1);
   });
 
   it('publicar exige estrutura completa; o app recebe dias/opções/blocos + formato antigo legível; nada interno vaza', async () => {

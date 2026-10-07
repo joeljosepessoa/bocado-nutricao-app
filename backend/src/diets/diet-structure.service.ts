@@ -239,17 +239,18 @@ export class DietStructureService {
   }
 
   /**
-   * Item da escolha: catálogo (com cálculo, mesma regra da inclusão manual) ou
-   * nome livre (sem cálculo). "À vontade" e faixa de quantidade ficam fora do
-   * cálculo/viram faixa — nunca valor inventado.
+   * Item da escolha: nome escrito (customFoodName, o que o paciente vê) e/ou
+   * alimento do catálogo (foodId, só para o cálculo — mesma regra da inclusão
+   * manual). Sem catálogo = sem cálculo. "À vontade" e faixa de quantidade
+   * ficam fora do cálculo/viram faixa — nunca valor inventado.
    */
   async addChoiceFood(ref: DraftRef, mealId: string, groupId: string, choiceId: string, dto: CreateChoiceFoodDto, meta: RequestMeta = {}) {
     await this.diets.assertEditableDraft(ref.professionalId, ref.clientId, ref.dietId, ref.versionId);
     await this.getChoice(ref.versionId, mealId, groupId, choiceId);
 
     const customFoodName = blank(dto.customFoodName);
-    if (!!dto.foodId === !!customFoodName) {
-      throw new BadRequestException('Informe um alimento do catálogo (foodId) OU um nome livre (customFoodName).');
+    if (!dto.foodId && !customFoodName) {
+      throw new BadRequestException('Informe o nome do alimento (customFoodName) e/ou um alimento do catálogo (foodId).');
     }
     const isFreeQuantity = dto.isFreeQuantity ?? false;
     if (isFreeQuantity && (dto.quantity !== undefined || dto.quantityMax !== undefined)) {

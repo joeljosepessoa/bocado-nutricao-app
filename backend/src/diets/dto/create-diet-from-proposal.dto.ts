@@ -60,7 +60,7 @@ export class ProposalMealDto {
 
 // --- Estrutura nova (P3): dias → refeições → grupos → escolhas → itens ------
 
-/** Item: catálogo (foodId) OU nome livre (customFoodName, sem cálculo); faixa e "à vontade". Regras cruzadas no serviço. */
+/** Item: nome escrito (customFoodName, o que o paciente vê) e/ou catálogo (foodId, só para o cálculo); faixa e "à vontade". Regras cruzadas no serviço. */
 export class ProposalChoiceFoodDto {
   @IsOptional() @IsUUID() foodId?: string;
   @IsOptional() @IsString() @Matches(/\S/) @MaxLength(L.maxNameLength) customFoodName?: string;

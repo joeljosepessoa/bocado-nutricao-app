@@ -36,8 +36,9 @@ export class CreateMealChoiceDto {
 export class UpdateMealChoiceDto extends CreateMealChoiceDto {}
 
 /**
- * Item de uma escolha: do catálogo (foodId) OU nome livre (customFoodName,
- * sem cálculo). Quantidade opcional: "à vontade" (isFreeQuantity) ou faixa
+ * Item de uma escolha: nome escrito (customFoodName — o que o paciente vê)
+ * e/ou alimento do catálogo (foodId — só para o cálculo; sem ele, sem
+ * cálculo). Quantidade opcional: "à vontade" (isFreeQuantity) ou faixa
  * (quantity..quantityMax). Regras cruzadas são conferidas no serviço.
  */
 export class CreateChoiceFoodDto {

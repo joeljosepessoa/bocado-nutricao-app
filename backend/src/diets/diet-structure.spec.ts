@@ -2,6 +2,7 @@ import {
   buildDietTree,
   chooseOneRange,
   flattenForLegacy,
+  foodDisplayName,
   isSimpleStructure,
   itemRange,
   roundRange,
@@ -154,6 +155,14 @@ describe('compatibilidade com dieta antiga', () => {
       expect.stringMatching(/^Carboidrato \(escolha 1\): Alimento \d+$/),
       expect.stringMatching(/^Alimento \d+$/),
     ]);
+  });
+});
+
+describe('nome exibido', () => {
+  it('o nome escrito pelo profissional vem antes do nome do catálogo (o catálogo só calcula)', () => {
+    expect(foodDisplayName(food(100, { customFoodName: 'aveia', food: { id: 'cat', name: 'Aveia, flocos, crua' } }))).toBe('aveia');
+    expect(foodDisplayName(food(100, { customFoodName: null, food: { id: 'cat', name: 'Aveia, flocos, crua' } }))).toBe('Aveia, flocos, crua');
+    expect(foodDisplayName(food(null, { foodId: null, food: null, customFoodName: 'salada de folhas', isFreeQuantity: true, quantity: null }))).toBe('salada de folhas (à vontade)');
   });
 });
 

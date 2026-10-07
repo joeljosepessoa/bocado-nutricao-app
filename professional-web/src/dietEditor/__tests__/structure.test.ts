@@ -4,6 +4,7 @@ import {
   dayTitle,
   foodCalcStatus,
   foodItemErrors,
+  foodName,
   formatKcal,
   isSimpleDiet,
   quantityText,
@@ -65,6 +66,12 @@ describe('formatação da nutrição (valores vindos da API)', () => {
     expect(quantityText(food({ quantity: 2, unit: 'slice' }))).toBe('2 fatia(s)');
     expect(quantityText(food({ isFreeQuantity: true, quantity: null }))).toBe('à vontade');
     expect(quantityText(food({ quantity: null, unit: null }))).toBe('');
+  });
+
+  it('mostra o nome ESCRITO pelo profissional mesmo quando o item está ligado ao catálogo (que só calcula)', () => {
+    expect(foodName(food({ customFoodName: 'aveia', food: { name: 'Aveia, flocos, crua' } }))).toBe('aveia');
+    expect(foodName(food({ customFoodName: null }))).toBe('Arroz');
+    expect(foodCalcStatus(food({ customFoodName: 'arroz' }))).toBeNull();
   });
 
   it('item fora do catálogo, sem conversão ou à vontade não ganha kcal inventado', () => {

@@ -103,7 +103,7 @@ describe('IA — organizar dieta existente (e2e)', () => {
 
     expect(await prisma.diet.count({ where: { clientId: client.id } })).toBe(0);
     const log = await prisma.aiInteractionLog.findFirstOrThrow({ where: { clientId: client.id, feature: 'organize_diet' } });
-    expect(log).toMatchObject({ status: 'succeeded', processingPolicy: 'professional_material', promptVersion: 'organize_diet@v2' });
+    expect(log).toMatchObject({ status: 'succeeded', processingPolicy: 'professional_material', promptVersion: 'organize_diet@v2.1' });
   });
 
   it.each([

@@ -301,7 +301,8 @@ export interface FlatMeal {
 }
 
 export function foodDisplayName(food: FoodRow): string {
-  const base = food.food?.name ?? food.customFoodName ?? 'Alimento';
+  // O nome ESCRITO pelo profissional vem primeiro; o do catálogo só quando não há nome escrito.
+  const base = food.customFoodName ?? food.food?.name ?? 'Alimento';
   return food.isFreeQuantity ? `${base} (à vontade)` : base;
 }
 
