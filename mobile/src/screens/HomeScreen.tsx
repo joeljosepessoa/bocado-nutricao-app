@@ -8,6 +8,7 @@ import { ScreenContainer } from '../components/ScreenContainer';
 import * as api from '../api/endpoints';
 import type { DietClientSummary, WorkoutClientSummary } from '../types/api';
 import type { MainTabParamList } from '../navigation/types';
+import { mealSummary } from '../diet/dietView';
 import { colors, spacing, typography } from '../theme/tokens';
 
 export function HomeScreen() {
@@ -32,7 +33,6 @@ export function HomeScreen() {
     load();
   }, [load]);
 
-  const mealCount = diet?.meals.length ?? 0;
   const dayCount = workout?.days.length ?? 0;
 
   return (
@@ -42,7 +42,7 @@ export function HomeScreen() {
       <Card>
         <Text style={styles.cardTitle}>Minha dieta</Text>
         <Text style={styles.cardBody}>
-          {diet ? `${mealCount} refeição(ões) prescrita(s).` : 'Nenhuma dieta publicada ainda.'}
+          {diet ? mealSummary(diet) : 'Nenhuma dieta publicada ainda.'}
         </Text>
         <Text style={styles.link} onPress={() => navigation.navigate('Diet')}>
           Ver dieta completa →

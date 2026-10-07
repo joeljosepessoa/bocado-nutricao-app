@@ -34,10 +34,11 @@ export interface SubstitutionOption {
   substituteFatG: number | null;
 }
 
+/** Formato ANTIGO (achatado) — ainda enviado pela API para APKs antigos. */
 export interface DietClientMealFood {
   foodName: string;
-  quantity: number;
-  unit: string;
+  quantity: number | null;
+  unit: string | null;
   kcal: number | null;
   proteinG: number | null;
   carbG: number | null;
@@ -53,10 +54,93 @@ export interface DietClientMeal {
   foods: DietClientMealFood[];
 }
 
+// --- Formato NOVO: dias → refeições → grupos → escolhas → alimentos ---------
+// A nutrição vem PRONTA da API, em faixa: opções/alternativas nunca são somadas
+// e dias diferentes nunca são somados. `partial` = algum item ficou fora da soma.
+
+export type DietDayKind = 'training' | 'rest' | 'other';
+export type MealGroupKind = 'fixed' | 'meal_options' | 'alternatives';
+
+export interface Nutrients {
+  kcal: number;
+  proteinG: number;
+  carbG: number;
+  fatG: number;
+  fiberG: number;
+}
+
+export interface NutritionRange {
+  min: Nutrients;
+  max: Nutrients;
+  partial: boolean;
+}
+
+export interface DietClientFoodItem {
+  foodName: string;
+  /** Fora do catálogo — sem cálculo nutricional. */
+  isCustom: boolean;
+  quantity: number | null;
+  quantityMax: number | null;
+  isFreeQuantity: boolean;
+  unit: string | null;
+  kcal: number | null;
+  proteinG: number | null;
+  carbG: number | null;
+  fatG: number | null;
+  substitutions: SubstitutionOption[];
+}
+
+export interface DietClientChoice {
+  label: string | null;
+  order: number;
+  nutrition: NutritionRange | null;
+  foods: DietClientFoodItem[];
+}
+
+export interface DietClientGroup {
+  kind: MealGroupKind;
+  label: string | null;
+  order: number;
+  nutrition: NutritionRange | null;
+  choices: DietClientChoice[];
+}
+
+export interface DietClientMealNode {
+  name: string;
+  order: number;
+  time: string | null;
+  notes: string | null;
+  nutrition: NutritionRange | null;
+  groups: DietClientGroup[];
+}
+
+export interface DietClientDay {
+  label: string | null;
+  kind: DietDayKind;
+  usageNotes: string | null;
+  order: number;
+  nutrition: NutritionRange | null;
+  meals: DietClientMealNode[];
+}
+
+export interface DietClientSupplement {
+  name: string;
+  quantity: number | null;
+  quantityMax: number | null;
+  unitText: string | null;
+  timing: string | null;
+  notes: string | null;
+  order: number;
+}
+
 export interface DietClientSummary {
   dietId: string;
   versionId: string;
   meals: DietClientMeal[];
+  /** Ausentes só se a API for anterior à estrutura nova — o app cai no formato antigo. */
+  days?: DietClientDay[];
+  supplements?: DietClientSupplement[];
+  patientGuidelines?: string | null;
 }
 
 export interface WorkoutClientSet {
