@@ -134,7 +134,8 @@ export function itemRange(food: FoodRow): NutritionRange {
   const factor = food.quantityMax !== null && food.quantity! > 0 ? food.quantityMax / food.quantity! : 1;
   const max = { ...min };
   for (const key of KEYS) max[key] = min[key] * factor;
-  return { min, max, partial: false };
+  // Macro sem número na TACO (Tr, NA, *, não analisado): soma o que tem número e marca a faixa como parcial.
+  return { min, max, partial: food.proteinG === null || food.carbG === null || food.fatG === null };
 }
 
 function round(value: number): number {

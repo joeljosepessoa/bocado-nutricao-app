@@ -92,8 +92,12 @@ describe('IA — organizar dieta existente (e2e)', () => {
       [150, 'g'],
     ]);
     expect(items[0]).toMatchObject({ matchStatus: 'matched', matchedFood: { id: bread.id } });
-    expect(items[1]).toMatchObject({ matchStatus: 'not_found', matchedFood: null });
-    expect((items[1].warnings as string[])[0]).toMatch(/não identificado/);
+    // "fruta" nunca é ligada sozinha. Com o catálogo TACO completo pode haver sugestão
+    // por semelhança ("Fruta-pão") → ambiguous; sem catálogo parecido → not_found.
+    expect(items[1]).toMatchObject({ matchedFood: null });
+    expect(['ambiguous', 'not_found']).toContain(items[1].matchStatus);
+    expect((items[1].warnings as string[]).length).toBeGreaterThan(0);
+    if (items[1].matchStatus === 'not_found') expect((items[1].warnings as string[])[0]).toMatch(/não identificado/);
 
     // Contexto mínimo e saída estruturada com o schema da dieta.
     const sent = fakeProvider.generate.mock.calls[0][0];

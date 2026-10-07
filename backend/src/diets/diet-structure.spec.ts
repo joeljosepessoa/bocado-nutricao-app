@@ -102,6 +102,12 @@ describe('nutrição em faixa — nunca soma opções/alternativas', () => {
     expect(tree[0].meals[0].nutrition).toMatchObject({ partial: true, min: { kcal: 100 }, max: { kcal: 100 } });
   });
 
+  it('macro sem número na TACO (ex.: azeite, carboidrato NA) soma o que tem número e marca a faixa como parcial', () => {
+    const azeite = itemRange(food(88, { proteinG: null, carbG: null, fatG: 10 }));
+    expect(azeite).toMatchObject({ partial: true, min: { kcal: 88, fatG: 10, carbG: 0, proteinG: 0 } });
+    expect(itemRange(food(100))).toMatchObject({ partial: false });
+  });
+
   it('faixa de quantidade (3 a 5 g): o máximo é proporcional ao valor gravado na quantidade mínima', () => {
     const range = roundRange(itemRange(food(12, { quantity: 3, quantityMax: 5 })));
     expect([range.min.kcal, range.max.kcal]).toEqual([12, 20]);

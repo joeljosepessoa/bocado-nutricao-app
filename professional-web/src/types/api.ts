@@ -364,10 +364,11 @@ export interface Food {
   name: string;
   scope: 'global' | 'private';
   baseUnit: string;
-  kcalPer100: number;
-  proteinGPer100: number;
-  carbGPer100: number;
-  fatGPer100: number;
+  /** null = catálogo oficial com marcador da TACO (Tr, NA, *, não analisado) — nunca 0. */
+  kcalPer100: number | null;
+  proteinGPer100: number | null;
+  carbGPer100: number | null;
+  fatGPer100: number | null;
   fiberGPer100: number | null;
 }
 
@@ -704,10 +705,10 @@ export interface AdminProfessional {
 export interface AdminModerationFood {
   id: string;
   name: string;
-  kcalPer100: number;
-  proteinGPer100: number;
-  carbGPer100: number;
-  fatGPer100: number;
+  kcalPer100: number | null;
+  proteinGPer100: number | null;
+  carbGPer100: number | null;
+  fatGPer100: number | null;
   source: string;
   createdAt: string;
 }

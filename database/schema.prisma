@@ -458,12 +458,26 @@ model Food {
   scope                   FoodScope     @default(global)
   ownerProfessionalId     String?       @map("owner_professional_id") // só quando scope = private
   baseUnit                NutritionUnit @map("base_unit") // g ou ml, validado no DTO
-  kcalPer100              Float         @map("kcal_per_100")
-  proteinGPer100          Float         @map("protein_g_per_100")
-  carbGPer100             Float         @map("carb_g_per_100")
-  fatGPer100              Float         @map("fat_g_per_100")
+  // Os 4 macros só ficam null no catálogo oficial, quando a TACO traz marcador
+  // (Tr, NA, *, vazio) — nunca 0. Alimento de profissional continua exigindo
+  // os 4 (DTO + CHECK foods_macros_required_unless_official_chk na migration).
+  kcalPer100              Float?        @map("kcal_per_100")
+  proteinGPer100          Float?        @map("protein_g_per_100")
+  carbGPer100             Float?        @map("carb_g_per_100")
+  fatGPer100              Float?        @map("fat_g_per_100")
   fiberGPer100            Float?        @map("fiber_g_per_100")
+  sodiumMgPer100          Float?        @map("sodium_mg_per_100")
   source                  String        @default("manual")
+  // Catálogo oficial (TACO 4ª edição): chave estável "taco4:<nº>" — base da
+  // importação idempotente. sourceData guarda todas as colunas da TACO com
+  // {valor, situacao, bruto}, ácidos graxos, aminoácidos e a linha de origem.
+  sourceKey               String?       @unique @map("source_key")
+  sourceEdition           String?       @map("source_edition")
+  sourceNumber            Int?          @map("source_number")
+  sourceHash              String?       @map("source_hash")
+  foodGroup               String?       @map("food_group")
+  preparation             String?
+  sourceData              Json?         @map("source_data")
   // Fase 15 — null = pendente de moderação (só o próprio criador enxerga,
   // ver visibilityFilter em foods.service.ts). Preenchido = visível a todos.
   // Migration faz backfill retroativo em todo Food global já existente.
@@ -479,10 +493,61 @@ model Food {
   mealFoods                 MealFood[]
   substitutionsAsOriginal   FoodSubstitution[]   @relation("OriginalFood")
   substitutionsAsSubstitute FoodSubstitution[]   @relation("SubstituteFood")
+  listMappings              FoodListMapping[]
+  aliases                   FoodAlias[]
 
   @@index([name])
   @@index([scope, ownerProfessionalId])
+  @@index([foodGroup])
   @@map("foods")
+}
+
+enum FoodListMappingStatus {
+  encontrado
+  precisa_revisao
+  nao_encontrado
+  fora_da_taco
+}
+
+// Lista de alimentos do Bocado ligada ao catálogo oficial. Separada do
+// catálogo: sem decisão explícita o item fica precisa_revisao e sem foodId;
+// fora_da_taco nunca aponta para um alimento da TACO.
+model FoodListMapping {
+  id            String                @id @default(uuid())
+  listGroup     String                @map("list_group")
+  listItemName  String                @map("list_item_name")
+  status        FoodListMappingStatus
+  foodId        String?               @map("food_id")
+  candidateKeys String[]              @map("candidate_keys")
+  notes         String?
+  decidedAt     DateTime?             @map("decided_at")
+  createdAt     DateTime              @default(now()) @map("created_at")
+  updatedAt     DateTime              @default(now()) @updatedAt @map("updated_at")
+
+  food    Food?       @relation(fields: [foodId], references: [id], onDelete: Restrict)
+  aliases FoodAlias[]
+
+  @@unique([listGroup, listItemName])
+  @@index([foodId])
+  @@map("food_list_mappings")
+}
+
+// Apelido de busca (forma normalizada). Só liga sozinho (autoLink) quando
+// aponta para um único alimento, sem ambiguidade.
+model FoodAlias {
+  id        String   @id @default(uuid())
+  alias     String   @unique
+  foodId    String?  @map("food_id")
+  mappingId String?  @map("mapping_id")
+  autoLink  Boolean  @default(false) @map("auto_link")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  food    Food?            @relation(fields: [foodId], references: [id], onDelete: Restrict)
+  mapping FoodListMapping? @relation(fields: [mappingId], references: [id], onDelete: Restrict)
+
+  @@index([foodId])
+  @@index([mappingId])
+  @@map("food_aliases")
 }
 
 model FoodUnitConversion {

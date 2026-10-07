@@ -2,12 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { Food, NutritionUnit } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 
+/**
+ * Macro null = o alimento não tem número para ele (catálogo oficial com
+ * marcador da TACO: Tr, NA, *, não analisado). Nunca vira 0.
+ */
 export interface NutritionSnapshot {
   gramsEquivalent: number;
-  kcal: number;
-  proteinG: number;
-  carbG: number;
-  fatG: number;
+  kcal: number | null;
+  proteinG: number | null;
+  carbG: number | null;
+  fatG: number | null;
   fiberG: number | null;
 }
 
@@ -15,6 +19,8 @@ function round(value: number, decimals = 1): number {
   const factor = 10 ** decimals;
   return Math.round(value * factor) / factor;
 }
+
+const scaled = (per100: number | null, factor: number) => (per100 != null ? round(per100 * factor) : null);
 
 @Injectable()
 export class NutritionCalculationService {
@@ -51,11 +57,11 @@ export class NutritionCalculationService {
     const factor = baseEquivalent / 100;
     return {
       gramsEquivalent: round(baseEquivalent, 2),
-      kcal: round(food.kcalPer100 * factor),
-      proteinG: round(food.proteinGPer100 * factor),
-      carbG: round(food.carbGPer100 * factor),
-      fatG: round(food.fatGPer100 * factor),
-      fiberG: food.fiberGPer100 != null ? round(food.fiberGPer100 * factor) : null,
+      kcal: scaled(food.kcalPer100, factor),
+      proteinG: scaled(food.proteinGPer100, factor),
+      carbG: scaled(food.carbGPer100, factor),
+      fatG: scaled(food.fatGPer100, factor),
+      fiberG: scaled(food.fiberGPer100, factor),
     };
   }
 }

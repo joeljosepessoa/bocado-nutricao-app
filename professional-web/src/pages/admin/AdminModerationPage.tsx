@@ -84,7 +84,7 @@ export function AdminModerationPage() {
           emptyDescription="Todo conteúdo global novo aparece aqui até ser aprovado ou rejeitado."
           columns={[
             { key: 'name', label: 'Nome', render: (row) => row.name },
-            { key: 'kcal', label: 'kcal/100', render: (row) => row.kcalPer100 },
+            { key: 'kcal', label: 'kcal/100', render: (row) => (row.kcalPer100 != null ? Math.round(row.kcalPer100) : '—') },
             { key: 'source', label: 'Origem', render: (row) => row.source },
             { key: 'createdAt', label: 'Criado em', render: (row) => formatDate(row.createdAt) },
             {

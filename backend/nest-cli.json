@@ -3,6 +3,9 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "assets": [{ "include": "reference-data/data/*.json", "watchAssets": false }]
+    "assets": [
+      { "include": "reference-data/data/*.json", "watchAssets": false },
+      { "include": "reference-data/taco/source/*.xlsx", "watchAssets": false }
+    ]
   }
 }

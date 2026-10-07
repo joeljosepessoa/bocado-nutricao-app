@@ -1,0 +1,2963 @@
+[
+ {
+  "alimento_bocado": "Peito de frango",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 406,
+    "nome": "Frango, peito, com pele, assado"
+   },
+   {
+    "numero": 407,
+    "nome": "Frango, peito, com pele, cru"
+   },
+   {
+    "numero": 408,
+    "nome": "Frango, peito, sem pele, cozido"
+   },
+   {
+    "numero": 409,
+    "nome": "Frango, peito, sem pele, cru"
+   },
+   {
+    "numero": 410,
+    "nome": "Frango, peito, sem pele, grelhado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "5 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Coxa de frango",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 396,
+    "nome": "Frango, coxa, com pele, assada"
+   },
+   {
+    "numero": 397,
+    "nome": "Frango, coxa, com pele, crua"
+   },
+   {
+    "numero": 398,
+    "nome": "Frango, coxa, sem pele, cozida"
+   },
+   {
+    "numero": 399,
+    "nome": "Frango, coxa, sem pele, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "4 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Sobrecoxa",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 411,
+    "nome": "Frango, sobrecoxa, com pele, assada"
+   },
+   {
+    "numero": 412,
+    "nome": "Frango, sobrecoxa, com pele, crua"
+   },
+   {
+    "numero": 413,
+    "nome": "Frango, sobrecoxa, sem pele, assada"
+   },
+   {
+    "numero": 414,
+    "nome": "Frango, sobrecoxa, sem pele, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "4 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Frango desfiado",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "A TACO não tem frango desfiado; é preparação do peito ou da coxa."
+ },
+ {
+  "alimento_bocado": "Patinho",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 376,
+    "nome": "Carne, bovina, patinho, sem gordura, cru"
+   },
+   {
+    "numero": 377,
+    "nome": "Carne, bovina, patinho, sem gordura, grelhado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Coxão mole",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 351,
+    "nome": "Carne, bovina, coxão mole, sem gordura, cozido"
+   },
+   {
+    "numero": 352,
+    "nome": "Carne, bovina, coxão mole, sem gordura, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Coxão duro",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 349,
+    "nome": "Carne, bovina, coxão duro, sem gordura, cozido"
+   },
+   {
+    "numero": 350,
+    "nome": "Carne, bovina, coxão duro, sem gordura, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Alcatra",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 369,
+    "nome": "Carne, bovina, miolo de alcatra, sem gordura, cru"
+   },
+   {
+    "numero": 370,
+    "nome": "Carne, bovina, miolo de alcatra, sem gordura, grelhado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Contrafilé",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 334,
+    "nome": "Carne, bovina, capa de contra-filé, com gordura, crua"
+   },
+   {
+    "numero": 335,
+    "nome": "Carne, bovina, capa de contra-filé, com gordura, grelhada"
+   },
+   {
+    "numero": 336,
+    "nome": "Carne, bovina, capa de contra-filé, sem gordura, crua"
+   },
+   {
+    "numero": 337,
+    "nome": "Carne, bovina, capa de contra-filé, sem gordura, grelhada"
+   },
+   {
+    "numero": 340,
+    "nome": "Carne, bovina, contra-filé, à milanesa"
+   },
+   {
+    "numero": 341,
+    "nome": "Carne, bovina, contra-filé de costela, cru"
+   },
+   {
+    "numero": 342,
+    "nome": "Carne, bovina, contra-filé de costela, grelhado"
+   },
+   {
+    "numero": 343,
+    "nome": "Carne, bovina, contra-filé, com gordura, cru"
+   },
+   {
+    "numero": 344,
+    "nome": "Carne, bovina, contra-filé, com gordura, grelhado"
+   },
+   {
+    "numero": 345,
+    "nome": "Carne, bovina, contra-filé, sem gordura, cru"
+   },
+   {
+    "numero": 346,
+    "nome": "Carne, bovina, contra-filé, sem gordura, grelhado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "11 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Filé mignon",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 357,
+    "nome": "Carne, bovina, filé mingnon, sem gordura, cru"
+   },
+   {
+    "numero": 358,
+    "nome": "Carne, bovina, filé mingnon, sem gordura, grelhado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma. Na TACO a grafia é \"filé mingnon\"."
+ },
+ {
+  "alimento_bocado": "Acém",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 326,
+    "nome": "Carne, bovina, acém, moído, cozido"
+   },
+   {
+    "numero": 327,
+    "nome": "Carne, bovina, acém, moído, cru"
+   },
+   {
+    "numero": 328,
+    "nome": "Carne, bovina, acém, sem gordura, cozido"
+   },
+   {
+    "numero": 329,
+    "nome": "Carne, bovina, acém, sem gordura, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "4 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Músculo",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 371,
+    "nome": "Carne, bovina, músculo, sem gordura, cozido"
+   },
+   {
+    "numero": 372,
+    "nome": "Carne, bovina, músculo, sem gordura, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Carne moída magra",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 326,
+    "nome": "Carne, bovina, acém, moído, cozido"
+   },
+   {
+    "numero": 327,
+    "nome": "Carne, bovina, acém, moído, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma. A TACO só tem acém moído; não distingue magra de comum."
+ },
+ {
+  "alimento_bocado": "Carne moída comum",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 326,
+    "nome": "Carne, bovina, acém, moído, cozido"
+   },
+   {
+    "numero": 327,
+    "nome": "Carne, bovina, acém, moído, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma. A TACO só tem acém moído; não distingue magra de comum."
+ },
+ {
+  "alimento_bocado": "Lagarto",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 363,
+    "nome": "Carne, bovina, lagarto, cozido"
+   },
+   {
+    "numero": 364,
+    "nome": "Carne, bovina, lagarto, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Fígado bovino",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 355,
+    "nome": "Carne, bovina, fígado, cru"
+   },
+   {
+    "numero": 356,
+    "nome": "Carne, bovina, fígado, grelhado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Lombo suíno",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 432,
+    "nome": "Porco, lombo, assado"
+   },
+   {
+    "numero": 433,
+    "nome": "Porco, lombo, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma. Na TACO, suíno aparece como \"Porco\"."
+ },
+ {
+  "alimento_bocado": "Pernil suíno",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 435,
+    "nome": "Porco, pernil, assado"
+   },
+   {
+    "numero": 436,
+    "nome": "Porco, pernil, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma. Na TACO, suíno aparece como \"Porco\"."
+ },
+ {
+  "alimento_bocado": "Filé suíno",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Tilápia",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Sardinha",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 318,
+    "nome": "Sardinha, assada"
+   },
+   {
+    "numero": 319,
+    "nome": "Sardinha, conserva em óleo"
+   },
+   {
+    "numero": 320,
+    "nome": "Sardinha, frita"
+   },
+   {
+    "numero": 321,
+    "nome": "Sardinha, inteira, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "4 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Atum",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 277,
+    "nome": "Atum, conserva em óleo"
+   },
+   {
+    "numero": 278,
+    "nome": "Atum, fresco, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Salmão",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 315,
+    "nome": "Salmão, filé, com pele, fresco,  grelhado"
+   },
+   {
+    "numero": 316,
+    "nome": "Salmão, sem pele, fresco, cru"
+   },
+   {
+    "numero": 317,
+    "nome": "Salmão, sem pele, fresco, grelhado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "3 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Merluza",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 301,
+    "nome": "Merluza, filé, assado"
+   },
+   {
+    "numero": 302,
+    "nome": "Merluza, filé, cru"
+   },
+   {
+    "numero": 303,
+    "nome": "Merluza, filé, frito"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "3 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Pescada",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 304,
+    "nome": "Pescada, branca, crua"
+   },
+   {
+    "numero": 305,
+    "nome": "Pescada, branca, frita"
+   },
+   {
+    "numero": 306,
+    "nome": "Pescada, filé, com farinha de trigo, frito"
+   },
+   {
+    "numero": 307,
+    "nome": "Pescada, filé, cru"
+   },
+   {
+    "numero": 308,
+    "nome": "Pescada, filé, frito"
+   },
+   {
+    "numero": 309,
+    "nome": "Pescada, filé, molho escabeche"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "6 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Bacalhau",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 279,
+    "nome": "Bacalhau, salgado, cru"
+   },
+   {
+    "numero": 280,
+    "nome": "Bacalhau, salgado, refogado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Camarão",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 284,
+    "nome": "Camarão, Rio Grande, grande, cozido"
+   },
+   {
+    "numero": 285,
+    "nome": "Camarão, Rio Grande, grande, cru"
+   },
+   {
+    "numero": 286,
+    "nome": "Camarão, Sete Barbas, sem cabeça, com casca, frito"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "3 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Ovos",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 488,
+    "nome": "Ovo, de galinha, inteiro, cozido/10minutos"
+   },
+   {
+    "numero": 489,
+    "nome": "Ovo, de galinha, inteiro, cru"
+   },
+   {
+    "numero": 490,
+    "nome": "Ovo, de galinha, inteiro, frito"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "3 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Clara de ovo",
+  "grupo": "1. Proteínas",
+  "candidato_taco": "Ovo, de galinha, clara, cozida/10minutos",
+  "candidatos": [
+   {
+    "numero": 486,
+    "nome": "Ovo, de galinha, clara, cozida/10minutos"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Ovo de codorna",
+  "grupo": "1. Proteínas",
+  "candidato_taco": "Ovo, de codorna, inteiro, cru",
+  "candidatos": [
+   {
+    "numero": 485,
+    "nome": "Ovo, de codorna, inteiro, cru"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Whey protein",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Suplemento: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Caseína",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Suplemento: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Proteína vegetal",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Suplemento/produto: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Tofu",
+  "grupo": "1. Proteínas",
+  "candidato_taco": "Soja, queijo (tofu)",
+  "candidatos": [
+   {
+    "numero": 584,
+    "nome": "Soja, queijo (tofu)"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Tempeh",
+  "grupo": "1. Proteínas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Não consta na TACO."
+ },
+ {
+  "alimento_bocado": "Arroz branco",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 3,
+    "nome": "Arroz, tipo 1, cozido"
+   },
+   {
+    "numero": 4,
+    "nome": "Arroz, tipo 1, cru"
+   },
+   {
+    "numero": 5,
+    "nome": "Arroz, tipo 2, cozido"
+   },
+   {
+    "numero": 6,
+    "nome": "Arroz, tipo 2, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "4 preparações/variações possíveis na TACO — escolha uma. Na TACO, arroz branco aparece como \"tipo 1\" e \"tipo 2\"."
+ },
+ {
+  "alimento_bocado": "Arroz integral",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 1,
+    "nome": "Arroz, integral, cozido"
+   },
+   {
+    "numero": 2,
+    "nome": "Arroz, integral, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Arroz parboilizado",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Arroz vermelho",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Arroz negro",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Feijão carioca",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 561,
+    "nome": "Feijão, carioca, cozido"
+   },
+   {
+    "numero": 562,
+    "nome": "Feijão, carioca, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Feijão preto",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 567,
+    "nome": "Feijão, preto, cozido"
+   },
+   {
+    "numero": 568,
+    "nome": "Feijão, preto, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Feijão vermelho",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "A TACO tem feijão roxo, rajado, rosinha e jalo, mas não \"vermelho\"."
+ },
+ {
+  "alimento_bocado": "Lentilha",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 577,
+    "nome": "Lentilha, cozida"
+   },
+   {
+    "numero": 578,
+    "nome": "Lentilha, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Grão-de-bico",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": "Grão-de-bico, cru",
+  "candidatos": [
+   {
+    "numero": 575,
+    "nome": "Grão-de-bico, cru"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": "A TACO só tem o grão-de-bico cru."
+ },
+ {
+  "alimento_bocado": "Ervilha",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 559,
+    "nome": "Ervilha, em vagem"
+   },
+   {
+    "numero": 560,
+    "nome": "Ervilha, enlatada, drenada"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Quinoa",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Aveia",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": "Aveia, flocos, crua",
+  "candidatos": [
+   {
+    "numero": 7,
+    "nome": "Aveia, flocos, crua"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Farinha de aveia",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Tapioca",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": "Tapioca, com manteiga",
+  "candidatos": [
+   {
+    "numero": 551,
+    "nome": "Tapioca, com manteiga"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "A TACO só tem \"Tapioca, com manteiga\" (preparação com manteiga)."
+ },
+ {
+  "alimento_bocado": "Goma de tapioca",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 124,
+    "nome": "Fécula, de mandioca"
+   },
+   {
+    "numero": 146,
+    "nome": "Polvilho, doce"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma. Goma de tapioca corresponde a fécula/polvilho de mandioca na TACO."
+ },
+ {
+  "alimento_bocado": "Cuscuz",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 533,
+    "nome": "Cuscuz, de milho, cozido com sal"
+   },
+   {
+    "numero": 534,
+    "nome": "Cuscuz, paulista"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Milho",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 42,
+    "nome": "Milho, amido, cru"
+   },
+   {
+    "numero": 43,
+    "nome": "Milho, fubá, cru"
+   },
+   {
+    "numero": 44,
+    "nome": "Milho, verde, cru"
+   },
+   {
+    "numero": 45,
+    "nome": "Milho, verde, enlatado, drenado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "4 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Fubá",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": "Milho, fubá, cru",
+  "candidatos": [
+   {
+    "numero": 43,
+    "nome": "Milho, fubá, cru"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Macarrão",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 39,
+    "nome": "Macarrão, instantâneo"
+   },
+   {
+    "numero": 40,
+    "nome": "Macarrão, trigo, cru"
+   },
+   {
+    "numero": 41,
+    "nome": "Macarrão, trigo, cru, com ovos"
+   },
+   {
+    "numero": 542,
+    "nome": "Macarrão, molho bolognesa"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "4 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Macarrão integral",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Batata inglesa",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 91,
+    "nome": "Batata, inglesa, cozida"
+   },
+   {
+    "numero": 92,
+    "nome": "Batata, inglesa, crua"
+   },
+   {
+    "numero": 93,
+    "nome": "Batata, inglesa, frita"
+   },
+   {
+    "numero": 94,
+    "nome": "Batata, inglesa, sauté"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "4 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Batata-doce",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 88,
+    "nome": "Batata, doce, cozida"
+   },
+   {
+    "numero": 89,
+    "nome": "Batata, doce, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Batata-baroa/mandioquinha",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 86,
+    "nome": "Batata, baroa, cozida"
+   },
+   {
+    "numero": 87,
+    "nome": "Batata, baroa, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Mandioca",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 129,
+    "nome": "Mandioca, cozida"
+   },
+   {
+    "numero": 130,
+    "nome": "Mandioca, crua"
+   },
+   {
+    "numero": 131,
+    "nome": "Mandioca, farofa, temperada"
+   },
+   {
+    "numero": 132,
+    "nome": "Mandioca, frita"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "4 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Aipim",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 129,
+    "nome": "Mandioca, cozida"
+   },
+   {
+    "numero": 130,
+    "nome": "Mandioca, crua"
+   },
+   {
+    "numero": 131,
+    "nome": "Mandioca, farofa, temperada"
+   },
+   {
+    "numero": 132,
+    "nome": "Mandioca, frita"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "4 preparações/variações possíveis na TACO — escolha uma. Aipim = mandioca na TACO."
+ },
+ {
+  "alimento_bocado": "Inhame",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": "Inhame, cru",
+  "candidatos": [
+   {
+    "numero": 126,
+    "nome": "Inhame, cru"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": "A TACO só tem o inhame cru."
+ },
+ {
+  "alimento_bocado": "Cará",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 102,
+    "nome": "Cará, cozido"
+   },
+   {
+    "numero": 103,
+    "nome": "Cará, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Abóbora",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 64,
+    "nome": "Abóbora, cabotian, cozida"
+   },
+   {
+    "numero": 65,
+    "nome": "Abóbora, cabotian, crua"
+   },
+   {
+    "numero": 66,
+    "nome": "Abóbora, menina brasileira, crua"
+   },
+   {
+    "numero": 67,
+    "nome": "Abóbora, moranga, crua"
+   },
+   {
+    "numero": 68,
+    "nome": "Abóbora, moranga, refogada"
+   },
+   {
+    "numero": 69,
+    "nome": "Abóbora, pescoço, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "6 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Pão francês",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": "Pão, trigo, francês",
+  "candidatos": [
+   {
+    "numero": 53,
+    "nome": "Pão, trigo, francês"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Pão integral",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": "Pão, trigo, forma, integral",
+  "candidatos": [
+   {
+    "numero": 52,
+    "nome": "Pão, trigo, forma, integral"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Pão de forma",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 48,
+    "nome": "Pão, aveia, forma"
+   },
+   {
+    "numero": 50,
+    "nome": "Pão, glúten, forma"
+   },
+   {
+    "numero": 51,
+    "nome": "Pão, milho, forma"
+   },
+   {
+    "numero": 52,
+    "nome": "Pão, trigo, forma, integral"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "4 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Pão de centeio",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "A TACO tem farinha de centeio, mas não o pão."
+ },
+ {
+  "alimento_bocado": "Wrap",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto industrializado: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Rap10",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto de marca: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Torrada",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": "Torrada, pão francês",
+  "candidatos": [
+   {
+    "numero": 63,
+    "nome": "Torrada, pão francês"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Granola",
+  "grupo": "2. Carboidratos",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto industrializado: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Banana prata",
+  "grupo": "3. Frutas",
+  "candidato_taco": "Banana, prata, crua",
+  "candidatos": [
+   {
+    "numero": 182,
+    "nome": "Banana, prata, crua"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Banana nanica",
+  "grupo": "3. Frutas",
+  "candidato_taco": "Banana, nanica, crua",
+  "candidatos": [
+   {
+    "numero": 179,
+    "nome": "Banana, nanica, crua"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Maçã",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 221,
+    "nome": "Maçã, Argentina, com casca, crua"
+   },
+   {
+    "numero": 222,
+    "nome": "Maçã, Fuji, com casca, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Pera",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 242,
+    "nome": "Pêra, Park, crua"
+   },
+   {
+    "numero": 243,
+    "nome": "Pêra, Williams, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Laranja",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 208,
+    "nome": "Laranja, baía, crua"
+   },
+   {
+    "numero": 209,
+    "nome": "Laranja, baía, suco"
+   },
+   {
+    "numero": 210,
+    "nome": "Laranja, da terra, crua"
+   },
+   {
+    "numero": 211,
+    "nome": "Laranja, da terra, suco"
+   },
+   {
+    "numero": 212,
+    "nome": "Laranja, lima, crua"
+   },
+   {
+    "numero": 213,
+    "nome": "Laranja, lima, suco"
+   },
+   {
+    "numero": 214,
+    "nome": "Laranja, pêra, crua"
+   },
+   {
+    "numero": 215,
+    "nome": "Laranja, pêra, suco"
+   },
+   {
+    "numero": 216,
+    "nome": "Laranja, valência, crua"
+   },
+   {
+    "numero": 217,
+    "nome": "Laranja, valência, suco"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "10 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Tangerina",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 251,
+    "nome": "Tangerina, Poncã, crua"
+   },
+   {
+    "numero": 252,
+    "nome": "Tangerina, Poncã, suco"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Mamão",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 224,
+    "nome": " Mamão, doce em calda, drenado"
+   },
+   {
+    "numero": 225,
+    "nome": "Mamão, Formosa, cru"
+   },
+   {
+    "numero": 226,
+    "nome": "Mamão, Papaia, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "3 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Melão",
+  "grupo": "3. Frutas",
+  "candidato_taco": "Melão, cru",
+  "candidatos": [
+   {
+    "numero": 236,
+    "nome": "Melão, cru"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Melancia",
+  "grupo": "3. Frutas",
+  "candidato_taco": "Melancia, crua",
+  "candidatos": [
+   {
+    "numero": 235,
+    "nome": "Melancia, crua"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Abacaxi",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 164,
+    "nome": "Abacaxi, cru"
+   },
+   {
+    "numero": 165,
+    "nome": "Abacaxi, polpa, congelada"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Manga",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 228,
+    "nome": "Manga, Haden, crua"
+   },
+   {
+    "numero": 229,
+    "nome": "Manga, Palmer, crua"
+   },
+   {
+    "numero": 230,
+    "nome": "Manga, polpa, congelada"
+   },
+   {
+    "numero": 231,
+    "nome": "Manga, Tommy Atkins, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "4 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Uva",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 256,
+    "nome": "Uva, Itália, crua"
+   },
+   {
+    "numero": 257,
+    "nome": "Uva, Rubi, crua"
+   },
+   {
+    "numero": 258,
+    "nome": "Uva, suco concentrado, envasado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "3 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Morango",
+  "grupo": "3. Frutas",
+  "candidato_taco": "Morango, cru",
+  "candidatos": [
+   {
+    "numero": 239,
+    "nome": "Morango, cru"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Kiwi",
+  "grupo": "3. Frutas",
+  "candidato_taco": "Kiwi, cru",
+  "candidatos": [
+   {
+    "numero": 207,
+    "nome": "Kiwi, cru"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Mirtilo",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Maracujá",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 232,
+    "nome": "Maracujá, cru"
+   },
+   {
+    "numero": 233,
+    "nome": "Maracujá, polpa, congelada"
+   },
+   {
+    "numero": 234,
+    "nome": "Maracujá, suco concentrado, envasado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "3 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Goiaba",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 197,
+    "nome": "Goiaba, branca, com casca, crua"
+   },
+   {
+    "numero": 198,
+    "nome": "Goiaba, doce em pasta"
+   },
+   {
+    "numero": 199,
+    "nome": "Goiaba, doce, cascão"
+   },
+   {
+    "numero": 200,
+    "nome": "Goiaba, vermelha, com casca, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "4 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Acerola",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 169,
+    "nome": "Acerola, crua"
+   },
+   {
+    "numero": 170,
+    "nome": "Acerola, polpa, congelada"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Caju",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 186,
+    "nome": "Caju, cru"
+   },
+   {
+    "numero": 187,
+    "nome": "Caju, polpa, congelada"
+   },
+   {
+    "numero": 188,
+    "nome": "Caju, suco concentrado, envasado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "3 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Caqui",
+  "grupo": "3. Frutas",
+  "candidato_taco": "Caqui, chocolate, cru",
+  "candidatos": [
+   {
+    "numero": 189,
+    "nome": "Caqui, chocolate, cru"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Pêssego",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 244,
+    "nome": "Pêssego, Aurora, cru"
+   },
+   {
+    "numero": 245,
+    "nome": "Pêssego, enlatado, em calda"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Ameixa",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 171,
+    "nome": "Ameixa, calda, enlatada "
+   },
+   {
+    "numero": 172,
+    "nome": "Ameixa, crua"
+   },
+   {
+    "numero": 173,
+    "nome": "Ameixa, em calda, enlatada, drenada "
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "3 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Figo",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 194,
+    "nome": "Figo, cru"
+   },
+   {
+    "numero": 195,
+    "nome": "Figo, enlatado, em calda"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Abacate",
+  "grupo": "3. Frutas",
+  "candidato_taco": "Abacate, cru",
+  "candidatos": [
+   {
+    "numero": 163,
+    "nome": "Abacate, cru"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Coco",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 478,
+    "nome": "Coco, água de"
+   },
+   {
+    "numero": 590,
+    "nome": "Coco, cru"
+   },
+   {
+    "numero": 591,
+    "nome": "Coco,  verde, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "3 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Limão",
+  "grupo": "3. Frutas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 218,
+    "nome": "Limão, cravo, suco"
+   },
+   {
+    "numero": 219,
+    "nome": "Limão, galego, suco"
+   },
+   {
+    "numero": 220,
+    "nome": "Limão, tahiti, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "3 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Alface",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 77,
+    "nome": "Alface, americana, crua"
+   },
+   {
+    "numero": 78,
+    "nome": "Alface, crespa, crua"
+   },
+   {
+    "numero": 79,
+    "nome": "Alface, lisa, crua"
+   },
+   {
+    "numero": 80,
+    "nome": "Alface, roxa, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "4 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Rúcula",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": "Rúcula, crua",
+  "candidatos": [
+   {
+    "numero": 152,
+    "nome": "Rúcula, crua"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Agrião",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": "Agrião, cru",
+  "candidatos": [
+   {
+    "numero": 75,
+    "nome": "Agrião, cru"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Couve",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 115,
+    "nome": "Couve, manteiga, crua"
+   },
+   {
+    "numero": 116,
+    "nome": "Couve, manteiga, refogada "
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Espinafre",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 119,
+    "nome": "Espinafre, Nova Zelândia, cru"
+   },
+   {
+    "numero": 120,
+    "nome": "Espinafre, Nova Zelândia, refogado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Acelga",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": "Acelga, crua",
+  "candidatos": [
+   {
+    "numero": 74,
+    "nome": "Acelga, crua"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Repolho",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 149,
+    "nome": "Repolho, branco, cru"
+   },
+   {
+    "numero": 150,
+    "nome": "Repolho, roxo, cru"
+   },
+   {
+    "numero": 151,
+    "nome": "Repolho, roxo, refogado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "3 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Brócolis",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 100,
+    "nome": "Brócolis, cozido"
+   },
+   {
+    "numero": 101,
+    "nome": "Brócolis, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Couve-flor",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 117,
+    "nome": "Couve-flor, crua"
+   },
+   {
+    "numero": 118,
+    "nome": "Couve-flor, cozida"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Cenoura",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 109,
+    "nome": "Cenoura, cozida"
+   },
+   {
+    "numero": 110,
+    "nome": "Cenoura, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Beterraba",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 97,
+    "nome": "Beterraba, cozida"
+   },
+   {
+    "numero": 98,
+    "nome": "Beterraba, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Abobrinha",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 70,
+    "nome": "Abobrinha, italiana, cozida"
+   },
+   {
+    "numero": 71,
+    "nome": "Abobrinha, italiana, crua"
+   },
+   {
+    "numero": 72,
+    "nome": "Abobrinha, italiana, refogada"
+   },
+   {
+    "numero": 73,
+    "nome": "Abobrinha, paulista, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "4 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Berinjela",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 95,
+    "nome": "Berinjela, cozida"
+   },
+   {
+    "numero": 96,
+    "nome": "Berinjela, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Chuchu",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 112,
+    "nome": "Chuchu, cozido"
+   },
+   {
+    "numero": 113,
+    "nome": "Chuchu, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Pepino",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": "Pepino, cru",
+  "candidatos": [
+   {
+    "numero": 142,
+    "nome": "Pepino, cru"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Tomate",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 157,
+    "nome": "Tomate, com semente, cru"
+   },
+   {
+    "numero": 158,
+    "nome": "Tomate, extrato"
+   },
+   {
+    "numero": 159,
+    "nome": "Tomate, molho industrializado"
+   },
+   {
+    "numero": 160,
+    "nome": "Tomate, purê"
+   },
+   {
+    "numero": 161,
+    "nome": "Tomate, salada"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "5 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Vagem",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": "Vagem, crua",
+  "candidatos": [
+   {
+    "numero": 162,
+    "nome": "Vagem, crua"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Quiabo",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": "Quiabo, cru",
+  "candidatos": [
+   {
+    "numero": 147,
+    "nome": "Quiabo, cru"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Pimentão",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 143,
+    "nome": "Pimentão, amarelo, cru"
+   },
+   {
+    "numero": 144,
+    "nome": "Pimentão, verde, cru"
+   },
+   {
+    "numero": 145,
+    "nome": "Pimentão, vermelho, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "3 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Cebola",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": "Cebola, crua",
+  "candidatos": [
+   {
+    "numero": 107,
+    "nome": "Cebola, crua"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Alho",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": "Alho, cru",
+  "candidatos": [
+   {
+    "numero": 82,
+    "nome": "Alho, cru"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Milho",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 42,
+    "nome": "Milho, amido, cru"
+   },
+   {
+    "numero": 43,
+    "nome": "Milho, fubá, cru"
+   },
+   {
+    "numero": 44,
+    "nome": "Milho, verde, cru"
+   },
+   {
+    "numero": 45,
+    "nome": "Milho, verde, enlatado, drenado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "4 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Ervilha",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 559,
+    "nome": "Ervilha, em vagem"
+   },
+   {
+    "numero": 560,
+    "nome": "Ervilha, enlatada, drenada"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Aspargos",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Cogumelos",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Palmito",
+  "grupo": "4. Verduras e legumes",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 138,
+    "nome": "Palmito, juçara, em conserva"
+   },
+   {
+    "numero": 139,
+    "nome": "Palmito, pupunha, em conserva"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Azeite de oliva",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": "Azeite, de oliva, extra virgem",
+  "candidatos": [
+   {
+    "numero": 260,
+    "nome": "Azeite, de oliva, extra virgem"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Óleo de coco",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Óleo de canola",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": "Óleo, de canola",
+  "candidatos": [
+   {
+    "numero": 268,
+    "nome": "Óleo, de canola"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Manteiga",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 261,
+    "nome": "Manteiga, com sal"
+   },
+   {
+    "numero": 262,
+    "nome": "Manteiga, sem sal"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Pasta de amendoim",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto industrializado: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Amendoim",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 557,
+    "nome": "Amendoim, grão, cru"
+   },
+   {
+    "numero": 558,
+    "nome": "Amendoim, torrado, salgado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Castanha-do-Pará",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": "Castanha-do-Brasil, crua",
+  "candidatos": [
+   {
+    "numero": 589,
+    "nome": "Castanha-do-Brasil, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "Castanha-do-Pará aparece como \"Castanha-do-Brasil\" na TACO."
+ },
+ {
+  "alimento_bocado": "Castanha de caju",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": "Castanha-de-caju, torrada, salgada",
+  "candidatos": [
+   {
+    "numero": 588,
+    "nome": "Castanha-de-caju, torrada, salgada"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Amêndoas",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": "Amêndoa, torrada, salgada",
+  "candidatos": [
+   {
+    "numero": 587,
+    "nome": "Amêndoa, torrada, salgada"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": "A TACO só tem amêndoa torrada e salgada."
+ },
+ {
+  "alimento_bocado": "Nozes",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": "Noz, crua",
+  "candidatos": [
+   {
+    "numero": 597,
+    "nome": "Noz, crua"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Pistache",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Macadâmia",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Semente de chia",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Linhaça",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": "Linhaça, semente",
+  "candidatos": [
+   {
+    "numero": 594,
+    "nome": "Linhaça, semente"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Gergelim",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": "Gergelim, semente",
+  "candidatos": [
+   {
+    "numero": 593,
+    "nome": "Gergelim, semente"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Semente de abóbora",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Tahine",
+  "grupo": "5. Gorduras e oleaginosas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Leite integral",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 458,
+    "nome": "Leite, de vaca, integral"
+   },
+   {
+    "numero": 459,
+    "nome": "Leite, de vaca, integral, pó"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Leite desnatado",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 456,
+    "nome": "Leite, de vaca, desnatado, pó"
+   },
+   {
+    "numero": 457,
+    "nome": "Leite, de vaca, desnatado, UHT"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Leite semidesnatado",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Leite zero lactose",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto industrializado: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Iogurte natural",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 448,
+    "nome": "Iogurte, natural"
+   },
+   {
+    "numero": 449,
+    "nome": "Iogurte, natural, desnatado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Iogurte grego",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto industrializado: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Iogurte zero lactose",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto industrializado: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Kefir",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "A TACO tem \"Leite, fermentado\", que não é kefir."
+ },
+ {
+  "alimento_bocado": "Queijo minas",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 461,
+    "nome": "Queijo, minas, frescal"
+   },
+   {
+    "numero": 462,
+    "nome": "Queijo, minas, meia cura"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Muçarela",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": "Queijo, mozarela",
+  "candidatos": [
+   {
+    "numero": 463,
+    "nome": "Queijo, mozarela"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "Na TACO a grafia é \"mozarela\"."
+ },
+ {
+  "alimento_bocado": "Cottage",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Ricota",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": "Queijo, ricota",
+  "candidatos": [
+   {
+    "numero": 469,
+    "nome": "Queijo, ricota"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Cream cheese",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto industrializado: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Requeijão",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": "Queijo, requeijão, cremoso",
+  "candidatos": [
+   {
+    "numero": 468,
+    "nome": "Queijo, requeijão, cremoso"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Requeijão light",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto industrializado: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Bebida de soja",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": "Soja, extrato solúvel, natural, fluido",
+  "candidatos": [
+   {
+    "numero": 582,
+    "nome": "Soja, extrato solúvel, natural, fluido"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "Na TACO: \"Soja, extrato solúvel, natural, fluido\"."
+ },
+ {
+  "alimento_bocado": "Bebida de amêndoas",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto industrializado: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Bebida de aveia",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto industrializado: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Bebida de coco",
+  "grupo": "6. Lácteos e alternativas",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "A TACO tem \"Leite, de coco\" (uso culinário), não a bebida."
+ },
+ {
+  "alimento_bocado": "Peito de peru",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 425,
+    "nome": "Peru, congelado, assado"
+   },
+   {
+    "numero": 426,
+    "nome": "Peru, congelado, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma. A TACO tem peru congelado (carne), não o peito de peru fatiado (frios)."
+ },
+ {
+  "alimento_bocado": "Presunto",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 438,
+    "nome": "Presunto, com capa de gordura"
+   },
+   {
+    "numero": 439,
+    "nome": "Presunto, sem capa de gordura"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Atum em água",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "A TACO só tem atum em óleo e atum fresco."
+ },
+ {
+  "alimento_bocado": "Sardinha em lata",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": "Sardinha, conserva em óleo",
+  "candidatos": [
+   {
+    "numero": 319,
+    "nome": "Sardinha, conserva em óleo"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "Na TACO: \"Sardinha, conserva em óleo\"."
+ },
+ {
+  "alimento_bocado": "Frango pronto/desfiado",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "A TACO não tem frango desfiado pronto."
+ },
+ {
+  "alimento_bocado": "Hambúrguer bovino",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 415,
+    "nome": "Hambúrguer, bovino, cru"
+   },
+   {
+    "numero": 416,
+    "nome": "Hambúrguer, bovino, frito"
+   },
+   {
+    "numero": 417,
+    "nome": "Hambúrguer, bovino, grelhado"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "3 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Hambúrguer de frango",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto industrializado: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Hambúrguer vegetal",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto industrializado: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Queijo light",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto industrializado: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Pão integral",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": "Pão, trigo, forma, integral",
+  "candidatos": [
+   {
+    "numero": 52,
+    "nome": "Pão, trigo, forma, integral"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Wrap integral",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto industrializado: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Granola sem açúcar",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto industrializado: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Pasta de amendoim",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Produto industrializado: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Geleia sem açúcar",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "A TACO só tem geleia de mocotó."
+ },
+ {
+  "alimento_bocado": "Chocolate 70%",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "A TACO tem chocolate meio amargo, sem teor de cacau definido."
+ },
+ {
+  "alimento_bocado": "Cacau em pó",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "A TACO tem \"Cacau, cru\" (fruta) e achocolatado em pó."
+ },
+ {
+  "alimento_bocado": "Leite em pó",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 456,
+    "nome": "Leite, de vaca, desnatado, pó"
+   },
+   {
+    "numero": 459,
+    "nome": "Leite, de vaca, integral, pó"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Whey",
+  "grupo": "7. Alimentos práticos para dieta",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "fora_da_taco",
+  "observacao": "Suplemento: valores dependem do rótulo."
+ },
+ {
+  "alimento_bocado": "Arroz carreteiro",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": "Arroz carreteiro",
+  "candidatos": [
+   {
+    "numero": 526,
+    "nome": "Arroz carreteiro"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Feijoada",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": "L",
+  "candidatos": [
+   {
+    "numero": 540,
+    "nome": "L"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "Na aba principal o nº 540 está com o nome \"L\" (truncado); na aba de ácidos graxos o mesmo nº se chama \"Feijoada\"."
+ },
+ {
+  "alimento_bocado": "Farofa",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": "Mandioca, farofa, temperada",
+  "candidatos": [
+   {
+    "numero": 131,
+    "nome": "Mandioca, farofa, temperada"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "A TACO só tem \"Mandioca, farofa, temperada\"."
+ },
+ {
+  "alimento_bocado": "Polenta",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": "Polenta, pré-cozida",
+  "candidatos": [
+   {
+    "numero": 62,
+    "nome": "Polenta, pré-cozida"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Pinhão",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": "Pinhão, cozido",
+  "candidatos": [
+   {
+    "numero": 595,
+    "nome": "Pinhão, cozido"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Chimarrão",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": "Chá, mate, infusão 5%",
+  "candidatos": [
+   {
+    "numero": 476,
+    "nome": "Chá, mate, infusão 5%"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "Na TACO: \"Chá, mate, infusão 5%\"."
+ },
+ {
+  "alimento_bocado": "Cuca",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Sagu",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Churrasco",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Genérico: escolha o corte (picanha, fraldinha, costela, maminha, cupim…)."
+ },
+ {
+  "alimento_bocado": "Vina",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "A TACO não tem salsicha/vina."
+ },
+ {
+  "alimento_bocado": "Linguiça",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 418,
+    "nome": "Lingüiça, frango, crua"
+   },
+   {
+    "numero": 419,
+    "nome": "Lingüiça, frango, frita"
+   },
+   {
+    "numero": 420,
+    "nome": "Lingüiça, frango, grelhada"
+   },
+   {
+    "numero": 421,
+    "nome": "Lingüiça, porco, crua"
+   },
+   {
+    "numero": 422,
+    "nome": "Lingüiça, porco, frita"
+   },
+   {
+    "numero": 423,
+    "nome": "Lingüiça, porco, grelhada"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "6 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Charque",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 338,
+    "nome": "Carne, bovina, charque, cozido"
+   },
+   {
+    "numero": 339,
+    "nome": "Carne, bovina, charque, cru"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Carne seca",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": null,
+  "candidatos": [
+   {
+    "numero": 384,
+    "nome": "Carne, bovina, seca, cozida"
+   },
+   {
+    "numero": 385,
+    "nome": "Carne, bovina, seca, crua"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "2 preparações/variações possíveis na TACO — escolha uma."
+ },
+ {
+  "alimento_bocado": "Paçoca",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": "Paçoca, amendoim",
+  "candidatos": [
+   {
+    "numero": 579,
+    "nome": "Paçoca, amendoim"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Tapioca",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": "Tapioca, com manteiga",
+  "candidatos": [
+   {
+    "numero": 551,
+    "nome": "Tapioca, com manteiga"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "A TACO só tem \"Tapioca, com manteiga\" (preparação com manteiga)."
+ },
+ {
+  "alimento_bocado": "Cuscuz nordestino",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": "Cuscuz, de milho, cozido com sal",
+  "candidatos": [
+   {
+    "numero": 533,
+    "nome": "Cuscuz, de milho, cozido com sal"
+   }
+  ],
+  "status": "precisa_revisao",
+  "observacao": "Na TACO: \"Cuscuz, de milho, cozido com sal\"."
+ },
+ {
+  "alimento_bocado": "Acarajé",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": "Acarajé",
+  "candidatos": [
+   {
+    "numero": 525,
+    "nome": "Acarajé"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ },
+ {
+  "alimento_bocado": "Moqueca",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": null,
+  "candidatos": [],
+  "status": "nao_encontrado",
+  "observacao": "Nenhum alimento correspondente na TACO."
+ },
+ {
+  "alimento_bocado": "Baião de dois",
+  "grupo": "8. Alimentos brasileiros/regionais",
+  "candidato_taco": "Baião de dois, arroz e feijão-de-corda",
+  "candidatos": [
+   {
+    "numero": 527,
+    "nome": "Baião de dois, arroz e feijão-de-corda"
+   }
+  ],
+  "status": "encontrado",
+  "observacao": ""
+ }
+]

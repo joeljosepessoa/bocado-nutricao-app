@@ -1,0 +1,5468 @@
+[
+ {
+  "alias": "abacate",
+  "alimento_bocado": "Abacate",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 163,
+    "nome": "Abacate, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "abacates",
+  "alimento_bocado": "Abacate",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 163,
+    "nome": "Abacate, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "abacaxi",
+  "alimento_bocado": "Abacaxi",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 164,
+    "nome": "Abacaxi, cru"
+   },
+   {
+    "numero": 165,
+    "nome": "Abacaxi, polpa, congelada"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "abacaxis",
+  "alimento_bocado": "Abacaxi",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 164,
+    "nome": "Abacaxi, cru"
+   },
+   {
+    "numero": 165,
+    "nome": "Abacaxi, polpa, congelada"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "abobora",
+  "alimento_bocado": "Abóbora",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 64,
+    "nome": "Abóbora, cabotian, cozida"
+   },
+   {
+    "numero": 65,
+    "nome": "Abóbora, cabotian, crua"
+   },
+   {
+    "numero": 66,
+    "nome": "Abóbora, menina brasileira, crua"
+   },
+   {
+    "numero": 67,
+    "nome": "Abóbora, moranga, crua"
+   },
+   {
+    "numero": 68,
+    "nome": "Abóbora, moranga, refogada"
+   },
+   {
+    "numero": 69,
+    "nome": "Abóbora, pescoço, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "aboboras",
+  "alimento_bocado": "Abóbora",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 64,
+    "nome": "Abóbora, cabotian, cozida"
+   },
+   {
+    "numero": 65,
+    "nome": "Abóbora, cabotian, crua"
+   },
+   {
+    "numero": 66,
+    "nome": "Abóbora, menina brasileira, crua"
+   },
+   {
+    "numero": 67,
+    "nome": "Abóbora, moranga, crua"
+   },
+   {
+    "numero": 68,
+    "nome": "Abóbora, moranga, refogada"
+   },
+   {
+    "numero": 69,
+    "nome": "Abóbora, pescoço, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "abobrinha",
+  "alimento_bocado": "Abobrinha",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 70,
+    "nome": "Abobrinha, italiana, cozida"
+   },
+   {
+    "numero": 71,
+    "nome": "Abobrinha, italiana, crua"
+   },
+   {
+    "numero": 72,
+    "nome": "Abobrinha, italiana, refogada"
+   },
+   {
+    "numero": 73,
+    "nome": "Abobrinha, paulista, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "abobrinhas",
+  "alimento_bocado": "Abobrinha",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 70,
+    "nome": "Abobrinha, italiana, cozida"
+   },
+   {
+    "numero": 71,
+    "nome": "Abobrinha, italiana, crua"
+   },
+   {
+    "numero": 72,
+    "nome": "Abobrinha, italiana, refogada"
+   },
+   {
+    "numero": 73,
+    "nome": "Abobrinha, paulista, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "acaraje",
+  "alimento_bocado": "Acarajé",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 525,
+    "nome": "Acarajé"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "acarajes",
+  "alimento_bocado": "Acarajé",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 525,
+    "nome": "Acarajé"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "acelga",
+  "alimento_bocado": "Acelga",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 74,
+    "nome": "Acelga, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "acelgas",
+  "alimento_bocado": "Acelga",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 74,
+    "nome": "Acelga, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "acem",
+  "alimento_bocado": "Acém",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 326,
+    "nome": "Carne, bovina, acém, moído, cozido"
+   },
+   {
+    "numero": 327,
+    "nome": "Carne, bovina, acém, moído, cru"
+   },
+   {
+    "numero": 328,
+    "nome": "Carne, bovina, acém, sem gordura, cozido"
+   },
+   {
+    "numero": 329,
+    "nome": "Carne, bovina, acém, sem gordura, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "acems",
+  "alimento_bocado": "Acém",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 326,
+    "nome": "Carne, bovina, acém, moído, cozido"
+   },
+   {
+    "numero": 327,
+    "nome": "Carne, bovina, acém, moído, cru"
+   },
+   {
+    "numero": 328,
+    "nome": "Carne, bovina, acém, sem gordura, cozido"
+   },
+   {
+    "numero": 329,
+    "nome": "Carne, bovina, acém, sem gordura, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "acerola",
+  "alimento_bocado": "Acerola",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 169,
+    "nome": "Acerola, crua"
+   },
+   {
+    "numero": 170,
+    "nome": "Acerola, polpa, congelada"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "acerolas",
+  "alimento_bocado": "Acerola",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 169,
+    "nome": "Acerola, crua"
+   },
+   {
+    "numero": 170,
+    "nome": "Acerola, polpa, congelada"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "agriao",
+  "alimento_bocado": "Agrião",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 75,
+    "nome": "Agrião, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "agriaos",
+  "alimento_bocado": "Agrião",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 75,
+    "nome": "Agrião, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "aipim",
+  "alimento_bocado": "Aipim",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 129,
+    "nome": "Mandioca, cozida"
+   },
+   {
+    "numero": 130,
+    "nome": "Mandioca, crua"
+   },
+   {
+    "numero": 131,
+    "nome": "Mandioca, farofa, temperada"
+   },
+   {
+    "numero": 132,
+    "nome": "Mandioca, frita"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "aipims",
+  "alimento_bocado": "Aipim",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 129,
+    "nome": "Mandioca, cozida"
+   },
+   {
+    "numero": 130,
+    "nome": "Mandioca, crua"
+   },
+   {
+    "numero": 131,
+    "nome": "Mandioca, farofa, temperada"
+   },
+   {
+    "numero": 132,
+    "nome": "Mandioca, frita"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "alcatra",
+  "alimento_bocado": "Alcatra",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 369,
+    "nome": "Carne, bovina, miolo de alcatra, sem gordura, cru"
+   },
+   {
+    "numero": 370,
+    "nome": "Carne, bovina, miolo de alcatra, sem gordura, grelhado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "alcatras",
+  "alimento_bocado": "Alcatra",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 369,
+    "nome": "Carne, bovina, miolo de alcatra, sem gordura, cru"
+   },
+   {
+    "numero": 370,
+    "nome": "Carne, bovina, miolo de alcatra, sem gordura, grelhado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "alface",
+  "alimento_bocado": "Alface",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 77,
+    "nome": "Alface, americana, crua"
+   },
+   {
+    "numero": 78,
+    "nome": "Alface, crespa, crua"
+   },
+   {
+    "numero": 79,
+    "nome": "Alface, lisa, crua"
+   },
+   {
+    "numero": 80,
+    "nome": "Alface, roxa, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "alfaces",
+  "alimento_bocado": "Alface",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 77,
+    "nome": "Alface, americana, crua"
+   },
+   {
+    "numero": 78,
+    "nome": "Alface, crespa, crua"
+   },
+   {
+    "numero": 79,
+    "nome": "Alface, lisa, crua"
+   },
+   {
+    "numero": 80,
+    "nome": "Alface, roxa, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "alho",
+  "alimento_bocado": "Alho",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 82,
+    "nome": "Alho, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "alhos",
+  "alimento_bocado": "Alho",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 82,
+    "nome": "Alho, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "ameixa",
+  "alimento_bocado": "Ameixa",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 171,
+    "nome": "Ameixa, calda, enlatada "
+   },
+   {
+    "numero": 172,
+    "nome": "Ameixa, crua"
+   },
+   {
+    "numero": 173,
+    "nome": "Ameixa, em calda, enlatada, drenada "
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "ameixas",
+  "alimento_bocado": "Ameixa",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 171,
+    "nome": "Ameixa, calda, enlatada "
+   },
+   {
+    "numero": 172,
+    "nome": "Ameixa, crua"
+   },
+   {
+    "numero": 173,
+    "nome": "Ameixa, em calda, enlatada, drenada "
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "amendoa",
+  "alimento_bocado": "Amêndoas",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 587,
+    "nome": "Amêndoa, torrada, salgada"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "amendoas",
+  "alimento_bocado": "Amêndoas",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 587,
+    "nome": "Amêndoa, torrada, salgada"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "amendoim",
+  "alimento_bocado": "Amendoim",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 557,
+    "nome": "Amendoim, grão, cru"
+   },
+   {
+    "numero": 558,
+    "nome": "Amendoim, torrado, salgado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "amendoims",
+  "alimento_bocado": "Amendoim",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 557,
+    "nome": "Amendoim, grão, cru"
+   },
+   {
+    "numero": 558,
+    "nome": "Amendoim, torrado, salgado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "arroz branco",
+  "alimento_bocado": "Arroz branco",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 3,
+    "nome": "Arroz, tipo 1, cozido"
+   },
+   {
+    "numero": 4,
+    "nome": "Arroz, tipo 1, cru"
+   },
+   {
+    "numero": 5,
+    "nome": "Arroz, tipo 2, cozido"
+   },
+   {
+    "numero": 6,
+    "nome": "Arroz, tipo 2, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "arroz brancos",
+  "alimento_bocado": "Arroz branco",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 3,
+    "nome": "Arroz, tipo 1, cozido"
+   },
+   {
+    "numero": 4,
+    "nome": "Arroz, tipo 1, cru"
+   },
+   {
+    "numero": 5,
+    "nome": "Arroz, tipo 2, cozido"
+   },
+   {
+    "numero": 6,
+    "nome": "Arroz, tipo 2, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "arroz carreteiro",
+  "alimento_bocado": "Arroz carreteiro",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 526,
+    "nome": "Arroz carreteiro"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "arroz carreteiros",
+  "alimento_bocado": "Arroz carreteiro",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 526,
+    "nome": "Arroz carreteiro"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "arroz integral",
+  "alimento_bocado": "Arroz integral",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 1,
+    "nome": "Arroz, integral, cozido"
+   },
+   {
+    "numero": 2,
+    "nome": "Arroz, integral, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "arroz integrals",
+  "alimento_bocado": "Arroz integral",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 1,
+    "nome": "Arroz, integral, cozido"
+   },
+   {
+    "numero": 2,
+    "nome": "Arroz, integral, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "arroz negro",
+  "alimento_bocado": "Arroz negro",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "arroz negros",
+  "alimento_bocado": "Arroz negro",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "arroz parboilizado",
+  "alimento_bocado": "Arroz parboilizado",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "arroz parboilizados",
+  "alimento_bocado": "Arroz parboilizado",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "arroz vermelho",
+  "alimento_bocado": "Arroz vermelho",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "arroz vermelhos",
+  "alimento_bocado": "Arroz vermelho",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "aspargo",
+  "alimento_bocado": "Aspargos",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "aspargos",
+  "alimento_bocado": "Aspargos",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "atum",
+  "alimento_bocado": "Atum",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 277,
+    "nome": "Atum, conserva em óleo"
+   },
+   {
+    "numero": 278,
+    "nome": "Atum, fresco, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "atum em agua",
+  "alimento_bocado": "Atum em água",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "atum em aguas",
+  "alimento_bocado": "Atum em água",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "atums",
+  "alimento_bocado": "Atum",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 277,
+    "nome": "Atum, conserva em óleo"
+   },
+   {
+    "numero": 278,
+    "nome": "Atum, fresco, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "aveia",
+  "alimento_bocado": "Aveia",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 7,
+    "nome": "Aveia, flocos, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "aveias",
+  "alimento_bocado": "Aveia",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 7,
+    "nome": "Aveia, flocos, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "azeite de oliva",
+  "alimento_bocado": "Azeite de oliva",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 260,
+    "nome": "Azeite, de oliva, extra virgem"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "azeite de olivas",
+  "alimento_bocado": "Azeite de oliva",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 260,
+    "nome": "Azeite, de oliva, extra virgem"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "bacalhau",
+  "alimento_bocado": "Bacalhau",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 279,
+    "nome": "Bacalhau, salgado, cru"
+   },
+   {
+    "numero": 280,
+    "nome": "Bacalhau, salgado, refogado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "bacalhaus",
+  "alimento_bocado": "Bacalhau",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 279,
+    "nome": "Bacalhau, salgado, cru"
+   },
+   {
+    "numero": 280,
+    "nome": "Bacalhau, salgado, refogado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "baiao de doi",
+  "alimento_bocado": "Baião de dois",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 527,
+    "nome": "Baião de dois, arroz e feijão-de-corda"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "baiao de dois",
+  "alimento_bocado": "Baião de dois",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 527,
+    "nome": "Baião de dois, arroz e feijão-de-corda"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "banana",
+  "alimento_bocado": "Banana",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 175,
+    "nome": "Banana, da terra, crua"
+   },
+   {
+    "numero": 176,
+    "nome": "Banana, doce em barra"
+   },
+   {
+    "numero": 177,
+    "nome": "Banana, figo, crua"
+   },
+   {
+    "numero": 178,
+    "nome": "Banana, maçã, crua"
+   },
+   {
+    "numero": 179,
+    "nome": "Banana, nanica, crua"
+   },
+   {
+    "numero": 180,
+    "nome": "Banana, ouro, crua"
+   },
+   {
+    "numero": 181,
+    "nome": "Banana, pacova, crua"
+   },
+   {
+    "numero": 182,
+    "nome": "Banana, prata, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "banana nanica",
+  "alimento_bocado": "Banana nanica",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 179,
+    "nome": "Banana, nanica, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "banana nanicas",
+  "alimento_bocado": "Banana nanica",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 179,
+    "nome": "Banana, nanica, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "banana prata",
+  "alimento_bocado": "Banana prata",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 182,
+    "nome": "Banana, prata, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "banana pratas",
+  "alimento_bocado": "Banana prata",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 182,
+    "nome": "Banana, prata, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "bananas",
+  "alimento_bocado": "Banana",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 175,
+    "nome": "Banana, da terra, crua"
+   },
+   {
+    "numero": 176,
+    "nome": "Banana, doce em barra"
+   },
+   {
+    "numero": 177,
+    "nome": "Banana, figo, crua"
+   },
+   {
+    "numero": 178,
+    "nome": "Banana, maçã, crua"
+   },
+   {
+    "numero": 179,
+    "nome": "Banana, nanica, crua"
+   },
+   {
+    "numero": 180,
+    "nome": "Banana, ouro, crua"
+   },
+   {
+    "numero": 181,
+    "nome": "Banana, pacova, crua"
+   },
+   {
+    "numero": 182,
+    "nome": "Banana, prata, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "batata baroa mandioquinha",
+  "alimento_bocado": "Batata-baroa/mandioquinha",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 86,
+    "nome": "Batata, baroa, cozida"
+   },
+   {
+    "numero": 87,
+    "nome": "Batata, baroa, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "batata baroa mandioquinhas",
+  "alimento_bocado": "Batata-baroa/mandioquinha",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 86,
+    "nome": "Batata, baroa, cozida"
+   },
+   {
+    "numero": 87,
+    "nome": "Batata, baroa, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "batata doce",
+  "alimento_bocado": "Batata-doce",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 88,
+    "nome": "Batata, doce, cozida"
+   },
+   {
+    "numero": 89,
+    "nome": "Batata, doce, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "batata doces",
+  "alimento_bocado": "Batata-doce",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 88,
+    "nome": "Batata, doce, cozida"
+   },
+   {
+    "numero": 89,
+    "nome": "Batata, doce, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "batata inglesa",
+  "alimento_bocado": "Batata inglesa",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 91,
+    "nome": "Batata, inglesa, cozida"
+   },
+   {
+    "numero": 92,
+    "nome": "Batata, inglesa, crua"
+   },
+   {
+    "numero": 93,
+    "nome": "Batata, inglesa, frita"
+   },
+   {
+    "numero": 94,
+    "nome": "Batata, inglesa, sauté"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "batata inglesas",
+  "alimento_bocado": "Batata inglesa",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 91,
+    "nome": "Batata, inglesa, cozida"
+   },
+   {
+    "numero": 92,
+    "nome": "Batata, inglesa, crua"
+   },
+   {
+    "numero": 93,
+    "nome": "Batata, inglesa, frita"
+   },
+   {
+    "numero": 94,
+    "nome": "Batata, inglesa, sauté"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "bebida de amendoa",
+  "alimento_bocado": "Bebida de amêndoas",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "bebida de amendoas",
+  "alimento_bocado": "Bebida de amêndoas",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "bebida de aveia",
+  "alimento_bocado": "Bebida de aveia",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "bebida de aveias",
+  "alimento_bocado": "Bebida de aveia",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "bebida de coco",
+  "alimento_bocado": "Bebida de coco",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "bebida de cocos",
+  "alimento_bocado": "Bebida de coco",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "bebida de soja",
+  "alimento_bocado": "Bebida de soja",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 582,
+    "nome": "Soja, extrato solúvel, natural, fluido"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "bebida de sojas",
+  "alimento_bocado": "Bebida de soja",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 582,
+    "nome": "Soja, extrato solúvel, natural, fluido"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "berinjela",
+  "alimento_bocado": "Berinjela",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 95,
+    "nome": "Berinjela, cozida"
+   },
+   {
+    "numero": 96,
+    "nome": "Berinjela, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "berinjelas",
+  "alimento_bocado": "Berinjela",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 95,
+    "nome": "Berinjela, cozida"
+   },
+   {
+    "numero": 96,
+    "nome": "Berinjela, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "beterraba",
+  "alimento_bocado": "Beterraba",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 97,
+    "nome": "Beterraba, cozida"
+   },
+   {
+    "numero": 98,
+    "nome": "Beterraba, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "beterrabas",
+  "alimento_bocado": "Beterraba",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 97,
+    "nome": "Beterraba, cozida"
+   },
+   {
+    "numero": 98,
+    "nome": "Beterraba, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "brocoli",
+  "alimento_bocado": "Brócolis",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 100,
+    "nome": "Brócolis, cozido"
+   },
+   {
+    "numero": 101,
+    "nome": "Brócolis, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "brocolis",
+  "alimento_bocado": "Brócolis",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 100,
+    "nome": "Brócolis, cozido"
+   },
+   {
+    "numero": 101,
+    "nome": "Brócolis, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cacau em po",
+  "alimento_bocado": "Cacau em pó",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cacau em pos",
+  "alimento_bocado": "Cacau em pó",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "caju",
+  "alimento_bocado": "Caju",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 186,
+    "nome": "Caju, cru"
+   },
+   {
+    "numero": 187,
+    "nome": "Caju, polpa, congelada"
+   },
+   {
+    "numero": 188,
+    "nome": "Caju, suco concentrado, envasado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cajus",
+  "alimento_bocado": "Caju",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 186,
+    "nome": "Caju, cru"
+   },
+   {
+    "numero": 187,
+    "nome": "Caju, polpa, congelada"
+   },
+   {
+    "numero": 188,
+    "nome": "Caju, suco concentrado, envasado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "camarao",
+  "alimento_bocado": "Camarão",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 284,
+    "nome": "Camarão, Rio Grande, grande, cozido"
+   },
+   {
+    "numero": 285,
+    "nome": "Camarão, Rio Grande, grande, cru"
+   },
+   {
+    "numero": 286,
+    "nome": "Camarão, Sete Barbas, sem cabeça, com casca, frito"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "camaraos",
+  "alimento_bocado": "Camarão",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 284,
+    "nome": "Camarão, Rio Grande, grande, cozido"
+   },
+   {
+    "numero": 285,
+    "nome": "Camarão, Rio Grande, grande, cru"
+   },
+   {
+    "numero": 286,
+    "nome": "Camarão, Sete Barbas, sem cabeça, com casca, frito"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "caqui",
+  "alimento_bocado": "Caqui",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 189,
+    "nome": "Caqui, chocolate, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "caquis",
+  "alimento_bocado": "Caqui",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 189,
+    "nome": "Caqui, chocolate, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "cara",
+  "alimento_bocado": "Cará",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 102,
+    "nome": "Cará, cozido"
+   },
+   {
+    "numero": 103,
+    "nome": "Cará, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "caras",
+  "alimento_bocado": "Cará",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 102,
+    "nome": "Cará, cozido"
+   },
+   {
+    "numero": 103,
+    "nome": "Cará, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "carne moida comum",
+  "alimento_bocado": "Carne moída comum",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 326,
+    "nome": "Carne, bovina, acém, moído, cozido"
+   },
+   {
+    "numero": 327,
+    "nome": "Carne, bovina, acém, moído, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "carne moida comums",
+  "alimento_bocado": "Carne moída comum",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 326,
+    "nome": "Carne, bovina, acém, moído, cozido"
+   },
+   {
+    "numero": 327,
+    "nome": "Carne, bovina, acém, moído, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "carne moida magra",
+  "alimento_bocado": "Carne moída magra",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 326,
+    "nome": "Carne, bovina, acém, moído, cozido"
+   },
+   {
+    "numero": 327,
+    "nome": "Carne, bovina, acém, moído, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "carne moida magras",
+  "alimento_bocado": "Carne moída magra",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 326,
+    "nome": "Carne, bovina, acém, moído, cozido"
+   },
+   {
+    "numero": 327,
+    "nome": "Carne, bovina, acém, moído, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "carne seca",
+  "alimento_bocado": "Carne seca",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 384,
+    "nome": "Carne, bovina, seca, cozida"
+   },
+   {
+    "numero": 385,
+    "nome": "Carne, bovina, seca, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "carne secas",
+  "alimento_bocado": "Carne seca",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 384,
+    "nome": "Carne, bovina, seca, cozida"
+   },
+   {
+    "numero": 385,
+    "nome": "Carne, bovina, seca, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "caseina",
+  "alimento_bocado": "Caseína",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "caseinas",
+  "alimento_bocado": "Caseína",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "castanha de caju",
+  "alimento_bocado": "Castanha de caju",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 588,
+    "nome": "Castanha-de-caju, torrada, salgada"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "castanha de cajus",
+  "alimento_bocado": "Castanha de caju",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 588,
+    "nome": "Castanha-de-caju, torrada, salgada"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "castanha do para",
+  "alimento_bocado": "Castanha-do-Pará",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 589,
+    "nome": "Castanha-do-Brasil, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "castanha do paras",
+  "alimento_bocado": "Castanha-do-Pará",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 589,
+    "nome": "Castanha-do-Brasil, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cebola",
+  "alimento_bocado": "Cebola",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 107,
+    "nome": "Cebola, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "cebolas",
+  "alimento_bocado": "Cebola",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 107,
+    "nome": "Cebola, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "cenoura",
+  "alimento_bocado": "Cenoura",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 109,
+    "nome": "Cenoura, cozida"
+   },
+   {
+    "numero": 110,
+    "nome": "Cenoura, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cenouras",
+  "alimento_bocado": "Cenoura",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 109,
+    "nome": "Cenoura, cozida"
+   },
+   {
+    "numero": 110,
+    "nome": "Cenoura, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "charque",
+  "alimento_bocado": "Charque",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 338,
+    "nome": "Carne, bovina, charque, cozido"
+   },
+   {
+    "numero": 339,
+    "nome": "Carne, bovina, charque, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "charques",
+  "alimento_bocado": "Charque",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 338,
+    "nome": "Carne, bovina, charque, cozido"
+   },
+   {
+    "numero": 339,
+    "nome": "Carne, bovina, charque, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "chimarrao",
+  "alimento_bocado": "Chimarrão",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 476,
+    "nome": "Chá, mate, infusão 5%"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "chimarraos",
+  "alimento_bocado": "Chimarrão",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 476,
+    "nome": "Chá, mate, infusão 5%"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "chocolate 70%",
+  "alimento_bocado": "Chocolate 70%",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "chocolate 70%s",
+  "alimento_bocado": "Chocolate 70%",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "chuchu",
+  "alimento_bocado": "Chuchu",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 112,
+    "nome": "Chuchu, cozido"
+   },
+   {
+    "numero": 113,
+    "nome": "Chuchu, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "chuchus",
+  "alimento_bocado": "Chuchu",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 112,
+    "nome": "Chuchu, cozido"
+   },
+   {
+    "numero": 113,
+    "nome": "Chuchu, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "churrasco",
+  "alimento_bocado": "Churrasco",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "churrascos",
+  "alimento_bocado": "Churrasco",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "clara de ovo",
+  "alimento_bocado": "Clara de ovo",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 486,
+    "nome": "Ovo, de galinha, clara, cozida/10minutos"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "clara de ovos",
+  "alimento_bocado": "Clara de ovo",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 486,
+    "nome": "Ovo, de galinha, clara, cozida/10minutos"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "coco",
+  "alimento_bocado": "Coco",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 478,
+    "nome": "Coco, água de"
+   },
+   {
+    "numero": 590,
+    "nome": "Coco, cru"
+   },
+   {
+    "numero": 591,
+    "nome": "Coco,  verde, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cocos",
+  "alimento_bocado": "Coco",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 478,
+    "nome": "Coco, água de"
+   },
+   {
+    "numero": 590,
+    "nome": "Coco, cru"
+   },
+   {
+    "numero": 591,
+    "nome": "Coco,  verde, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cogumelo",
+  "alimento_bocado": "Cogumelos",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cogumelos",
+  "alimento_bocado": "Cogumelos",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "contrafile",
+  "alimento_bocado": "Contrafilé",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 334,
+    "nome": "Carne, bovina, capa de contra-filé, com gordura, crua"
+   },
+   {
+    "numero": 335,
+    "nome": "Carne, bovina, capa de contra-filé, com gordura, grelhada"
+   },
+   {
+    "numero": 336,
+    "nome": "Carne, bovina, capa de contra-filé, sem gordura, crua"
+   },
+   {
+    "numero": 337,
+    "nome": "Carne, bovina, capa de contra-filé, sem gordura, grelhada"
+   },
+   {
+    "numero": 340,
+    "nome": "Carne, bovina, contra-filé, à milanesa"
+   },
+   {
+    "numero": 341,
+    "nome": "Carne, bovina, contra-filé de costela, cru"
+   },
+   {
+    "numero": 342,
+    "nome": "Carne, bovina, contra-filé de costela, grelhado"
+   },
+   {
+    "numero": 343,
+    "nome": "Carne, bovina, contra-filé, com gordura, cru"
+   },
+   {
+    "numero": 344,
+    "nome": "Carne, bovina, contra-filé, com gordura, grelhado"
+   },
+   {
+    "numero": 345,
+    "nome": "Carne, bovina, contra-filé, sem gordura, cru"
+   },
+   {
+    "numero": 346,
+    "nome": "Carne, bovina, contra-filé, sem gordura, grelhado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "contrafiles",
+  "alimento_bocado": "Contrafilé",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 334,
+    "nome": "Carne, bovina, capa de contra-filé, com gordura, crua"
+   },
+   {
+    "numero": 335,
+    "nome": "Carne, bovina, capa de contra-filé, com gordura, grelhada"
+   },
+   {
+    "numero": 336,
+    "nome": "Carne, bovina, capa de contra-filé, sem gordura, crua"
+   },
+   {
+    "numero": 337,
+    "nome": "Carne, bovina, capa de contra-filé, sem gordura, grelhada"
+   },
+   {
+    "numero": 340,
+    "nome": "Carne, bovina, contra-filé, à milanesa"
+   },
+   {
+    "numero": 341,
+    "nome": "Carne, bovina, contra-filé de costela, cru"
+   },
+   {
+    "numero": 342,
+    "nome": "Carne, bovina, contra-filé de costela, grelhado"
+   },
+   {
+    "numero": 343,
+    "nome": "Carne, bovina, contra-filé, com gordura, cru"
+   },
+   {
+    "numero": 344,
+    "nome": "Carne, bovina, contra-filé, com gordura, grelhado"
+   },
+   {
+    "numero": 345,
+    "nome": "Carne, bovina, contra-filé, sem gordura, cru"
+   },
+   {
+    "numero": 346,
+    "nome": "Carne, bovina, contra-filé, sem gordura, grelhado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cottage",
+  "alimento_bocado": "Cottage",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cottages",
+  "alimento_bocado": "Cottage",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "couve",
+  "alimento_bocado": "Couve",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 115,
+    "nome": "Couve, manteiga, crua"
+   },
+   {
+    "numero": 116,
+    "nome": "Couve, manteiga, refogada "
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "couve flor",
+  "alimento_bocado": "Couve-flor",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 117,
+    "nome": "Couve-flor, crua"
+   },
+   {
+    "numero": 118,
+    "nome": "Couve-flor, cozida"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "couve flors",
+  "alimento_bocado": "Couve-flor",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 117,
+    "nome": "Couve-flor, crua"
+   },
+   {
+    "numero": 118,
+    "nome": "Couve-flor, cozida"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "couves",
+  "alimento_bocado": "Couve",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 115,
+    "nome": "Couve, manteiga, crua"
+   },
+   {
+    "numero": 116,
+    "nome": "Couve, manteiga, refogada "
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "coxa de frango",
+  "alimento_bocado": "Coxa de frango",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 396,
+    "nome": "Frango, coxa, com pele, assada"
+   },
+   {
+    "numero": 397,
+    "nome": "Frango, coxa, com pele, crua"
+   },
+   {
+    "numero": 398,
+    "nome": "Frango, coxa, sem pele, cozida"
+   },
+   {
+    "numero": 399,
+    "nome": "Frango, coxa, sem pele, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "coxa de frangos",
+  "alimento_bocado": "Coxa de frango",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 396,
+    "nome": "Frango, coxa, com pele, assada"
+   },
+   {
+    "numero": 397,
+    "nome": "Frango, coxa, com pele, crua"
+   },
+   {
+    "numero": 398,
+    "nome": "Frango, coxa, sem pele, cozida"
+   },
+   {
+    "numero": 399,
+    "nome": "Frango, coxa, sem pele, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "coxao duro",
+  "alimento_bocado": "Coxão duro",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 349,
+    "nome": "Carne, bovina, coxão duro, sem gordura, cozido"
+   },
+   {
+    "numero": 350,
+    "nome": "Carne, bovina, coxão duro, sem gordura, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "coxao duros",
+  "alimento_bocado": "Coxão duro",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 349,
+    "nome": "Carne, bovina, coxão duro, sem gordura, cozido"
+   },
+   {
+    "numero": 350,
+    "nome": "Carne, bovina, coxão duro, sem gordura, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "coxao mole",
+  "alimento_bocado": "Coxão mole",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 351,
+    "nome": "Carne, bovina, coxão mole, sem gordura, cozido"
+   },
+   {
+    "numero": 352,
+    "nome": "Carne, bovina, coxão mole, sem gordura, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "coxao moles",
+  "alimento_bocado": "Coxão mole",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 351,
+    "nome": "Carne, bovina, coxão mole, sem gordura, cozido"
+   },
+   {
+    "numero": 352,
+    "nome": "Carne, bovina, coxão mole, sem gordura, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cream cheese",
+  "alimento_bocado": "Cream cheese",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cream cheeses",
+  "alimento_bocado": "Cream cheese",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cuca",
+  "alimento_bocado": "Cuca",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cucas",
+  "alimento_bocado": "Cuca",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cuscuz",
+  "alimento_bocado": "Cuscuz",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 533,
+    "nome": "Cuscuz, de milho, cozido com sal"
+   },
+   {
+    "numero": 534,
+    "nome": "Cuscuz, paulista"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cuscuz nordestino",
+  "alimento_bocado": "Cuscuz nordestino",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 533,
+    "nome": "Cuscuz, de milho, cozido com sal"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cuscuz nordestinos",
+  "alimento_bocado": "Cuscuz nordestino",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 533,
+    "nome": "Cuscuz, de milho, cozido com sal"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "cuscuzs",
+  "alimento_bocado": "Cuscuz",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 533,
+    "nome": "Cuscuz, de milho, cozido com sal"
+   },
+   {
+    "numero": 534,
+    "nome": "Cuscuz, paulista"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "ervilha",
+  "alimento_bocado": "Ervilha",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 559,
+    "nome": "Ervilha, em vagem"
+   },
+   {
+    "numero": 560,
+    "nome": "Ervilha, enlatada, drenada"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "ervilhas",
+  "alimento_bocado": "Ervilha",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 559,
+    "nome": "Ervilha, em vagem"
+   },
+   {
+    "numero": 560,
+    "nome": "Ervilha, enlatada, drenada"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "espinafre",
+  "alimento_bocado": "Espinafre",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 119,
+    "nome": "Espinafre, Nova Zelândia, cru"
+   },
+   {
+    "numero": 120,
+    "nome": "Espinafre, Nova Zelândia, refogado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "espinafres",
+  "alimento_bocado": "Espinafre",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 119,
+    "nome": "Espinafre, Nova Zelândia, cru"
+   },
+   {
+    "numero": 120,
+    "nome": "Espinafre, Nova Zelândia, refogado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "farinha de aveia",
+  "alimento_bocado": "Farinha de aveia",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "farinha de aveias",
+  "alimento_bocado": "Farinha de aveia",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "farofa",
+  "alimento_bocado": "Farofa",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 131,
+    "nome": "Mandioca, farofa, temperada"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "farofas",
+  "alimento_bocado": "Farofa",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 131,
+    "nome": "Mandioca, farofa, temperada"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "feijao carioca",
+  "alimento_bocado": "Feijão carioca",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 561,
+    "nome": "Feijão, carioca, cozido"
+   },
+   {
+    "numero": 562,
+    "nome": "Feijão, carioca, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "feijao cariocas",
+  "alimento_bocado": "Feijão carioca",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 561,
+    "nome": "Feijão, carioca, cozido"
+   },
+   {
+    "numero": 562,
+    "nome": "Feijão, carioca, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "feijao preto",
+  "alimento_bocado": "Feijão preto",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 567,
+    "nome": "Feijão, preto, cozido"
+   },
+   {
+    "numero": 568,
+    "nome": "Feijão, preto, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "feijao pretos",
+  "alimento_bocado": "Feijão preto",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 567,
+    "nome": "Feijão, preto, cozido"
+   },
+   {
+    "numero": 568,
+    "nome": "Feijão, preto, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "feijao vermelho",
+  "alimento_bocado": "Feijão vermelho",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "feijao vermelhos",
+  "alimento_bocado": "Feijão vermelho",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "feijoada",
+  "alimento_bocado": "Feijoada",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 540,
+    "nome": "L"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "feijoadas",
+  "alimento_bocado": "Feijoada",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 540,
+    "nome": "L"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "figado bovino",
+  "alimento_bocado": "Fígado bovino",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 355,
+    "nome": "Carne, bovina, fígado, cru"
+   },
+   {
+    "numero": 356,
+    "nome": "Carne, bovina, fígado, grelhado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "figado bovinos",
+  "alimento_bocado": "Fígado bovino",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 355,
+    "nome": "Carne, bovina, fígado, cru"
+   },
+   {
+    "numero": 356,
+    "nome": "Carne, bovina, fígado, grelhado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "figo",
+  "alimento_bocado": "Figo",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 194,
+    "nome": "Figo, cru"
+   },
+   {
+    "numero": 195,
+    "nome": "Figo, enlatado, em calda"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "figos",
+  "alimento_bocado": "Figo",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 194,
+    "nome": "Figo, cru"
+   },
+   {
+    "numero": 195,
+    "nome": "Figo, enlatado, em calda"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "file mignon",
+  "alimento_bocado": "Filé mignon",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 357,
+    "nome": "Carne, bovina, filé mingnon, sem gordura, cru"
+   },
+   {
+    "numero": 358,
+    "nome": "Carne, bovina, filé mingnon, sem gordura, grelhado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "file mignons",
+  "alimento_bocado": "Filé mignon",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 357,
+    "nome": "Carne, bovina, filé mingnon, sem gordura, cru"
+   },
+   {
+    "numero": 358,
+    "nome": "Carne, bovina, filé mingnon, sem gordura, grelhado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "file suino",
+  "alimento_bocado": "Filé suíno",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "file suinos",
+  "alimento_bocado": "Filé suíno",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "frango desfiado",
+  "alimento_bocado": "Frango desfiado",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "frango desfiados",
+  "alimento_bocado": "Frango desfiado",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "frango pronto desfiado",
+  "alimento_bocado": "Frango pronto/desfiado",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "frango pronto desfiados",
+  "alimento_bocado": "Frango pronto/desfiado",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "fuba",
+  "alimento_bocado": "Fubá",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 43,
+    "nome": "Milho, fubá, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "fubas",
+  "alimento_bocado": "Fubá",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 43,
+    "nome": "Milho, fubá, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "geleia sem acucar",
+  "alimento_bocado": "Geleia sem açúcar",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "geleia sem acucars",
+  "alimento_bocado": "Geleia sem açúcar",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "gergelim",
+  "alimento_bocado": "Gergelim",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 593,
+    "nome": "Gergelim, semente"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "gergelims",
+  "alimento_bocado": "Gergelim",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 593,
+    "nome": "Gergelim, semente"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "goiaba",
+  "alimento_bocado": "Goiaba",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 197,
+    "nome": "Goiaba, branca, com casca, crua"
+   },
+   {
+    "numero": 198,
+    "nome": "Goiaba, doce em pasta"
+   },
+   {
+    "numero": 199,
+    "nome": "Goiaba, doce, cascão"
+   },
+   {
+    "numero": 200,
+    "nome": "Goiaba, vermelha, com casca, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "goiabas",
+  "alimento_bocado": "Goiaba",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 197,
+    "nome": "Goiaba, branca, com casca, crua"
+   },
+   {
+    "numero": 198,
+    "nome": "Goiaba, doce em pasta"
+   },
+   {
+    "numero": 199,
+    "nome": "Goiaba, doce, cascão"
+   },
+   {
+    "numero": 200,
+    "nome": "Goiaba, vermelha, com casca, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "goma de tapioca",
+  "alimento_bocado": "Goma de tapioca",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 124,
+    "nome": "Fécula, de mandioca"
+   },
+   {
+    "numero": 146,
+    "nome": "Polvilho, doce"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "goma de tapiocas",
+  "alimento_bocado": "Goma de tapioca",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 124,
+    "nome": "Fécula, de mandioca"
+   },
+   {
+    "numero": 146,
+    "nome": "Polvilho, doce"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "granola",
+  "alimento_bocado": "Granola",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "granola sem acucar",
+  "alimento_bocado": "Granola sem açúcar",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "granola sem acucars",
+  "alimento_bocado": "Granola sem açúcar",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "granolas",
+  "alimento_bocado": "Granola",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "grao de bico",
+  "alimento_bocado": "Grão-de-bico",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 575,
+    "nome": "Grão-de-bico, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "grao de bicos",
+  "alimento_bocado": "Grão-de-bico",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 575,
+    "nome": "Grão-de-bico, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "hamburguer bovino",
+  "alimento_bocado": "Hambúrguer bovino",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 415,
+    "nome": "Hambúrguer, bovino, cru"
+   },
+   {
+    "numero": 416,
+    "nome": "Hambúrguer, bovino, frito"
+   },
+   {
+    "numero": 417,
+    "nome": "Hambúrguer, bovino, grelhado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "hamburguer bovinos",
+  "alimento_bocado": "Hambúrguer bovino",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 415,
+    "nome": "Hambúrguer, bovino, cru"
+   },
+   {
+    "numero": 416,
+    "nome": "Hambúrguer, bovino, frito"
+   },
+   {
+    "numero": 417,
+    "nome": "Hambúrguer, bovino, grelhado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "hamburguer de frango",
+  "alimento_bocado": "Hambúrguer de frango",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "hamburguer de frangos",
+  "alimento_bocado": "Hambúrguer de frango",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "hamburguer vegetal",
+  "alimento_bocado": "Hambúrguer vegetal",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "hamburguer vegetals",
+  "alimento_bocado": "Hambúrguer vegetal",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "inhame",
+  "alimento_bocado": "Inhame",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 126,
+    "nome": "Inhame, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "inhames",
+  "alimento_bocado": "Inhame",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 126,
+    "nome": "Inhame, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "iogurte grego",
+  "alimento_bocado": "Iogurte grego",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "iogurte gregos",
+  "alimento_bocado": "Iogurte grego",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "iogurte natural",
+  "alimento_bocado": "Iogurte natural",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 448,
+    "nome": "Iogurte, natural"
+   },
+   {
+    "numero": 449,
+    "nome": "Iogurte, natural, desnatado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "iogurte naturals",
+  "alimento_bocado": "Iogurte natural",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 448,
+    "nome": "Iogurte, natural"
+   },
+   {
+    "numero": 449,
+    "nome": "Iogurte, natural, desnatado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "iogurte zero lactose",
+  "alimento_bocado": "Iogurte zero lactose",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "iogurte zero lactoses",
+  "alimento_bocado": "Iogurte zero lactose",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "kefir",
+  "alimento_bocado": "Kefir",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "kefirs",
+  "alimento_bocado": "Kefir",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "kiwi",
+  "alimento_bocado": "Kiwi",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 207,
+    "nome": "Kiwi, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "kiwis",
+  "alimento_bocado": "Kiwi",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 207,
+    "nome": "Kiwi, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "lagarto",
+  "alimento_bocado": "Lagarto",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 363,
+    "nome": "Carne, bovina, lagarto, cozido"
+   },
+   {
+    "numero": 364,
+    "nome": "Carne, bovina, lagarto, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "lagartos",
+  "alimento_bocado": "Lagarto",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 363,
+    "nome": "Carne, bovina, lagarto, cozido"
+   },
+   {
+    "numero": 364,
+    "nome": "Carne, bovina, lagarto, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "laranja",
+  "alimento_bocado": "Laranja",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 208,
+    "nome": "Laranja, baía, crua"
+   },
+   {
+    "numero": 209,
+    "nome": "Laranja, baía, suco"
+   },
+   {
+    "numero": 210,
+    "nome": "Laranja, da terra, crua"
+   },
+   {
+    "numero": 211,
+    "nome": "Laranja, da terra, suco"
+   },
+   {
+    "numero": 212,
+    "nome": "Laranja, lima, crua"
+   },
+   {
+    "numero": 213,
+    "nome": "Laranja, lima, suco"
+   },
+   {
+    "numero": 214,
+    "nome": "Laranja, pêra, crua"
+   },
+   {
+    "numero": 215,
+    "nome": "Laranja, pêra, suco"
+   },
+   {
+    "numero": 216,
+    "nome": "Laranja, valência, crua"
+   },
+   {
+    "numero": 217,
+    "nome": "Laranja, valência, suco"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "laranjas",
+  "alimento_bocado": "Laranja",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 208,
+    "nome": "Laranja, baía, crua"
+   },
+   {
+    "numero": 209,
+    "nome": "Laranja, baía, suco"
+   },
+   {
+    "numero": 210,
+    "nome": "Laranja, da terra, crua"
+   },
+   {
+    "numero": 211,
+    "nome": "Laranja, da terra, suco"
+   },
+   {
+    "numero": 212,
+    "nome": "Laranja, lima, crua"
+   },
+   {
+    "numero": 213,
+    "nome": "Laranja, lima, suco"
+   },
+   {
+    "numero": 214,
+    "nome": "Laranja, pêra, crua"
+   },
+   {
+    "numero": 215,
+    "nome": "Laranja, pêra, suco"
+   },
+   {
+    "numero": 216,
+    "nome": "Laranja, valência, crua"
+   },
+   {
+    "numero": 217,
+    "nome": "Laranja, valência, suco"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "leite desnatado",
+  "alimento_bocado": "Leite desnatado",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 456,
+    "nome": "Leite, de vaca, desnatado, pó"
+   },
+   {
+    "numero": 457,
+    "nome": "Leite, de vaca, desnatado, UHT"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "leite desnatados",
+  "alimento_bocado": "Leite desnatado",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 456,
+    "nome": "Leite, de vaca, desnatado, pó"
+   },
+   {
+    "numero": 457,
+    "nome": "Leite, de vaca, desnatado, UHT"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "leite em po",
+  "alimento_bocado": "Leite em pó",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 456,
+    "nome": "Leite, de vaca, desnatado, pó"
+   },
+   {
+    "numero": 459,
+    "nome": "Leite, de vaca, integral, pó"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "leite em pos",
+  "alimento_bocado": "Leite em pó",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 456,
+    "nome": "Leite, de vaca, desnatado, pó"
+   },
+   {
+    "numero": 459,
+    "nome": "Leite, de vaca, integral, pó"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "leite integral",
+  "alimento_bocado": "Leite integral",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 458,
+    "nome": "Leite, de vaca, integral"
+   },
+   {
+    "numero": 459,
+    "nome": "Leite, de vaca, integral, pó"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "leite integrals",
+  "alimento_bocado": "Leite integral",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 458,
+    "nome": "Leite, de vaca, integral"
+   },
+   {
+    "numero": 459,
+    "nome": "Leite, de vaca, integral, pó"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "leite semidesnatado",
+  "alimento_bocado": "Leite semidesnatado",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "leite semidesnatados",
+  "alimento_bocado": "Leite semidesnatado",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "leite zero lactose",
+  "alimento_bocado": "Leite zero lactose",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "leite zero lactoses",
+  "alimento_bocado": "Leite zero lactose",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "lentilha",
+  "alimento_bocado": "Lentilha",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 577,
+    "nome": "Lentilha, cozida"
+   },
+   {
+    "numero": 578,
+    "nome": "Lentilha, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "lentilhas",
+  "alimento_bocado": "Lentilha",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 577,
+    "nome": "Lentilha, cozida"
+   },
+   {
+    "numero": 578,
+    "nome": "Lentilha, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "limao",
+  "alimento_bocado": "Limão",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 218,
+    "nome": "Limão, cravo, suco"
+   },
+   {
+    "numero": 219,
+    "nome": "Limão, galego, suco"
+   },
+   {
+    "numero": 220,
+    "nome": "Limão, tahiti, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "limaos",
+  "alimento_bocado": "Limão",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 218,
+    "nome": "Limão, cravo, suco"
+   },
+   {
+    "numero": 219,
+    "nome": "Limão, galego, suco"
+   },
+   {
+    "numero": 220,
+    "nome": "Limão, tahiti, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "linguica",
+  "alimento_bocado": "Linguiça",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 418,
+    "nome": "Lingüiça, frango, crua"
+   },
+   {
+    "numero": 419,
+    "nome": "Lingüiça, frango, frita"
+   },
+   {
+    "numero": 420,
+    "nome": "Lingüiça, frango, grelhada"
+   },
+   {
+    "numero": 421,
+    "nome": "Lingüiça, porco, crua"
+   },
+   {
+    "numero": 422,
+    "nome": "Lingüiça, porco, frita"
+   },
+   {
+    "numero": 423,
+    "nome": "Lingüiça, porco, grelhada"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "linguicas",
+  "alimento_bocado": "Linguiça",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 418,
+    "nome": "Lingüiça, frango, crua"
+   },
+   {
+    "numero": 419,
+    "nome": "Lingüiça, frango, frita"
+   },
+   {
+    "numero": 420,
+    "nome": "Lingüiça, frango, grelhada"
+   },
+   {
+    "numero": 421,
+    "nome": "Lingüiça, porco, crua"
+   },
+   {
+    "numero": 422,
+    "nome": "Lingüiça, porco, frita"
+   },
+   {
+    "numero": 423,
+    "nome": "Lingüiça, porco, grelhada"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "linhaca",
+  "alimento_bocado": "Linhaça",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 594,
+    "nome": "Linhaça, semente"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "linhacas",
+  "alimento_bocado": "Linhaça",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 594,
+    "nome": "Linhaça, semente"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "lombo suino",
+  "alimento_bocado": "Lombo suíno",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 432,
+    "nome": "Porco, lombo, assado"
+   },
+   {
+    "numero": 433,
+    "nome": "Porco, lombo, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "lombo suinos",
+  "alimento_bocado": "Lombo suíno",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 432,
+    "nome": "Porco, lombo, assado"
+   },
+   {
+    "numero": 433,
+    "nome": "Porco, lombo, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "maca",
+  "alimento_bocado": "Maçã",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 221,
+    "nome": "Maçã, Argentina, com casca, crua"
+   },
+   {
+    "numero": 222,
+    "nome": "Maçã, Fuji, com casca, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "macadamia",
+  "alimento_bocado": "Macadâmia",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "macadamias",
+  "alimento_bocado": "Macadâmia",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "macarrao",
+  "alimento_bocado": "Macarrão",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 39,
+    "nome": "Macarrão, instantâneo"
+   },
+   {
+    "numero": 40,
+    "nome": "Macarrão, trigo, cru"
+   },
+   {
+    "numero": 41,
+    "nome": "Macarrão, trigo, cru, com ovos"
+   },
+   {
+    "numero": 542,
+    "nome": "Macarrão, molho bolognesa"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "macarrao integral",
+  "alimento_bocado": "Macarrão integral",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "macarrao integrals",
+  "alimento_bocado": "Macarrão integral",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "macarraos",
+  "alimento_bocado": "Macarrão",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 39,
+    "nome": "Macarrão, instantâneo"
+   },
+   {
+    "numero": 40,
+    "nome": "Macarrão, trigo, cru"
+   },
+   {
+    "numero": 41,
+    "nome": "Macarrão, trigo, cru, com ovos"
+   },
+   {
+    "numero": 542,
+    "nome": "Macarrão, molho bolognesa"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "macas",
+  "alimento_bocado": "Maçã",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 221,
+    "nome": "Maçã, Argentina, com casca, crua"
+   },
+   {
+    "numero": 222,
+    "nome": "Maçã, Fuji, com casca, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "mamao",
+  "alimento_bocado": "Mamão",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 224,
+    "nome": " Mamão, doce em calda, drenado"
+   },
+   {
+    "numero": 225,
+    "nome": "Mamão, Formosa, cru"
+   },
+   {
+    "numero": 226,
+    "nome": "Mamão, Papaia, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "mamaos",
+  "alimento_bocado": "Mamão",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 224,
+    "nome": " Mamão, doce em calda, drenado"
+   },
+   {
+    "numero": 225,
+    "nome": "Mamão, Formosa, cru"
+   },
+   {
+    "numero": 226,
+    "nome": "Mamão, Papaia, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "mandioca",
+  "alimento_bocado": "Mandioca",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 129,
+    "nome": "Mandioca, cozida"
+   },
+   {
+    "numero": 130,
+    "nome": "Mandioca, crua"
+   },
+   {
+    "numero": 131,
+    "nome": "Mandioca, farofa, temperada"
+   },
+   {
+    "numero": 132,
+    "nome": "Mandioca, frita"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "mandiocas",
+  "alimento_bocado": "Mandioca",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 129,
+    "nome": "Mandioca, cozida"
+   },
+   {
+    "numero": 130,
+    "nome": "Mandioca, crua"
+   },
+   {
+    "numero": 131,
+    "nome": "Mandioca, farofa, temperada"
+   },
+   {
+    "numero": 132,
+    "nome": "Mandioca, frita"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "manga",
+  "alimento_bocado": "Manga",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 228,
+    "nome": "Manga, Haden, crua"
+   },
+   {
+    "numero": 229,
+    "nome": "Manga, Palmer, crua"
+   },
+   {
+    "numero": 230,
+    "nome": "Manga, polpa, congelada"
+   },
+   {
+    "numero": 231,
+    "nome": "Manga, Tommy Atkins, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "mangas",
+  "alimento_bocado": "Manga",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 228,
+    "nome": "Manga, Haden, crua"
+   },
+   {
+    "numero": 229,
+    "nome": "Manga, Palmer, crua"
+   },
+   {
+    "numero": 230,
+    "nome": "Manga, polpa, congelada"
+   },
+   {
+    "numero": 231,
+    "nome": "Manga, Tommy Atkins, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "manteiga",
+  "alimento_bocado": "Manteiga",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 261,
+    "nome": "Manteiga, com sal"
+   },
+   {
+    "numero": 262,
+    "nome": "Manteiga, sem sal"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "manteigas",
+  "alimento_bocado": "Manteiga",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 261,
+    "nome": "Manteiga, com sal"
+   },
+   {
+    "numero": 262,
+    "nome": "Manteiga, sem sal"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "maracuja",
+  "alimento_bocado": "Maracujá",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 232,
+    "nome": "Maracujá, cru"
+   },
+   {
+    "numero": 233,
+    "nome": "Maracujá, polpa, congelada"
+   },
+   {
+    "numero": 234,
+    "nome": "Maracujá, suco concentrado, envasado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "maracujas",
+  "alimento_bocado": "Maracujá",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 232,
+    "nome": "Maracujá, cru"
+   },
+   {
+    "numero": 233,
+    "nome": "Maracujá, polpa, congelada"
+   },
+   {
+    "numero": 234,
+    "nome": "Maracujá, suco concentrado, envasado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "melancia",
+  "alimento_bocado": "Melancia",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 235,
+    "nome": "Melancia, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "melancias",
+  "alimento_bocado": "Melancia",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 235,
+    "nome": "Melancia, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "melao",
+  "alimento_bocado": "Melão",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 236,
+    "nome": "Melão, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "melaos",
+  "alimento_bocado": "Melão",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 236,
+    "nome": "Melão, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "merluza",
+  "alimento_bocado": "Merluza",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 301,
+    "nome": "Merluza, filé, assado"
+   },
+   {
+    "numero": 302,
+    "nome": "Merluza, filé, cru"
+   },
+   {
+    "numero": 303,
+    "nome": "Merluza, filé, frito"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "merluzas",
+  "alimento_bocado": "Merluza",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 301,
+    "nome": "Merluza, filé, assado"
+   },
+   {
+    "numero": 302,
+    "nome": "Merluza, filé, cru"
+   },
+   {
+    "numero": 303,
+    "nome": "Merluza, filé, frito"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "milho",
+  "alimento_bocado": "Milho",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 42,
+    "nome": "Milho, amido, cru"
+   },
+   {
+    "numero": 43,
+    "nome": "Milho, fubá, cru"
+   },
+   {
+    "numero": 44,
+    "nome": "Milho, verde, cru"
+   },
+   {
+    "numero": 45,
+    "nome": "Milho, verde, enlatado, drenado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "milhos",
+  "alimento_bocado": "Milho",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 42,
+    "nome": "Milho, amido, cru"
+   },
+   {
+    "numero": 43,
+    "nome": "Milho, fubá, cru"
+   },
+   {
+    "numero": 44,
+    "nome": "Milho, verde, cru"
+   },
+   {
+    "numero": 45,
+    "nome": "Milho, verde, enlatado, drenado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "mirtilo",
+  "alimento_bocado": "Mirtilo",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "mirtilos",
+  "alimento_bocado": "Mirtilo",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "moqueca",
+  "alimento_bocado": "Moqueca",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "moquecas",
+  "alimento_bocado": "Moqueca",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "morango",
+  "alimento_bocado": "Morango",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 239,
+    "nome": "Morango, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "morangos",
+  "alimento_bocado": "Morango",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 239,
+    "nome": "Morango, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "mucarela",
+  "alimento_bocado": "Muçarela",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 463,
+    "nome": "Queijo, mozarela"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "mucarelas",
+  "alimento_bocado": "Muçarela",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 463,
+    "nome": "Queijo, mozarela"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "musculo",
+  "alimento_bocado": "Músculo",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 371,
+    "nome": "Carne, bovina, músculo, sem gordura, cozido"
+   },
+   {
+    "numero": 372,
+    "nome": "Carne, bovina, músculo, sem gordura, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "musculos",
+  "alimento_bocado": "Músculo",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 371,
+    "nome": "Carne, bovina, músculo, sem gordura, cozido"
+   },
+   {
+    "numero": 372,
+    "nome": "Carne, bovina, músculo, sem gordura, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "noze",
+  "alimento_bocado": "Nozes",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 597,
+    "nome": "Noz, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "nozes",
+  "alimento_bocado": "Nozes",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 597,
+    "nome": "Noz, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "oleo de canola",
+  "alimento_bocado": "Óleo de canola",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 268,
+    "nome": "Óleo, de canola"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "oleo de canolas",
+  "alimento_bocado": "Óleo de canola",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 268,
+    "nome": "Óleo, de canola"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "oleo de coco",
+  "alimento_bocado": "Óleo de coco",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "oleo de cocos",
+  "alimento_bocado": "Óleo de coco",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "ovo",
+  "alimento_bocado": "Ovos",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 488,
+    "nome": "Ovo, de galinha, inteiro, cozido/10minutos"
+   },
+   {
+    "numero": 489,
+    "nome": "Ovo, de galinha, inteiro, cru"
+   },
+   {
+    "numero": 490,
+    "nome": "Ovo, de galinha, inteiro, frito"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "ovo de codorna",
+  "alimento_bocado": "Ovo de codorna",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 485,
+    "nome": "Ovo, de codorna, inteiro, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "ovo de codornas",
+  "alimento_bocado": "Ovo de codorna",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 485,
+    "nome": "Ovo, de codorna, inteiro, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "ovos",
+  "alimento_bocado": "Ovos",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 488,
+    "nome": "Ovo, de galinha, inteiro, cozido/10minutos"
+   },
+   {
+    "numero": 489,
+    "nome": "Ovo, de galinha, inteiro, cru"
+   },
+   {
+    "numero": 490,
+    "nome": "Ovo, de galinha, inteiro, frito"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pacoca",
+  "alimento_bocado": "Paçoca",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 579,
+    "nome": "Paçoca, amendoim"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "pacocas",
+  "alimento_bocado": "Paçoca",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 579,
+    "nome": "Paçoca, amendoim"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "palmito",
+  "alimento_bocado": "Palmito",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 138,
+    "nome": "Palmito, juçara, em conserva"
+   },
+   {
+    "numero": 139,
+    "nome": "Palmito, pupunha, em conserva"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "palmitos",
+  "alimento_bocado": "Palmito",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 138,
+    "nome": "Palmito, juçara, em conserva"
+   },
+   {
+    "numero": 139,
+    "nome": "Palmito, pupunha, em conserva"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pao de centeio",
+  "alimento_bocado": "Pão de centeio",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pao de centeios",
+  "alimento_bocado": "Pão de centeio",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pao de forma",
+  "alimento_bocado": "Pão de forma",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 48,
+    "nome": "Pão, aveia, forma"
+   },
+   {
+    "numero": 50,
+    "nome": "Pão, glúten, forma"
+   },
+   {
+    "numero": 51,
+    "nome": "Pão, milho, forma"
+   },
+   {
+    "numero": 52,
+    "nome": "Pão, trigo, forma, integral"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pao de formas",
+  "alimento_bocado": "Pão de forma",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 48,
+    "nome": "Pão, aveia, forma"
+   },
+   {
+    "numero": 50,
+    "nome": "Pão, glúten, forma"
+   },
+   {
+    "numero": 51,
+    "nome": "Pão, milho, forma"
+   },
+   {
+    "numero": 52,
+    "nome": "Pão, trigo, forma, integral"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pao france",
+  "alimento_bocado": "Pão francês",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 53,
+    "nome": "Pão, trigo, francês"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "pao frances",
+  "alimento_bocado": "Pão francês",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 53,
+    "nome": "Pão, trigo, francês"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "pao integral",
+  "alimento_bocado": "Pão integral",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 52,
+    "nome": "Pão, trigo, forma, integral"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "pao integrals",
+  "alimento_bocado": "Pão integral",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 52,
+    "nome": "Pão, trigo, forma, integral"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "pasta de amendoim",
+  "alimento_bocado": "Pasta de amendoim",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pasta de amendoims",
+  "alimento_bocado": "Pasta de amendoim",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "patinho",
+  "alimento_bocado": "Patinho",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 376,
+    "nome": "Carne, bovina, patinho, sem gordura, cru"
+   },
+   {
+    "numero": 377,
+    "nome": "Carne, bovina, patinho, sem gordura, grelhado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "patinhos",
+  "alimento_bocado": "Patinho",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 376,
+    "nome": "Carne, bovina, patinho, sem gordura, cru"
+   },
+   {
+    "numero": 377,
+    "nome": "Carne, bovina, patinho, sem gordura, grelhado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "peito de frango",
+  "alimento_bocado": "Peito de frango",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 406,
+    "nome": "Frango, peito, com pele, assado"
+   },
+   {
+    "numero": 407,
+    "nome": "Frango, peito, com pele, cru"
+   },
+   {
+    "numero": 408,
+    "nome": "Frango, peito, sem pele, cozido"
+   },
+   {
+    "numero": 409,
+    "nome": "Frango, peito, sem pele, cru"
+   },
+   {
+    "numero": 410,
+    "nome": "Frango, peito, sem pele, grelhado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "peito de frangos",
+  "alimento_bocado": "Peito de frango",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 406,
+    "nome": "Frango, peito, com pele, assado"
+   },
+   {
+    "numero": 407,
+    "nome": "Frango, peito, com pele, cru"
+   },
+   {
+    "numero": 408,
+    "nome": "Frango, peito, sem pele, cozido"
+   },
+   {
+    "numero": 409,
+    "nome": "Frango, peito, sem pele, cru"
+   },
+   {
+    "numero": 410,
+    "nome": "Frango, peito, sem pele, grelhado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "peito de peru",
+  "alimento_bocado": "Peito de peru",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 425,
+    "nome": "Peru, congelado, assado"
+   },
+   {
+    "numero": 426,
+    "nome": "Peru, congelado, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "peito de perus",
+  "alimento_bocado": "Peito de peru",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 425,
+    "nome": "Peru, congelado, assado"
+   },
+   {
+    "numero": 426,
+    "nome": "Peru, congelado, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pepino",
+  "alimento_bocado": "Pepino",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 142,
+    "nome": "Pepino, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "pepinos",
+  "alimento_bocado": "Pepino",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 142,
+    "nome": "Pepino, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "pera",
+  "alimento_bocado": "Pera",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 242,
+    "nome": "Pêra, Park, crua"
+   },
+   {
+    "numero": 243,
+    "nome": "Pêra, Williams, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "peras",
+  "alimento_bocado": "Pera",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 242,
+    "nome": "Pêra, Park, crua"
+   },
+   {
+    "numero": 243,
+    "nome": "Pêra, Williams, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pernil suino",
+  "alimento_bocado": "Pernil suíno",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 435,
+    "nome": "Porco, pernil, assado"
+   },
+   {
+    "numero": 436,
+    "nome": "Porco, pernil, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pernil suinos",
+  "alimento_bocado": "Pernil suíno",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 435,
+    "nome": "Porco, pernil, assado"
+   },
+   {
+    "numero": 436,
+    "nome": "Porco, pernil, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pescada",
+  "alimento_bocado": "Pescada",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 304,
+    "nome": "Pescada, branca, crua"
+   },
+   {
+    "numero": 305,
+    "nome": "Pescada, branca, frita"
+   },
+   {
+    "numero": 306,
+    "nome": "Pescada, filé, com farinha de trigo, frito"
+   },
+   {
+    "numero": 307,
+    "nome": "Pescada, filé, cru"
+   },
+   {
+    "numero": 308,
+    "nome": "Pescada, filé, frito"
+   },
+   {
+    "numero": 309,
+    "nome": "Pescada, filé, molho escabeche"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pescadas",
+  "alimento_bocado": "Pescada",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 304,
+    "nome": "Pescada, branca, crua"
+   },
+   {
+    "numero": 305,
+    "nome": "Pescada, branca, frita"
+   },
+   {
+    "numero": 306,
+    "nome": "Pescada, filé, com farinha de trigo, frito"
+   },
+   {
+    "numero": 307,
+    "nome": "Pescada, filé, cru"
+   },
+   {
+    "numero": 308,
+    "nome": "Pescada, filé, frito"
+   },
+   {
+    "numero": 309,
+    "nome": "Pescada, filé, molho escabeche"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pessego",
+  "alimento_bocado": "Pêssego",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 244,
+    "nome": "Pêssego, Aurora, cru"
+   },
+   {
+    "numero": 245,
+    "nome": "Pêssego, enlatado, em calda"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pessegos",
+  "alimento_bocado": "Pêssego",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 244,
+    "nome": "Pêssego, Aurora, cru"
+   },
+   {
+    "numero": 245,
+    "nome": "Pêssego, enlatado, em calda"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pimentao",
+  "alimento_bocado": "Pimentão",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 143,
+    "nome": "Pimentão, amarelo, cru"
+   },
+   {
+    "numero": 144,
+    "nome": "Pimentão, verde, cru"
+   },
+   {
+    "numero": 145,
+    "nome": "Pimentão, vermelho, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pimentaos",
+  "alimento_bocado": "Pimentão",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 143,
+    "nome": "Pimentão, amarelo, cru"
+   },
+   {
+    "numero": 144,
+    "nome": "Pimentão, verde, cru"
+   },
+   {
+    "numero": 145,
+    "nome": "Pimentão, vermelho, cru"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pinhao",
+  "alimento_bocado": "Pinhão",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 595,
+    "nome": "Pinhão, cozido"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "pinhaos",
+  "alimento_bocado": "Pinhão",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 595,
+    "nome": "Pinhão, cozido"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "pistache",
+  "alimento_bocado": "Pistache",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "pistaches",
+  "alimento_bocado": "Pistache",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "polenta",
+  "alimento_bocado": "Polenta",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 62,
+    "nome": "Polenta, pré-cozida"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "polentas",
+  "alimento_bocado": "Polenta",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 62,
+    "nome": "Polenta, pré-cozida"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "presunto",
+  "alimento_bocado": "Presunto",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 438,
+    "nome": "Presunto, com capa de gordura"
+   },
+   {
+    "numero": 439,
+    "nome": "Presunto, sem capa de gordura"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "presuntos",
+  "alimento_bocado": "Presunto",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 438,
+    "nome": "Presunto, com capa de gordura"
+   },
+   {
+    "numero": 439,
+    "nome": "Presunto, sem capa de gordura"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "proteina vegetal",
+  "alimento_bocado": "Proteína vegetal",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "proteina vegetals",
+  "alimento_bocado": "Proteína vegetal",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "queijo light",
+  "alimento_bocado": "Queijo light",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "queijo lights",
+  "alimento_bocado": "Queijo light",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "queijo mina",
+  "alimento_bocado": "Queijo minas",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 461,
+    "nome": "Queijo, minas, frescal"
+   },
+   {
+    "numero": 462,
+    "nome": "Queijo, minas, meia cura"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "queijo minas",
+  "alimento_bocado": "Queijo minas",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 461,
+    "nome": "Queijo, minas, frescal"
+   },
+   {
+    "numero": 462,
+    "nome": "Queijo, minas, meia cura"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "quiabo",
+  "alimento_bocado": "Quiabo",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 147,
+    "nome": "Quiabo, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "quiabos",
+  "alimento_bocado": "Quiabo",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 147,
+    "nome": "Quiabo, cru"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "quinoa",
+  "alimento_bocado": "Quinoa",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "quinoas",
+  "alimento_bocado": "Quinoa",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "rap10",
+  "alimento_bocado": "Rap10",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "rap10s",
+  "alimento_bocado": "Rap10",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "repolho",
+  "alimento_bocado": "Repolho",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 149,
+    "nome": "Repolho, branco, cru"
+   },
+   {
+    "numero": 150,
+    "nome": "Repolho, roxo, cru"
+   },
+   {
+    "numero": 151,
+    "nome": "Repolho, roxo, refogado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "repolhos",
+  "alimento_bocado": "Repolho",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 149,
+    "nome": "Repolho, branco, cru"
+   },
+   {
+    "numero": 150,
+    "nome": "Repolho, roxo, cru"
+   },
+   {
+    "numero": 151,
+    "nome": "Repolho, roxo, refogado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "requeijao",
+  "alimento_bocado": "Requeijão",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 468,
+    "nome": "Queijo, requeijão, cremoso"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "requeijao light",
+  "alimento_bocado": "Requeijão light",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "requeijao lights",
+  "alimento_bocado": "Requeijão light",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "requeijaos",
+  "alimento_bocado": "Requeijão",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 468,
+    "nome": "Queijo, requeijão, cremoso"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "ricota",
+  "alimento_bocado": "Ricota",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 469,
+    "nome": "Queijo, ricota"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "ricotas",
+  "alimento_bocado": "Ricota",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 469,
+    "nome": "Queijo, ricota"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "rucula",
+  "alimento_bocado": "Rúcula",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 152,
+    "nome": "Rúcula, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "ruculas",
+  "alimento_bocado": "Rúcula",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 152,
+    "nome": "Rúcula, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "sagu",
+  "alimento_bocado": "Sagu",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "sagus",
+  "alimento_bocado": "Sagu",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "salmao",
+  "alimento_bocado": "Salmão",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 315,
+    "nome": "Salmão, filé, com pele, fresco,  grelhado"
+   },
+   {
+    "numero": 316,
+    "nome": "Salmão, sem pele, fresco, cru"
+   },
+   {
+    "numero": 317,
+    "nome": "Salmão, sem pele, fresco, grelhado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "salmaos",
+  "alimento_bocado": "Salmão",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 315,
+    "nome": "Salmão, filé, com pele, fresco,  grelhado"
+   },
+   {
+    "numero": 316,
+    "nome": "Salmão, sem pele, fresco, cru"
+   },
+   {
+    "numero": 317,
+    "nome": "Salmão, sem pele, fresco, grelhado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "sardinha",
+  "alimento_bocado": "Sardinha",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 318,
+    "nome": "Sardinha, assada"
+   },
+   {
+    "numero": 319,
+    "nome": "Sardinha, conserva em óleo"
+   },
+   {
+    "numero": 320,
+    "nome": "Sardinha, frita"
+   },
+   {
+    "numero": 321,
+    "nome": "Sardinha, inteira, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "sardinha em lata",
+  "alimento_bocado": "Sardinha em lata",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 319,
+    "nome": "Sardinha, conserva em óleo"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "sardinha em latas",
+  "alimento_bocado": "Sardinha em lata",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 319,
+    "nome": "Sardinha, conserva em óleo"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "sardinhas",
+  "alimento_bocado": "Sardinha",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 318,
+    "nome": "Sardinha, assada"
+   },
+   {
+    "numero": 319,
+    "nome": "Sardinha, conserva em óleo"
+   },
+   {
+    "numero": 320,
+    "nome": "Sardinha, frita"
+   },
+   {
+    "numero": 321,
+    "nome": "Sardinha, inteira, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "semente de abobora",
+  "alimento_bocado": "Semente de abóbora",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "semente de aboboras",
+  "alimento_bocado": "Semente de abóbora",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "semente de chia",
+  "alimento_bocado": "Semente de chia",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "semente de chias",
+  "alimento_bocado": "Semente de chia",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "sobrecoxa",
+  "alimento_bocado": "Sobrecoxa",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 411,
+    "nome": "Frango, sobrecoxa, com pele, assada"
+   },
+   {
+    "numero": 412,
+    "nome": "Frango, sobrecoxa, com pele, crua"
+   },
+   {
+    "numero": 413,
+    "nome": "Frango, sobrecoxa, sem pele, assada"
+   },
+   {
+    "numero": 414,
+    "nome": "Frango, sobrecoxa, sem pele, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "sobrecoxas",
+  "alimento_bocado": "Sobrecoxa",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 411,
+    "nome": "Frango, sobrecoxa, com pele, assada"
+   },
+   {
+    "numero": 412,
+    "nome": "Frango, sobrecoxa, com pele, crua"
+   },
+   {
+    "numero": 413,
+    "nome": "Frango, sobrecoxa, sem pele, assada"
+   },
+   {
+    "numero": 414,
+    "nome": "Frango, sobrecoxa, sem pele, crua"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "tahine",
+  "alimento_bocado": "Tahine",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "tahines",
+  "alimento_bocado": "Tahine",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "tangerina",
+  "alimento_bocado": "Tangerina",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 251,
+    "nome": "Tangerina, Poncã, crua"
+   },
+   {
+    "numero": 252,
+    "nome": "Tangerina, Poncã, suco"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "tangerinas",
+  "alimento_bocado": "Tangerina",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 251,
+    "nome": "Tangerina, Poncã, crua"
+   },
+   {
+    "numero": 252,
+    "nome": "Tangerina, Poncã, suco"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "tapioca",
+  "alimento_bocado": "Tapioca",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 551,
+    "nome": "Tapioca, com manteiga"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "tapiocas",
+  "alimento_bocado": "Tapioca",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 551,
+    "nome": "Tapioca, com manteiga"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "tempeh",
+  "alimento_bocado": "Tempeh",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "tempehs",
+  "alimento_bocado": "Tempeh",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "tilapia",
+  "alimento_bocado": "Tilápia",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "tilapias",
+  "alimento_bocado": "Tilápia",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "tofu",
+  "alimento_bocado": "Tofu",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 584,
+    "nome": "Soja, queijo (tofu)"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "tofus",
+  "alimento_bocado": "Tofu",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 584,
+    "nome": "Soja, queijo (tofu)"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "tomate",
+  "alimento_bocado": "Tomate",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 157,
+    "nome": "Tomate, com semente, cru"
+   },
+   {
+    "numero": 158,
+    "nome": "Tomate, extrato"
+   },
+   {
+    "numero": 159,
+    "nome": "Tomate, molho industrializado"
+   },
+   {
+    "numero": 160,
+    "nome": "Tomate, purê"
+   },
+   {
+    "numero": 161,
+    "nome": "Tomate, salada"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "tomates",
+  "alimento_bocado": "Tomate",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 157,
+    "nome": "Tomate, com semente, cru"
+   },
+   {
+    "numero": 158,
+    "nome": "Tomate, extrato"
+   },
+   {
+    "numero": 159,
+    "nome": "Tomate, molho industrializado"
+   },
+   {
+    "numero": 160,
+    "nome": "Tomate, purê"
+   },
+   {
+    "numero": 161,
+    "nome": "Tomate, salada"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "torrada",
+  "alimento_bocado": "Torrada",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 63,
+    "nome": "Torrada, pão francês"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "torradas",
+  "alimento_bocado": "Torrada",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 63,
+    "nome": "Torrada, pão francês"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "uva",
+  "alimento_bocado": "Uva",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 256,
+    "nome": "Uva, Itália, crua"
+   },
+   {
+    "numero": 257,
+    "nome": "Uva, Rubi, crua"
+   },
+   {
+    "numero": 258,
+    "nome": "Uva, suco concentrado, envasado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "uvas",
+  "alimento_bocado": "Uva",
+  "status": "precisa_revisao",
+  "candidatos": [
+   {
+    "numero": 256,
+    "nome": "Uva, Itália, crua"
+   },
+   {
+    "numero": 257,
+    "nome": "Uva, Rubi, crua"
+   },
+   {
+    "numero": 258,
+    "nome": "Uva, suco concentrado, envasado"
+   }
+  ],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "vagem",
+  "alimento_bocado": "Vagem",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 162,
+    "nome": "Vagem, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "vagems",
+  "alimento_bocado": "Vagem",
+  "status": "encontrado",
+  "candidatos": [
+   {
+    "numero": 162,
+    "nome": "Vagem, crua"
+   }
+  ],
+  "ligar_automaticamente": true
+ },
+ {
+  "alias": "vina",
+  "alimento_bocado": "Vina",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "vinas",
+  "alimento_bocado": "Vina",
+  "status": "nao_encontrado",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "whey",
+  "alimento_bocado": "Whey",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "whey protein",
+  "alimento_bocado": "Whey protein",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "whey proteins",
+  "alimento_bocado": "Whey protein",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "wheys",
+  "alimento_bocado": "Whey",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "wrap",
+  "alimento_bocado": "Wrap",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "wrap integral",
+  "alimento_bocado": "Wrap integral",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "wrap integrals",
+  "alimento_bocado": "Wrap integral",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ },
+ {
+  "alias": "wraps",
+  "alimento_bocado": "Wrap",
+  "status": "fora_da_taco",
+  "candidatos": [],
+  "ligar_automaticamente": false
+ }
+]

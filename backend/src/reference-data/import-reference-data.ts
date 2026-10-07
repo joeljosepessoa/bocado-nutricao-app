@@ -2,11 +2,18 @@ import { randomBytes } from 'crypto';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import * as bcrypt from 'bcrypt';
-import { ExerciseType, FoodScope, ExerciseScope, NutritionUnit, PrismaClient, Role } from '@prisma/client';
+import { ExerciseType, ExerciseScope, PrismaClient, Role } from '@prisma/client';
+import { buildTacoCatalog } from './taco/taco-catalog';
+import { importTacoCatalog, TacoImportReport } from './taco/taco-catalog-import';
+import { PrismaTacoCatalogStore } from './taco/taco-catalog-stores';
+import { parseTaco } from './taco/taco-parser';
 
 function loadJson<T>(fileName: string): T {
   return JSON.parse(readFileSync(join(__dirname, 'data', fileName), 'utf-8')) as T;
 }
+
+/** Planilha oficial da TACO 4ª edição (copiada para o dist pelo nest-cli.json). */
+export const TACO_SOURCE_FILE = join(__dirname, 'taco', 'source', 'Taco-4a-Edicao.xlsx');
 
 // Conta "dona" técnica do catálogo global importado — precisa existir porque
 // Food.createdByProfessionalId e Exercise.createdByProfessionalId são
@@ -15,17 +22,6 @@ function loadJson<T>(fileName: string): T {
 // esta conta nunca deve logar, só serve como referência de proveniência.
 export const SYSTEM_PROFESSIONAL_EMAIL = 'sistema.catalogo@bocadodenutricao.com.br';
 const SYSTEM_PROFESSIONAL_NAME = 'Catálogo Bocado de Nutrição (sistema)';
-const FOOD_SOURCE = 'taco';
-
-interface FoodSeed {
-  name: string;
-  baseUnit: NutritionUnit;
-  kcalPer100: number;
-  proteinGPer100: number;
-  carbGPer100: number;
-  fatGPer100: number;
-  fiberGPer100?: number;
-}
 
 interface ExerciseSeed {
   name: string;
@@ -37,7 +33,7 @@ interface ExerciseSeed {
 
 export interface ImportSummary {
   systemProfessionalId: string;
-  foods: { created: number; skipped: number };
+  foods: TacoImportReport;
   exercises: { created: number; skipped: number; approved: number };
 }
 
@@ -64,38 +60,14 @@ async function ensureSystemProfessional(prisma: PrismaClient): Promise<string> {
   return user.id;
 }
 
-async function importFoods(prisma: PrismaClient, systemProfessionalId: string): Promise<{ created: number; skipped: number }> {
-  let created = 0;
-  let skipped = 0;
-
-  const foodsData = loadJson<FoodSeed[]>('foods.json');
-  for (const entry of foodsData) {
-    const existing = await prisma.food.findFirst({
-      where: { name: entry.name, scope: FoodScope.global, createdByProfessionalId: systemProfessionalId },
-    });
-    if (existing) {
-      skipped += 1;
-      continue;
-    }
-
-    await prisma.food.create({
-      data: {
-        name: entry.name,
-        scope: FoodScope.global,
-        baseUnit: entry.baseUnit,
-        kcalPer100: entry.kcalPer100,
-        proteinGPer100: entry.proteinGPer100,
-        carbGPer100: entry.carbGPer100,
-        fatGPer100: entry.fatGPer100,
-        fiberGPer100: entry.fiberGPer100,
-        source: FOOD_SOURCE,
-        createdByProfessionalId: systemProfessionalId,
-      },
-    });
-    created += 1;
-  }
-
-  return { created, skipped };
+/**
+ * Catálogo oficial de alimentos = os 597 registros da TACO 4ª edição, lidos da
+ * planilha. Idempotente pela chave "taco4:<nº>"; adota os 33 alimentos do
+ * importador antigo (foods.json, hoje só histórico) sem duplicar; nunca apaga.
+ */
+async function importFoods(prisma: PrismaClient, systemProfessionalId: string): Promise<TacoImportReport> {
+  const records = buildTacoCatalog(parseTaco(TACO_SOURCE_FILE));
+  return importTacoCatalog(new PrismaTacoCatalogStore(prisma, systemProfessionalId), records);
 }
 
 /**
@@ -155,9 +127,16 @@ async function main() {
   const prisma = new PrismaClient();
   try {
     const summary = await importReferenceData(prisma);
+    const f = summary.foods;
     console.log(
-      `Alimentos: ${summary.foods.created} criados, ${summary.foods.skipped} já existiam. ` +
-        `Exercícios: ${summary.exercises.created} criados, ${summary.exercises.skipped} já existiam ` +
+      `Alimentos (TACO 4ª edição): ${f.encontrados} encontrados, ${f.inseridos} inseridos, ${f.atualizados} atualizados, ` +
+        `${f.ignorados} ignorados (sem mudança), ${f.duplicados} duplicados.`,
+    );
+    for (const d of f.detalhes.duplicados) console.log(`  duplicado: ${d.chave} ${d.nome} — ${d.motivo}`);
+    for (const u of f.detalhes.atualizados) console.log(`  atualizado: ${u.chave} ${u.nome} — ${u.motivo}`);
+    for (const n of f.detalhes.antigosSemCorrespondencia) console.log(`  antigo sem correspondência (mantido): ${n}`);
+    console.log(
+      `Exercícios: ${summary.exercises.created} criados, ${summary.exercises.skipped} já existiam ` +
         `(${summary.exercises.approved} pendente(s) aprovado(s)).`,
     );
   } finally {

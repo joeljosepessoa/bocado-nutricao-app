@@ -21,6 +21,8 @@ function main() {
   const sourceDataDir = join(__dirname, '..', '..', 'src', 'reference-data', 'data');
   const builtDataDir = join(__dirname, 'data');
   const missing = missingReferenceDataAssets(sourceDataDir, builtDataDir);
+  // O catálogo de alimentos é lido da planilha oficial da TACO (asset .xlsx).
+  if (!existsSync(join(__dirname, 'taco', 'source', 'Taco-4a-Edicao.xlsx'))) missing.push('taco/source/Taco-4a-Edicao.xlsx');
   if (missing.length > 0) {
     console.error(`Build sem os dados de referência em ${builtDataDir}: ${missing.join(', ')} (ver assets no nest-cli.json).`);
     process.exit(1);

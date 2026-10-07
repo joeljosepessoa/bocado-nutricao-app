@@ -58,7 +58,7 @@ export function FoodPickerModal({
             >
               {food.name}
               <span style={{ marginLeft: 6, fontSize: 11.5, color: 'var(--color-text-secondary)' }}>
-                {food.kcalPer100} kcal / 100 {food.baseUnit}
+                {food.kcalPer100 != null ? `${Math.round(food.kcalPer100)} kcal / 100 ${food.baseUnit}` : 'kcal sem número na TACO'}
               </span>
             </button>
           ))}
