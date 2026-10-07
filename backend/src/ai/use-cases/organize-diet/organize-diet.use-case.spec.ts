@@ -7,20 +7,28 @@ import { FOOD_WARNINGS, OrganizeDietUseCase, type OrganizedDietProposal } from '
 import { ORGANIZED_DIET_JSON_SCHEMA } from './organized-diet.schema';
 
 const DIET_TEXT = 'CAFÉ DA MANHÃ\n2 fatias de pão integral\n150 g de fruta';
+const item = (sourceText: string, food: string, quantity: number, unit: string) => ({ sourceText, food, quantity, quantityMax: null, unit, freeQuantity: false, notes: null });
 const AI_JSON = {
-  meals: [
+  days: [
     {
-      name: 'CAFÉ DA MANHÃ',
-      time: null,
-      notes: null,
-      items: [
-        { sourceText: '2 fatias de pão integral', food: 'Pão integral', quantity: 2, unit: 'fatias', notes: null },
-        { sourceText: '150 g de fruta', food: 'Fruta', quantity: 150, unit: 'g', notes: null },
+      label: null,
+      kind: 'other',
+      usageNotes: null,
+      meals: [
+        {
+          name: 'CAFÉ DA MANHÃ',
+          time: null,
+          notes: null,
+          groups: [{ kind: 'fixed', label: null, choices: [{ label: null, items: [item('2 fatias de pão integral', 'Pão integral', 2, 'fatias'), item('150 g de fruta', 'Fruta', 150, 'g')] }] }],
+        },
       ],
     },
   ],
+  supplements: [],
+  guidelines: [],
   warnings: [],
 };
+const itemsOf = (proposal: OrganizedDietProposal) => proposal.days[0].meals[0].groups[0].choices[0].items;
 
 const foodsService = { listVisibleRefs: jest.fn().mockResolvedValue([{ id: 'f5', name: 'Pão integral' }, { id: 'f4', name: 'Banana prata' }]) };
 const useCase = new OrganizeDietUseCase(foodsService as unknown as FoodsService);
@@ -38,7 +46,7 @@ describe('OrganizeDietUseCase', () => {
   it('gera PROPOSTA: associa só nome igual; o resto fica para revisão', async () => {
     const out = await useCase.processOutput({ text: JSON.stringify(AI_JSON), model: 'x' }, params());
     const proposal = out.structuredData as unknown as OrganizedDietProposal;
-    const [bread, fruit] = proposal.meals[0].items;
+    const [bread, fruit] = itemsOf(proposal);
     expect(bread).toMatchObject({ matchStatus: 'matched', matchedFood: { id: 'f5' }, quantity: 2, unit: 'slice' });
     expect(fruit).toMatchObject({ matchStatus: 'not_found', matchedFood: null, quantity: 150, unit: 'g' });
     expect(fruit.warnings[0]).toBe(FOOD_WARNINGS.notFound);
@@ -46,7 +54,7 @@ describe('OrganizeDietUseCase', () => {
 
   it('resposta que altera a prescrição ou não é JSON é recusada', async () => {
     const altered = structuredClone(AI_JSON);
-    altered.meals[0].items[1].quantity = 200;
+    altered.days[0].meals[0].groups[0].choices[0].items[1].quantity = 200;
     await expect(useCase.processOutput({ text: JSON.stringify(altered), model: 'x' }, params())).rejects.toBeInstanceOf(AiOutputValidationError);
     await expect(useCase.processOutput({ text: 'Claro! Aqui está sua dieta.', model: 'x' }, params())).rejects.toThrow(/não é JSON/);
     await expect(useCase.processOutput({ text: '{}', model: 'x', truncated: true }, params())).rejects.toThrow(/longa demais/);
@@ -81,6 +89,6 @@ describe('organize_diet com o provedor Anthropic', () => {
     );
     expect(provider.create.mock.calls[0][0].output_config).toEqual({ format: { type: 'json_schema', schema: ORGANIZED_DIET_JSON_SCHEMA } });
     const out = await useCase.processOutput(result, params());
-    expect((out.structuredData as unknown as OrganizedDietProposal).meals[0].items).toHaveLength(2);
+    expect(itemsOf(out.structuredData as unknown as OrganizedDietProposal)).toHaveLength(2);
   });
 });

@@ -385,6 +385,10 @@ export interface ProposalDietItem {
   sourceText: string;
   rawFood: string;
   quantity: number | null;
+  /** Faixa "3 a 5 g": quantity = 3, quantityMax = 5. */
+  quantityMax: number | null;
+  /** "à vontade" escrito no texto. */
+  freeQuantity: boolean;
   unitText: string | null;
   unit: NutritionUnit | null;
   notes: string | null;
@@ -394,29 +398,87 @@ export interface ProposalDietItem {
   warnings: string[];
 }
 
-export interface ProposalMeal {
+export interface DietProposalChoice {
+  label: string | null;
+  items: ProposalDietItem[];
+}
+
+export interface DietProposalGroup {
+  kind: MealGroupKind;
+  label: string | null;
+  choices: DietProposalChoice[];
+}
+
+export interface DietProposalMeal {
   name: string | null;
   time: string | null;
   notes: string | null;
-  items: ProposalDietItem[];
+  groups: DietProposalGroup[];
   warnings: string[];
 }
 
+export interface DietProposalDay {
+  label: string | null;
+  kind: DietDayKind;
+  usageNotes: string | null;
+  meals: DietProposalMeal[];
+  warnings: string[];
+}
+
+export interface DietProposalSupplement {
+  sourceText: string;
+  name: string;
+  quantity: number | null;
+  quantityMax: number | null;
+  unitText: string | null;
+  timing: string | null;
+  notes: string | null;
+  warnings: string[];
+}
+
+/** Proposta organizada pela IA (organize_diet@v2) e já conferida contra o texto — nada gravado ainda. */
 export interface OrganizedDietProposal {
-  meals: ProposalMeal[];
+  days: DietProposalDay[];
+  supplements: DietProposalSupplement[];
+  /** Orientações ao paciente copiadas literalmente do texto. */
+  guidelines: string[];
   warnings: string[];
 }
 
+export interface ProposalChoiceFoodInput {
+  foodId?: string;
+  customFoodName?: string;
+  quantity?: number;
+  quantityMax?: number;
+  unit?: NutritionUnit;
+  isFreeQuantity?: boolean;
+  notes?: string | null;
+}
+
+/** Proposta revisada → rascunho. `days` (estrutura nova) OU `meals` (formato antigo). */
 export interface CreateDietFromProposalInput {
   objective?: string;
   notes?: string;
   replaceDraft?: boolean;
-  meals: Array<{
+  meals?: Array<{
     name: string;
     time?: string | null;
     notes?: string | null;
     foods: Array<{ foodId: string; quantity: number; unit: NutritionUnit; notes?: string | null }>;
   }>;
+  days?: Array<{
+    label?: string | null;
+    kind?: DietDayKind;
+    usageNotes?: string | null;
+    meals: Array<{
+      name: string;
+      time?: string | null;
+      notes?: string | null;
+      groups: Array<{ kind: MealGroupKind; label?: string | null; choices: Array<{ label?: string | null; foods: ProposalChoiceFoodInput[] }> }>;
+    }>;
+  }>;
+  supplements?: Array<{ name: string; quantity?: number; quantityMax?: number; unitText?: string | null; timing?: string | null; notes?: string | null }>;
+  patientGuidelines?: string | null;
 }
 
 // --- Treinos --------------------------------------------------------------

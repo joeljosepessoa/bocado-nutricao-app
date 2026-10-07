@@ -1,10 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as api from '../../api/endpoints';
-import type { OrganizedDietProposal } from '../../types/api';
+import type { OrganizedDietProposal, ProposalDietItem } from '../../types/api';
 import { DietAssistantPage } from '../DietAssistantPage';
 
 vi.mock('../../api/endpoints', () => ({
@@ -14,40 +14,127 @@ vi.mock('../../api/endpoints', () => ({
   listFoods: vi.fn(),
 }));
 
-const proposal: OrganizedDietProposal = {
+const item = (sourceText: string, rawFood: string, quantity: number | null, unit: ProposalDietItem['unit'], extra: Partial<ProposalDietItem> = {}): ProposalDietItem => ({
+  sourceText,
+  rawFood,
+  quantity,
+  quantityMax: null,
+  freeQuantity: false,
+  unitText: unit,
+  unit,
+  notes: null,
+  matchStatus: 'matched',
+  matchedFood: { id: `f-${rawFood}`, name: rawFood },
+  candidates: [],
   warnings: [],
-  meals: [
+  ...extra,
+});
+
+const singleDay = (meals: OrganizedDietProposal['days'][number]['meals']): OrganizedDietProposal => ({
+  warnings: [],
+  supplements: [],
+  guidelines: [],
+  days: [{ label: null, kind: 'other', usageNotes: null, warnings: [], meals }],
+});
+
+const proposal = singleDay([
+  {
+    name: 'CAFÉ DA MANHÃ',
+    time: null,
+    notes: null,
+    warnings: [],
+    groups: [
+      {
+        kind: 'fixed',
+        label: null,
+        choices: [
+          {
+            label: null,
+            items: [
+              item('2 fatias de pão integral', 'Pão integral', 2, 'slice', { matchedFood: { id: 'f-pao', name: 'Pão integral' } }),
+              item('150 g de fruta', 'Fruta', 150, 'g', {
+                matchStatus: 'ambiguous',
+                matchedFood: null,
+                candidates: [{ id: 'f-mamao', name: 'Mamão papaia' }],
+                warnings: ['Alimento com mais de uma correspondência possível — escolha no catálogo.'],
+              }),
+            ],
+          },
+        ],
+      },
+    ],
+  },
+]);
+
+/** Dieta com dia de treino/descanso, opções, bloco "escolha 1", item à vontade fora do catálogo, suplemento e orientação. */
+const structuredProposal: OrganizedDietProposal = {
+  warnings: [],
+  guidelines: ['Água: no mínimo 2,5 litros por dia.'],
+  supplements: [{ sourceText: 'Creatina: 3 a 5 g por dia', name: 'Creatina', quantity: 3, quantityMax: 5, unitText: 'g', timing: null, notes: null, warnings: [] }],
+  days: [
     {
-      name: 'CAFÉ DA MANHÃ',
-      time: null,
-      notes: null,
+      label: 'DIA DE TREINO',
+      kind: 'training',
+      usageNotes: null,
       warnings: [],
-      items: [
+      meals: [
         {
-          sourceText: '2 fatias de pão integral',
-          rawFood: 'Pão integral',
-          quantity: 2,
-          unitText: 'fatias',
-          unit: 'slice',
+          name: 'CAFÉ DA MANHÃ',
+          time: null,
           notes: null,
-          matchStatus: 'matched',
-          matchedFood: { id: 'f-pao', name: 'Pão integral' },
-          candidates: [],
           warnings: [],
+          groups: [
+            {
+              kind: 'meal_options',
+              label: null,
+              choices: [
+                { label: 'Opção 1', items: [item('10 g de aveia', 'Aveia', 10, 'g'), item('2 ovos', 'Ovo', 2, 'unit')] },
+                { label: 'Opção 2', items: [item('30 g de whey', 'Whey', 30, 'g')] },
+              ],
+            },
+          ],
         },
         {
-          sourceText: '150 g de fruta',
-          rawFood: 'Fruta',
-          quantity: 150,
-          unitText: 'g',
-          unit: 'g',
+          name: 'ALMOÇO',
+          time: null,
           notes: null,
-          matchStatus: 'ambiguous',
-          matchedFood: null,
-          candidates: [{ id: 'f-mamao', name: 'Mamão papaia' }],
-          warnings: ['Alimento com mais de uma correspondência possível — escolha no catálogo.'],
+          warnings: [],
+          groups: [
+            {
+              kind: 'alternatives',
+              label: 'Carboidrato',
+              choices: [
+                { label: null, items: [item('65 g de arroz', 'Arroz', 65, 'g')] },
+                { label: null, items: [item('160 g de batata', 'Batata', 160, 'g')] },
+              ],
+            },
+            {
+              kind: 'fixed',
+              label: null,
+              choices: [
+                {
+                  label: null,
+                  items: [
+                    item('salada de folhas à vontade', 'salada de folhas', null, null, {
+                      freeQuantity: true,
+                      matchStatus: 'not_found',
+                      matchedFood: null,
+                      warnings: ['Alimento não identificado no catálogo — revisar.'],
+                    }),
+                  ],
+                },
+              ],
+            },
+          ],
         },
       ],
+    },
+    {
+      label: 'DIA DE DESCANSO',
+      kind: 'rest',
+      usageNotes: null,
+      warnings: [],
+      meals: [{ name: 'CEIA', time: null, notes: null, warnings: [], groups: [{ kind: 'fixed', label: null, choices: [{ label: null, items: [item('10 g de castanhas', 'Castanha', 10, 'g')] }] }] }],
     },
   ],
 };
@@ -106,22 +193,86 @@ describe('Assistente de Dieta', () => {
     await user.click(screen.getByRole('button', { name: 'Criar dieta como rascunho' }));
     expect(await screen.findByText('Substituir o rascunho atual?')).toBeTruthy();
     expect(vi.mocked(api.createDietFromProposal).mock.calls[0][1]).toEqual({
-      meals: [
+      days: [
         {
-          name: 'CAFÉ DA MANHÃ',
-          time: null,
-          notes: null,
-          foods: [
-            { foodId: 'f-pao', quantity: 2, unit: 'slice', notes: null },
-            { foodId: 'f-mamao', quantity: 150, unit: 'g', notes: null },
+          label: null,
+          kind: 'other',
+          usageNotes: null,
+          meals: [
+            {
+              name: 'CAFÉ DA MANHÃ',
+              time: null,
+              notes: null,
+              groups: [
+                {
+                  kind: 'fixed',
+                  label: null,
+                  choices: [
+                    {
+                      label: null,
+                      foods: [
+                        { foodId: 'f-pao', quantity: 2, unit: 'slice', notes: null },
+                        { foodId: 'f-mamao', quantity: 150, unit: 'g', notes: null },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
           ],
         },
       ],
+      supplements: [],
+      patientGuidelines: null,
     });
 
     await user.click(screen.getByRole('button', { name: 'Substituir rascunho' }));
     expect(await screen.findByText('Aba Dieta')).toBeTruthy();
     expect(vi.mocked(api.createDietFromProposal).mock.calls[1][1]).toMatchObject({ replaceDraft: true });
+  });
+
+  it('revisão na mesma árvore da dieta: dias, opções, bloco "escolha 1", nome livre, suplemento e orientações', async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.organizeDiet).mockResolvedValue({ text: '', structuredData: structuredProposal } as never);
+    vi.mocked(api.createDietFromProposal).mockResolvedValue({} as never);
+    renderPage();
+    await user.type(screen.getByLabelText(/Cole aqui a dieta/), 'DIA DE TREINO');
+    await user.click(screen.getByRole('button', { name: 'Organizar com IA' }));
+    await screen.findByText(/Proposta de dieta organizada por IA/);
+
+    expect(screen.getByRole('tab', { name: 'DIA DE TREINO' })).toHaveAttribute('aria-selected', 'true');
+    const cafe = screen.getByRole('region', { name: 'Refeição CAFÉ DA MANHÃ' });
+    expect(within(cafe).getByText('Escolha 1 opção')).toBeInTheDocument();
+    expect(within(cafe).getAllByRole('article').map((a) => a.getAttribute('aria-label'))).toEqual(['Opção 1', 'Opção 2']);
+    const almoco = screen.getByRole('region', { name: 'Refeição ALMOÇO' });
+    expect(within(within(almoco).getByRole('region', { name: 'Carboidrato' })).getByText('Escolha 1')).toBeInTheDocument();
+    expect((screen.getByLabelText('À vontade: salada de folhas') as HTMLInputElement).checked).toBe(true);
+
+    // Item fora do catálogo: não cria até o profissional decidir; "Usar como nome livre" resolve (sem cálculo).
+    await user.click(screen.getByRole('button', { name: 'Criar dieta como rascunho' }));
+    expect(await screen.findByText(/salada de folhas: Escolha o alimento no catálogo/, { selector: 'li' })).toBeInTheDocument();
+    expect(api.createDietFromProposal).not.toHaveBeenCalled();
+    await user.click(within(almoco).getByRole('button', { name: 'Usar como nome livre' }));
+    expect(within(almoco).getByText('Sem cálculo')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'DIA DE DESCANSO' }));
+    expect(screen.getByRole('region', { name: 'Refeição CEIA' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Refeição ALMOÇO' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Criar dieta como rascunho' }));
+    await screen.findByText('Aba Dieta');
+    const payload = vi.mocked(api.createDietFromProposal).mock.calls[0][1];
+    expect(payload.days!.map((d) => [d.label, d.kind, d.meals.length])).toEqual([
+      ['DIA DE TREINO', 'training', 2],
+      ['DIA DE DESCANSO', 'rest', 1],
+    ]);
+    const [cafeOut, almocoOut] = payload.days![0].meals;
+    expect(cafeOut.groups[0]).toMatchObject({ kind: 'meal_options', choices: [{ label: 'Opção 1' }, { label: 'Opção 2' }] });
+    expect(almocoOut.groups[0]).toMatchObject({ kind: 'alternatives', label: 'Carboidrato' });
+    expect(almocoOut.groups[0].choices).toHaveLength(2);
+    expect(almocoOut.groups[1].choices[0].foods).toEqual([{ customFoodName: 'salada de folhas', isFreeQuantity: true, notes: null }]);
+    expect(payload.supplements).toEqual([{ name: 'Creatina', quantity: 3, quantityMax: 5, unitText: 'g', timing: null, notes: null }]);
+    expect(payload.patientGuidelines).toBe('Água: no mínimo 2,5 litros por dia.');
   });
 
   it('erro da IA (resposta recusada) é mostrado e nada é salvo', async () => {

@@ -7,6 +7,7 @@ import { MockAiProvider } from '../src/ai/providers/mock-ai.provider';
 import type { AiGenerationRequest, AiGenerationResult } from '../src/ai/providers/ai-provider.interface';
 import { ORGANIZED_DIET_JSON_SCHEMA } from '../src/ai/use-cases/organize-diet/organized-diet.schema';
 import { createClient, createFood, registerProfessional } from './helpers';
+import { faithfulUserDiet, USER_EXAMPLE_DIET, wholeLineUserDiet } from './fixtures/user-example-diet';
 
 const prisma = new PrismaClient();
 
@@ -24,7 +25,20 @@ const fakeProvider = {
 const reply = (body: unknown) =>
   fakeProvider.generate.mockResolvedValueOnce({ text: typeof body === 'string' ? body : JSON.stringify(body), model: 'fake-model' });
 
-const item = (sourceText: string, food: string, quantity: number | null, unit: string | null) => ({ sourceText, food, quantity, unit, notes: null });
+const item = (sourceText: string, food: string, quantity: number | null, unit: string | null) => ({
+  sourceText,
+  food,
+  quantity,
+  quantityMax: null,
+  unit,
+  freeQuantity: false,
+  notes: null,
+});
+type Item = ReturnType<typeof item>;
+const fixedMeal = (name: string, items: Item[]) => ({ name, time: null, notes: null, groups: [{ kind: 'fixed', label: null, choices: [{ label: null, items }] }] });
+/** Resposta v2 com um único dia e refeições só com itens fixos. */
+const v2 = (meals: ReturnType<typeof fixedMeal>[]) => ({ days: [{ label: null, kind: 'other', usageNotes: null, meals }], supplements: [], guidelines: [], warnings: [] });
+const itemsOf = (proposal: { days: Array<{ meals: Array<{ groups: Array<{ choices: Array<{ items: unknown[] }> }> }> }> }) => proposal.days[0].meals[0].groups[0].choices[0].items as Array<Record<string, unknown>>;
 
 describe('IA — organizar dieta existente (e2e)', () => {
   let app: INestApplication;
@@ -66,28 +80,20 @@ describe('IA — organizar dieta existente (e2e)', () => {
   it('organiza sem alterar quantidades; gera só PROPOSTA (nenhuma dieta criada/publicada); log com política professional_material', async () => {
     const { professional, client, tag, bread } = await setup();
     const text = `CAFÉ DA MANHÃ\n2 fatias de Pão integral ${tag}\n150 g de fruta`;
-    reply({
-      meals: [
-        {
-          name: 'CAFÉ DA MANHÃ',
-          time: null,
-          notes: null,
-          items: [item(`2 fatias de Pão integral ${tag}`, `Pão integral ${tag}`, 2, 'fatias'), item('150 g de fruta', 'fruta', 150, 'g')],
-        },
-      ],
-      warnings: [],
-    });
+    reply(v2([fixedMeal('CAFÉ DA MANHÃ', [item(`2 fatias de Pão integral ${tag}`, `Pão integral ${tag}`, 2, 'fatias'), item('150 g de fruta', 'fruta', 150, 'g')])]));
 
     const res = await organize(professional.accessToken, client.id, text).expect(201);
     const proposal = res.body.structuredData;
-    expect(proposal.meals).toHaveLength(1);
-    expect(proposal.meals[0].items.map((i: { quantity: number; unit: string }) => [i.quantity, i.unit])).toEqual([
+    expect(proposal.days).toHaveLength(1);
+    expect(proposal.days[0].meals).toHaveLength(1);
+    const items = itemsOf(proposal);
+    expect(items.map((i) => [i.quantity, i.unit])).toEqual([
       [2, 'slice'],
       [150, 'g'],
     ]);
-    expect(proposal.meals[0].items[0]).toMatchObject({ matchStatus: 'matched', matchedFood: { id: bread.id } });
-    expect(proposal.meals[0].items[1]).toMatchObject({ matchStatus: 'not_found', matchedFood: null });
-    expect(proposal.meals[0].items[1].warnings[0]).toMatch(/não identificado/);
+    expect(items[0]).toMatchObject({ matchStatus: 'matched', matchedFood: { id: bread.id } });
+    expect(items[1]).toMatchObject({ matchStatus: 'not_found', matchedFood: null });
+    expect((items[1].warnings as string[])[0]).toMatch(/não identificado/);
 
     // Contexto mínimo e saída estruturada com o schema da dieta.
     const sent = fakeProvider.generate.mock.calls[0][0];
@@ -97,7 +103,7 @@ describe('IA — organizar dieta existente (e2e)', () => {
 
     expect(await prisma.diet.count({ where: { clientId: client.id } })).toBe(0);
     const log = await prisma.aiInteractionLog.findFirstOrThrow({ where: { clientId: client.id, feature: 'organize_diet' } });
-    expect(log).toMatchObject({ status: 'succeeded', processingPolicy: 'professional_material', promptVersion: 'organize_diet@v1' });
+    expect(log).toMatchObject({ status: 'succeeded', processingPolicy: 'professional_material', promptVersion: 'organize_diet@v2' });
   });
 
   it.each([
@@ -106,7 +112,7 @@ describe('IA — organizar dieta existente (e2e)', () => {
     ['alimento inventado', item('1 colher de azeite', 'azeite', 1, 'colher de sopa'), /não está no texto/],
   ])('%s: resposta recusada (invalid_output), nada devolvido', async (_label, fruitItem, message) => {
     const { professional, client } = await setup();
-    reply({ meals: [{ name: 'ALMOÇO', time: null, notes: null, items: [fruitItem] }], warnings: [] });
+    reply(v2([fixedMeal('ALMOÇO', [fruitItem])]));
     const res = await organize(professional.accessToken, client.id, 'ALMOÇO\n150 g de fruta').expect(503);
     expect(res.body.message).toMatch(message);
     const log = await prisma.aiInteractionLog.findFirstOrThrow({ where: { clientId: client.id, feature: 'organize_diet' } });
@@ -115,18 +121,56 @@ describe('IA — organizar dieta existente (e2e)', () => {
 
   it('refeição acrescentada pela IA é recusada; alimento omitido vira aviso de revisão', async () => {
     const { professional, client } = await setup();
-    reply({
-      meals: [
-        { name: 'ALMOÇO', time: null, notes: null, items: [item('150 g de fruta', 'fruta', 150, 'g')] },
-        { name: 'CEIA', time: null, notes: null, items: [item('150 g de fruta', 'fruta', 150, 'g')] },
-      ],
-      warnings: [],
-    });
+    reply(v2([fixedMeal('ALMOÇO', [item('150 g de fruta', 'fruta', 150, 'g')]), fixedMeal('CEIA', [item('150 g de fruta', 'fruta', 150, 'g')])]));
     await organize(professional.accessToken, client.id, 'ALMOÇO\n150 g de fruta').expect(503);
 
-    reply({ meals: [{ name: 'ALMOÇO', time: null, notes: null, items: [item('150 g de fruta', 'fruta', 150, 'g')] }], warnings: [] });
+    reply(v2([fixedMeal('ALMOÇO', [item('150 g de fruta', 'fruta', 150, 'g')])]));
     const res = await organize(professional.accessToken, client.id, 'ALMOÇO\n150 g de fruta\n100 g de feijão').expect(201);
     expect(res.body.structuredData.warnings).toEqual(['Trecho não organizado: "100 g de feijão" — revisar.']);
+  });
+
+  it('v2: a dieta real (treino/descanso, opções, blocos, suplementos, orientações) vira proposta estruturada, sem avisos', async () => {
+    const { professional, client } = await setup();
+    reply(faithfulUserDiet());
+    const res = await organize(professional.accessToken, client.id, USER_EXAMPLE_DIET).expect(201);
+    const proposal = res.body.structuredData;
+    expect(proposal.warnings).toEqual([]);
+    expect(proposal.days.map((d: { label: string; kind: string }) => [d.label, d.kind])).toEqual([
+      ['DIA DE TREINO', 'training'],
+      ['DIA DE DESCANSO', 'rest'],
+    ]);
+    const cafe = proposal.days[0].meals[0];
+    expect(cafe.groups[0].kind).toBe('meal_options');
+    expect(cafe.groups[0].choices.map((c: { label: string }) => c.label)).toEqual(['Opção 1', 'Opção 2', 'Opção 3']);
+    const salad = proposal.days[0].meals[1].groups[2].choices[0].items[2];
+    expect(salad).toMatchObject({ rawFood: 'salada de folhas', freeQuantity: true, quantity: null });
+    expect(proposal.supplements.map((s: { name: string }) => s.name)).toEqual(['Creatina', 'Ômega-3', 'Whey protein']);
+    expect(proposal.guidelines).toHaveLength(8);
+    // Nada gravado: é só proposta.
+    expect(await prisma.diet.count({ where: { clientId: client.id } })).toBe(0);
+  });
+
+  it('v2: regressão do falso positivo — linha inteira em cada item e "2 ovos" no café e no lanche são aceitos', async () => {
+    const { professional, client } = await setup();
+    reply(wholeLineUserDiet());
+    await organize(professional.accessToken, client.id, USER_EXAMPLE_DIET).expect(201);
+  });
+
+  it('v2: opções misturadas ou alternativa virando item fixo são recusadas (invalid_output)', async () => {
+    const { professional, client } = await setup();
+    const mixed = faithfulUserDiet();
+    const [op1, op2] = mixed.days[0].meals[0].groups[0].choices;
+    op1.items.push(op2.items.pop()!);
+    reply(mixed);
+    const res = await organize(professional.accessToken, client.id, USER_EXAMPLE_DIET).expect(503);
+    expect(res.body.message).toMatch(/opções misturadas/);
+
+    const merged = faithfulUserDiet();
+    const almoco = merged.days[0].meals[1];
+    const carbo = almoco.groups.shift()!;
+    almoco.groups[1].choices[0].items.push(...carbo.choices[0].items, ...carbo.choices[1].items);
+    reply(merged);
+    expect((await organize(professional.accessToken, client.id, USER_EXAMPLE_DIET).expect(503)).body.message).toMatch(/são alternativas no texto/);
   });
 
   it('resposta que não é JSON é recusada', async () => {

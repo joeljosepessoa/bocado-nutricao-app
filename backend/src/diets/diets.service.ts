@@ -1,12 +1,13 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { DietAuditAction, DietStatus, DietVersionStatus, NotificationEventType, NutritionUnit } from '@prisma/client';
+import { DietAuditAction, DietStatus, DietVersionStatus, MealGroupKind, NotificationEventType, NutritionUnit } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { FoodsService } from '../foods/foods.service';
 import { NutritionCalculationService } from '../foods/nutrition-calculation.service';
 import { NotificationDispatchService } from '../notifications/notification-dispatch.service';
 import { DietAuditLogService } from './diet-audit-log.service';
 import { CreateDietDto } from './dto/create-diet.dto';
-import { CreateDietFromProposalDto } from './dto/create-diet-from-proposal.dto';
+import { CreateDietFromProposalDto, ProposalChoiceFoodDto, ProposalDayDto } from './dto/create-diet-from-proposal.dto';
+import { proposalStructureProblems, writeProposalContent } from './diet-proposal';
 import { UpdateDietDto } from './dto/update-diet.dto';
 import { UpdateDietVersionDto } from './dto/update-diet-version.dto';
 import { CreateMealDto } from './dto/create-meal.dto';
@@ -208,17 +209,31 @@ export class DietsService {
   async createFromProposal(professionalId: string, clientId: string, dto: CreateDietFromProposalDto, meta: RequestMeta = {}) {
     await this.assertOwnedClient(professionalId, clientId);
 
+    if (!!dto.days === !!dto.meals) {
+      throw new BadRequestException('Envie a dieta em "days" (estrutura por dia) ou em "meals" (formato antigo) — um dos dois.');
+    }
+    // Formato antigo = dia único com um grupo fixo por refeição (mesma leitura de sempre).
+    const days: ProposalDayDto[] =
+      dto.days ??
+      [{ label: null, meals: dto.meals!.map((meal) => ({ ...meal, groups: [{ kind: MealGroupKind.fixed, choices: [{ foods: meal.foods }] }] })) }];
+    const problems = proposalStructureProblems(days, dto.supplements ?? []);
+    if (problems.length > 0) {
+      throw new BadRequestException(`Corrija a estrutura da dieta: ${problems.slice(0, 5).join(' ')}`);
+    }
+
     // Visibilidade + snapshot nutricional antes da transação (mesma regra de createMealFood).
-    const snapshots = new Map<string, Awaited<ReturnType<NutritionCalculationService['calculate']>>>();
+    // Só item do catálogo com quantidade e unidade (e não "à vontade") tem cálculo — nunca valor inventado.
+    const snapshots = new Map<ProposalChoiceFoodDto, Awaited<ReturnType<NutritionCalculationService['calculate']>>>();
     const foodsById = new Map<string, Awaited<ReturnType<FoodsService['findVisible']>>>();
-    for (const [m, meal] of dto.meals.entries()) {
-      for (const [f, item] of meal.foods.entries()) {
-        let food = foodsById.get(item.foodId);
-        if (!food) {
-          food = await this.foodsService.findVisible(professionalId, item.foodId);
-          foodsById.set(item.foodId, food);
-        }
-        snapshots.set(`${m}:${f}`, await this.calculation.calculate(food, item.quantity, item.unit));
+    for (const item of days.flatMap((d) => d.meals.flatMap((m) => m.groups.flatMap((g) => g.choices.flatMap((c) => c.foods))))) {
+      if (!item.foodId) continue;
+      let food = foodsById.get(item.foodId);
+      if (!food) {
+        food = await this.foodsService.findVisible(professionalId, item.foodId);
+        foodsById.set(item.foodId, food);
+      }
+      if (!item.isFreeQuantity && item.quantity != null && item.unit) {
+        snapshots.set(item, await this.calculation.calculate(food, item.quantity, item.unit));
       }
     }
 
@@ -245,7 +260,14 @@ export class DietsService {
         if (!activeDiet) {
           const diet = await tx.diet.create({ data: { clientId, professionalId } });
           const version = await tx.dietVersion.create({
-            data: { dietId: diet.id, versionNumber: 1, createdByProfessionalId: professionalId, objective: blank(dto.objective), notes: blank(dto.notes) },
+            data: {
+              dietId: diet.id,
+              versionNumber: 1,
+              createdByProfessionalId: professionalId,
+              objective: blank(dto.objective),
+              notes: blank(dto.notes),
+              patientGuidelines: blank(dto.patientGuidelines),
+            },
           });
           dietId = diet.id;
           versionId = version.id;
@@ -253,11 +275,13 @@ export class DietsService {
         } else if (existingDraft) {
           // Só o RASCUNHO (nunca publicado) tem o conteúdo trocado — mesma operação de excluir refeição.
           await clearDraftMeals(tx, existingDraft.id);
+          if (dto.supplements !== undefined) await tx.dietSupplement.deleteMany({ where: { dietVersionId: existingDraft.id } });
           await tx.dietVersion.update({
             where: { id: existingDraft.id },
             data: {
               ...(dto.objective !== undefined ? { objective: blank(dto.objective) } : {}),
               ...(dto.notes !== undefined ? { notes: blank(dto.notes) } : {}),
+              ...(dto.patientGuidelines !== undefined ? { patientGuidelines: blank(dto.patientGuidelines) } : {}),
             },
           });
           dietId = activeDiet.id;
@@ -277,6 +301,7 @@ export class DietsService {
               endDate: published?.endDate,
               objective: dto.objective !== undefined ? blank(dto.objective) : published?.objective,
               notes: dto.notes !== undefined ? blank(dto.notes) : published?.notes,
+              patientGuidelines: dto.patientGuidelines !== undefined ? blank(dto.patientGuidelines) : published?.patientGuidelines,
               targetCalories: published?.targetCalories,
               targetProteinG: published?.targetProteinG,
               targetCarbG: published?.targetCarbG,
@@ -288,40 +313,24 @@ export class DietsService {
           action = DietAuditAction.version_created;
         }
 
-        const dietDayId = await ensureDefaultDay(tx, versionId);
-        for (const [m, meal] of dto.meals.entries()) {
-          const { meal: createdMeal, choiceId } = await createMealWithFixedGroup(tx, {
-            dietVersionId: versionId,
-            dietDayId,
-            name: meal.name.trim(),
-            order: m,
-            time: meal.time ?? null,
-            notes: blank(meal.notes),
+        await writeProposalContent(tx, versionId, days, (item) => snapshots.get(item) ?? null);
+        if (dto.supplements?.length) {
+          await tx.dietSupplement.createMany({
+            data: dto.supplements.map((s, order) => ({
+              dietVersionId: versionId,
+              name: s.name.trim(),
+              quantity: s.quantity ?? null,
+              quantityMax: s.quantityMax ?? null,
+              unitText: blank(s.unitText),
+              timing: blank(s.timing),
+              notes: blank(s.notes),
+              order,
+            })),
           });
-          for (const [f, item] of meal.foods.entries()) {
-            const snapshot = snapshots.get(`${m}:${f}`);
-            await tx.mealFood.create({
-              data: {
-                mealId: createdMeal.id,
-                mealChoiceId: choiceId,
-                foodId: item.foodId,
-                order: f,
-                quantity: item.quantity,
-                unit: item.unit,
-                gramsEquivalent: snapshot?.gramsEquivalent,
-                kcal: snapshot?.kcal,
-                proteinG: snapshot?.proteinG,
-                carbG: snapshot?.carbG,
-                fatG: snapshot?.fatG,
-                fiberG: snapshot?.fiberG,
-                notes: blank(item.notes),
-              },
-            });
-          }
         }
         return { dietId, versionId, action };
       },
-      { timeout: 30_000 },
+      { timeout: 60_000 },
     );
 
     await this.auditLog.record({

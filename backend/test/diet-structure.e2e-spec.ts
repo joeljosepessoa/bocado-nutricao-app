@@ -7,6 +7,10 @@ import { createClient, createFood, registerProfessional } from './helpers';
 
 const prisma = new PrismaClient();
 
+// O preparo monta uma dieta inteira (dois dias, opções e blocos) pela API — com as
+// suítes rodando em paralelo, passa dos 5 s padrão do Jest.
+jest.setTimeout(30_000);
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 describe('Estrutura nova da dieta — dias, opções, alternativas, suplementos (e2e)', () => {
   let app: INestApplication;
