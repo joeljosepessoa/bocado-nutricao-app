@@ -573,15 +573,15 @@ model DietVersion {
 model Meal {
   id            String  @id @default(uuid())
   dietVersionId String  @map("diet_version_id")
-  // Opcional durante a compatibilidade (P1); a migration liga as refeições antigas ao dia único.
-  dietDayId     String? @map("diet_day_id")
+  // Obrigatório desde o P5 (as refeições antigas foram ligadas ao dia único no P1).
+  dietDayId     String  @map("diet_day_id")
   name          String
   order         Int
   time          String?
   notes         String?
 
   dietVersion DietVersion @relation(fields: [dietVersionId], references: [id], onDelete: Restrict)
-  dietDay     DietDay?    @relation(fields: [dietDayId], references: [id], onDelete: Restrict)
+  dietDay     DietDay     @relation(fields: [dietDayId], references: [id], onDelete: Restrict)
   foods       MealFood[]
   groups      MealGroup[]
 
@@ -681,8 +681,8 @@ model DietSupplement {
 model MealFood {
   id              String         @id @default(uuid())
   mealId          String         @map("meal_id")
-  // Opcional durante a compatibilidade (P1); a migration liga os itens antigos à escolha única.
-  mealChoiceId    String?        @map("meal_choice_id")
+  // Obrigatório desde o P5 (os itens antigos foram ligados à escolha única no P1).
+  mealChoiceId    String         @map("meal_choice_id")
   // Catálogo OU nome livre (sem cálculo nutricional) — nunca os dois vazios (CHECK no banco).
   foodId          String?        @map("food_id")
   customFoodName  String?        @map("custom_food_name")
@@ -701,7 +701,7 @@ model MealFood {
   notes           String?
 
   meal       Meal        @relation(fields: [mealId], references: [id], onDelete: Restrict)
-  mealChoice MealChoice? @relation(fields: [mealChoiceId], references: [id], onDelete: Restrict)
+  mealChoice MealChoice  @relation(fields: [mealChoiceId], references: [id], onDelete: Restrict)
   food       Food?       @relation(fields: [foodId], references: [id], onDelete: Restrict)
 
   @@index([mealId, order])
