@@ -107,7 +107,7 @@ describe('IA — erros de provedor chegam em formato controlado (e2e)', () => {
 
   it('erro inesperado (não controlado) nunca vaza o detalhe interno', async () => {
     const { professional, client } = await setup();
-    fakeProvider.generate.mockRejectedValue(new Error('connection string postgres://usuario:senha@host'));
+    fakeProvider.generate.mockRejectedValue(new Error('connection string postgres://usuario:senha@host:5432/app'));
 
     const res = await draftNote(professional.accessToken, client.id).expect(503);
     expect(res.body.message).toBe('Não foi possível gerar o conteúdo agora.');
