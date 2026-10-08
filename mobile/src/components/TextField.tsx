@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
-import { colors, radius, spacing, typography } from '../theme/tokens';
+import { radius, spacing, typography } from '../theme/tokens';
+import { useStyles, useTheme, type ThemeColors } from '../theme/theme';
 
 interface Props extends TextInputProps {
   label: string;
@@ -8,6 +9,8 @@ interface Props extends TextInputProps {
 }
 
 export function TextField({ label, error, style, ...rest }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.wrapper}>
       <Text style={styles.label}>{label}</Text>
@@ -22,7 +25,7 @@ export function TextField({ label, error, style, ...rest }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   wrapper: { gap: spacing.xs },
   label: { ...typography.caption, color: colors.textSecondary },
   input: {

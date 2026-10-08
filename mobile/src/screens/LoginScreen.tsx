@@ -3,9 +3,11 @@ import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-na
 import { useAuth } from '../auth/AuthContext';
 import { Button } from '../components/Button';
 import { TextField } from '../components/TextField';
-import { colors, spacing, typography } from '../theme/tokens';
+import { spacing, typography } from '../theme/tokens';
+import { useStyles, type ThemeColors } from '../theme/theme';
 
 export function LoginScreen() {
+  const styles = useStyles(makeStyles);
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -61,7 +63,7 @@ export function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { flex: 1, justifyContent: 'center', padding: spacing.lg, gap: spacing.md },
   title: { ...typography.title, color: colors.primaryDark, textAlign: 'center' },

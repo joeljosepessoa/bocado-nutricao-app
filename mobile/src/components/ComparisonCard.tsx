@@ -4,7 +4,8 @@ import { Card } from './Card';
 import { computeDelta, computePercentDelta } from '../evolution/delta';
 import { PRIMARY_METRICS } from '../evolution/metricCatalog';
 import type { EvolutionEntry } from '../types/api';
-import { colors, spacing, typography } from '../theme/tokens';
+import { spacing, typography } from '../theme/tokens';
+import { useStyles, type ThemeColors } from '../theme/theme';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR');
@@ -22,6 +23,7 @@ interface Props {
  * duplica lógica de autorização em duas rotas).
  */
 export function ComparisonCard({ from, to }: Props) {
+  const styles = useStyles(makeStyles);
   const rows = PRIMARY_METRICS.map((metric) => {
     const a = metric.accessor(from);
     const b = metric.accessor(to);
@@ -53,7 +55,7 @@ export function ComparisonCard({ from, to }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, justifyContent: 'center' },
   headerLabel: { ...typography.caption, color: colors.textSecondary },
   arrow: { color: colors.textSecondary },

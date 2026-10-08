@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { MetricDescriptor } from '../evolution/metricCatalog';
 import type { EvolutionEntry } from '../types/api';
-import { colors, radius, spacing, typography } from '../theme/tokens';
+import { radius, spacing, typography } from '../theme/tokens';
+import { useStyles, type ThemeColors } from '../theme/theme';
 
 interface Props {
   title: string;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function MeasurementsGrid({ title, metrics, entry, defaultCollapsed = true }: Props) {
+  const styles = useStyles(makeStyles);
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const rows = metrics
     .map((metric) => ({ metric, value: metric.accessor(entry) }))
@@ -44,7 +46,7 @@ export function MeasurementsGrid({ title, metrics, entry, defaultCollapsed = tru
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   toggle: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },
   title: { ...typography.subtitle, color: colors.textPrimary, fontSize: 15 },
   chevron: { ...typography.caption, color: colors.primary, fontWeight: '600' },

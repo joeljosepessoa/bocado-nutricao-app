@@ -3,7 +3,8 @@ import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'rea
 import * as api from '../api/endpoints';
 import { API_BASE_URL, getAccessToken } from '../api/client';
 import { resolveExerciseMediaSource } from '../media/exerciseMedia';
-import { colors, radius, spacing, typography } from '../theme/tokens';
+import { radius, spacing, typography } from '../theme/tokens';
+import { useStyles, useTheme, type ThemeColors } from '../theme/theme';
 
 interface Props {
   imageUrl: string | null;
@@ -19,6 +20,7 @@ interface Props {
  * este componente mantém no máximo UM GIF aberto por vez.
  */
 export function ExerciseDemo({ imageUrl, exerciseName, expanded, onToggle }: Props) {
+  const styles = useStyles(makeStyles);
   if (!resolveExerciseMediaSource(imageUrl, API_BASE_URL, null)) {
     return null;
   }
@@ -40,6 +42,8 @@ export function ExerciseDemo({ imageUrl, exerciseName, expanded, onToggle }: Pro
 }
 
 function DemoImage({ imageUrl, exerciseName }: { imageUrl: string | null; exerciseName: string }) {
+  const { colors } = useTheme();
+  const styles = useStyles(makeStyles);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [attempt, setAttempt] = useState(0);
 
@@ -96,7 +100,7 @@ function DemoImage({ imageUrl, exerciseName }: { imageUrl: string | null; exerci
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   wrapper: { marginTop: spacing.xs },
   toggle: { ...typography.caption, color: colors.primary, fontWeight: '600' },
   frame: {

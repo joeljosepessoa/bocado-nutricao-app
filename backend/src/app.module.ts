@@ -20,6 +20,7 @@ import { DietsModule } from './diets/diets.module';
 import { ExercisesModule } from './exercises/exercises.module';
 import { WorkoutsModule } from './workouts/workouts.module';
 import { ClientAppModule } from './client-app/client-app.module';
+import { ClientTrackingModule } from './client-tracking/client-tracking.module';
 import { ReportsModule } from './reports/reports.module';
 import { ScaleReadingsModule } from './scale-readings/scale-readings.module';
 import { DevicesModule } from './devices/devices.module';
@@ -50,6 +51,7 @@ import { ClientBillingModule } from './client-billing/client-billing.module';
     ExercisesModule,
     WorkoutsModule,
     ClientAppModule,
+    ClientTrackingModule,
     ReportsModule,
     ScaleReadingsModule,
     DevicesModule,

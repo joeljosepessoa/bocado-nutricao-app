@@ -5,13 +5,15 @@ import type { Message } from '../types/api';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { Button } from '../components/Button';
 import { TextField } from '../components/TextField';
-import { colors, radius, spacing, typography } from '../theme/tokens';
+import { radius, spacing, typography } from '../theme/tokens';
+import { useStyles, type ThemeColors } from '../theme/theme';
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
 export function MessagesScreen() {
+  const styles = useStyles(makeStyles);
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(true);
@@ -89,7 +91,7 @@ export function MessagesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   bubble: {
     maxWidth: '80%',
     borderRadius: radius.md,

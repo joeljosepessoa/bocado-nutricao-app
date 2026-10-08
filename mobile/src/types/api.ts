@@ -20,6 +20,9 @@ export interface ClientSelf {
   birthDate: string | null;
   phone: string | null;
   gender: string | null;
+  /** Metas preenchidas pelo nutricionista na ficha (null = sem meta; ausentes em APIs anteriores). */
+  targetWeightKg?: number | null;
+  waterGoalMl?: number | null;
   user: { email: string; fullName: string };
 }
 
@@ -426,4 +429,65 @@ export interface ClientDataExport {
   requestId: string;
   exportedAt: string;
   [key: string]: unknown;
+}
+
+// --- Registros do próprio paciente (peso, água e fotos) -------------------------
+
+export interface WeightEntry {
+  /** null quando o peso veio de uma avaliação liberada (não pode ser apagado pelo app). */
+  id: string | null;
+  weightKg: number;
+  recordedAt: string;
+  source: 'self' | 'evaluation';
+}
+
+export interface WeightList {
+  targetWeightKg: number | null;
+  /** Ordem cronológica (mais antigo primeiro). */
+  items: WeightEntry[];
+}
+
+export type WaterGoalSource = 'professional' | 'weight' | 'default';
+
+export interface WaterEntry {
+  id: string;
+  amountMl: number;
+  loggedAt: string;
+}
+
+export interface WaterDay {
+  date: string;
+  totalMl: number;
+  goalMl: number;
+  goalSource: WaterGoalSource;
+  entries: WaterEntry[];
+}
+
+export interface WaterHistory {
+  goalMl: number;
+  goalSource: WaterGoalSource;
+  days: Array<{ date: string; totalMl: number }>;
+}
+
+export interface ProgressPhoto {
+  id: string;
+  contentType: string;
+  takenAt: string;
+  createdAt: string;
+}
+
+export interface WorkoutExecutionSetRecord {
+  workoutExerciseId: string;
+  setOrder: number;
+  repsPerformed: number | null;
+  loadValue: number | null;
+  loadUnit: string | null;
+}
+
+export interface WorkoutExecutionRecord {
+  id: string;
+  workoutDayId: string;
+  performedAt: string;
+  notes: string | null;
+  sets: WorkoutExecutionSetRecord[];
 }

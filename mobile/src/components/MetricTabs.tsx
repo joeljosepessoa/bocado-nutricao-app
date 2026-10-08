@@ -1,7 +1,8 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import type { MetricDescriptor } from '../evolution/metricCatalog';
-import { colors, radius, spacing, typography } from '../theme/tokens';
+import { radius, spacing, typography } from '../theme/tokens';
+import { useStyles, type ThemeColors } from '../theme/theme';
 
 interface Props {
   metrics: MetricDescriptor[];
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function MetricTabs({ metrics, selectedKey, onSelect }: Props) {
+  const styles = useStyles(makeStyles);
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
       {metrics.map((metric) => {
@@ -28,7 +30,7 @@ export function MetricTabs({ metrics, selectedKey, onSelect }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   row: { flexDirection: 'row', gap: spacing.xs, paddingVertical: 2 },
   chip: {
     paddingHorizontal: spacing.sm + 2,

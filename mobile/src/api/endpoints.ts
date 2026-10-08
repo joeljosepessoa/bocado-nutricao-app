@@ -21,7 +21,13 @@ import type {
   NotificationPreference,
   PaginatedResult,
   SignedUrl,
+  ProgressPhoto,
+  WaterDay,
+  WaterHistory,
+  WeightEntry,
+  WeightList,
   WorkoutClientSummary,
+  WorkoutExecutionRecord,
 } from '../types/api';
 
 export async function login(email: string, password: string): Promise<AuthTokenPair> {
@@ -73,7 +79,7 @@ export async function logWorkoutExecution(dto: CreateExecutionLogInput): Promise
 export async function listWorkoutExecutions(
   page = 1,
   pageSize = 20,
-): Promise<PaginatedResult<{ id: string; performedAt: string; workoutDayId: string }>> {
+): Promise<PaginatedResult<WorkoutExecutionRecord>> {
   const res = await apiClient.get('/client/workout/execution-logs', { params: { page, pageSize } });
   return res.data;
 }
@@ -258,4 +264,74 @@ export async function exportMyData(): Promise<ClientDataExport> {
 
 export async function deleteMyAccount(currentPassword: string): Promise<void> {
   await apiClient.post('/client/account-deletion', { currentPassword });
+}
+
+// ---------------------------------------------------------------------------
+// Registros do próprio paciente: peso, água e fotos de progresso
+// ---------------------------------------------------------------------------
+
+/** Pesos reais (registros do app + avaliações liberadas); `days` limita ao período recente. */
+export async function getWeights(days?: number): Promise<WeightList> {
+  const res = await apiClient.get<WeightList>('/client/weights', { params: days ? { days } : undefined });
+  return res.data;
+}
+
+export async function addWeight(weightKg: number, recordedAt?: string): Promise<WeightEntry> {
+  const res = await apiClient.post<WeightEntry>('/client/weights', { weightKg, ...(recordedAt ? { recordedAt } : {}) });
+  return res.data;
+}
+
+export async function deleteWeight(id: string): Promise<void> {
+  await apiClient.delete(`/client/weights/${id}`);
+}
+
+/** `date` é o dia no calendário do aparelho (AAAA-MM-DD). */
+export async function getWaterDay(date: string): Promise<WaterDay> {
+  const res = await apiClient.get<WaterDay>('/client/water', { params: { date } });
+  return res.data;
+}
+
+export async function addWater(amountMl: number, date: string): Promise<WaterDay> {
+  const res = await apiClient.post<WaterDay>('/client/water', { amountMl, date });
+  return res.data;
+}
+
+export async function deleteWaterEntry(id: string): Promise<WaterDay> {
+  const res = await apiClient.delete<WaterDay>(`/client/water/${id}`);
+  return res.data;
+}
+
+export async function resetWaterDay(date: string): Promise<WaterDay> {
+  const res = await apiClient.delete<WaterDay>('/client/water', { params: { date } });
+  return res.data;
+}
+
+export async function getWaterHistory(days = 30): Promise<WaterHistory> {
+  const res = await apiClient.get<WaterHistory>('/client/water/history', { params: { days } });
+  return res.data;
+}
+
+export async function listProgressPhotos(): Promise<ProgressPhoto[]> {
+  const res = await apiClient.get<ProgressPhoto[]>('/client/progress-photos');
+  return res.data;
+}
+
+export async function uploadProgressPhoto(file: { uri: string; mimeType: string; name: string }, takenAt?: string): Promise<ProgressPhoto> {
+  const form = new FormData();
+  // React Native aceita { uri, type, name } como arquivo no FormData.
+  form.append('file', { uri: file.uri, type: file.mimeType, name: file.name } as unknown as Blob);
+  if (takenAt) form.append('takenAt', takenAt);
+  const res = await apiClient.post<ProgressPhoto>('/client/progress-photos', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data;
+}
+
+export async function getProgressPhotoUrl(id: string): Promise<SignedUrl> {
+  const res = await apiClient.get<SignedUrl>(`/client/progress-photos/${id}/download-url`);
+  return res.data;
+}
+
+export async function deleteProgressPhoto(id: string): Promise<void> {
+  await apiClient.delete(`/client/progress-photos/${id}`);
 }

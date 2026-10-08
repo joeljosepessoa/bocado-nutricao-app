@@ -12,6 +12,7 @@ import { AppointmentsService } from '../appointments/appointments.service';
 import { DevicesService } from '../devices/devices.service';
 import { NotificationPreferencesService } from '../notifications/notification-preferences.service';
 import { ClientSubscriptionsService } from '../client-billing/client-subscriptions.service';
+import { ClientTrackingService } from '../client-tracking/client-tracking.service';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 
 const EXPORT_PAGE_SIZE = 10_000;
@@ -47,6 +48,8 @@ export interface ClientDataExport {
    * definida (docs/IA-PRIVACIDADE.md).
    */
   aiInteractions: unknown[];
+  /** Registros feitos pelo próprio paciente no app: peso, água e fotos de progresso (só metadados das fotos). */
+  ownRecords: unknown;
 }
 
 @Injectable()
@@ -64,6 +67,7 @@ export class LgpdService {
     private readonly devicesService: DevicesService,
     private readonly notificationPreferencesService: NotificationPreferencesService,
     private readonly clientSubscriptions: ClientSubscriptionsService,
+    private readonly clientTracking: ClientTrackingService,
   ) {}
 
   async exportClientData(clientId: string): Promise<ClientDataExport> {
@@ -88,13 +92,14 @@ export class LgpdService {
       orderBy: { createdAt: 'asc' },
     });
 
-    const [aiConsent, aiInteractions] = await Promise.all([
+    const [aiConsent, aiInteractions, ownRecords] = await Promise.all([
       this.prisma.client.findUniqueOrThrow({ where: { id: clientId }, select: { aiDataProcessingConsentAt: true } }),
       this.prisma.aiInteractionLog.findMany({
         where: { clientId },
         select: { feature: true, createdAt: true, status: true, provider: true, model: true, processingPolicy: true },
         orderBy: { createdAt: 'asc' },
       }),
+      this.clientTracking.exportOwnRecords(clientId),
     ]);
 
     const request = await this.prisma.dataExportRequest.create({ data: { clientId } });
@@ -113,6 +118,7 @@ export class LgpdService {
       notificationPreferences,
       aiConsent,
       aiInteractions,
+      ownRecords,
     };
   }
 
@@ -168,5 +174,9 @@ export class LgpdService {
     ]);
 
     await this.refreshTokenService.revokeAllForUser(clientId);
+
+    // Peso, água e fotos que o próprio paciente registrou: dado pessoal dele,
+    // sem valor de integridade para o profissional — apagado, não anonimizado.
+    await this.clientTracking.deleteOwnRecords(clientId);
   }
 }

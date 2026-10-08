@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { FoodLineView } from '../dietPresentation';
-import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { radius, spacing, typography } from '../../theme/tokens';
+import { useStyles, type ThemeColors } from '../../theme/theme';
 
 /** "110 g de fruta" + "À vontade"/observação embaixo + substituições (quando houver). */
 export function FoodLine({ food, emphasized = false }: { food: FoodLineView; emphasized?: boolean }) {
+  const styles = useStyles(makeStyles);
   const [expanded, setExpanded] = useState(false);
   const count = food.substitutions.length;
   return (
@@ -30,7 +32,7 @@ export function FoodLine({ food, emphasized = false }: { food: FoodLineView; emp
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   row: { gap: 2, flexShrink: 1 },
   text: { ...typography.body, color: colors.textPrimary, lineHeight: 21 },
   emphasized: { fontWeight: '600' },

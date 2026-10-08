@@ -3,10 +3,13 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { DIET_SCREEN_TEXT } from '../dietScreenState';
-import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { radius, spacing, typography } from '../../theme/tokens';
+import { useStyles, useTheme, type ThemeColors } from '../../theme/theme';
 
 /** Esqueleto enquanto a dieta carrega pela primeira vez. */
 export function DietSkeleton() {
+  const { colors } = useTheme();
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.skeleton} accessibilityLabel={DIET_SCREEN_TEXT.loading} accessibilityRole="progressbar">
       <View style={[styles.bar, styles.titleBar]} />
@@ -30,6 +33,7 @@ export function DietSkeleton() {
 }
 
 export function DietErrorState({ onRetry, retrying }: { onRetry: () => void; retrying: boolean }) {
+  const styles = useStyles(makeStyles);
   return (
     <Card style={styles.center}>
       <Text style={styles.icon}>⚠️</Text>
@@ -43,6 +47,7 @@ export function DietErrorState({ onRetry, retrying }: { onRetry: () => void; ret
 }
 
 export function DietEmptyState() {
+  const styles = useStyles(makeStyles);
   return (
     <Card style={styles.center}>
       <Text style={styles.icon}>🍽️</Text>
@@ -54,6 +59,7 @@ export function DietEmptyState() {
 
 /** Atualização falhou, mas a dieta já carregada continua na tela. */
 export function RefreshFailedBanner({ onRetry }: { onRetry: () => void }) {
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.banner} accessibilityRole="alert">
       <Text style={styles.bannerText}>{DIET_SCREEN_TEXT.refreshFailed}</Text>
@@ -64,7 +70,7 @@ export function RefreshFailedBanner({ onRetry }: { onRetry: () => void }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   skeleton: { gap: spacing.md },
   bar: { backgroundColor: colors.border, borderRadius: radius.sm },
   titleBar: { height: 26, width: '45%' },

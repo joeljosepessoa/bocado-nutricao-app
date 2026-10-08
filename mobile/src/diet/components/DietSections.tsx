@@ -2,10 +2,12 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Card } from '../../components/Card';
 import type { SupplementView } from '../dietPresentation';
-import { colors, spacing, typography } from '../../theme/tokens';
+import { spacing, typography } from '../../theme/tokens';
+import { useStyles, type ThemeColors } from '../../theme/theme';
 
 /** Cabeçalho "Minha dieta" — só o que a API realmente envia (nenhuma meta inventada). */
 export function DietHeader({ title, instruction }: { title: string; instruction: string | null }) {
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.header}>
       <Text style={styles.title} accessibilityRole="header">
@@ -18,6 +20,7 @@ export function DietHeader({ title, instruction }: { title: string; instruction:
 
 /** 💊 Suplementação — não aparece quando não há suplementos. */
 export function SupplementsCard({ supplements }: { supplements: SupplementView[] }) {
+  const styles = useStyles(makeStyles);
   if (supplements.length === 0) return null;
   return (
     <Card>
@@ -38,6 +41,7 @@ export function SupplementsCard({ supplements }: { supplements: SupplementView[]
 
 /** 📋 Orientações em tópicos — não aparece quando não há orientações. */
 export function GuidelinesCard({ guidelines }: { guidelines: string[] }) {
+  const styles = useStyles(makeStyles);
   if (guidelines.length === 0) return null;
   return (
     <Card>
@@ -54,7 +58,7 @@ export function GuidelinesCard({ guidelines }: { guidelines: string[] }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   header: { gap: 2 },
   title: { ...typography.title, color: colors.primaryDark },
   instruction: { ...typography.caption, color: colors.textSecondary },

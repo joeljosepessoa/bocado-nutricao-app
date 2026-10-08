@@ -4,11 +4,13 @@ import { useAuth } from '../auth/AuthContext';
 import { Button } from '../components/Button';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { TextField } from '../components/TextField';
-import { colors, typography } from '../theme/tokens';
+import { typography } from '../theme/tokens';
+import { useStyles, type ThemeColors } from '../theme/theme';
 
 const MIN_PASSWORD_LENGTH = 8;
 
 export function ChangePasswordScreen() {
+  const styles = useStyles(makeStyles);
   const { changePassword, logout } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -64,7 +66,7 @@ export function ChangePasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   title: { ...typography.subtitle, color: colors.textPrimary },
   subtitle: { ...typography.body, color: colors.textSecondary },
   error: { color: colors.danger, ...typography.body },

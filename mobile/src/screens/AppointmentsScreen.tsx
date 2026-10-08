@@ -6,7 +6,8 @@ import { ScreenContainer } from '../components/ScreenContainer';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { StatusPill } from '../components/StatusPill';
-import { colors, spacing, typography } from '../theme/tokens';
+import { spacing, typography } from '../theme/tokens';
+import { useStyles, type ThemeColors } from '../theme/theme';
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -25,6 +26,7 @@ const STATUS_TONE: Record<Appointment['status'], 'success' | 'progress' | 'neutr
 };
 
 export function AppointmentsScreen() {
+  const styles = useStyles(makeStyles);
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,7 +138,7 @@ export function AppointmentsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   sectionTitle: { ...typography.subtitle, color: colors.textPrimary },
   empty: { ...typography.body, color: colors.textSecondary },
   error: { ...typography.caption, color: colors.danger },

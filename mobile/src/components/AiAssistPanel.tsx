@@ -5,7 +5,8 @@ import { Button } from './Button';
 import * as api from '../api/endpoints';
 import type { AiGenerationResult } from '../types/api';
 import { setAiConsent } from '../privacy/aiConsent';
-import { colors, typography } from '../theme/tokens';
+import { typography } from '../theme/tokens';
+import { useStyles, type ThemeColors } from '../theme/theme';
 
 type Status = 'idle' | 'loading' | 'needsConsent' | 'ready' | 'error';
 
@@ -22,6 +23,7 @@ interface Props {
  * rotulado como conteúdo de IA.
  */
 export function AiAssistPanel({ title, helperText, generate }: Props) {
+  const styles = useStyles(makeStyles);
   const [status, setStatus] = useState<Status>('idle');
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +94,7 @@ export function AiAssistPanel({ title, helperText, generate }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   title: { ...typography.subtitle, color: colors.textPrimary },
   helper: { ...typography.caption, color: colors.textSecondary },
   body: { ...typography.body, color: colors.textPrimary },

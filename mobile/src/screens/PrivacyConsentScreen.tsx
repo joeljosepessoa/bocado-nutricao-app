@@ -3,9 +3,11 @@ import { StyleSheet, Text } from 'react-native';
 import { useAuth } from '../auth/AuthContext';
 import { Button } from '../components/Button';
 import { ScreenContainer } from '../components/ScreenContainer';
-import { colors, typography } from '../theme/tokens';
+import { typography } from '../theme/tokens';
+import { useStyles, type ThemeColors } from '../theme/theme';
 
 export function PrivacyConsentScreen() {
+  const styles = useStyles(makeStyles);
   const { acceptPrivacyTerms, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +46,7 @@ export function PrivacyConsentScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   title: { ...typography.subtitle, color: colors.textPrimary },
   body: { ...typography.body, color: colors.textSecondary },
   error: { color: colors.danger, ...typography.body },

@@ -1,11 +1,14 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { ChoiceView, SectionView } from '../dietPresentation';
-import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { radius, spacing, typography } from '../../theme/tokens';
+import { useStyles, type ThemeColors } from '../../theme/theme';
+
 import { FoodLine } from './FoodLine';
 
 /** Alternativa de um bloco: "○ 65 g de arroz" (uma ou mais linhas ligadas por "+"). */
 function Alternative({ choice }: { choice: ChoiceView }) {
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.alternative}>
       <View style={styles.radio} accessibilityElementsHidden importantForAccessibility="no" />
@@ -25,6 +28,7 @@ function Alternative({ choice }: { choice: ChoiceView }) {
 
 /** Opção completa: cartão "Opção 1" com os alimentos daquela opção. */
 function Option({ choice }: { choice: ChoiceView }) {
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.option}>
       <View style={styles.optionHeader}>
@@ -42,6 +46,7 @@ function Option({ choice }: { choice: ChoiceView }) {
 }
 
 function SectionTitle({ title, instruction }: { title: string; instruction?: string }) {
+  const styles = useStyles(makeStyles);
   return (
     <Text style={styles.sectionTitle} accessibilityRole="header">
       {title.toLocaleUpperCase('pt-BR')}
@@ -51,6 +56,7 @@ function SectionTitle({ title, instruction }: { title: string; instruction?: str
 }
 
 export function MealSection({ section }: { section: SectionView }) {
+  const styles = useStyles(makeStyles);
   if (section.kind === 'fixed') {
     return (
       <View style={section.title ? styles.fixedBox : styles.plain}>
@@ -84,7 +90,7 @@ export function MealSection({ section }: { section: SectionView }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   plain: { gap: spacing.xs },
   fixedBox: { gap: spacing.xs, backgroundColor: colors.background, borderRadius: radius.md, padding: spacing.sm },
   choiceBox: { gap: spacing.sm },

@@ -6,7 +6,9 @@ import { Card } from '../components/Card';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { TextField } from '../components/TextField';
 import * as api from '../api/endpoints';
-import { colors, spacing, typography } from '../theme/tokens';
+import { spacing, typography } from '../theme/tokens';
+import { useStyles, type ThemeColors } from '../theme/theme';
+
 import { AI_FEATURES, consentStatusLabel, isConsentGranted, setAiConsent } from '../privacy/aiConsent';
 
 /**
@@ -14,6 +16,7 @@ import { AI_FEATURES, consentStatusLabel, isConsentGranted, setAiConsent } from 
  * Abrir a tela só CONSULTA; conceder exige marcar a caixa e salvar.
  */
 function AiConsentSection() {
+  const styles = useStyles(makeStyles);
   const [consentedAt, setConsentedAt] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [checked, setChecked] = useState(false);
@@ -109,6 +112,7 @@ function AiConsentSection() {
 }
 
 export function PrivacyScreen() {
+  const styles = useStyles(makeStyles);
   const { logout } = useAuth();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -192,7 +196,7 @@ export function PrivacyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   title: { ...typography.subtitle, color: colors.textPrimary },
   body: { ...typography.body, color: colors.textSecondary },
   error: { ...typography.caption, color: colors.danger },

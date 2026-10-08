@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, radius, spacing, typography } from '../theme/tokens';
+import { radius, spacing, typography } from '../theme/tokens';
+import { useStyles, type ThemeColors } from '../theme/theme';
 
 interface Props {
   label: string;
@@ -8,14 +9,15 @@ interface Props {
 }
 
 export function StatusPill({ label, tone = 'neutral' }: Props) {
+  const styles = useStyles(makeStyles);
   return (
-    <View style={[styles.pill, toneStyles[tone]]}>
+    <View style={[styles.pill, styles[tone]]}>
       <Text style={[styles.text, tone === 'neutral' ? styles.textNeutral : styles.textOnTint]}>{label}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   pill: {
     alignSelf: 'flex-start',
     paddingVertical: spacing.xs,
@@ -25,11 +27,9 @@ const styles = StyleSheet.create({
   text: { ...typography.caption, fontWeight: '600' },
   textNeutral: { color: colors.textSecondary },
   textOnTint: { color: colors.textInverse },
-});
-
-const toneStyles = StyleSheet.create({
   neutral: { backgroundColor: colors.border },
   progress: { backgroundColor: colors.accent },
   success: { backgroundColor: colors.success },
   danger: { backgroundColor: colors.danger },
 });
+

@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Switch, Text, View } from 'react-native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import * as api from '../api/endpoints';
 import type { DeviceConnection, DeviceMetricSample } from '../types/api';
@@ -9,8 +8,10 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { StatusPill } from '../components/StatusPill';
 import { flushDeviceMetricQueue } from '../offline/sync';
-import { colors, typography } from '../theme/tokens';
-import type { RootStackParamList } from '../navigation/types';
+import { typography } from '../theme/tokens';
+import { useStyles, type ThemeColors } from '../theme/theme';
+
+import type { AppNavigation } from '../navigation/types';
 
 const SOURCE_LABELS: Record<DeviceConnection['sourceType'], string> = {
   ble_direct: 'Bluetooth (cinta de FC)',
@@ -35,7 +36,8 @@ const METRIC_LABELS: Record<DeviceMetricSample['metricType'], string> = {
 };
 
 export function ActivityScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const styles = useStyles(makeStyles);
+  const navigation = useNavigation<AppNavigation>();
   const [consentedAt, setConsentedAt] = useState<string | null | undefined>(undefined);
   const [connections, setConnections] = useState<DeviceConnection[]>([]);
   const [samplesByConnection, setSamplesByConnection] = useState<Record<string, DeviceMetricSample[]>>({});
@@ -172,7 +174,7 @@ export function ActivityScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   heading: { ...typography.subtitle, color: colors.textPrimary },
   itemTitle: { ...typography.body, color: colors.textPrimary, fontWeight: '600' },
   body: { ...typography.body, color: colors.textSecondary },

@@ -20,6 +20,8 @@ const CLIENT_DETAIL_SELECT = {
   notes: true,
   status: true,
   archivedAt: true,
+  targetWeightKg: true,
+  waterGoalMl: true,
   createdAt: true,
   updatedAt: true,
   user: { select: { email: true, fullName: true } },
@@ -30,6 +32,8 @@ const CLIENT_SELF_SELECT = {
   birthDate: true,
   phone: true,
   gender: true,
+  targetWeightKg: true,
+  waterGoalMl: true,
   user: { select: { email: true, fullName: true } },
 };
 
@@ -128,6 +132,8 @@ export class ClientsService {
           notes: dto.notes,
           status: dto.status,
           archivedAt,
+          targetWeightKg: dto.targetWeightKg,
+          waterGoalMl: dto.waterGoalMl,
         },
       });
     });

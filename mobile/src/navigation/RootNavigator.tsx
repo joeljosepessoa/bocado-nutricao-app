@@ -6,14 +6,10 @@ import { LoginScreen } from '../screens/LoginScreen';
 import { ChangePasswordScreen } from '../screens/ChangePasswordScreen';
 import { PrivacyConsentScreen } from '../screens/PrivacyConsentScreen';
 import { WorkoutExecutionScreen } from '../screens/WorkoutExecutionScreen';
-import { ReportsScreen } from '../screens/ReportsScreen';
 import { ReportDetailScreen } from '../screens/ReportDetailScreen';
 import { ConnectDeviceScreen } from '../screens/ConnectDeviceScreen';
-import { NotificationPreferencesScreen } from '../screens/NotificationPreferencesScreen';
-import { MessagesScreen } from '../screens/MessagesScreen';
-import { AppointmentsScreen } from '../screens/AppointmentsScreen';
-import { PrivacyScreen } from '../screens/PrivacyScreen';
 import { MainTabs } from './MainTabs';
+import { AppHeader } from './AppShell';
 import type { RootStackParamList } from './types';
 import { flushExecutionLogQueue } from '../offline/sync';
 
@@ -61,24 +57,11 @@ export function RootNavigator() {
   }
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{ header: ({ navigation, options }) => <AppHeader title={options.title ?? ''} onBack={() => navigation.goBack()} /> }}>
       <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
-      <Stack.Screen
-        name="WorkoutExecution"
-        component={WorkoutExecutionScreen}
-        options={{ presentation: 'modal', title: 'Execução de treino' }}
-      />
-      <Stack.Screen name="Reports" component={ReportsScreen} options={{ title: 'Relatórios' }} />
+      <Stack.Screen name="WorkoutExecution" component={WorkoutExecutionScreen} options={{ title: 'Execução de treino' }} />
       <Stack.Screen name="ReportDetail" component={ReportDetailScreen} options={{ title: 'Meu relatório' }} />
       <Stack.Screen name="ConnectDevice" component={ConnectDeviceScreen} options={{ title: 'Conectar dispositivo' }} />
-      <Stack.Screen
-        name="NotificationPreferences"
-        component={NotificationPreferencesScreen}
-        options={{ title: 'Notificações' }}
-      />
-      <Stack.Screen name="Messages" component={MessagesScreen} options={{ title: 'Mensagens' }} />
-      <Stack.Screen name="Appointments" component={AppointmentsScreen} options={{ title: 'Consultas' }} />
-      <Stack.Screen name="Privacy" component={PrivacyScreen} options={{ title: 'Privacidade e dados' }} />
     </Stack.Navigator>
   );
 }

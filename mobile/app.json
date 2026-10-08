@@ -34,7 +34,23 @@
     },
     "plugins": [
       "expo-secure-store",
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Bocado de Nutrição usa suas fotos para você registrar sua evolução.",
+          "cameraPermission": "O Bocado de Nutrição usa a câmera para você tirar fotos da sua evolução.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "owner": "bocadodenutricao"
   }

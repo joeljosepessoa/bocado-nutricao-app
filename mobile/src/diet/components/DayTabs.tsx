@@ -2,10 +2,12 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card } from '../../components/Card';
 import type { DayView } from '../dietPresentation';
-import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { radius, spacing, typography } from '../../theme/tokens';
+import { useStyles, type ThemeColors } from '../../theme/theme';
 
 /** [ 🏋️ DIA DE TREINO ] [ 🛏️ DIA DE DESCANSO ] — mostra só as refeições do dia escolhido. */
 export function DayTabs({ days, selected, onSelect }: { days: DayView[]; selected: number; onSelect: (index: number) => void }) {
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.tabs} accessibilityRole="tablist">
       {days.map((day, i) => {
@@ -30,6 +32,7 @@ export function DayTabs({ days, selected, onSelect }: { days: DayView[]; selecte
 
 /** Instrução de uso e total do dia — o aviso de cálculo aparece aqui, uma única vez. */
 export function DayIntro({ day, showTitle }: { day: DayView; showTitle: boolean }) {
+  const styles = useStyles(makeStyles);
   const { calories } = day;
   if (!showTitle && !day.usageNotes && !calories.text && !day.calorieNote) return null;
   return (
@@ -54,7 +57,7 @@ export function DayIntro({ day, showTitle }: { day: DayView; showTitle: boolean 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   tabs: { flexDirection: 'row', gap: spacing.sm },
   tab: {
     flex: 1,

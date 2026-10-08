@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { ScreenContainer } from '../components/ScreenContainer';
 import * as api from '../api/endpoints';
 import type { EvolutionEntry } from '../types/api';
-import type { RootStackParamList } from '../navigation/types';
-import { colors, spacing, typography } from '../theme/tokens';
+import type { AppNavigation } from '../navigation/types';
+import { spacing, typography } from '../theme/tokens';
+import { useStyles, type ThemeColors } from '../theme/theme';
 
 // Mesmo truque de "buscar tudo" já usado em EvolutionScreen — sem endpoint
 // dedicado de listagem paginada pro app, e o volume real por cliente é
@@ -20,6 +20,7 @@ function formatDate(iso: string): string {
 }
 
 function EvaluationCard({ entry, onOpen }: { entry: EvolutionEntry; onOpen: () => void }) {
+  const styles = useStyles(makeStyles);
   return (
     <Card>
       <Text style={styles.cardTitle}>Avaliação corporal</Text>
@@ -37,7 +38,8 @@ function EvaluationCard({ entry, onOpen }: { entry: EvolutionEntry; onOpen: () =
 }
 
 export function ReportsScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const styles = useStyles(makeStyles);
+  const navigation = useNavigation<AppNavigation>();
   const [entries, setEntries] = useState<EvolutionEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -82,7 +84,7 @@ export function ReportsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   empty: { ...typography.body, color: colors.textSecondary, textAlign: 'center', marginTop: spacing.xl },
   cardTitle: { ...typography.caption, color: colors.textSecondary, textTransform: 'uppercase' },
   cardDate: { ...typography.subtitle, color: colors.textPrimary },

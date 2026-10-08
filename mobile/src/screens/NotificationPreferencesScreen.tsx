@@ -4,7 +4,8 @@ import { Card } from '../components/Card';
 import { ScreenContainer } from '../components/ScreenContainer';
 import * as api from '../api/endpoints';
 import type { NotificationEventType, NotificationPreference } from '../types/api';
-import { colors, spacing, typography } from '../theme/tokens';
+import { spacing, typography } from '../theme/tokens';
+import { useStyles, useTheme, type ThemeColors } from '../theme/theme';
 
 const EVENT_LABELS: Record<NotificationEventType, string> = {
   report_ready: 'Relatório disponível',
@@ -16,6 +17,8 @@ const EVENT_LABELS: Record<NotificationEventType, string> = {
 };
 
 export function NotificationPreferencesScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles(makeStyles);
   const [preferences, setPreferences] = useState<NotificationPreference[] | null>(null);
   const [savingType, setSavingType] = useState<NotificationEventType | null>(null);
 
@@ -57,7 +60,7 @@ export function NotificationPreferencesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   subtitle: { ...typography.body, color: colors.textSecondary },
   row: {
     flexDirection: 'row',

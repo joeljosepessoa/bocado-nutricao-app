@@ -41,6 +41,9 @@ export interface ClientDetail {
   archivedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Metas definidas pelo nutricionista (null = sem meta). */
+  targetWeightKg: number | null;
+  waterGoalMl: number | null;
   user: { email: string; fullName: string };
 }
 
@@ -60,6 +63,8 @@ export interface UpdateClientInput {
   birthDate?: string;
   notes?: string;
   status?: ClientStatus;
+  targetWeightKg?: number | null;
+  waterGoalMl?: number | null;
 }
 
 // --- Avaliação física ---------------------------------------------------

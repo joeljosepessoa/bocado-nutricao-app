@@ -5,7 +5,8 @@ import { API_BASE_URL } from '../api/client';
 import { PHOTO_ANGLE_LABELS, resolvePhotoSource } from '../media/reportPhoto';
 import { PhotoLightbox } from './PhotoLightbox';
 import type { EvaluationPhotoView } from '../types/api';
-import { colors, radius, spacing, typography } from '../theme/tokens';
+import { radius, spacing, typography } from '../theme/tokens';
+import { useStyles, useTheme, type ThemeColors } from '../theme/theme';
 
 interface LoadedPhoto extends EvaluationPhotoView {
   uri: string | null;
@@ -18,6 +19,8 @@ interface Props {
   // antiga da API estiver no ar, o campo simplesmente não vem no JSON, e o
   // tipo do TS sozinho não protege contra isso em runtime.
   photos: EvaluationPhotoView[] | undefined;
+  /** Esconde o título "Fotos da evolução" quando a tela já tem o seu. */
+  showTitle?: boolean;
 }
 
 /**
@@ -25,7 +28,9 @@ interface Props {
  * que a galeria monta, nunca guarda em cache/disco (dado de saúde: mesma
  * postura de EvolutionScreen ao não cachear a evolução).
  */
-export function EvaluationPhotoGallery({ evaluationId, photos: photosProp }: Props) {
+export function EvaluationPhotoGallery({ evaluationId, photos: photosProp, showTitle = true }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles(makeStyles);
   const photos = photosProp ?? [];
   const [loaded, setLoaded] = useState<LoadedPhoto[]>(photos.map((p) => ({ ...p, uri: null })));
   const [loading, setLoading] = useState(true);
@@ -60,7 +65,7 @@ export function EvaluationPhotoGallery({ evaluationId, photos: photosProp }: Pro
 
   return (
     <View>
-      <Text style={styles.sectionTitle}>Fotos da evolução</Text>
+      {showTitle ? <Text style={styles.sectionTitle}>Fotos da evolução</Text> : null}
       {loading ? <ActivityIndicator color={colors.primary} style={styles.spinner} /> : null}
       <View style={styles.grid}>
         {loaded.map((photo, index) =>
@@ -82,7 +87,7 @@ export function EvaluationPhotoGallery({ evaluationId, photos: photosProp }: Pro
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   sectionTitle: { ...typography.subtitle, color: colors.textPrimary, fontSize: 16 },
   spinner: { marginTop: spacing.sm },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },

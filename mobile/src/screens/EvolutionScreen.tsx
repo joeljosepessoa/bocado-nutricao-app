@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { ChevronRight, LineChart, WifiOff } from 'lucide-react-native';
 import { Card } from '../components/Card';
 import { ComparisonCard } from '../components/ComparisonCard';
 import { EvolutionChart } from '../components/EvolutionChart';
@@ -8,13 +10,16 @@ import { MetricTabs } from '../components/MetricTabs';
 import { PeriodSelector } from '../components/PeriodSelector';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { AiAssistPanel } from '../components/AiAssistPanel';
+import { EmptyState, ErrorState, FadeIn, LoadingState, PageTitle } from '../components/ui';
+import type { AppNavigation } from '../navigation/types';
 import * as api from '../api/endpoints';
 import { toChartPoints } from '../evolution/chartData';
 import { resolveEvolutionViewState } from '../evolution/emptyState';
 import { ALL_METRICS, COMPOSITION_METRICS, MEASUREMENT_METRICS, PRIMARY_METRICS, findMetric } from '../evolution/metricCatalog';
 import { filterByPeriod, type Period } from '../evolution/periodFilter';
 import type { EvolutionEntry } from '../types/api';
-import { colors, spacing, typography } from '../theme/tokens';
+import { radius, spacing, typography } from '../theme/tokens';
+import { shadow, useStyles, useTheme, type ThemeColors } from '../theme/theme';
 
 // Bem acima do volume real de avaliações por cliente (dezenas, não
 // centenas) — na prática funciona como "buscar tudo" para o gráfico e o
@@ -26,22 +31,33 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR');
 }
 
-function EvolutionEntryCard({ entry }: { entry: EvolutionEntry }) {
+function EvolutionEntryCard({ entry, onPress }: { entry: EvolutionEntry; onPress: () => void }) {
+  const styles = useStyles(makeStyles);
+  const { colors } = useTheme();
   return (
-    <Card>
-      <Text style={styles.date}>{formatDate(entry.evaluatedAt)}</Text>
-      {entry.weightKg != null ? <Text style={styles.metric}>Peso: {entry.weightKg} kg</Text> : null}
-      {entry.bmiClassification ? <Text style={styles.metric}>IMC: {entry.bmiClassification}</Text> : null}
-      {entry.bodyFatPercent != null ? <Text style={styles.metric}>% de gordura: {entry.bodyFatPercent}%</Text> : null}
-      {entry.fatMassKg != null ? <Text style={styles.metric}>Massa gorda: {entry.fatMassKg} kg</Text> : null}
-      {entry.leanMassKg != null ? <Text style={styles.metric}>Massa magra: {entry.leanMassKg} kg</Text> : null}
-    </Card>
+    <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => pressed && styles.pressed}>
+      <Card>
+        <View style={styles.entryHeader}>
+          <Text style={[styles.date, styles.flex]}>{formatDate(entry.evaluatedAt)}</Text>
+          <ChevronRight size={18} color={colors.textMuted} />
+        </View>
+        {entry.weightKg != null ? <Text style={styles.metric}>Peso: {entry.weightKg} kg</Text> : null}
+        {entry.bmiClassification ? <Text style={styles.metric}>IMC: {entry.bmiClassification}</Text> : null}
+        {entry.bodyFatPercent != null ? <Text style={styles.metric}>% de gordura: {entry.bodyFatPercent}%</Text> : null}
+        {entry.fatMassKg != null ? <Text style={styles.metric}>Massa gorda: {entry.fatMassKg} kg</Text> : null}
+        {entry.leanMassKg != null ? <Text style={styles.metric}>Massa magra: {entry.leanMassKg} kg</Text> : null}
+      </Card>
+    </Pressable>
   );
 }
 
 export function EvolutionScreen() {
+  const styles = useStyles(makeStyles);
+  const navigation = useNavigation<AppNavigation>();
   const [entries, setEntries] = useState<EvolutionEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [period, setPeriod] = useState<Period>('all');
   const [metricKey, setMetricKey] = useState<string>('weightKg');
 
@@ -53,6 +69,10 @@ export function EvolutionScreen() {
       // não continuar visível a partir de uma cópia local (Fase 8, Seção 9).
       const result = await api.getEvolution(1, EVOLUTION_FETCH_PAGE_SIZE);
       setEntries(result.items);
+      setLoaded(true);
+      setFailed(false);
+    } catch {
+      setFailed(true);
     } finally {
       setLoading(false);
     }
@@ -84,21 +104,38 @@ export function EvolutionScreen() {
     [periodEntries, selectedMetric],
   );
 
+  if (!loaded && failed) {
+    return (
+      <ScreenContainer onRefresh={load} refreshing={loading}>
+        <ErrorState message="Não foi possível carregar sua evolução." onRetry={load} retrying={loading} icon={WifiOff} />
+      </ScreenContainer>
+    );
+  }
+  if (!loaded) {
+    return (
+      <ScreenContainer scroll={false}>
+        <LoadingState />
+      </ScreenContainer>
+    );
+  }
   if (viewState === 'none') {
     return (
       <ScreenContainer onRefresh={load} refreshing={loading}>
-        <Text style={styles.empty}>
-          Nenhuma avaliação liberada ainda. Seu profissional libera os indicadores de evolução após cada avaliação
-          física.
-        </Text>
+        <PageTitle title="Evolução" />
+        <EmptyState
+          icon={LineChart}
+          title="Nenhuma avaliação liberada ainda"
+          description="Seu profissional libera os indicadores de evolução após cada avaliação física."
+        />
       </ScreenContainer>
     );
   }
 
   return (
     <ScreenContainer onRefresh={load} refreshing={loading}>
+      <PageTitle title="Evolução" subtitle={current ? `Última avaliação em ${formatDate(current.evaluatedAt)}` : undefined} />
       {current ? (
-        <View style={styles.currentGrid}>
+        <FadeIn style={styles.currentGrid}>
           {PRIMARY_METRICS.map((metric) => {
             const value = metric.accessor(current);
             if (value == null) return null;
@@ -112,7 +149,7 @@ export function EvolutionScreen() {
               </View>
             );
           })}
-        </View>
+        </FadeIn>
       ) : null}
 
       {current ? (
@@ -159,7 +196,7 @@ export function EvolutionScreen() {
 
           <Text style={styles.sectionTitle}>Histórico</Text>
           {entries.map((entry) => (
-            <EvolutionEntryCard key={entry.id} entry={entry} />
+            <EvolutionEntryCard key={entry.id} entry={entry} onPress={() => navigation.navigate('Assessment', { evaluationId: entry.id })} />
           ))}
         </>
       )}
@@ -167,23 +204,24 @@ export function EvolutionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  empty: { ...typography.body, color: colors.textSecondary, textAlign: 'center', marginTop: spacing.xl },
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+  flex: { flex: 1 },
+  pressed: { opacity: 0.8 },
+  entryHeader: { flexDirection: 'row', alignItems: 'center' },
   date: { ...typography.subtitle, color: colors.textPrimary },
   metric: { ...typography.body, color: colors.textSecondary },
   sectionTitle: { ...typography.subtitle, color: colors.textPrimary, fontSize: 16 },
   singleNotice: { ...typography.caption, color: colors.textSecondary, textAlign: 'center', padding: spacing.sm },
-  currentGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  currentGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   currentTile: {
     flexGrow: 1,
     minWidth: '28%',
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    padding: spacing.sm,
+    borderRadius: radius.lg,
+    padding: spacing.sm + 4,
     alignItems: 'center',
+    ...shadow('md'),
   },
   currentLabel: { ...typography.caption, color: colors.textSecondary, fontSize: 11, textAlign: 'center' },
-  currentValue: { ...typography.subtitle, color: colors.primaryDark, fontSize: 18 },
+  currentValue: { ...typography.subtitle, color: colors.primary, fontSize: 20, fontWeight: '800' },
 });

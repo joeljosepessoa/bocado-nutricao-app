@@ -9,6 +9,7 @@ import { TextField } from '../../components/TextField';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Modal } from '../../components/Modal';
 import { formatDate } from '../../lib/format';
+import { parseGoals } from '../../lib/clientGoals';
 
 export function OverviewTab() {
   const { client } = useOutletContext<{ client: ClientDetail }>();
@@ -18,6 +19,9 @@ export function OverviewTab() {
   const [fullName, setFullName] = useState(client.user.fullName);
   const [phone, setPhone] = useState(client.phone ?? '');
   const [notes, setNotes] = useState(client.notes ?? '');
+  const [targetWeight, setTargetWeight] = useState(client.targetWeightKg != null ? String(client.targetWeightKg).replace('.', ',') : '');
+  const [waterGoal, setWaterGoal] = useState(client.waterGoalMl != null ? String(client.waterGoalMl) : '');
+  const [goalError, setGoalError] = useState<string | null>(null);
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [resetResult, setResetResult] = useState<string | null>(null);
 
@@ -27,12 +31,23 @@ export function OverviewTab() {
   };
 
   const updateMutation = useMutation({
-    mutationFn: () => api.updateClient(clientId!, { fullName, phone, notes }),
+    mutationFn: (goals: { targetWeightKg: number | null; waterGoalMl: number | null }) =>
+      api.updateClient(clientId!, { fullName, phone, notes, ...goals }),
     onSuccess: () => {
       invalidate();
       setEditing(false);
     },
   });
+
+  function handleSave() {
+    const goals = parseGoals(targetWeight, waterGoal);
+    if ('error' in goals) {
+      setGoalError(goals.error);
+      return;
+    }
+    setGoalError(null);
+    updateMutation.mutate(goals);
+  }
 
   const archiveMutation = useMutation({
     mutationFn: () => api.updateClient(clientId!, { status: client.status === 'archived' ? 'active' : 'archived' }),
@@ -51,6 +66,21 @@ export function OverviewTab() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 420 }}>
             <TextField label="Nome completo" value={fullName} onChange={(e) => setFullName(e.target.value)} />
             <TextField label="Telefone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <TextField
+              label="Meta de peso (kg)"
+              inputMode="decimal"
+              placeholder="Sem meta"
+              value={targetWeight}
+              onChange={(e) => setTargetWeight(e.target.value)}
+            />
+            <TextField
+              label="Meta de água (ml)"
+              inputMode="numeric"
+              placeholder="Sem meta (35 ml por kg)"
+              value={waterGoal}
+              onChange={(e) => setWaterGoal(e.target.value)}
+            />
+            {goalError ? <div style={{ fontSize: 13, color: 'var(--color-danger)' }}>{goalError}</div> : null}
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13 }}>
               <span style={{ color: 'var(--color-text-secondary)', fontWeight: 600 }}>Notas</span>
               <textarea
@@ -61,7 +91,7 @@ export function OverviewTab() {
               />
             </label>
             <div style={{ display: 'flex', gap: 8 }}>
-              <Button onClick={() => updateMutation.mutate()} loading={updateMutation.isPending}>
+              <Button onClick={handleSave} loading={updateMutation.isPending}>
                 Salvar
               </Button>
               <Button variant="ghost" onClick={() => setEditing(false)}>
@@ -76,6 +106,8 @@ export function OverviewTab() {
             <Field label="Gênero" value={client.gender ?? '—'} />
             <Field label="Nascimento" value={formatDate(client.birthDate)} />
             <Field label="Cliente desde" value={formatDate(client.createdAt)} />
+            <Field label="Meta de peso" value={client.targetWeightKg != null ? `${String(client.targetWeightKg).replace('.', ',')} kg` : '—'} />
+            <Field label="Meta de água" value={client.waterGoalMl != null ? `${client.waterGoalMl} ml` : '—'} />
           </div>
         )}
         {client.notes && !editing ? (

@@ -1,174 +1,327 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, Pressable, StyleSheet, Text, TextInput, Vibration, View } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
+import { Check, CheckCircle2, Circle, Flag, MessageSquareText, Timer } from 'lucide-react-native';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { Collapsible } from '../components/Collapsible';
 import { ExerciseDemo } from '../components/ExerciseDemo';
+import { RestTimerModal } from '../components/RestTimerModal';
 import { ScreenContainer } from '../components/ScreenContainer';
+import { FadeIn, GradientCard, ProgressBar } from '../components/ui';
 import { useRestTimer } from '../hooks/useRestTimer';
 import * as api from '../api/endpoints';
 import { enqueueExecutionLogOffline } from '../offline/sync';
-import type { RootStackParamList } from '../navigation/types';
-import type { ExecutionSetInput } from '../types/api';
-import { colors, radius, spacing, typography } from '../theme/tokens';
+import type { AppNavigation, RootStackParamList } from '../navigation/types';
+import {
+  DEFAULT_REST_SECONDS,
+  NOTES_MAX_LENGTH,
+  buildExecution,
+  buildExecutionPayload,
+  executionProgress,
+  type ExecutionExercise,
+  type ExecutionSet,
+} from '../workout/executionModel';
+import { radius, spacing, typography } from '../theme/tokens';
+import { useStyles, useTheme, type ThemeColors } from '../theme/theme';
 
-const DEFAULT_REST_SECONDS = 60;
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- som local empacotado pelo Metro
+const REST_DONE_SOUND = require('../../assets/sounds/rest-done.wav');
 
-interface LoggedSet {
-  key: string;
-  workoutExerciseId: string;
-  exerciseName: string;
-  setOrder: number;
-  done: boolean;
-  reps: string;
-  load: string;
-  restSeconds: number;
-}
+const UNIT_LABEL: Record<string, string> = { kg: 'kg', lb: 'lb', bodyweight: 'corpo', band_level: 'nível', other: '' };
 
+/**
+ * Execução do treino: marcar séries, ajustar repetições e cargas, descansar
+ * com o cronômetro (som + vibração no fim) e escrever uma observação. Ao
+ * finalizar, salva no banco as séries feitas, as cargas, a observação e a
+ * data; sem internet, guarda no aparelho e envia depois.
+ */
 export function WorkoutExecutionScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const styles = useStyles(makeStyles);
+  const { colors } = useTheme();
+  const navigation = useNavigation<AppNavigation>();
   const route = useRoute<RouteProp<RootStackParamList, 'WorkoutExecution'>>();
   const { day } = route.params;
   const timer = useRestTimer(DEFAULT_REST_SECONDS);
+  const player = useAudioPlayer(REST_DONE_SOUND);
 
-  const [sets, setSets] = useState<LoggedSet[]>(() =>
-    day.exercises.flatMap((exercise) =>
-      exercise.sets.map((set) => ({
-        key: `${exercise.workoutExerciseId}-${set.order}`,
-        workoutExerciseId: exercise.workoutExerciseId,
-        exerciseName: exercise.exerciseName,
-        setOrder: set.order,
-        done: false,
-        reps: set.reps != null ? String(set.reps) : '',
-        load: set.loadValue != null ? String(set.loadValue) : '',
-        restSeconds: set.restSeconds ?? DEFAULT_REST_SECONDS,
-      })),
-    ),
-  );
+  const [exercises, setExercises] = useState<ExecutionExercise[]>(() => buildExecution(day));
+  const [notes, setNotes] = useState('');
+  const [timerOpen, setTimerOpen] = useState(false);
+  const [restTotal, setRestTotal] = useState(DEFAULT_REST_SECONDS);
   const [submitting, setSubmitting] = useState(false);
-  const [savedOffline, setSavedOffline] = useState(false);
-  // No máximo um GIF aberto por vez (cada GIF é 1920x1080).
+  const [startedAt] = useState(() => new Date());
+  const savedRef = useRef(false);
+  const alertedRef = useRef(false);
+  // No máximo um GIF aberto por vez (cada GIF é grande).
   const [openDemo, setOpenDemo] = useState<string | null>(null);
 
-  function updateSet(key: string, patch: Partial<LoggedSet>) {
-    setSets((prev) => prev.map((s) => (s.key === key ? { ...s, ...patch } : s)));
+  const progress = executionProgress(exercises);
+
+  useEffect(() => {
+    // Aviso curto por cima da música do paciente (abaixa o volume dela, não pausa).
+    setAudioModeAsync({ playsInSilentMode: true, interruptionMode: 'duckOthers' }).catch(() => undefined);
+  }, []);
+
+  // Fim do descanso: som + vibração uma vez, e o cronômetro aparece.
+  useEffect(() => {
+    if (timer.running && timer.finished) {
+      if (!alertedRef.current) {
+        alertedRef.current = true;
+        Vibration.vibrate([0, 400, 200, 400]);
+        try {
+          player.seekTo(0);
+          player.play();
+        } catch {
+          // Sem áudio disponível: a vibração e o aviso visual continuam.
+        }
+        setTimerOpen(true);
+      }
+    } else {
+      alertedRef.current = false;
+    }
+  }, [timer.running, timer.finished, player]);
+
+  // Sair com séries feitas e não salvas pede confirmação.
+  useEffect(
+    () =>
+      navigation.addListener('beforeRemove', (event) => {
+        if (savedRef.current || executionProgress(exercises).done === 0) return;
+        event.preventDefault();
+        Alert.alert('Sair do treino?', 'As séries marcadas ainda não foram salvas.', [
+          { text: 'Continuar treino', style: 'cancel' },
+          { text: 'Sair sem salvar', style: 'destructive', onPress: () => navigation.dispatch(event.data.action) },
+        ]);
+      }),
+    [navigation, exercises],
+  );
+
+  function updateSet(key: string, patch: Partial<ExecutionSet>) {
+    setExercises((prev) => prev.map((e) => ({ ...e, sets: e.sets.map((s) => (s.key === key ? { ...s, ...patch } : s)) })));
   }
 
-  function markDone(set: LoggedSet) {
-    updateSet(set.key, { done: true });
-    timer.reset(set.restSeconds);
-    timer.start(set.restSeconds);
+  function startRest(seconds: number) {
+    setRestTotal(seconds);
+    timer.reset(seconds);
+    timer.start(seconds);
+    setTimerOpen(true);
   }
 
-  async function handleFinish() {
-    const doneSets = sets.filter((s) => s.done);
-    const payload = {
-      workoutDayId: day.workoutDayId,
-      sets: doneSets.map<ExecutionSetInput>((s) => ({
-        workoutExerciseId: s.workoutExerciseId,
-        setOrder: s.setOrder,
-        repsPerformed: s.reps ? Number(s.reps) : undefined,
-        loadValue: s.load ? Number(s.load) : undefined,
-      })),
-    };
-
-    if (payload.sets.length === 0) {
-      navigation.goBack();
+  function toggleSet(set: ExecutionSet) {
+    if (set.done) {
+      updateSet(set.key, { done: false });
       return;
     }
+    updateSet(set.key, { done: true });
+    startRest(set.restSeconds);
+  }
 
+  function closeTimer() {
+    setTimerOpen(false);
+    timer.reset(restTotal);
+  }
+
+  async function finish() {
+    const payload = buildExecutionPayload(day.workoutDayId, exercises, notes, new Date());
+    if (!payload) {
+      Alert.alert('Nenhuma série marcada', 'Marque as séries que você fez antes de finalizar.');
+      return;
+    }
     setSubmitting(true);
     try {
       await api.logWorkoutExecution(payload);
-      navigation.goBack();
+      savedRef.current = true;
+      Alert.alert('Treino salvo!', `${payload.sets.length} ${payload.sets.length === 1 ? 'série registrada' : 'séries registradas'}. Bom trabalho!`, [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
     } catch {
       await enqueueExecutionLogOffline(payload);
-      setSavedOffline(true);
-      setTimeout(() => navigation.goBack(), 1200);
+      savedRef.current = true;
+      Alert.alert('Salvo no aparelho', 'Sem conexão agora — o treino será enviado automaticamente quando a internet voltar.', [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
     } finally {
       setSubmitting(false);
     }
   }
 
-  const exerciseNames = Array.from(new Set(sets.map((s) => s.exerciseName)));
+  const elapsedMinutes = Math.max(0, Math.round((Date.now() - startedAt.getTime()) / 60000));
 
   return (
     <ScreenContainer>
-      <Card style={styles.timerCard}>
-        <Text style={styles.timerLabel}>Descanso</Text>
-        <Text style={styles.timerValue}>{timer.label}</Text>
-        <View style={styles.timerActions}>
-          <Button title="-15s" variant="secondary" onPress={() => timer.adjust(-15)} />
-          <Button title={timer.running ? 'Pausar' : 'Iniciar'} onPress={() => (timer.running ? timer.pause() : timer.start())} />
-          <Button title="+15s" variant="secondary" onPress={() => timer.adjust(15)} />
+      <FadeIn>
+        <GradientCard>
+          <Text style={styles.heroTitle}>{day.name}</Text>
+          <Text style={styles.heroDetail}>
+            {progress.done} de {progress.total} séries · {elapsedMinutes} min
+          </Text>
+          <ProgressBar value={progress.percent * 100} colors={['#FFFFFF', '#FED7AA']} />
+        </GradientCard>
+      </FadeIn>
+
+      {exercises.map((exercise, index) => {
+        const done = exercise.sets.filter((s) => s.done).length;
+        const complete = done === exercise.sets.length && exercise.sets.length > 0;
+        return (
+          <FadeIn key={exercise.workoutExerciseId} delay={Math.min(index, 6) * 50}>
+            <Card>
+              <Collapsible
+                initiallyOpen={index === 0}
+                accessibilityLabel={`${exercise.name}, ${done} de ${exercise.sets.length} séries`}
+                header={
+                  <View style={styles.exerciseHeader}>
+                    <View style={[styles.exerciseBadge, complete && styles.exerciseBadgeDone]}>
+                      {complete ? <Check size={16} color="#FFFFFF" /> : <Text style={styles.exerciseBadgeText}>{index + 1}</Text>}
+                    </View>
+                    <View style={styles.flex}>
+                      <Text style={styles.exerciseName}>{exercise.name}</Text>
+                      <Text style={styles.exerciseMeta}>
+                        {[exercise.muscleGroup, `${done}/${exercise.sets.length} séries`].filter(Boolean).join(' · ')}
+                      </Text>
+                    </View>
+                  </View>
+                }
+              >
+                <ExerciseDemo
+                  imageUrl={exercise.imageUrl}
+                  exerciseName={exercise.name}
+                  expanded={openDemo === exercise.workoutExerciseId}
+                  onToggle={() => setOpenDemo((current) => (current === exercise.workoutExerciseId ? null : exercise.workoutExerciseId))}
+                />
+                <View style={styles.setHeader}>
+                  <Text style={[styles.setHeaderText, styles.setNumberCol]}>Série</Text>
+                  <Text style={[styles.setHeaderText, styles.inputCol]}>Reps</Text>
+                  <Text style={[styles.setHeaderText, styles.inputCol]}>Carga</Text>
+                  <Text style={[styles.setHeaderText, styles.checkCol]}>Feita</Text>
+                </View>
+                {exercise.sets.map((set) => (
+                  <View key={set.key} style={[styles.setRow, set.done && styles.setRowDone]}>
+                    <Text style={[styles.setNumber, styles.setNumberCol]}>{set.number}</Text>
+                    <TextInput
+                      style={[styles.input, styles.inputCol]}
+                      keyboardType="number-pad"
+                      value={set.reps}
+                      placeholder="—"
+                      placeholderTextColor={colors.textMuted}
+                      onChangeText={(value) => updateSet(set.key, { reps: value })}
+                      accessibilityLabel={`Repetições da série ${set.number}`}
+                    />
+                    <View style={[styles.loadBox, styles.inputCol]}>
+                      <TextInput
+                        style={[styles.input, styles.flex]}
+                        keyboardType="decimal-pad"
+                        value={set.load}
+                        placeholder="—"
+                        placeholderTextColor={colors.textMuted}
+                        onChangeText={(value) => updateSet(set.key, { load: value })}
+                        accessibilityLabel={`Carga da série ${set.number}`}
+                      />
+                      <Text style={styles.unit}>{UNIT_LABEL[set.loadUnit ?? 'kg'] ?? ''}</Text>
+                    </View>
+                    <Pressable
+                      onPress={() => toggleSet(set)}
+                      hitSlop={6}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: set.done }}
+                      accessibilityLabel={`Série ${set.number} feita`}
+                      style={styles.checkCol}
+                    >
+                      {set.done ? <CheckCircle2 size={30} color={colors.success} /> : <Circle size={30} color={colors.textMuted} />}
+                    </Pressable>
+                  </View>
+                ))}
+                <Pressable onPress={() => startRest(exercise.sets[0]?.restSeconds ?? DEFAULT_REST_SECONDS)} accessibilityRole="button" style={styles.restLink}>
+                  <Timer size={16} color={colors.primary} />
+                  <Text style={styles.restLinkText}>Iniciar descanso ({exercise.sets[0]?.restSeconds ?? DEFAULT_REST_SECONDS}s)</Text>
+                </Pressable>
+              </Collapsible>
+            </Card>
+          </FadeIn>
+        );
+      })}
+
+      <Card>
+        <View style={styles.notesHeader}>
+          <MessageSquareText size={18} color={colors.primary} />
+          <Text style={styles.exerciseName}>Observação</Text>
         </View>
+        <TextInput
+          style={styles.notes}
+          value={notes}
+          onChangeText={setNotes}
+          multiline
+          maxLength={NOTES_MAX_LENGTH}
+          placeholder="Como foi o treino? Dor, cansaço, carga que subiu..."
+          placeholderTextColor={colors.textMuted}
+          accessibilityLabel="Observação do treino"
+          textAlignVertical="top"
+        />
       </Card>
 
-      {exerciseNames.map((name) => (
-        <Card key={name}>
-          <Text style={styles.exerciseName}>{name}</Text>
-          <ExerciseDemo
-            imageUrl={day.exercises.find((e) => e.exerciseName === name)?.imageUrl ?? null}
-            exerciseName={name}
-            expanded={openDemo === name}
-            onToggle={() => setOpenDemo((current) => (current === name ? null : name))}
-          />
-          {sets
-            .filter((s) => s.exerciseName === name)
-            .map((set) => (
-              <View key={set.key} style={styles.setRow}>
-                <Text style={styles.setLabel}>Série {set.setOrder + 1}</Text>
-                <TextInput
-                  style={styles.setInput}
-                  keyboardType="numeric"
-                  value={set.reps}
-                  placeholder="reps"
-                  onChangeText={(v) => updateSet(set.key, { reps: v })}
-                />
-                <TextInput
-                  style={styles.setInput}
-                  keyboardType="numeric"
-                  value={set.load}
-                  placeholder="carga"
-                  onChangeText={(v) => updateSet(set.key, { load: v })}
-                />
-                <Button
-                  title={set.done ? 'Feita ✓' : 'Concluir'}
-                  variant={set.done ? 'secondary' : 'primary'}
-                  onPress={() => markDone(set)}
-                />
-              </View>
-            ))}
-        </Card>
-      ))}
+      <Button
+        title="Finalizar treino"
+        variant="success"
+        onPress={finish}
+        loading={submitting}
+        icon={<Flag size={18} color="#FFFFFF" />}
+      />
 
-      {savedOffline ? (
-        <Text style={styles.offlineNotice}>Sem conexão — execução salva no aparelho e será enviada depois.</Text>
-      ) : null}
-
-      <Button title="Finalizar execução" onPress={handleFinish} loading={submitting} />
+      <RestTimerModal
+        visible={timerOpen}
+        timer={timer}
+        totalSeconds={restTotal}
+        onSelectPreset={startRest}
+        onClose={closeTimer}
+      />
     </ScreenContainer>
   );
 }
 
-const styles = StyleSheet.create({
-  timerCard: { alignItems: 'center' },
-  timerLabel: { ...typography.caption, color: colors.textSecondary },
-  timerValue: { fontSize: 40, fontWeight: '700', color: colors.primaryDark },
-  timerActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
-  exerciseName: { ...typography.subtitle, color: colors.textPrimary },
-  setRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm },
-  setLabel: { ...typography.body, color: colors.textSecondary, width: 70 },
-  setInput: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    width: 64,
-    textAlign: 'center',
-    color: colors.textPrimary,
-  },
-  offlineNotice: { ...typography.caption, color: colors.accent, textAlign: 'center' },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    flex: { flex: 1 },
+    heroTitle: { ...typography.title, color: '#FFFFFF' },
+    heroDetail: { ...typography.body, color: 'rgba(255,255,255,0.9)' },
+    exerciseHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm + 2 },
+    exerciseBadge: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
+    exerciseBadgeDone: { backgroundColor: colors.success },
+    exerciseBadgeText: { ...typography.caption, fontWeight: '800', color: colors.primaryDark },
+    exerciseName: { ...typography.body, fontWeight: '700', color: colors.textPrimary },
+    exerciseMeta: { ...typography.caption, color: colors.textSecondary },
+    setHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.xs },
+    setHeaderText: { ...typography.tiny, color: colors.textMuted, textTransform: 'uppercase', textAlign: 'center' },
+    setRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.xs, borderRadius: radius.md },
+    setRowDone: { backgroundColor: colors.successSoft },
+    setNumber: { ...typography.body, fontWeight: '700', color: colors.textPrimary, textAlign: 'center' },
+    setNumberCol: { width: 40 },
+    inputCol: { flex: 1 },
+    checkCol: { width: 48, alignItems: 'center' },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.sm,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 8,
+      textAlign: 'center',
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textPrimary,
+      backgroundColor: colors.surface,
+    },
+    loadBox: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    unit: { ...typography.tiny, color: colors.textSecondary },
+    restLink: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 4 },
+    restLinkText: { ...typography.caption, fontWeight: '600', color: colors.primary },
+    notesHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    notes: {
+      minHeight: 96,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      padding: spacing.sm + 2,
+      ...typography.body,
+      color: colors.textPrimary,
+      backgroundColor: colors.surfaceMuted,
+    },
+  });

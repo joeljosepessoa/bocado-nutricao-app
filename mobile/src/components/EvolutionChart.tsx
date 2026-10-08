@@ -2,7 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Line, Polyline, Text as SvgText } from 'react-native-svg';
 import type { ChartPoint } from '../evolution/chartData';
-import { colors, spacing, typography } from '../theme/tokens';
+import { spacing, typography } from '../theme/tokens';
+import { useStyles, useTheme, type ThemeColors } from '../theme/theme';
 
 const WIDTH = 320;
 const HEIGHT = 180;
@@ -28,6 +29,8 @@ interface Props {
  * desenha o que existe, nunca interpola.
  */
 export function EvolutionChart({ points, unit }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles(makeStyles);
   if (points.length < 2) {
     return (
       <View style={styles.emptyBox}>
@@ -102,7 +105,7 @@ export function EvolutionChart({ points, unit }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   emptyBox: { paddingVertical: spacing.lg, alignItems: 'center' },
   emptyText: { ...typography.caption, color: colors.textSecondary, textAlign: 'center', maxWidth: 260 },
 });

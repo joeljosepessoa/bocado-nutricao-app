@@ -14,7 +14,9 @@ import { createHeartRateServiceDriver } from '../ble/heartRateServiceDriver';
 import { MOCK_HR_ADVERTISEMENT, MOCK_HR_SERVICE_DESCRIPTOR, simulateHeartRatePayload } from '../ble/mockHeartRateDevice';
 import type { BleTransport, NormalizedDeviceSample, Unsubscribe, WearableDriver } from '../ble/types';
 import { enqueueDeviceMetricsOffline, flushDeviceMetricQueue } from '../offline/sync';
-import { colors, spacing, typography } from '../theme/tokens';
+import { spacing, typography } from '../theme/tokens';
+import { useStyles, type ThemeColors } from '../theme/theme';
+
 import type { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ConnectDevice'>;
@@ -105,6 +107,7 @@ export function ConnectDeviceScreen({ navigation }: Props) {
 }
 
 function SourcePicker({ onPick }: { onPick: (source: 'ble' | 'manual') => void }) {
+  const styles = useStyles(makeStyles);
   return (
     <>
       <Text style={styles.heading}>Conectar dispositivo</Text>
@@ -142,6 +145,7 @@ interface FlowProps {
 }
 
 function BleHeartRateFlow({ onCancel, onDone, saving, setSaving, error, setError }: FlowProps) {
+  const styles = useStyles(makeStyles);
   const [state, dispatch] = useReducer(bleReducer, { status: 'idle', samples: [] });
   const registryRef = useRef<WearableDriverRegistry | null>(null);
   const transportRef = useRef<BleTransport | null>(null);
@@ -264,6 +268,7 @@ function BleHeartRateFlow({ onCancel, onDone, saving, setSaving, error, setError
 }
 
 function ManualEntryForm({ onCancel, onDone, saving, setSaving, error, setError }: FlowProps) {
+  const styles = useStyles(makeStyles);
   const [metricType, setMetricType] = useState<DeviceMetricType>('heart_rate');
   const [value, setValue] = useState('');
 
@@ -321,7 +326,7 @@ function ManualEntryForm({ onCancel, onDone, saving, setSaving, error, setError 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   heading: { ...typography.subtitle, color: colors.textPrimary },
   itemTitle: { ...typography.body, color: colors.textPrimary, fontWeight: '600' },
   itemBody: { ...typography.caption, color: colors.textSecondary },

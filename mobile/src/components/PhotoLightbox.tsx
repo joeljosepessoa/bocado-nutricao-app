@@ -1,6 +1,7 @@
 import React from 'react';
 import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, spacing, typography } from '../theme/tokens';
+import { spacing, typography } from '../theme/tokens';
+import { useStyles, type ThemeColors } from '../theme/theme';
 
 interface Props {
   visible: boolean;
@@ -15,6 +16,7 @@ interface Props {
  * fechar. Suficiente pro pedido ("tocar na foto pra abrir maior").
  */
 export function PhotoLightbox({ visible, uri, label, onClose }: Props) {
+  const styles = useStyles(makeStyles);
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
@@ -28,7 +30,7 @@ export function PhotoLightbox({ visible, uri, label, onClose }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', alignItems: 'center', justifyContent: 'center' },
   image: { width: '100%', height: '80%' },
   labelBox: { position: 'absolute', bottom: spacing.xl, alignItems: 'center' },
