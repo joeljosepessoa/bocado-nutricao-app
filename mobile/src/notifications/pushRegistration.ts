@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
-import * as Notifications from 'expo-notifications';
+import { loadNotifications } from './loadNotifications';
 import * as api from '../api/endpoints';
 
 /**
@@ -22,7 +22,8 @@ function currentPlatform(): 'ios' | 'android' | null {
 async function getPushToken(): Promise<string | null> {
   const platform = currentPlatform();
   const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-  if (!platform || typeof projectId !== 'string' || projectId.length === 0) {
+  const Notifications = loadNotifications();
+  if (!platform || !Notifications || typeof projectId !== 'string' || projectId.length === 0) {
     return null;
   }
   try {

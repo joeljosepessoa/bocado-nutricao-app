@@ -1,11 +1,13 @@
-import * as Notifications from 'expo-notifications';
+import { loadNotifications } from './loadNotifications';
 
 /**
  * Notificação local (não push) só para avisar que o descanso acabou quando
  * o app está em segundo plano. Nenhum servidor de push está envolvido —
  * é agendada e cancelada inteiramente no dispositivo.
  */
-Notifications.setNotificationHandler({
+const Notifications = loadNotifications();
+
+Notifications?.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
     shouldShowList: true,
@@ -15,7 +17,7 @@ Notifications.setNotificationHandler({
 });
 
 export async function scheduleRestTimerNotification(remainingSeconds: number): Promise<string | null> {
-  if (remainingSeconds <= 0) {
+  if (remainingSeconds <= 0 || !Notifications) {
     return null;
   }
   try {
@@ -39,7 +41,7 @@ export async function scheduleRestTimerNotification(remainingSeconds: number): P
 }
 
 export async function cancelRestTimerNotification(notificationId: string | null): Promise<void> {
-  if (!notificationId) {
+  if (!notificationId || !Notifications) {
     return;
   }
   try {

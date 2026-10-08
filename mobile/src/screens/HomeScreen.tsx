@@ -143,7 +143,10 @@ export function HomeScreen() {
       points: weightChartPoints(items, now),
       water: waterProgress(data.water),
       nextWorkout: nextWorkoutDay(data.workout, data.lastWorkoutDayId),
-      dateText: now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }),
+      // 'quinta-feira, 8 de outubro' → só a primeira letra maiúscula.
+      dateText: ((text: string) => text.charAt(0).toLocaleUpperCase('pt-BR') + text.slice(1))(
+        now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }),
+      ),
       hello: greeting(now),
     };
   }, [data, dayChoice, user?.fullName]);
@@ -373,7 +376,7 @@ const makeStyles = (colors: ThemeColors) =>
     flex: { flex: 1 },
     pressed: { opacity: 0.75 },
     hello: { ...typography.title, color: colors.textPrimary },
-    date: { ...typography.body, color: colors.textSecondary, marginTop: 2, textTransform: 'capitalize' },
+    date: { ...typography.body, color: colors.textSecondary, marginTop: 2 },
     grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm + 4 },
     stat: {
       flexBasis: '47%',
