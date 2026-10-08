@@ -95,7 +95,7 @@ export function decodeTextFile(buffer: Buffer): string {
     swapped.swap16();
     return swapped.toString('utf16le');
   }
-  return buffer.toString('utf-8').replace(/^﻿/, '');
+  return buffer.toString('utf-8').replace(/^\uFEFF/, '');
 }
 
 // --- CSV do inventário ------------------------------------------------------
@@ -132,7 +132,7 @@ function parseCsvLine(line: string): string[] {
 
 /** Lê o CSV gerado pelo inventário (Export-Csv do PowerShell, UTF-8 com BOM). */
 export function parseInventoryCsv(text: string): InventoryRow[] {
-  const lines = text.replace(/^﻿/, '').split(/\r?\n/).filter((line) => line.trim() !== '');
+  const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter((line) => line.trim() !== '');
   const header = parseCsvLine(lines[0] ?? '');
   if (CSV_HEADER.some((name, i) => header[i] !== name)) {
     throw new Error(`Inventário com cabeçalho inesperado — esperado: ${CSV_HEADER.join(',')}.`);

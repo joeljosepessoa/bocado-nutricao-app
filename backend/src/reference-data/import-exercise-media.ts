@@ -49,7 +49,7 @@ export function createR2KeyVerifier(get: (key: string) => string | undefined, cl
           return 'missing';
         }
         // Credencial errada, rede etc.: aborta em vez de seguir sem conferir.
-        throw new Error(`Falha ao conferir chave no R2 (${status.name ?? 'erro'}).`);
+        throw new Error(`Falha ao conferir chave no R2 (${status.name ?? 'erro'}).`, { cause: error });
       }
     },
   };

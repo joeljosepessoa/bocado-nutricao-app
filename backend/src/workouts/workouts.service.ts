@@ -409,11 +409,11 @@ export class WorkoutsService {
       });
 
       if (publishedVersion) {
-        for (const day of publishedVersion.days as any[]) {
+        for (const day of publishedVersion.days) {
           const clonedDay = await tx.workoutDay.create({
             data: { workoutVersionId: created.id, name: day.name, order: day.order, notes: day.notes },
           });
-          for (const ex of day.exercises as any[]) {
+          for (const ex of day.exercises) {
             const clonedExercise = await tx.workoutExercise.create({
               data: {
                 workoutDayId: clonedDay.id,
@@ -422,7 +422,7 @@ export class WorkoutsService {
                 notes: ex.notes,
               },
             });
-            for (const set of ex.sets as any[]) {
+            for (const set of ex.sets) {
               await tx.workoutSet.create({
                 data: {
                   workoutExerciseId: clonedExercise.id,
@@ -545,12 +545,12 @@ export class WorkoutsService {
       this.findVersion(professionalId, clientId, workoutId, toId, meta, false),
     ]);
 
-    const volumeByExercise = (version: any) => {
+    const volumeByExercise = (version: typeof from) => {
       const map = new Map<string, { exerciseName: string; volume: number }>();
       for (const day of version.days) {
         for (const ex of day.exercises) {
           const volume = ex.sets.reduce(
-            (sum: number, set: any) => sum + (set.reps != null && set.loadValue != null ? set.reps * set.loadValue : 0),
+            (sum: number, set: { reps: number | null; loadValue: number | null }) => sum + (set.reps != null && set.loadValue != null ? set.reps * set.loadValue : 0),
             0,
           );
           const existing = map.get(ex.exerciseId);

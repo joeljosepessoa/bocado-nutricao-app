@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { DietAuditAction, DietStatus, DietVersionStatus, MealGroupKind, NotificationEventType, NutritionUnit } from '@prisma/client';
+import { DietAuditAction, DietStatus, DietVersionStatus, MealGroupKind, NotificationEventType } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { FoodsService } from '../foods/foods.service';
 import { NutritionCalculationService } from '../foods/nutrition-calculation.service';
@@ -345,7 +345,7 @@ export class DietsService {
     return this.findOne(professionalId, clientId, result.dietId, meta, false);
   }
 
-  async list(professionalId: string, clientId: string, page = 1, pageSize = 20, meta: RequestMeta = {}) {
+  async list(professionalId: string, clientId: string, page = 1, pageSize = 20, _meta: RequestMeta = {}) {
     await this.assertOwnedClient(professionalId, clientId);
     const safePage = page > 0 ? page : 1;
     const safePageSize = pageSize > 0 ? pageSize : 20;

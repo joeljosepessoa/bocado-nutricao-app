@@ -19,13 +19,13 @@ function semverAtLeast(version: string, minimum: string): boolean {
 
 describe('Hardening do upload de foto', () => {
   it('o multer instalado é >= 2.3.0 (override do package.json da raiz aplicado)', () => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- lê a versão instalada em tempo de teste
     const { version } = require('multer/package.json') as { version: string };
     expect(semverAtLeast(version, '2.3.0')).toBe(true);
   });
 
   it('o multer instalado aceita os limites (valida cada valor) e conhece as opções de nome de campo', () => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- lê a versão instalada em tempo de teste
     const multer = require('multer') as (options: { limits: Record<string, number> }) => unknown;
     expect(() => multer({ limits: { ...PHOTO_UPLOAD_LIMITS } })).not.toThrow();
     // O multer 2.4 valida os limites e recusa valores que o busboy ignoraria em silêncio.

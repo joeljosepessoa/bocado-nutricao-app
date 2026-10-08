@@ -1,4 +1,4 @@
-import { IsEnum, IsIn, IsInt, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
+import { IsEnum, IsIn, IsInt, IsString, IsUUID, Matches, Max, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
 import { AiFeatureKey } from '@prisma/client';
 
 export const MAX_WORKOUT_TEXT_LENGTH = 12000;

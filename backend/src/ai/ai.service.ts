@@ -316,7 +316,7 @@ export class AiService {
       if (error instanceof AiOutputValidationError) {
         throw error;
       }
-      throw new Error('Não foi possível processar a resposta da IA.');
+      throw new Error('Não foi possível processar a resposta da IA.', { cause: error });
     }
   }
 

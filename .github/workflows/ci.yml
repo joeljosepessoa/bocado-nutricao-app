@@ -28,7 +28,7 @@ jobs:
       - run: bash scripts/check-secrets.sh
 
   backend:
-    name: Backend (migrations, build, unit, e2e)
+    name: Backend (migrations, build, lint, unit, e2e)
     runs-on: ubuntu-24.04
     services:
       # Banco descartável só do CI (vive e morre com o job). Nada aponta para banco de verdade.
@@ -111,15 +111,14 @@ jobs:
       - name: Typecheck e build
         run: npm run build --workspace backend
 
+      - name: Lint
+        run: npm run lint --workspace backend
+
       - name: Testes unitários
         run: npm test --workspace backend
 
       - name: Testes e2e
         run: npm run test:e2e --workspace backend
-
-      # Fora do gate: `npm run lint --workspace backend` nunca funcionou (o ESLint 10 do projeto exige
-      # eslint.config.* e o backend não tem — dívida histórica, não regressão). O typecheck do build
-      # acima é o gate estático do backend até o lint ser configurado.
 
   web:
     name: Professional Web (testes, typecheck, lint, build)

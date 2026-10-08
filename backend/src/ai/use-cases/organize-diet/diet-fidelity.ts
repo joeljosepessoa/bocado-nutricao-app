@@ -589,7 +589,7 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
 
   const totalMeals = organized.days.reduce((sum, d) => sum + d.meals.length, 0);
   let mealNumber = 0;
-  const days: CheckedDay[] = organized.days.map((day, d) => {
+  const days: CheckedDay[] = organized.days.map((day) => {
     const dayWarnings: string[] = [];
     // Nome de dia não é prescrição: texto que só titula o 2º dia ("DIA DE DESCANSO")
     // deixa o 1º sem título, e a IA sugere um. A sugestão fica, mas como aviso que o

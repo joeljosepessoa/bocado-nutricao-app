@@ -233,9 +233,9 @@ export class ClientSubscriptionsService {
         return ClientSubscriptionStatus.authorized;
       case 'paused':
         return ClientSubscriptionStatus.paused;
-      case 'cancelled':
       // A documentação oficial usa "canceled" ao cancelar e as consultas devolvem
       // "cancelled": aceitar as duas evita ignorar silenciosamente um cancelamento.
+      case 'cancelled':
       case 'canceled':
         return ClientSubscriptionStatus.cancelled;
       default:

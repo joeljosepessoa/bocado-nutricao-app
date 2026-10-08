@@ -159,7 +159,7 @@ describe('buildMatchContext — a tabela de aliases é validada', () => {
 
 describe('inventário, listagem do bucket, manifesto e relatório', () => {
   const csv = [
-    '﻿"Equipamento","GrupoMuscular","NomeArquivo","CaminhoRelativo","TamanhoMB","TamanhoBytes","SHA256"',
+    '\uFEFF"Equipamento","GrupoMuscular","NomeArquivo","CaminhoRelativo","TamanhoMB","TamanhoBytes","SHA256"',
     `"EXERCÍCIOS COM BARRAS","PERNA","Barbell-Full-Squat_Thighs.gif","x","0,1","100","${SHA('A')}"`,
     `"EXERCÍCIOS COM BARRAS","PERNA","Barbell-Full-Squat-(female)_Thighs.gif","x","0,1","100","${SHA('A')}"`,
     `"EXERCÍCIOS COM BARRAS","BICEPS","Barbell-Preacher-Curl_Arms.gif","x","0,1","200","${SHA('b')}"`,
@@ -180,7 +180,7 @@ describe('inventário, listagem do bucket, manifesto e relatório', () => {
   it('lê a listagem salva em UTF-16 pelo PowerShell (e UTF-8 com/sem BOM)', () => {
     const line = '2026-10-02 11:35:15    100 exercises/barras/perna/Barbell-Full-Squat_Thighs.gif\r\n';
     const utf16 = Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(line, 'utf16le')]);
-    for (const buffer of [utf16, Buffer.from(`﻿${line}`, 'utf-8'), Buffer.from(line, 'utf-8')]) {
+    for (const buffer of [utf16, Buffer.from(`\uFEFF${line}`, 'utf-8'), Buffer.from(line, 'utf-8')]) {
       expect(parseBucketListing(decodeTextFile(buffer)).objects).toEqual([
         { storageKey: 'exercises/barras/perna/Barbell-Full-Squat_Thighs.gif', sizeBytes: 100 },
       ]);

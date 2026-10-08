@@ -36,6 +36,7 @@ export class LocalStorageService extends StorageService {
       throw new Error(
         `STORAGE_LOCAL_DIR (${this.baseDir}) não é gravável: ${error instanceof Error ? error.message : String(error)}. ` +
           'Em Docker, monte um volume persistente nesse caminho.',
+        { cause: error },
       );
     }
   }
