@@ -22,14 +22,14 @@ jobs:
   # Rede de segurança contra segredo/arquivo sensível versionado por descuido (scripts/check-secrets.sh).
   secrets:
     name: Secrets acidentais
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       - run: bash scripts/check-secrets.sh
 
   backend:
     name: Backend (migrations, build, unit, e2e)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       # Banco descartável só do CI (vive e morre com o job). Nada aponta para banco de verdade.
       postgres:
@@ -64,10 +64,10 @@ jobs:
       PORT: 3000
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
 
       # Node 22: mínimo exigido por dependências atuais (puppeteer 25 e vitest 5 pedem >= 22.12).
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7.0.0
         with:
           node-version: '22'
           cache: 'npm'
@@ -123,11 +123,11 @@ jobs:
 
   web:
     name: Professional Web (testes, typecheck, lint, build)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7.0.0
         with:
           node-version: '22'
           cache: 'npm'
@@ -149,15 +149,15 @@ jobs:
 
   mobile:
     name: ${{ matrix.workspace }} (testes, typecheck, lint)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         workspace: [mobile, professional-mobile]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7.0.0
         with:
           node-version: '22'
           cache: 'npm'
@@ -175,11 +175,11 @@ jobs:
         run: npm run lint --workspace ${{ matrix.workspace }}
 
   dependency-audit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7.0.0
         with:
           node-version: '22'
           cache: 'npm'
