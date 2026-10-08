@@ -217,11 +217,38 @@ describe('v2 — a dieta real do profissional (dia de treino/descanso, opções,
     expect(rejection(split, USER_EXAMPLE_DIET)).toMatch(/"135 g de peito de frango" e "10 g de azeite" aparecem juntos no texto/);
   });
 
-  it('rótulos inventados (dia, bloco, opção) e orientação reescrita são recusados', () => {
+  it('nome de dia que não está no texto NÃO recusa a dieta: fica como sugestão com aviso obrigatório de revisão', () => {
     const day = faithfulUserDiet();
     day.days[1].label = 'DIA DE FOLGA';
-    expect(rejection(day, USER_EXAMPLE_DIET)).toMatch(/o dia "DIA DE FOLGA" não está no texto/);
+    const checked = checkDietFidelity(USER_EXAMPLE_DIET, day);
+    expect(checked.days[1]).toMatchObject({ label: 'DIA DE FOLGA', warnings: [DIET_WARNINGS.dayLabelSuggested('DIA DE FOLGA')] });
+    expect(checked.days[0].warnings).toEqual([]);
+  });
 
+  it('regressão: texto colado sem o título do 1º dia (só "DIA DE DESCANSO" escrito) e com rodapé do PDF é organizado, com avisos', () => {
+    // Exatamente como o profissional colou: começa em "1. CAFÉ DA MANHÃ", bullets "•", linhas quebradas e o rodapé no meio.
+    const pasted = USER_EXAMPLE_DIET.split('\nSUPLEMENTAÇÃO')[0]
+      .replace(/^DIA DE TREINO\nUsar nos 5 dias de musculação na semana\. Escolher 1 opção em cada refeição ou bloco\.\n/, '')
+      .replace(/\n\n/g, '\n')
+      .replace(/\* /g, '• ')
+      .replace(/\/ 120 g de polenta\./g, '/ 120 g de\npolenta.')
+      .replace(/\/ 150 g de sobrecoxa sem pele\./g, '/ 150 g\nde sobrecoxa sem pele.')
+      .replace('DIA DE DESCANSO', 'BOCADODENUTRIÇÃO\nDIA DE DESCANSO');
+    expect(pasted.startsWith('1. CAFÉ DA MANHÃ — ESCOLHER 1 OPÇÃO')).toBe(true);
+    const organized = { ...faithfulUserDiet(), supplements: [], guidelines: [] };
+
+    const checked = checkDietFidelity(pasted, organized);
+    expect(checked.days.map((d) => [d.label, d.kind, d.meals.length])).toEqual([
+      ['DIA DE TREINO', 'training', 5],
+      ['DIA DE DESCANSO', 'rest', 5],
+    ]);
+    expect(checked.days[0].warnings).toEqual([DIET_WARNINGS.dayLabelSuggested('DIA DE TREINO'), DIET_WARNINGS.usageNotesDiscarded]);
+    expect(checked.days[0].usageNotes).toBeNull();
+    expect(checked.days[1].warnings).toEqual([]);
+    expect(checked.warnings).toEqual([DIET_WARNINGS.uncovered('BOCADODENUTRIÇÃO')]);
+  });
+
+  it('rótulos inventados (bloco, opção) e orientação reescrita são recusados', () => {
     const block = faithfulUserDiet();
     block.days[0].meals[1].groups[0].label = 'Carboidratos complexos';
     expect(rejection(block, USER_EXAMPLE_DIET)).toMatch(/o bloco "Carboidratos complexos" não está no texto/);

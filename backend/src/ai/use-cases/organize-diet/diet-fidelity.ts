@@ -28,6 +28,7 @@ export const DIET_WARNINGS = {
   mealWithoutItems: 'Nenhum alimento identificado nesta refeição.',
   singleChoice: 'Bloco "escolha 1" com uma única opção — confira.',
   uncovered: (line: string) => `Trecho não organizado: "${line}" — revisar.`,
+  dayLabelSuggested: (label: string) => `O título "${label}" não está escrito no texto — foi sugerido pela IA. Confirme ou corrija o nome do dia.`,
 } as const;
 
 export interface CheckedDietItem {
@@ -590,7 +591,10 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
   let mealNumber = 0;
   const days: CheckedDay[] = organized.days.map((day, d) => {
     const dayWarnings: string[] = [];
-    requireLabel(day.label, `Dia ${d + 1}: o dia`);
+    // Nome de dia não é prescrição: texto que só titula o 2º dia ("DIA DE DESCANSO")
+    // deixa o 1º sem título, e a IA sugere um. A sugestão fica, mas como aviso que o
+    // profissional precisa revisar — nunca recusa a dieta inteira por isso.
+    if (day.label && !literal(day.label)) dayWarnings.push(DIET_WARNINGS.dayLabelSuggested(day.label));
     let usageNotes: string | null = null;
     if (day.usageNotes) {
       usageNotes = literal(day.usageNotes);
