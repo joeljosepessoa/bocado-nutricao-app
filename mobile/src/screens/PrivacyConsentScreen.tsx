@@ -25,7 +25,7 @@ export function PrivacyConsentScreen() {
   }
 
   return (
-    <ScreenContainer>
+    <ScreenContainer safeTop>
       <Text style={styles.title}>Privacidade dos seus dados</Text>
       <Text style={styles.body}>
         Seu profissional utiliza este aplicativo para acompanhar sua dieta, seus treinos e sua evolução física.

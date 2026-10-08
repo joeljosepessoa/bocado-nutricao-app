@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { CheckCircle2, Circle } from 'lucide-react-native';
 import { useAuth } from '../auth/AuthContext';
 import { Button } from '../components/Button';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { TextField } from '../components/TextField';
-import { typography } from '../theme/tokens';
-import { useStyles, type ThemeColors } from '../theme/theme';
+import { changePasswordFailureMessage, newPasswordError, passwordChecklist } from '../auth/passwordRules';
+import { radius, spacing, typography } from '../theme/tokens';
+import { useStyles, useTheme, type ThemeColors } from '../theme/theme';
 
-const MIN_PASSWORD_LENGTH = 8;
 
 export function ChangePasswordScreen() {
   const styles = useStyles(makeStyles);
+  const { colors } = useTheme();
   const { changePassword, logout } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -19,27 +21,25 @@ export function ChangePasswordScreen() {
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit() {
-    if (newPassword.length < MIN_PASSWORD_LENGTH) {
-      setError(`A nova senha deve ter ao menos ${MIN_PASSWORD_LENGTH} caracteres.`);
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setError('As senhas não coincidem.');
+    const invalid = newPasswordError(newPassword, confirmPassword);
+    if (invalid) {
+      setError(invalid);
       return;
     }
     setError(null);
     setLoading(true);
     try {
       await changePassword(currentPassword, newPassword);
-    } catch {
-      setError('Não foi possível trocar a senha. Confira a senha atual.');
+    } catch (err) {
+      const response = (err as { response?: { status?: number; data?: { message?: unknown } } })?.response;
+      setError(changePasswordFailureMessage(response?.status, response?.data?.message));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <ScreenContainer>
+    <ScreenContainer safeTop>
       <Text style={styles.title}>Defina uma nova senha</Text>
       <Text style={styles.subtitle}>
         Por segurança, você precisa trocar a senha temporária recebida do seu profissional antes de continuar.
@@ -51,6 +51,16 @@ export function ChangePasswordScreen() {
         onChangeText={setCurrentPassword}
         secureTextEntry
       />
+      <View style={styles.rules} accessibilityLabel="Como deve ser a nova senha">
+        <Text style={styles.rulesTitle}>Como deve ser a nova senha</Text>
+        {passwordChecklist(newPassword, confirmPassword).map((rule) => (
+          <View key={rule.label} style={styles.rule} accessibilityState={{ checked: rule.ok }}>
+            {rule.ok ? <CheckCircle2 size={16} color={colors.success} /> : <Circle size={16} color={colors.textMuted} />}
+            <Text style={[styles.ruleText, rule.ok && { color: colors.success }]}>{rule.label}</Text>
+          </View>
+        ))}
+        <Text style={styles.ruleExample}>Exemplo: bocado2026x (não use esse, crie a sua)</Text>
+      </View>
       <TextField label="Nova senha" value={newPassword} onChangeText={setNewPassword} secureTextEntry />
       <TextField
         label="Confirmar nova senha"
@@ -69,5 +79,10 @@ export function ChangePasswordScreen() {
 const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   title: { ...typography.subtitle, color: colors.textPrimary },
   subtitle: { ...typography.body, color: colors.textSecondary },
+  rules: { backgroundColor: colors.primarySoft, borderRadius: radius.md, padding: spacing.sm + 4, gap: 6 },
+  rulesTitle: { ...typography.body, fontWeight: '700', color: colors.textPrimary },
+  rule: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  ruleText: { ...typography.caption, color: colors.textSecondary },
+  ruleExample: { ...typography.tiny, color: colors.textMuted, marginTop: 2 },
   error: { color: colors.danger, ...typography.body },
 });
