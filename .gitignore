@@ -24,3 +24,6 @@ coverage/
 *.keystore
 google-services.json
 GoogleService-Info.plist
+
+# Gerado por backend/src/reference-data/taco/build-taco-data.ts a partir da planilha oficial (2,8 MB).
+backend/src/reference-data/taco/data/taco-4a-edicao.json
