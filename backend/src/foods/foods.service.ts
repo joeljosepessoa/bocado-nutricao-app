@@ -3,6 +3,7 @@ import { DietVersionStatus, Food, FoodScope, NutritionUnit, Role } from '@prisma
 import { PrismaService } from '../common/prisma/prisma.service';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { NutritionCalculationService } from './nutrition-calculation.service';
+import { normalizeFoodName } from './food-name-matching';
 import { CreateFoodDto } from './dto/create-food.dto';
 import { UpdateFoodDto } from './dto/update-food.dto';
 import { CreateSubstitutionDto } from './dto/create-substitution.dto';
@@ -55,16 +56,40 @@ export class FoodsService {
     return food;
   }
 
+  /**
+   * Busca do catálogo: pelo nome (contém, sem diferenciar maiúsculas) ou por um
+   * apelido aprovado da lista do Bocado — "peito de frango" acha
+   * "Frango, peito, sem pele, grelhado".
+   */
   async list(professionalId: string, search?: string) {
+    const term = search?.trim();
+    const aliasFoodIds = term ? await this.foodIdsByAlias(term) : [];
     return this.prisma.food.findMany({
+      // AND: o filtro de visibilidade também é um OR — nunca pode ser sobrescrito pela busca.
       where: {
-        ...this.visibilityFilter(professionalId),
-        ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
+        AND: [
+          this.visibilityFilter(professionalId),
+          ...(term
+            ? [{ OR: [{ name: { contains: term, mode: 'insensitive' as const } }, ...(aliasFoodIds.length ? [{ id: { in: aliasFoodIds } }] : [])] }]
+            : []),
+        ],
       },
       include: FOOD_INCLUDE,
       orderBy: { name: 'asc' },
       take: 100,
     });
+  }
+
+  /** Alimentos cujo apelido aprovado (que liga sozinho) contém o termo buscado. */
+  private async foodIdsByAlias(term: string): Promise<string[]> {
+    const normalized = normalizeFoodName(term);
+    if (!normalized) return [];
+    const rows = await this.prisma.foodAlias.findMany({
+      where: { autoLink: true, foodId: { not: null }, alias: { contains: normalized } },
+      select: { foodId: true },
+      take: 50,
+    });
+    return [...new Set(rows.map((r) => r.foodId as string))];
   }
 
   /** Id e nome de todo alimento visível ao profissional — base do matching do Assistente de Dieta. */

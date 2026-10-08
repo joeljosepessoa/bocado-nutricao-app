@@ -1,8 +1,11 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
+import { PrismaClient } from '@prisma/client';
 import { AppModule } from '../src/app.module';
 import { createAdmin, createClient, createDiet, createFood, registerProfessional } from './helpers';
+
+const prisma = new PrismaClient();
 
 describe('Catálogo de alimentos (e2e)', () => {
   let app: INestApplication;
@@ -16,6 +19,32 @@ describe('Catálogo de alimentos (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
+    await prisma.$disconnect();
+  });
+
+  it('busca acha pelo apelido aprovado, sem mostrar alimento privado de outro profissional', async () => {
+    const tag = Date.now();
+    const me = await registerProfessional(app);
+    const other = await registerProfessional(app);
+    const mine = await createFood(app, me.accessToken, { name: `Frango, peito, grelhado ${tag}`, scope: 'private' });
+    const theirs = await createFood(app, other.accessToken, { name: `Segredo do outro ${tag}`, scope: 'private' });
+    await prisma.foodAlias.createMany({
+      data: [
+        { alias: `peito de frango apelido ${tag}`, foodId: mine.id, autoLink: true },
+        { alias: `peito de frango outro ${tag}`, foodId: theirs.id, autoLink: true },
+        { alias: `so registrado ${tag}`, foodId: mine.id, autoLink: false },
+      ],
+    });
+    const search = (term: string) =>
+      request(app.getHttpServer()).get('/foods').query({ search: term }).set('Authorization', `Bearer ${me.accessToken}`).expect(200);
+
+    // Acento, caixa e o nome diferente do cadastro não importam: o apelido liga.
+    const ids = (await search(`Peito de Frango`)).body.map((f: { id: string }) => f.id);
+    expect(ids).toContain(mine.id);
+    expect(ids).not.toContain(theirs.id);
+
+    // Apelido que não liga sozinho não entra na busca.
+    expect((await search(`so registrado ${tag}`)).body).toEqual([]);
   });
 
   it('cria alimento global com conversão de unidade', async () => {
