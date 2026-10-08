@@ -441,9 +441,20 @@ export interface DietProposalSupplement {
 export interface OrganizedDietProposal {
   days: DietProposalDay[];
   supplements: DietProposalSupplement[];
-  /** Orientações ao paciente copiadas literalmente do texto. */
+  /** Orientações ao paciente copiadas literalmente do texto (no modo "montar": propostas pela IA). */
   guidelines: string[];
   warnings: string[];
+  /** Só no modo "Deixar a IA montar" (create_diet). */
+  mode?: 'create';
+  /** Cálculo do SISTEMA sobre a proposta da IA (opções/"escolha 1" viram faixa). */
+  nutrition?: { targetKcal: number | null; days: Array<{ label: string | null; min: Nutrients; max: Nutrients }> };
+}
+
+/** Pedido do modo "Deixar a IA montar": só o texto é obrigatório. */
+export interface CreateDietWithAiInput {
+  dietGoal: string;
+  targetKcal?: number;
+  mealsPerDay?: number;
 }
 
 export interface ProposalChoiceFoodInput {
@@ -609,7 +620,7 @@ export interface SignedUrl {
 
 // --- IA assistiva (Fase 12) -----------------------------------------------
 
-export type AiFeatureKey = 'draft_note' | 'explain_evaluation' | 'narrate_trend' | 'organize_workout';
+export type AiFeatureKey = 'draft_note' | 'explain_evaluation' | 'narrate_trend' | 'organize_workout' | 'organize_diet' | 'create_diet';
 
 /** Sempre rotulado como conteúdo assistivo — nunca um dado original do sistema. */
 export interface AiGenerationResult {

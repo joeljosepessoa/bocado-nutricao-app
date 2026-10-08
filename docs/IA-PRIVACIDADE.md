@@ -13,6 +13,7 @@ interação grava a política aplicada em `AiInteractionLog.processingPolicy`.
 |---|---|---|---|---|
 | `organize_workout` | profissional (painel) | **só** o texto de treino colado pelo profissional | não exigido | `professional_material` |
 | `organize_diet` | profissional (painel) | **só** o texto de dieta colado pelo profissional | não exigido | `professional_material` |
+| `create_diet` | profissional (painel) | pedido do profissional + idade, sexo e números da última avaliação (peso, altura, % gordura, massa magra, TMB) + catálogo de alimentos | exigido | `client_consent` |
 | `draft_note` | profissional | primeiro nome da cliente + instruções do profissional | exigido | `client_consent` |
 | `explain_evaluation` | cliente (app) e profissional | métricas da avaliação liberada (peso, IMC, % gordura, massas, medidas) | exigido | `client_consent` |
 | `narrate_trend` | cliente (app) | variação das métricas entre as duas últimas avaliações liberadas | exigido | `client_consent` |
@@ -39,6 +40,27 @@ o que a IA deixar de fora vira aviso de revisão. Calorias e macros são sempre
 calculadas pelo backend, nunca pela IA. O resultado é só um rascunho — publicar
 continua sendo ação manual do profissional. Mesmo limite conhecido: dado pessoal
 colado no próprio texto segue para o provedor.
+
+### Minimização e conferência do `create_diet` (modo "Deixar a IA montar")
+
+O contexto (`create-diet/create-diet.use-case.ts`) leva:
+
+- o pedido escrito pelo profissional (objetivo, restrições, rotina, meta de kcal e
+  número de refeições opcionais);
+- do cliente, **só** a idade, o sexo e os números da última avaliação (peso, altura,
+  % de gordura, massa magra, TMB da bioimpedância);
+- o catálogo calculável (nome e valores por 100 g dos alimentos visíveis ao
+  profissional com os 4 macros numéricos).
+
+**Nunca** vão ao provedor: nome, e-mail, telefone, id, observações, pressão,
+glicemia, fotos ou histórico.
+
+A IA só pode citar alimentos do catálogo pela referência (`ref`). O backend
+resolve cada referência e **descarta com aviso** o que não existir no catálogo.
+Calorias e macros são calculadas pelo sistema, com faixa para "escolha 1" e
+aviso quando o dia fica fora de ±10% da meta. O resultado é só um rascunho para
+revisão. Mesmo limite conhecido: dado pessoal escrito no próprio pedido segue
+para o provedor.
 
 ## Consentimento da cliente
 

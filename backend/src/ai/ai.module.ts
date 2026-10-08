@@ -14,6 +14,7 @@ import { ExplainEvaluationUseCase } from './use-cases/explain-evaluation.use-cas
 import { NarrateTrendUseCase } from './use-cases/narrate-trend.use-case';
 import { OrganizeWorkoutUseCase } from './use-cases/organize-workout/organize-workout.use-case';
 import { OrganizeDietUseCase } from './use-cases/organize-diet/organize-diet.use-case';
+import { CreateDietUseCase } from './use-cases/create-diet/create-diet.use-case';
 
 @Module({
   imports: [PhysicalEvaluationsModule, ExercisesModule, FoodsModule],
@@ -31,6 +32,7 @@ import { OrganizeDietUseCase } from './use-cases/organize-diet/organize-diet.use
     NarrateTrendUseCase,
     OrganizeWorkoutUseCase,
     OrganizeDietUseCase,
+    CreateDietUseCase,
   ],
 })
 export class AiModule {}

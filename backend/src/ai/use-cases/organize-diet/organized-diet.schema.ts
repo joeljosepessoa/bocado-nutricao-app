@@ -89,14 +89,14 @@ export interface AiOrganizedDiet {
   warnings: string[];
 }
 
-const nullable = (schema: Record<string, unknown>) => ({ anyOf: [schema, { type: 'null' }] });
-const strictObject = (properties: Record<string, unknown>) => ({
+export const nullable = (schema: Record<string, unknown>) => ({ anyOf: [schema, { type: 'null' }] });
+export const strictObject = (properties: Record<string, unknown>) => ({
   type: 'object',
   additionalProperties: false,
   required: Object.keys(properties),
   properties,
 });
-const list = (items: Record<string, unknown>) => ({ type: 'array', items });
+export const list = (items: Record<string, unknown>) => ({ type: 'array', items });
 
 const ITEM_SCHEMA = strictObject({
   sourceText: { type: 'string' },
@@ -146,7 +146,7 @@ export const ORGANIZED_DIET_JSON_SCHEMA: Record<string, unknown> = strictObject(
   warnings: list({ type: 'string' }),
 });
 
-class SchemaError extends Error {
+export class SchemaError extends Error {
   constructor(
     readonly path: string,
     readonly problem: string,
@@ -155,11 +155,11 @@ class SchemaError extends Error {
   }
 }
 
-function fail(path: string, problem: string): never {
+export function fail(path: string, problem: string): never {
   throw new SchemaError(path, problem);
 }
 
-function asObject(value: unknown, path: string, allowedKeys: readonly string[]): Record<string, unknown> {
+export function asObject(value: unknown, path: string, allowedKeys: readonly string[]): Record<string, unknown> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) fail(path, 'deve ser um objeto');
   const obj = value as Record<string, unknown>;
   const unknown = Object.keys(obj).find((key) => !allowedKeys.includes(key));
@@ -167,13 +167,13 @@ function asObject(value: unknown, path: string, allowedKeys: readonly string[]):
   return obj;
 }
 
-function asArray(value: unknown, path: string, max: number): unknown[] {
+export function asArray(value: unknown, path: string, max: number): unknown[] {
   if (!Array.isArray(value)) fail(path, 'deve ser uma lista');
   if (value.length > max) fail(path, `no máximo ${max} itens`);
   return value;
 }
 
-function optionalString(value: unknown, path: string, maxLength: number): string | null {
+export function optionalString(value: unknown, path: string, maxLength: number): string | null {
   if (value === undefined || value === null) return null;
   if (typeof value !== 'string') fail(path, 'deve ser texto ou null');
   const trimmed = value.trim();
@@ -181,7 +181,7 @@ function optionalString(value: unknown, path: string, maxLength: number): string
   return trimmed.length > 0 ? trimmed : null;
 }
 
-function requiredString(value: unknown, path: string, maxLength: number): string {
+export function requiredString(value: unknown, path: string, maxLength: number): string {
   const result = optionalString(value, path, maxLength);
   if (result === null) fail(path, 'obrigatório');
   return result;
@@ -195,12 +195,12 @@ function optionalQuantity(value: unknown, path: string): number | null {
   return value;
 }
 
-function oneOf<T extends string>(value: unknown, path: string, allowed: readonly T[]): T {
+export function oneOf<T extends string>(value: unknown, path: string, allowed: readonly T[]): T {
   if (typeof value !== 'string' || !allowed.includes(value as T)) fail(path, `deve ser um de: ${allowed.join(', ')}`);
   return value as T;
 }
 
-function stringList(value: unknown, path: string, max: number, maxLength: number): string[] {
+export function stringList(value: unknown, path: string, max: number, maxLength: number): string[] {
   if (value === undefined || value === null) return [];
   return asArray(value, path, max).map((item, i) => requiredString(item, `${path}[${i}]`, maxLength));
 }
@@ -270,7 +270,7 @@ function parseSupplement(value: unknown, path: string): AiSupplement {
 }
 
 /** Tolera só embrulho de formatação (cerca de código, texto antes/depois) — o conteúdo é validado inteiro depois. */
-function extractJson(text: string): unknown {
+export function extractJson(text: string): unknown {
   const unfenced = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
   try {
     return JSON.parse(unfenced);

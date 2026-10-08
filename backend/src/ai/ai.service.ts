@@ -14,6 +14,7 @@ import { ExplainEvaluationUseCase } from './use-cases/explain-evaluation.use-cas
 import { NarrateTrendUseCase } from './use-cases/narrate-trend.use-case';
 import { OrganizeWorkoutUseCase } from './use-cases/organize-workout/organize-workout.use-case';
 import { OrganizeDietUseCase } from './use-cases/organize-diet/organize-diet.use-case';
+import { CreateDietUseCase } from './use-cases/create-diet/create-diet.use-case';
 import type { AiUseCase, BuildContextParams } from './use-cases/ai-use-case.interface';
 import { AiGenerationResponseDto } from './dto/ai-generation-response.dto';
 
@@ -87,6 +88,7 @@ export class AiService {
     narrateTrend: NarrateTrendUseCase,
     organizeWorkout: OrganizeWorkoutUseCase,
     organizeDiet: OrganizeDietUseCase,
+    createDiet: CreateDietUseCase,
   ) {
     this.useCases = new Map<AiFeatureKey, AiUseCase>([
       [draftNote.feature, draftNote],
@@ -94,6 +96,7 @@ export class AiService {
       [narrateTrend.feature, narrateTrend],
       [organizeWorkout.feature, organizeWorkout],
       [organizeDiet.feature, organizeDiet],
+      [createDiet.feature, createDiet],
     ]);
     const configuredTimeout = Number(config.get<string>('AI_TIMEOUT_MS'));
     this.defaultTimeoutMs = Number.isFinite(configuredTimeout) && configuredTimeout > 0 ? configuredTimeout : DEFAULT_AI_TIMEOUT_MS;

@@ -9,6 +9,7 @@ import { DietAssistantPage } from '../DietAssistantPage';
 
 vi.mock('../../api/endpoints', () => ({
   organizeDiet: vi.fn(),
+  createDietWithAi: vi.fn(),
   createDietFromProposal: vi.fn(),
   acceptProfessionalAiConsent: vi.fn(),
   listFoods: vi.fn(),
@@ -166,11 +167,111 @@ async function organizeSample() {
 describe('Assistente de Dieta', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('deixa claro que a IA não altera a prescrição; o modo "manter exatamente como escrevi" é o escolhido', () => {
+  it('deixa claro que a IA não altera a prescrição; o modo "manter exatamente como escrevi" é o padrão e o outro modo está disponível', () => {
     renderPage();
     expect(screen.getByRole('note').textContent).toMatch(/A IA não altera quantidades, alimentos ou prescrição/);
     expect(screen.getByRole('radio', { name: /Manter exatamente como escrevi/ })).toBeChecked();
-    expect(screen.getByRole('radio', { name: /Deixar a IA montar\/ajustar/ })).toBeDisabled();
+    expect(screen.getByRole('radio', { name: /Deixar a IA montar\/ajustar/ })).toBeEnabled();
+    expect(screen.getByRole('radio', { name: /Deixar a IA montar\/ajustar/ })).not.toBeChecked();
+  });
+
+  describe('modo "Deixar a IA montar/ajustar"', () => {
+    const created: OrganizedDietProposal = {
+      ...singleDay([
+        {
+          name: 'Almoço',
+          time: '12:00',
+          notes: null,
+          warnings: [],
+          groups: [
+            {
+              kind: 'alternatives',
+              label: 'Carboidrato',
+              choices: [
+                { label: null, items: [item('', 'Arroz, tipo 1, cozido', 100, 'g', { matchedFood: { id: 'f-arroz', name: 'Arroz, tipo 1, cozido' } })] },
+                { label: null, items: [item('', 'Batata, inglesa, cozida', 200, 'g', { matchedFood: { id: 'f-batata', name: 'Batata, inglesa, cozida' } })] },
+              ],
+            },
+          ],
+        },
+      ]),
+      mode: 'create',
+      guidelines: ['Beba água ao longo do dia.'],
+      nutrition: {
+        targetKcal: 1800,
+        days: [
+          {
+            label: null,
+            min: { kcal: 103.2, proteinG: 2.4, carbG: 23.8, fatG: 0, fiberG: 0 },
+            max: { kcal: 128.3, proteinG: 2.5, carbG: 28.1, fatG: 0.2, fiberG: 1.6 },
+          },
+        ],
+      },
+    };
+
+    async function chooseCreate() {
+      const user = userEvent.setup();
+      renderPage();
+      await user.click(screen.getByRole('radio', { name: /Deixar a IA montar\/ajustar/ }));
+      return user;
+    }
+
+    it('troca o formulário: pedido + meta opcional; explica consentimento e cálculo pelo sistema', async () => {
+      await chooseCreate();
+      expect(screen.queryByLabelText(/Cole aqui a dieta/)).not.toBeInTheDocument();
+      expect(screen.getByRole('note').textContent).toMatch(/só com alimentos do catálogo/);
+      expect(screen.getByRole('note').textContent).toMatch(/O sistema calcula calorias e\s+macros/);
+      expect(screen.getByRole('button', { name: 'Montar com IA' })).toBeDisabled();
+    });
+
+    it('envia o pedido, a meta e as refeições; mostra o cálculo do sistema e a proposta ligada ao catálogo; cria o RASCUNHO', async () => {
+      const user = await chooseCreate();
+      vi.mocked(api.createDietWithAi).mockResolvedValue({ text: '', structuredData: created } as never);
+      vi.mocked(api.createDietFromProposal).mockResolvedValue({} as never);
+      await user.type(screen.getByLabelText('O que a dieta deve atender'), 'Emagrecimento, sem lactose');
+      await user.type(screen.getByLabelText(/Meta de kcal por dia/), '1800');
+      await user.type(screen.getByLabelText(/Refeições por dia/), '5');
+      await user.click(screen.getByRole('button', { name: 'Montar com IA' }));
+
+      expect(api.createDietWithAi).toHaveBeenCalledWith('c1', { dietGoal: 'Emagrecimento, sem lactose', targetKcal: 1800, mealsPerDay: 5 });
+      expect(api.organizeDiet).not.toHaveBeenCalled();
+      expect(await screen.findByText(/Proposta de dieta montada por IA com alimentos do catálogo/)).toBeInTheDocument();
+      const summary = screen.getByText('Cálculo do sistema para a proposta da IA').closest('section, div')!.parentElement!;
+      expect(summary.textContent).toMatch(/Meta informada: 1\.800 kcal por dia/);
+      expect(summary.textContent).toMatch(/103–128 kcal/);
+      expect(screen.getByText('Catálogo: Arroz, tipo 1, cozido')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Montar novamente' })).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Criar dieta como rascunho' }));
+      await screen.findByText('Aba Dieta');
+      const payload = vi.mocked(api.createDietFromProposal).mock.calls[0][1];
+      expect(payload.days![0].meals[0].groups[0]).toMatchObject({
+        kind: 'alternatives',
+        label: 'Carboidrato',
+        choices: [{ foods: [{ foodId: 'f-arroz', quantity: 100, unit: 'g' }] }, { foods: [{ foodId: 'f-batata', quantity: 200, unit: 'g' }] }],
+      });
+      expect(payload.patientGuidelines).toBe('Beba água ao longo do dia.');
+    });
+
+    it('meta fora de 800–6000 kcal bloqueia o envio com explicação', async () => {
+      const user = await chooseCreate();
+      await user.type(screen.getByLabelText('O que a dieta deve atender'), 'Hipertrofia');
+      await user.type(screen.getByLabelText(/Meta de kcal por dia/), '300');
+      expect(screen.getByRole('button', { name: 'Montar com IA' })).toBeDisabled();
+      expect(screen.getByRole('alert').textContent).toMatch(/entre 800 e 6000 kcal/);
+    });
+
+    it('paciente sem consentimento: mostra o motivo, sem botão de ativar (só o paciente autoriza no app)', async () => {
+      const user = await chooseCreate();
+      vi.mocked(api.createDietWithAi).mockRejectedValue({
+        response: { status: 403, data: { message: 'O cliente ainda não autorizou o processamento de dados por IA. Peça ao cliente que acesse Privacidade e dados no aplicativo.' } },
+      });
+      await user.type(screen.getByLabelText('O que a dieta deve atender'), 'Hipertrofia');
+      await user.click(screen.getByRole('button', { name: 'Montar com IA' }));
+      expect((await screen.findByRole('alert')).textContent).toMatch(/O cliente ainda não autorizou/);
+      expect(screen.queryByRole('button', { name: /Ativar assistente de IA/ })).not.toBeInTheDocument();
+      expect(api.createDietFromProposal).not.toHaveBeenCalled();
+    });
   });
 
   it('mostra a proposta com o nome COMO ESCRITO, o texto original e as quantidades intactas; fora do catálogo fica "Sem cálculo"', async () => {

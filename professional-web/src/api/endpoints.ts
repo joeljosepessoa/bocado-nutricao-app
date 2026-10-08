@@ -13,6 +13,7 @@ import type {
   CreateClientInput,
   CreateWorkoutFromProposalInput,
   CreateDietFromProposalInput,
+  CreateDietWithAiInput,
   CreateEvaluationInput,
   DashboardSummary,
   Diet,
@@ -687,6 +688,18 @@ export async function organizeDiet(
     `/clients/${clientId}/ai/generate`,
     { feature: 'organize_diet', dietText },
   );
+  return res.data;
+}
+
+/** Assistente de Dieta, modo "Deixar a IA montar": proposta só com alimentos do catálogo, calculada pelo sistema (nada é gravado). */
+export async function createDietWithAi(
+  clientId: string,
+  input: CreateDietWithAiInput,
+): Promise<AiGenerationResult & { structuredData: OrganizedDietProposal }> {
+  const res = await apiClient.post<AiGenerationResult & { structuredData: OrganizedDietProposal }>(`/clients/${clientId}/ai/generate`, {
+    feature: 'create_diet',
+    ...input,
+  });
   return res.data;
 }
 

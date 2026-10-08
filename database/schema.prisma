@@ -1371,6 +1371,10 @@ enum AiFeatureKey {
   organize_workout
   // Organiza uma dieta JÁ escrita pelo profissional (nunca prescreve) — desenho/aprovação próprios.
   organize_diet
+  // Propõe um RASCUNHO de dieta só com alimentos do catálogo, a partir do pedido do
+  // profissional e de dados mínimos do cliente (exige o consentimento de IA do
+  // cliente); o sistema calcula kcal/macros e o profissional revisa (E3).
+  create_diet
 }
 
 // Por que um recurso de IA pôde processar o pedido: com consentimento

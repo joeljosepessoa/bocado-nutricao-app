@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { DietVersionStatus, Food, FoodScope, Role } from '@prisma/client';
+import { DietVersionStatus, Food, FoodScope, NutritionUnit, Role } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { NutritionCalculationService } from './nutrition-calculation.service';
@@ -73,6 +73,40 @@ export class FoodsService {
       where: this.visibilityFilter(professionalId),
       select: { id: true, name: true },
       orderBy: { name: 'asc' },
+    });
+  }
+
+  /**
+   * Catálogo que a IA pode usar para MONTAR uma dieta: alimentos visíveis ao
+   * profissional, em g ou ml, com os 4 macros numéricos — o que tem marcador
+   * da TACO (Tr/NA/*) fica de fora, porque o sistema não conseguiria calcular.
+   */
+  async listCalculableForAi(professionalId: string) {
+    return this.prisma.food.findMany({
+      where: {
+        AND: [
+          this.visibilityFilter(professionalId),
+          { baseUnit: { in: [NutritionUnit.g, NutritionUnit.ml] } },
+          { kcalPer100: { not: null } },
+          { proteinGPer100: { not: null } },
+          { carbGPer100: { not: null } },
+          { fatGPer100: { not: null } },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        baseUnit: true,
+        sourceKey: true,
+        sourceNumber: true,
+        foodGroup: true,
+        kcalPer100: true,
+        proteinGPer100: true,
+        carbGPer100: true,
+        fatGPer100: true,
+        fiberGPer100: true,
+      },
+      orderBy: [{ name: 'asc' }, { id: 'asc' }],
     });
   }
 
