@@ -5,7 +5,7 @@ import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import type { CatalogExerciseRef } from './exercise-name-matching';
-import { ExerciseMediaStorage, PRIMARY_EXERCISE_MEDIA_QUERY } from './exercise-media-storage.service';
+import { ExerciseMediaStorage, PRIMARY_EXERCISE_MEDIA_QUERY, type ExerciseWithMedia } from './exercise-media-storage.service';
 
 const LOCKED_IDENTITY_FIELDS = ['name', 'muscleGroup', 'equipment', 'type'] as const;
 // Teto de sanidade: acima disso o matching só deixa de achar (vira "não encontrado"), nunca associa errado.
@@ -77,7 +77,7 @@ export class ExercisesService {
   }
 
   /** `imageUrl` para exibição (mídia do R2 → imageUrl gravado) de um exercício já carregado com `media`. */
-  toDisplay<T extends { imageUrl: string | null; media?: Array<{ storageKey: string }> }>(exercise: T) {
+  toDisplay<T extends ExerciseWithMedia>(exercise: T) {
     return this.mediaStorage.toDisplay(exercise);
   }
 

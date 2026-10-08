@@ -47,7 +47,7 @@ describe('Treino — editar e excluir (e2e)', () => {
     const remada = await createExercise(app, professional.accessToken, { name: `Remada ${tag}`, scope: 'private' });
     const agachamento = await createExercise(app, professional.accessToken, { name: `Agachamento ${tag}`, scope: 'private' });
     const media = await prisma.exerciseMedia.create({
-      data: { exerciseId: supino.id, storageKey: `exercises/e2e/${tag}/supino.gif`, contentType: 'image/gif', sizeBytes: 10, sha256: 'a'.repeat(64) },
+      data: { exerciseId: supino.id, storageKey: `exercises/e2e/${tag}/supino.gif`, contentType: 'image/gif', sizeBytes: 10, sha256: 'a'.repeat(64), curationStatus: 'approved', isPrimary: true },
     });
     const workout = await createWorkout(app, professional.accessToken, client.id);
     const v1 = workout.currentVersion.id;

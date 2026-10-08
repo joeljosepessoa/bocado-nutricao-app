@@ -59,26 +59,40 @@ describe('Mídia de exercício no R2 privado (e2e)', () => {
     for (const key of Object.keys(R2_ENV)) delete process.env[key];
   });
 
-  /** Catálogo do teste: R2 com 2 mídias, URL externa, caminho legado e sem mídia. */
+  /**
+   * Catálogo do teste: R2 com 3 mídias (a mais antiga REJEITADA, uma pendente e
+   * a principal APROVADA — só esta pode aparecer), exercício com GIFs mas
+   * nenhum aprovado (não mostra nada, nem o imageUrl antigo), URL externa,
+   * caminho legado e sem mídia.
+   */
   async function seedCatalog(accessToken: string) {
     const tag = Date.now();
     const r2 = await createExercise(app, accessToken, { name: `Rosca R2 ${tag}`, scope: 'private' });
     await prisma.exerciseMedia.createMany({
       data: [
-        { exerciseId: r2.id, storageKey: `exercises/halteres/segunda-${tag}.gif`, contentType: 'image/gif', sizeBytes: 2, sha256: 'b'.repeat(64), createdAt: new Date('2026-01-02') },
-        { exerciseId: r2.id, storageKey: `exercises/halteres/primeira-${tag}.gif`, contentType: 'image/gif', sizeBytes: 1, sha256: 'a'.repeat(64), createdAt: new Date('2026-01-01') },
+        { exerciseId: r2.id, storageKey: `exercises/halteres/aprovada-${tag}.gif`, contentType: 'image/gif', sizeBytes: 2, sha256: 'b'.repeat(64), createdAt: new Date('2026-01-03'), curationStatus: 'approved', isPrimary: true },
+        { exerciseId: r2.id, storageKey: `exercises/halteres/pendente-${tag}.gif`, contentType: 'image/gif', sizeBytes: 3, sha256: 'c'.repeat(64), createdAt: new Date('2026-01-02') },
+        { exerciseId: r2.id, storageKey: `exercises/halteres/rejeitada-${tag}.gif`, contentType: 'image/gif', sizeBytes: 1, sha256: 'a'.repeat(64), createdAt: new Date('2026-01-01'), curationStatus: 'rejected', rejectionReason: 'outro movimento' },
+      ],
+    });
+    const uncurated = await createExercise(app, accessToken, { name: `Sem GIF aprovado ${tag}`, scope: 'private' });
+    await prisma.exercise.update({ where: { id: uncurated.id }, data: { imageUrl: LEGACY } });
+    await prisma.exerciseMedia.createMany({
+      data: [
+        { exerciseId: uncurated.id, storageKey: `exercises/halteres/so-rejeitada-${tag}.gif`, contentType: 'image/gif', sizeBytes: 1, sha256: 'd'.repeat(64), curationStatus: 'rejected' },
+        { exerciseId: uncurated.id, storageKey: `exercises/halteres/so-pendente-${tag}.gif`, contentType: 'image/gif', sizeBytes: 1, sha256: 'e'.repeat(64) },
       ],
     });
     const external = await createExercise(app, accessToken, { name: `Externo ${tag}`, scope: 'private', imageUrl: 'https://cdn.exemplo.com/externo.gif' });
     const legacy = await createExercise(app, accessToken, { name: `Legado ${tag}`, scope: 'private' });
     await prisma.exercise.update({ where: { id: legacy.id }, data: { imageUrl: LEGACY } });
     const none = await createExercise(app, accessToken, { name: `Sem mídia ${tag}`, scope: 'private' });
-    return { tag, r2, external, legacy, none, r2Url: signedUrlFor(`exercises/halteres/primeira-${tag}.gif`) };
+    return { tag, r2, uncurated, external, legacy, none, r2Url: signedUrlFor(`exercises/halteres/aprovada-${tag}.gif`) };
   }
 
-  it('lista e detalhe: imageUrl = URL temporária do R2 (1ª mídia); fallbacks externo e legado intactos; nada gravado', async () => {
+  it('lista e detalhe: imageUrl = GIF APROVADO do R2 (nunca o rejeitado/pendente); sem aprovado = null; fallbacks externo e legado intactos; nada gravado', async () => {
     const professional = await registerProfessional(app);
-    const { tag, r2, external, legacy, none, r2Url } = await seedCatalog(professional.accessToken);
+    const { tag, r2, uncurated, external, legacy, none, r2Url } = await seedCatalog(professional.accessToken);
 
     const list = await request(app.getHttpServer())
       .get('/exercises')
@@ -87,6 +101,7 @@ describe('Mídia de exercício no R2 privado (e2e)', () => {
       .expect(200);
     const byId = new Map(list.body.map((e: { id: string; imageUrl: string | null }) => [e.id, e.imageUrl]));
     expect(byId.get(r2.id)).toBe(r2Url);
+    expect(byId.get(uncurated.id)).toBeNull();
     expect(byId.get(external.id)).toBe('https://cdn.exemplo.com/externo.gif');
     expect(byId.get(legacy.id)).toBe(LEGACY);
     expect(byId.get(none.id)).toBeNull();

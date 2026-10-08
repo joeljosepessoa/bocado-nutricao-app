@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { ExerciseMediaCurationStatus } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -90,17 +91,33 @@ export function withoutPresignedUrls(_key: string, value: unknown): unknown {
   return isPresignedUrl(value) ? null : value;
 }
 
-/** Mídia primária de um exercício: a imagem mais antiga (determinística com N mídias). */
+/**
+ * Imagens de um exercício para escolher a exibida: a principal primeiro, depois
+ * a ordem definida na curadoria (sortOrder) e, por fim, a mais antiga. Vêm
+ * TODAS as imagens (não só as aprovadas) para `resolveImageUrl` saber quando
+ * o exercício tem GIFs mas nenhum aprovado — aí não mostra nada, nem o
+ * imageUrl antigo (que pode ser justamente o GIF rejeitado).
+ */
 export const PRIMARY_EXERCISE_MEDIA_QUERY = {
   where: { contentType: { startsWith: 'image/' } },
-  select: { storageKey: true },
-  orderBy: [{ createdAt: 'asc' as const }, { id: 'asc' as const }],
-  take: 1,
+  select: { storageKey: true, curationStatus: true },
+  orderBy: [{ isPrimary: 'desc' as const }, { sortOrder: 'asc' as const }, { createdAt: 'asc' as const }, { id: 'asc' as const }],
+  take: 50,
 };
+
+export interface ExerciseMediaRef {
+  storageKey: string;
+  curationStatus: ExerciseMediaCurationStatus;
+}
 
 export interface ExerciseWithMedia {
   imageUrl: string | null;
-  media?: Array<{ storageKey: string }>;
+  media?: ExerciseMediaRef[];
+}
+
+/** O GIF que pode ser exibido: o primeiro APROVADO na ordem da consulta; pendente/rejeitado nunca. */
+export function displayableMedia(media: ExerciseMediaRef[] | undefined): ExerciseMediaRef | null {
+  return media?.find((m) => m.curationStatus === ExerciseMediaCurationStatus.approved) ?? null;
 }
 
 /**
@@ -162,11 +179,15 @@ export class ExerciseMediaStorage {
   }
 
   /**
-   * `imageUrl` exibido ao usuário: mídia do R2 (URL temporária) → imageUrl
+   * `imageUrl` exibido ao usuário: GIF APROVADO do R2 (URL temporária) → imageUrl
    * gravado (URL externa ou caminho legado `/exercise-media/<sha256>`) → null.
+   * Exercício com GIFs no catálogo mas nenhum aprovado (pendentes/rejeitados)
+   * mostra null ("GIF não disponível"), nunca um GIF não conferido.
    */
   async resolveImageUrl(exercise: ExerciseWithMedia): Promise<string | null> {
-    const storageKey = exercise.media?.[0]?.storageKey;
+    const chosen = displayableMedia(exercise.media);
+    if (!chosen && (exercise.media?.length ?? 0) > 0) return null;
+    const storageKey = chosen?.storageKey;
     if (storageKey) {
       const url = await this.presignedGetUrl(storageKey);
       if (url) return url;

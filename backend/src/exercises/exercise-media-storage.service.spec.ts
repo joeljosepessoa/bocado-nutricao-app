@@ -2,13 +2,19 @@ import { BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { ExerciseMediaCurationStatus } from '@prisma/client';
 import {
   EXERCISE_MEDIA_URL_EXPIRES_IN_SECONDS,
   ExerciseMediaStorage,
+  PRIMARY_EXERCISE_MEDIA_QUERY,
   isPresignedUrl,
   readExerciseMediaStorageConfig,
   withoutPresignedUrls,
 } from './exercise-media-storage.service';
+
+const APPROVED = ExerciseMediaCurationStatus.approved;
+const PENDING = ExerciseMediaCurationStatus.pending;
+const REJECTED = ExerciseMediaCurationStatus.rejected;
 
 // Nenhuma chamada real ao R2: cliente S3 e presigner são simulados.
 jest.mock('@aws-sdk/client-s3', () => {
@@ -96,8 +102,8 @@ describe('ExerciseMediaStorage', () => {
     const storage = new ExerciseMediaStorage(configWith({}));
     expect(storage.enabled).toBe(false);
     await expect(storage.presignedGetUrl('exercises/halteres/a.gif')).resolves.toBeNull();
-    await expect(storage.resolveImageUrl({ imageUrl: null, media: [{ storageKey: 'exercises/halteres/a.gif' }] })).resolves.toBeNull();
-    await expect(storage.resolveImageUrl({ imageUrl: 'https://cdn.exemplo.com/x.gif', media: [{ storageKey: 'k' }] })).resolves.toBe(
+    await expect(storage.resolveImageUrl({ imageUrl: null, media: [{ storageKey: 'exercises/halteres/a.gif', curationStatus: APPROVED }] })).resolves.toBeNull();
+    await expect(storage.resolveImageUrl({ imageUrl: 'https://cdn.exemplo.com/x.gif', media: [{ storageKey: 'k', curationStatus: APPROVED }] })).resolves.toBe(
       'https://cdn.exemplo.com/x.gif',
     );
     expect(S3Client).not.toHaveBeenCalled();
@@ -133,7 +139,7 @@ describe('ExerciseMediaStorage', () => {
     const storage = new ExerciseMediaStorage(configWith(fullEnv));
     const legacy = `/exercise-media/${'a'.repeat(64)}`;
 
-    await expect(storage.resolveImageUrl({ imageUrl: legacy, media: [{ storageKey: 'exercises/barras/supino.gif' }] })).resolves.toBe(
+    await expect(storage.resolveImageUrl({ imageUrl: legacy, media: [{ storageKey: 'exercises/barras/supino.gif', curationStatus: APPROVED }] })).resolves.toBe(
       fakeSignedUrl('exercises/barras/supino.gif'),
     );
     await expect(storage.resolveImageUrl({ imageUrl: 'https://cdn.exemplo.com/x.gif', media: [] })).resolves.toBe('https://cdn.exemplo.com/x.gif');
@@ -141,11 +147,34 @@ describe('ExerciseMediaStorage', () => {
     await expect(storage.resolveImageUrl({ imageUrl: null, media: [] })).resolves.toBeNull();
   });
 
-  it('múltiplas mídias: usa a primeira (a consulta já ordena por createdAt, id)', async () => {
+  it('múltiplas mídias: usa a primeira APROVADA na ordem da consulta (principal primeiro)', async () => {
     const storage = new ExerciseMediaStorage(configWith(fullEnv));
-    const url = await storage.resolveImageUrl({ imageUrl: null, media: [{ storageKey: 'primeira.gif' }, { storageKey: 'segunda.gif' }] });
-    expect(url).toBe(fakeSignedUrl('primeira.gif'));
+    const url = await storage.resolveImageUrl({
+      imageUrl: null,
+      media: [
+        { storageKey: 'rejeitada.gif', curationStatus: REJECTED },
+        { storageKey: 'pendente.gif', curationStatus: PENDING },
+        { storageKey: 'aprovada.gif', curationStatus: APPROVED },
+        { storageKey: 'aprovada-2.gif', curationStatus: APPROVED },
+      ],
+    });
+    expect(url).toBe(fakeSignedUrl('aprovada.gif'));
     expect(signed).toHaveBeenCalledTimes(1);
+  });
+
+  it('GIFs só pendentes/rejeitados: nada é exibido — nem o imageUrl antigo (pode ser o GIF rejeitado)', async () => {
+    const storage = new ExerciseMediaStorage(configWith(fullEnv));
+    const legacy = `/exercise-media/${'a'.repeat(64)}`;
+    await expect(
+      storage.resolveImageUrl({ imageUrl: legacy, media: [{ storageKey: 'r.gif', curationStatus: REJECTED }, { storageKey: 'p.gif', curationStatus: PENDING }] }),
+    ).resolves.toBeNull();
+    expect(signed).not.toHaveBeenCalled();
+  });
+
+  it('consulta: todas as imagens, principal primeiro, depois sortOrder, data e id', () => {
+    expect(PRIMARY_EXERCISE_MEDIA_QUERY.orderBy).toEqual([{ isPrimary: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }]);
+    expect(PRIMARY_EXERCISE_MEDIA_QUERY.select).toEqual({ storageKey: true, curationStatus: true });
+    expect(PRIMARY_EXERCISE_MEDIA_QUERY.where).toEqual({ contentType: { startsWith: 'image/' } });
   });
 
   it('falha ao assinar: cai no imageUrl gravado e o log não leva credencial', async () => {
@@ -153,7 +182,7 @@ describe('ExerciseMediaStorage', () => {
     const logError = jest.spyOn((storage as unknown as { logger: { error: (m: string) => void } }).logger, 'error').mockImplementation(() => undefined);
     signed.mockRejectedValueOnce(new Error(`credencial ${SECRET} recusada`));
 
-    await expect(storage.resolveImageUrl({ imageUrl: 'https://cdn.exemplo.com/x.gif', media: [{ storageKey: 'k.gif' }] })).resolves.toBe(
+    await expect(storage.resolveImageUrl({ imageUrl: 'https://cdn.exemplo.com/x.gif', media: [{ storageKey: 'k.gif', curationStatus: APPROVED }] })).resolves.toBe(
       'https://cdn.exemplo.com/x.gif',
     );
     expect(logError).toHaveBeenCalledTimes(1);
@@ -162,7 +191,7 @@ describe('ExerciseMediaStorage', () => {
 
   it('toDisplay: remove a relação media e mantém o resto do objeto intacto', async () => {
     const storage = new ExerciseMediaStorage(configWith(fullEnv));
-    const display = await storage.toDisplay({ id: 'e1', name: 'Supino', imageUrl: null, media: [{ storageKey: 'k.gif' }] });
+    const display = await storage.toDisplay({ id: 'e1', name: 'Supino', imageUrl: null, media: [{ storageKey: 'k.gif', curationStatus: APPROVED }] });
     expect(display).toEqual({ id: 'e1', name: 'Supino', imageUrl: fakeSignedUrl('k.gif') });
     expect(JSON.stringify(display)).not.toContain(SECRET);
     expect(JSON.stringify(display)).not.toContain(ACCESS_KEY);
