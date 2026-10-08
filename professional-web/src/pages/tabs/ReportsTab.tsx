@@ -125,7 +125,20 @@ export function ReportsTab() {
         columns={[
           { key: 'date', label: 'Gerado em', render: (row) => formatDateTime(row.generatedAt) },
           { key: 'audience', label: 'Público', render: (row) => AUDIENCE_LABEL[row.audience] },
-          { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
+          {
+            key: 'status',
+            label: 'Status',
+            render: (row) => (
+              <div>
+                <StatusBadge status={row.status} />
+                {row.status === 'failed' && row.failureReason ? (
+                  <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2, maxWidth: 220 }} title={row.failureReason}>
+                    {row.failureReason}
+                  </div>
+                ) : null}
+              </div>
+            ),
+          },
           { key: 'size', label: 'Tamanho', render: (row) => formatBytes(row.sizeBytes) },
           {
             key: 'release',

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import * as api from '../../api/endpoints';
@@ -7,6 +7,15 @@ import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { TextField } from '../../components/TextField';
 import { AiAssistPanel } from '../../components/AiAssistPanel';
+import {
+  evaluationDraftKey,
+  loadEvaluationDraft,
+  removeEvaluationDraft,
+  saveEvaluationDraft,
+  type EvaluationDraftData,
+} from '../../utils/evaluationDraft';
+
+const DRAFT_AUTOSAVE_DEBOUNCE_MS = 1500;
 
 const MEASUREMENT_FIELDS: Array<{ key: keyof Measurements; label: string }> = [
   { key: 'chestCm', label: 'Tórax (cm)' }, { key: 'waistCm', label: 'Cintura (cm)' },
@@ -61,6 +70,44 @@ export function EvaluationFormPage() {
   const [bioimpedance, setBioimpedance] = useState<NumField>({});
   const [error, setError] = useState<string | null>(null);
 
+  // Isolado por cliente + avaliação — o rascunho de um nunca aparece pro outro.
+  const draftKey = useMemo(() => evaluationDraftKey(clientId!, evaluationId), [clientId, evaluationId]);
+  const [pendingDraft, setPendingDraft] = useState<EvaluationDraftData | null>(null);
+  // Só liga o autosave depois que o professional decidiu o que fazer com um
+  // rascunho pendente — nunca sobrescreve o rascunho antes da escolha explícita.
+  const [draftDecided, setDraftDecided] = useState(false);
+
+  useEffect(() => {
+    const draft = loadEvaluationDraft(draftKey);
+    setPendingDraft(draft);
+    setDraftDecided(!draft);
+  }, [draftKey]);
+
+  function handleRestoreDraft() {
+    if (!pendingDraft) return;
+    setHeightCm(pendingDraft.heightCm);
+    setWeightKg(pendingDraft.weightKg);
+    setBiologicalSex(pendingDraft.biologicalSex);
+    setProtocolCode(pendingDraft.protocolCode);
+    setBloodPressureSystolic(pendingDraft.bloodPressureSystolic);
+    setBloodPressureDiastolic(pendingDraft.bloodPressureDiastolic);
+    setHeartRate(pendingDraft.heartRate);
+    setGlucose(pendingDraft.glucose);
+    setNotes(pendingDraft.notes);
+    setDraftInstructions(pendingDraft.draftInstructions);
+    setMeasurements(pendingDraft.measurements);
+    setSkinfolds(pendingDraft.skinfolds);
+    setBioimpedance(pendingDraft.bioimpedance);
+    setPendingDraft(null);
+    setDraftDecided(true);
+  }
+
+  function handleDiscardDraft() {
+    removeEvaluationDraft(draftKey);
+    setPendingDraft(null);
+    setDraftDecided(true);
+  }
+
   useEffect(() => {
     if (!existing) return;
     setHeightCm(String(existing.heightCm));
@@ -82,6 +129,45 @@ export function EvaluationFormPage() {
       setSkinfolds(s);
     }
   }, [existing]);
+
+  // Autosave debounced — nunca inclui senha/token/credenciais, só os campos do formulário.
+  useEffect(() => {
+    if (!draftDecided) return;
+    const timer = setTimeout(() => {
+      saveEvaluationDraft(draftKey, {
+        heightCm,
+        weightKg,
+        biologicalSex,
+        protocolCode,
+        bloodPressureSystolic,
+        bloodPressureDiastolic,
+        heartRate,
+        glucose,
+        notes,
+        draftInstructions,
+        measurements,
+        skinfolds,
+        bioimpedance,
+      });
+    }, DRAFT_AUTOSAVE_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [
+    draftDecided,
+    draftKey,
+    heightCm,
+    weightKg,
+    biologicalSex,
+    protocolCode,
+    bloodPressureSystolic,
+    bloodPressureDiastolic,
+    heartRate,
+    glucose,
+    notes,
+    draftInstructions,
+    measurements,
+    skinfolds,
+    bioimpedance,
+  ]);
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -113,6 +199,7 @@ export function EvaluationFormPage() {
       return isEdit ? api.updateEvaluation(clientId!, evaluationId!, payload) : api.createEvaluation(clientId!, payload);
     },
     onSuccess: (result) => {
+      removeEvaluationDraft(draftKey);
       queryClient.invalidateQueries({ queryKey: ['evaluations', clientId] });
       queryClient.invalidateQueries({ queryKey: ['evolution', clientId] });
       navigate(`/clients/${clientId}/evaluations/${result.id}`);
@@ -123,6 +210,22 @@ export function EvaluationFormPage() {
   return (
     <>
       <h2 style={{ fontSize: 17, margin: 0 }}>{isEdit ? 'Editar avaliação' : 'Nova avaliação'}</h2>
+
+      {pendingDraft ? (
+        <Card>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 14 }}>Encontramos um rascunho não salvo desta avaliação.</span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button size="small" onClick={handleRestoreDraft}>
+                Restaurar rascunho
+              </Button>
+              <Button size="small" variant="ghost" onClick={handleDiscardDraft}>
+                Descartar
+              </Button>
+            </div>
+          </div>
+        </Card>
+      ) : null}
 
       <Card title="Dados básicos">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>

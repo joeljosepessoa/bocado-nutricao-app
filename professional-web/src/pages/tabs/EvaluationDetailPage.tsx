@@ -7,6 +7,7 @@ import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
 import { AiAssistPanel } from '../../components/AiAssistPanel';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { formatDate, formatNumber } from '../../lib/format';
 
 const MEASUREMENT_LABELS: Record<keyof Measurements, string> = {
@@ -29,6 +30,8 @@ export function EvaluationDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [reportMessage, setReportMessage] = useState<string | null>(null);
+  const [releaseMessage, setReleaseMessage] = useState<string | null>(null);
+  const [showReleaseConfirm, setShowReleaseConfirm] = useState(false);
 
   const { data: evaluation, isLoading } = useQuery({
     queryKey: ['evaluation', clientId, evaluationId],
@@ -38,7 +41,10 @@ export function EvaluationDetailPage() {
 
   const releaseMutation = useMutation({
     mutationFn: (released: boolean) => api.setEvaluationRelease(clientId!, evaluationId!, released),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['evaluation', clientId, evaluationId] }),
+    onSuccess: (_, released) => {
+      queryClient.invalidateQueries({ queryKey: ['evaluation', clientId, evaluationId] });
+      setReleaseMessage(released ? 'Avaliação liberada para o cliente.' : null);
+    },
   });
 
   const reportMutation = useMutation({
@@ -67,11 +73,27 @@ export function EvaluationDetailPage() {
           <Button variant="ghost" onClick={() => navigate(`/clients/${clientId}/evaluations/${evaluationId}/edit`)}>
             Editar
           </Button>
-          <Button variant={isReleased ? 'secondary' : 'primary'} onClick={() => releaseMutation.mutate(!isReleased)} loading={releaseMutation.isPending}>
+          <Button
+            variant={isReleased ? 'secondary' : 'primary'}
+            onClick={() => (isReleased ? releaseMutation.mutate(false) : setShowReleaseConfirm(true))}
+            loading={releaseMutation.isPending}
+          >
             {isReleased ? 'Retirar liberação' : 'Liberar ao cliente'}
           </Button>
         </div>
       </div>
+
+      {releaseMessage ? <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{releaseMessage}</div> : null}
+
+      {showReleaseConfirm ? (
+        <ConfirmDialog
+          title="Liberar avaliação"
+          description="Você deseja liberar esta avaliação para o cliente? Depois de liberada, o cliente poderá visualizar os dados autorizados desta avaliação."
+          confirmLabel="Liberar para cliente"
+          onConfirm={() => releaseMutation.mutateAsync(true)}
+          onClose={() => setShowReleaseConfirm(false)}
+        />
+      ) : null}
 
       <Card title="Composição corporal">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>

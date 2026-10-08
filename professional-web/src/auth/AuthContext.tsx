@@ -1,7 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
 import { authReducer, initialAuthState, type AuthState } from './authReducer';
-import { configureAuthHandlers, setAccessToken } from '../api/client';
+import { cancelProactiveTokenRefresh, configureAuthHandlers, setAccessToken } from '../api/client';
 import * as api from '../api/endpoints';
+import { clearAllEvaluationDrafts } from '../utils/evaluationDraft';
 
 interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -21,6 +22,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     configureAuthHandlers({ onSessionExpired: handleSessionExpired });
   }, [handleSessionExpired]);
+
+  // Garante que o timer de renovação proativa nunca sobrevive ao AuthProvider.
+  useEffect(() => {
+    return () => {
+      cancelProactiveTokenRefresh();
+    };
+  }, []);
 
   // Não há refresh token acessível a JS (cookie HttpOnly) — a única forma
   // de saber se existe uma sessão ao carregar a página é tentar renovar;
@@ -46,6 +54,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     setAccessToken(null);
+    cancelProactiveTokenRefresh();
+    clearAllEvaluationDrafts();
     dispatch({ type: 'LOGOUT' });
     try {
       await api.logout();
