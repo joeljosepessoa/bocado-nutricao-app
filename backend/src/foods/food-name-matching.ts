@@ -49,16 +49,24 @@ interface IndexedFood {
 
 export type FoodCatalogIndex = IndexedFood[];
 
+/** Apelido normalizado → alimento (só apelidos que ligam sozinhos, aprovados pelo nutricionista). */
+export type FoodAliasIndex = ReadonlyMap<string, CatalogFoodRef>;
+
+export function buildFoodAliasIndex(aliases: { alias: string; food: CatalogFoodRef }[]): FoodAliasIndex {
+  return new Map(aliases.map((a) => [normalizeFoodName(a.alias), a.food]));
+}
+
 export function buildFoodCatalogIndex(catalog: CatalogFoodRef[]): FoodCatalogIndex {
   return catalog.map((ref) => ({ ref, normalized: normalizeFoodName(ref.name), stems: new Set(significantStems(ref.name)) }));
 }
 
 /**
- * Associação só por nome IGUAL (ignorando acento/caixa/pontuação). Qualquer
+ * Associação só por nome IGUAL (ignorando acento/caixa/pontuação) ou por um
+ * apelido aprovado pelo nutricionista (lista do Bocado × TACO). Qualquer
  * outra semelhança vira apenas sugestão — o profissional escolhe. Nunca
  * inventa correspondência: "fruta" não vira "banana".
  */
-export function matchFoodName(rawName: string, index: FoodCatalogIndex): FoodMatch {
+export function matchFoodName(rawName: string, index: FoodCatalogIndex, aliases?: FoodAliasIndex): FoodMatch {
   const target = normalizeFoodName(rawName);
   const exact = index.filter((entry) => entry.normalized === target);
   if (exact.length === 1) {
@@ -66,6 +74,11 @@ export function matchFoodName(rawName: string, index: FoodCatalogIndex): FoodMat
   }
   if (exact.length > 1) {
     return { status: 'ambiguous', food: null, candidates: exact.slice(0, MAX_FOOD_CANDIDATES).map((e) => e.ref) };
+  }
+  // Apelido aprovado pelo nutricionista ("peito de frango", "arroz branco").
+  const viaAlias = aliases?.get(target);
+  if (viaAlias) {
+    return { status: 'matched', food: viaAlias, candidates: [] };
   }
 
   const wanted = significantStems(rawName);

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AiFeatureKey, NutritionUnit } from '@prisma/client';
 import { FoodsService } from '../../../foods/foods.service';
-import { buildFoodCatalogIndex, CatalogFoodRef, FoodCatalogIndex, FoodMatchStatus, matchFoodName } from '../../../foods/food-name-matching';
+import { buildFoodAliasIndex, buildFoodCatalogIndex, CatalogFoodRef, FoodAliasIndex, FoodCatalogIndex, FoodMatchStatus, matchFoodName } from '../../../foods/food-name-matching';
 import { AiOutputValidationError } from '../../ai-errors';
 import type { AiGenerationResult } from '../../providers/ai-provider.interface';
 import type { GenerateAiContentDto } from '../../dto/generate-ai-content.dto';
@@ -97,8 +97,8 @@ export interface OrganizedDietProposal {
   warnings: string[];
 }
 
-function toProposalItem(item: CheckedDietItem, index: FoodCatalogIndex): ProposalDietItem {
-  const match = matchFoodName(item.rawFood, index);
+function toProposalItem(item: CheckedDietItem, index: FoodCatalogIndex, aliases: FoodAliasIndex): ProposalDietItem {
+  const match = matchFoodName(item.rawFood, index, aliases);
   const warnings = [...item.warnings];
   if (match.status === 'not_found') warnings.unshift(FOOD_WARNINGS.notFound);
   if (match.status === 'ambiguous') warnings.unshift(FOOD_WARNINGS.ambiguous);
@@ -144,6 +144,7 @@ export class OrganizeDietUseCase implements AiUseCase {
 
     const checked = checkDietFidelity((input as GenerateAiContentDto).dietText ?? '', organized);
     const index = buildFoodCatalogIndex(await this.foodsService.listVisibleRefs(professionalId));
+    const aliases = buildFoodAliasIndex(await this.foodsService.listAutoLinkAliases(professionalId));
     const proposal: OrganizedDietProposal = {
       days: checked.days.map((day) => ({
         ...day,
@@ -151,7 +152,7 @@ export class OrganizeDietUseCase implements AiUseCase {
           ...meal,
           groups: meal.groups.map((group) => ({
             ...group,
-            choices: group.choices.map((choice) => ({ ...choice, items: choice.items.map((item) => toProposalItem(item, index)) })),
+            choices: group.choices.map((choice) => ({ ...choice, items: choice.items.map((item) => toProposalItem(item, index, aliases)) })),
           })),
         })),
       })),

@@ -1,4 +1,4 @@
-import { buildFoodCatalogIndex, matchFoodName } from './food-name-matching';
+import { buildFoodAliasIndex, buildFoodCatalogIndex, matchFoodName } from './food-name-matching';
 
 const catalog = buildFoodCatalogIndex([
   { id: 'f1', name: 'Arroz, tipo 1, cozido' },
@@ -24,5 +24,29 @@ describe('matchFoodName — nunca inventa correspondência', () => {
 
   it('"fruta" não vira "banana": sem correspondência, sem sugestão inventada', () => {
     expect(matchFoodName('Fruta', catalog)).toEqual({ status: 'not_found', food: null, candidates: [] });
+  });
+});
+
+describe('matchFoodName — apelidos aprovados pelo nutricionista', () => {
+  const taco = buildFoodCatalogIndex([
+    { id: 't410', name: 'Frango, peito, sem pele, grelhado' },
+    { id: 't3', name: 'Arroz, tipo 1, cozido' },
+    { id: 'p1', name: 'Peito de frango' },
+  ]);
+  const aliases = buildFoodAliasIndex([
+    { alias: 'peito de frango', food: { id: 't410', name: 'Frango, peito, sem pele, grelhado' } },
+    { alias: 'arroz branco', food: { id: 't3', name: 'Arroz, tipo 1, cozido' } },
+  ]);
+
+  it('nome escrito diferente da TACO liga pelo apelido (acento, caixa e plural do texto não importam)', () => {
+    expect(matchFoodName('Arroz Branco', taco, aliases)).toEqual({ status: 'matched', food: { id: 't3', name: 'Arroz, tipo 1, cozido' }, candidates: [] });
+  });
+
+  it('nome igual a um alimento do catálogo continua tendo prioridade sobre o apelido', () => {
+    expect(matchFoodName('Peito de frango', taco, aliases).food?.id).toBe('p1');
+  });
+
+  it('sem apelidos, o comportamento antigo não muda', () => {
+    expect(matchFoodName('Arroz branco', taco).status).toBe('ambiguous');
   });
 });

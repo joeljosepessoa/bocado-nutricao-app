@@ -7,6 +7,8 @@ import { buildTacoCatalog } from './taco/taco-catalog';
 import { importTacoCatalog, TacoImportReport } from './taco/taco-catalog-import';
 import { PrismaTacoCatalogStore } from './taco/taco-catalog-stores';
 import { parseTaco } from './taco/taco-parser';
+import { FoodListChoiceFile, FoodListImportReport, importFoodList } from './taco/food-list-import';
+import { PrismaFoodListStore } from './taco/food-list-stores';
 
 function loadJson<T>(fileName: string): T {
   return JSON.parse(readFileSync(join(__dirname, 'data', fileName), 'utf-8')) as T;
@@ -34,6 +36,8 @@ interface ExerciseSeed {
 export interface ImportSummary {
   systemProfessionalId: string;
   foods: TacoImportReport;
+  /** Lista do Bocado × TACO (escolhas aprovadas) e apelidos de busca. */
+  foodList: FoodListImportReport;
   exercises: { created: number; skipped: number; approved: number };
 }
 
@@ -119,8 +123,10 @@ async function importExercises(
 export async function importReferenceData(prisma: PrismaClient): Promise<ImportSummary> {
   const systemProfessionalId = await ensureSystemProfessional(prisma);
   const foods = await importFoods(prisma, systemProfessionalId);
+  // Depois da TACO: as escolhas apontam para os alimentos pela chave "taco4:<nº>".
+  const foodList = await importFoodList(new PrismaFoodListStore(prisma), loadJson<FoodListChoiceFile>('lista-bocado-escolhas.json'));
   const exercises = await importExercises(prisma, systemProfessionalId);
-  return { systemProfessionalId, foods, exercises };
+  return { systemProfessionalId, foods, foodList, exercises };
 }
 
 async function main() {
@@ -135,6 +141,12 @@ async function main() {
     for (const d of f.detalhes.duplicados) console.log(`  duplicado: ${d.chave} ${d.nome} — ${d.motivo}`);
     for (const u of f.detalhes.atualizados) console.log(`  atualizado: ${u.chave} ${u.nome} — ${u.motivo}`);
     for (const n of f.detalhes.antigosSemCorrespondencia) console.log(`  antigo sem correspondência (mantido): ${n}`);
+    const l = summary.foodList;
+    console.log(
+      `Lista do Bocado × TACO: ${l.itens.criados} itens criados, ${l.itens.atualizados} atualizados, ${l.itens.semMudanca} sem mudança; ` +
+        `apelidos: ${l.apelidos.criados} criados, ${l.apelidos.atualizados} atualizados, ${l.apelidos.semMudanca} sem mudança (${l.apelidos.ligamSozinhos} ligam sozinhos).`,
+    );
+    for (const a of l.apelidosEmConflito) console.log(`  apelido em conflito (não liga sozinho): ${a}`);
     console.log(
       `Exercícios: ${summary.exercises.created} criados, ${summary.exercises.skipped} já existiam ` +
         `(${summary.exercises.approved} pendente(s) aprovado(s)).`,

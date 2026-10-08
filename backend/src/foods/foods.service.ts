@@ -77,6 +77,19 @@ export class FoodsService {
   }
 
   /**
+   * Apelidos que ligam sozinhos (lista do Bocado × TACO aprovada pelo
+   * nutricionista): "peito de frango" → "Frango, peito, sem pele, grelhado".
+   * Só alimentos visíveis ao profissional.
+   */
+  async listAutoLinkAliases(professionalId: string): Promise<{ alias: string; food: { id: string; name: string } }[]> {
+    const rows = await this.prisma.foodAlias.findMany({
+      where: { autoLink: true, food: this.visibilityFilter(professionalId) },
+      select: { alias: true, food: { select: { id: true, name: true } } },
+    });
+    return rows.flatMap((r) => (r.food ? [{ alias: r.alias, food: r.food }] : []));
+  }
+
+  /**
    * Catálogo que a IA pode usar para MONTAR uma dieta: alimentos visíveis ao
    * profissional, em g ou ml, com os 4 macros numéricos — o que tem marcador
    * da TACO (Tr/NA/*) fica de fora, porque o sistema não conseguiria calcular.

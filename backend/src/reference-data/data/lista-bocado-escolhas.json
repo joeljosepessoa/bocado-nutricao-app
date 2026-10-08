@@ -1,0 +1,3216 @@
+{
+ "fonte": "Página de conferência TACO × lista do Bocado; todas as escolhas aprovadas pelo nutricionista em 2026-10-08.",
+ "aprovado_em": "2026-10-08",
+ "itens": [
+  {
+   "grupo": "1. Proteínas",
+   "item": "Peito de frango",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 410,
+   "taco_nome": "Frango, peito, sem pele, grelhado",
+   "nota": "Pronto e na versão mais magra (sem pele/sem gordura).",
+   "candidatos": [
+    406,
+    407,
+    408,
+    409,
+    410
+   ],
+   "apelidos": [
+    "peito de frango",
+    "peito de frangos"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Coxa de frango",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 398,
+   "taco_nome": "Frango, coxa, sem pele, cozida",
+   "nota": "Pronto e na versão mais magra (sem pele/sem gordura).",
+   "candidatos": [
+    396,
+    397,
+    398,
+    399
+   ],
+   "apelidos": [
+    "coxa de frango",
+    "coxa de frangos"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Sobrecoxa",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 413,
+   "taco_nome": "Frango, sobrecoxa, sem pele, assada",
+   "nota": "Pronto e na versão mais magra (sem pele/sem gordura).",
+   "candidatos": [
+    411,
+    412,
+    413,
+    414
+   ],
+   "apelidos": [
+    "sobrecoxa",
+    "sobrecoxas"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Frango desfiado",
+   "status_original": "nao_encontrado",
+   "escolha": "taco",
+   "taco_numero": 408,
+   "taco_nome": "Frango, peito, sem pele, cozido",
+   "nota": "Frango desfiado é peito de frango sem pele cozido.",
+   "candidatos": [],
+   "apelidos": [
+    "frango desfiado",
+    "frango desfiados"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Patinho",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 377,
+   "taco_nome": "Carne, bovina, patinho, sem gordura, grelhado",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    376,
+    377
+   ],
+   "apelidos": [
+    "patinho",
+    "patinhos"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Coxão mole",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 351,
+   "taco_nome": "Carne, bovina, coxão mole, sem gordura, cozido",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    351,
+    352
+   ],
+   "apelidos": [
+    "coxao mole",
+    "coxao moles"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Coxão duro",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 349,
+   "taco_nome": "Carne, bovina, coxão duro, sem gordura, cozido",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    349,
+    350
+   ],
+   "apelidos": [
+    "coxao duro",
+    "coxao duros"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Alcatra",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 370,
+   "taco_nome": "Carne, bovina, miolo de alcatra, sem gordura, grelhado",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    369,
+    370
+   ],
+   "apelidos": [
+    "alcatra",
+    "alcatras"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Contrafilé",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 346,
+   "taco_nome": "Carne, bovina, contra-filé, sem gordura, grelhado",
+   "nota": "Pronto e na versão mais magra (sem pele/sem gordura).",
+   "candidatos": [
+    334,
+    335,
+    336,
+    337,
+    340,
+    341,
+    342,
+    343,
+    344,
+    345,
+    346
+   ],
+   "apelidos": [
+    "contrafile",
+    "contrafiles"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Filé mignon",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 358,
+   "taco_nome": "Carne, bovina, filé mingnon, sem gordura, grelhado",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    357,
+    358
+   ],
+   "apelidos": [
+    "file mignon",
+    "file mignons"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Acém",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 328,
+   "taco_nome": "Carne, bovina, acém, sem gordura, cozido",
+   "nota": "Pronto e na versão mais magra (sem pele/sem gordura).",
+   "candidatos": [
+    326,
+    327,
+    328,
+    329
+   ],
+   "apelidos": [
+    "acem",
+    "acems"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Músculo",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 371,
+   "taco_nome": "Carne, bovina, músculo, sem gordura, cozido",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    371,
+    372
+   ],
+   "apelidos": [
+    "musculo",
+    "musculos"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Carne moída magra",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 326,
+   "taco_nome": "Carne, bovina, acém, moído, cozido",
+   "nota": "A TACO só tem acém moído; cozido. Não distingue magra de comum.",
+   "candidatos": [
+    326,
+    327
+   ],
+   "apelidos": [
+    "carne moida magra",
+    "carne moida magras"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Carne moída comum",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 326,
+   "taco_nome": "Carne, bovina, acém, moído, cozido",
+   "nota": "A TACO só tem acém moído; cozido. Não distingue magra de comum.",
+   "candidatos": [
+    326,
+    327
+   ],
+   "apelidos": [
+    "carne moida comum",
+    "carne moida comums"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Lagarto",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 363,
+   "taco_nome": "Carne, bovina, lagarto, cozido",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    363,
+    364
+   ],
+   "apelidos": [
+    "lagarto",
+    "lagartos"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Fígado bovino",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 356,
+   "taco_nome": "Carne, bovina, fígado, grelhado",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    355,
+    356
+   ],
+   "apelidos": [
+    "figado bovino",
+    "figado bovinos"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Lombo suíno",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 432,
+   "taco_nome": "Porco, lombo, assado",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    432,
+    433
+   ],
+   "apelidos": [
+    "lombo suino",
+    "lombo suinos"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Pernil suíno",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 435,
+   "taco_nome": "Porco, pernil, assado",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    435,
+    436
+   ],
+   "apelidos": [
+    "pernil suino",
+    "pernil suinos"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Filé suíno",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "file suino",
+    "file suinos"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Tilápia",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "tilapia",
+    "tilapias"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Sardinha",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 318,
+   "taco_nome": "Sardinha, assada",
+   "nota": "Assada (a sardinha em lata tem item próprio).",
+   "candidatos": [
+    318,
+    319,
+    320,
+    321
+   ],
+   "apelidos": [
+    "sardinha",
+    "sardinhas"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Atum",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 277,
+   "taco_nome": "Atum, conserva em óleo",
+   "nota": "O atum mais usado é o de lata; a TACO só tem em óleo.",
+   "candidatos": [
+    277,
+    278
+   ],
+   "apelidos": [
+    "atum",
+    "atums"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Salmão",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 317,
+   "taco_nome": "Salmão, sem pele, fresco, grelhado",
+   "nota": "Pronto e na versão mais magra (sem pele/sem gordura).",
+   "candidatos": [
+    315,
+    316,
+    317
+   ],
+   "apelidos": [
+    "salmao",
+    "salmaos"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Merluza",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 301,
+   "taco_nome": "Merluza, filé, assado",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    301,
+    302,
+    303
+   ],
+   "apelidos": [
+    "merluza",
+    "merluzas"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Pescada",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 307,
+   "taco_nome": "Pescada, filé, cru",
+   "nota": "A TACO não tem pescada grelhada ou cozida; filé cru (pese cru) é o mais próximo sem fritura.",
+   "candidatos": [
+    304,
+    305,
+    306,
+    307,
+    308,
+    309
+   ],
+   "apelidos": [
+    "pescada",
+    "pescadas"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Bacalhau",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 280,
+   "taco_nome": "Bacalhau, salgado, refogado",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    279,
+    280
+   ],
+   "apelidos": [
+    "bacalhau",
+    "bacalhaus"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Camarão",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 284,
+   "taco_nome": "Camarão, Rio Grande, grande, cozido",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    284,
+    285,
+    286
+   ],
+   "apelidos": [
+    "camarao",
+    "camaraos"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Ovos",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 488,
+   "taco_nome": "Ovo, de galinha, inteiro, cozido/10minutos",
+   "nota": "Ovo cozido: sem óleo de fritura no cálculo.",
+   "candidatos": [
+    488,
+    489,
+    490
+   ],
+   "apelidos": [
+    "ovo",
+    "ovos"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Clara de ovo",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 486,
+   "taco_nome": "Ovo, de galinha, clara, cozida/10minutos",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    486
+   ],
+   "apelidos": [
+    "clara de ovo",
+    "clara de ovos"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Ovo de codorna",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 485,
+   "taco_nome": "Ovo, de codorna, inteiro, cru",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    485
+   ],
+   "apelidos": [
+    "ovo de codorna",
+    "ovo de codornas"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Whey protein",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "whey protein",
+    "whey proteins"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Caseína",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "caseina",
+    "caseinas"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Proteína vegetal",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "proteina vegetal",
+    "proteina vegetals"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Tofu",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 584,
+   "taco_nome": "Soja, queijo (tofu)",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    584
+   ],
+   "apelidos": [
+    "tofu",
+    "tofus"
+   ]
+  },
+  {
+   "grupo": "1. Proteínas",
+   "item": "Tempeh",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "tempeh",
+    "tempehs"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Arroz branco",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 3,
+   "taco_nome": "Arroz, tipo 1, cozido",
+   "nota": "Tipo 1 (o mais vendido), cozido.",
+   "candidatos": [
+    3,
+    4,
+    5,
+    6
+   ],
+   "apelidos": [
+    "arroz branco",
+    "arroz brancos"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Arroz integral",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 1,
+   "taco_nome": "Arroz, integral, cozido",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    1,
+    2
+   ],
+   "apelidos": [
+    "arroz integral",
+    "arroz integrals"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Arroz parboilizado",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "arroz parboilizado",
+    "arroz parboilizados"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Arroz vermelho",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "arroz vermelho",
+    "arroz vermelhos"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Arroz negro",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "arroz negro",
+    "arroz negros"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Feijão carioca",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 561,
+   "taco_nome": "Feijão, carioca, cozido",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    561,
+    562
+   ],
+   "apelidos": [
+    "feijao carioca",
+    "feijao cariocas"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Feijão preto",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 567,
+   "taco_nome": "Feijão, preto, cozido",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    567,
+    568
+   ],
+   "apelidos": [
+    "feijao preto",
+    "feijao pretos"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Feijão vermelho",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "feijao vermelho",
+    "feijao vermelhos"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Lentilha",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 577,
+   "taco_nome": "Lentilha, cozida",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    577,
+    578
+   ],
+   "apelidos": [
+    "lentilha",
+    "lentilhas"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Grão-de-bico",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 575,
+   "taco_nome": "Grão-de-bico, cru",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    575
+   ],
+   "apelidos": [
+    "grao de bico",
+    "grao de bicos"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Ervilha",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 560,
+   "taco_nome": "Ervilha, enlatada, drenada",
+   "nota": "Ervilha em lata, drenada, é a mais usada.",
+   "candidatos": [
+    559,
+    560
+   ],
+   "apelidos": [
+    "ervilha",
+    "ervilhas"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Quinoa",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "quinoa",
+    "quinoas"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Aveia",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 7,
+   "taco_nome": "Aveia, flocos, crua",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    7
+   ],
+   "apelidos": [
+    "aveia",
+    "aveias"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Farinha de aveia",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "farinha de aveia",
+    "farinha de aveias"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Tapioca",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 551,
+   "taco_nome": "Tapioca, com manteiga",
+   "nota": "Único da TACO, mas inclui manteiga; para tapioca sem manteiga use Goma de tapioca.",
+   "candidatos": [
+    551
+   ],
+   "apelidos": [
+    "tapioca",
+    "tapiocas"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Goma de tapioca",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 124,
+   "taco_nome": "Fécula, de mandioca",
+   "nota": "Goma de tapioca é fécula de mandioca.",
+   "candidatos": [
+    124,
+    146
+   ],
+   "apelidos": [
+    "goma de tapioca",
+    "goma de tapiocas"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Cuscuz",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 533,
+   "taco_nome": "Cuscuz, de milho, cozido com sal",
+   "nota": "Cuscuz de milho, cozido.",
+   "candidatos": [
+    533,
+    534
+   ],
+   "apelidos": [
+    "cuscuz",
+    "cuscuzs"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Milho",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 45,
+   "taco_nome": "Milho, verde, enlatado, drenado",
+   "nota": "Milho verde em lata, drenado, é o mais usado.",
+   "candidatos": [
+    42,
+    43,
+    44,
+    45
+   ],
+   "apelidos": [
+    "milho",
+    "milhos"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Fubá",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 43,
+   "taco_nome": "Milho, fubá, cru",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    43
+   ],
+   "apelidos": [
+    "fuba",
+    "fubas"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Macarrão",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 40,
+   "taco_nome": "Macarrão, trigo, cru",
+   "nota": "A TACO não tem macarrão cozido: o cálculo vale para o peso CRU. Confira se a dieta pesa cru.",
+   "candidatos": [
+    39,
+    40,
+    41,
+    542
+   ],
+   "apelidos": [
+    "macarrao",
+    "macarraos"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Macarrão integral",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "macarrao integral",
+    "macarrao integrals"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Batata inglesa",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 91,
+   "taco_nome": "Batata, inglesa, cozida",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    91,
+    92,
+    93,
+    94
+   ],
+   "apelidos": [
+    "batata inglesa",
+    "batata inglesas"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Batata-doce",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 88,
+   "taco_nome": "Batata, doce, cozida",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    88,
+    89
+   ],
+   "apelidos": [
+    "batata doce",
+    "batata doces"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Batata-baroa/mandioquinha",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 86,
+   "taco_nome": "Batata, baroa, cozida",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    86,
+    87
+   ],
+   "apelidos": [
+    "batata baroa mandioquinha",
+    "batata baroa mandioquinhas"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Mandioca",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 129,
+   "taco_nome": "Mandioca, cozida",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    129,
+    130,
+    131,
+    132
+   ],
+   "apelidos": [
+    "mandioca",
+    "mandiocas"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Aipim",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 129,
+   "taco_nome": "Mandioca, cozida",
+   "nota": "Aipim é mandioca; cozida.",
+   "candidatos": [
+    129,
+    130,
+    131,
+    132
+   ],
+   "apelidos": [
+    "aipim",
+    "aipims"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Inhame",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 126,
+   "taco_nome": "Inhame, cru",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    126
+   ],
+   "apelidos": [
+    "inhame",
+    "inhames"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Cará",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 102,
+   "taco_nome": "Cará, cozido",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    102,
+    103
+   ],
+   "apelidos": [
+    "cara",
+    "caras"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Abóbora",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 64,
+   "taco_nome": "Abóbora, cabotian, cozida",
+   "nota": "Cabotiá cozida, a mais usada em dieta.",
+   "candidatos": [
+    64,
+    65,
+    66,
+    67,
+    68,
+    69
+   ],
+   "apelidos": [
+    "abobora",
+    "aboboras"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Pão francês",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 53,
+   "taco_nome": "Pão, trigo, francês",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    53
+   ],
+   "apelidos": [
+    "pao france",
+    "pao frances"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Pão integral",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 52,
+   "taco_nome": "Pão, trigo, forma, integral",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    52
+   ],
+   "apelidos": [
+    "pao integral",
+    "pao integrals"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Pão de forma",
+   "status_original": "precisa_revisao",
+   "escolha": "nenhum",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "A TACO não tem pão de forma branco (só integral, aveia, glúten e milho). Use Pão integral quando for o caso.",
+   "candidatos": [
+    48,
+    50,
+    51,
+    52
+   ],
+   "apelidos": [
+    "pao de forma",
+    "pao de formas"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Pão de centeio",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "pao de centeio",
+    "pao de centeios"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Wrap",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "wrap",
+    "wraps"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Rap10",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "rap10",
+    "rap10s"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Torrada",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 63,
+   "taco_nome": "Torrada, pão francês",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    63
+   ],
+   "apelidos": [
+    "torrada",
+    "torradas"
+   ]
+  },
+  {
+   "grupo": "2. Carboidratos",
+   "item": "Granola",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "granola",
+    "granolas"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Banana prata",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 182,
+   "taco_nome": "Banana, prata, crua",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    182
+   ],
+   "apelidos": [
+    "banana prata",
+    "banana pratas"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Banana nanica",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 179,
+   "taco_nome": "Banana, nanica, crua",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    179
+   ],
+   "apelidos": [
+    "banana nanica",
+    "banana nanicas"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Maçã",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 222,
+   "taco_nome": "Maçã, Fuji, com casca, crua",
+   "nota": "Fruta crua, variedade mais comum no mercado.",
+   "candidatos": [
+    221,
+    222
+   ],
+   "apelidos": [
+    "maca",
+    "macas"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Pera",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 243,
+   "taco_nome": "Pêra, Williams, crua",
+   "nota": "Fruta crua, variedade mais comum no mercado.",
+   "candidatos": [
+    242,
+    243
+   ],
+   "apelidos": [
+    "pera",
+    "peras"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Laranja",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 214,
+   "taco_nome": "Laranja, pêra, crua",
+   "nota": "Laranja-pera, a fruta (o suco é outro item).",
+   "candidatos": [
+    208,
+    209,
+    210,
+    211,
+    212,
+    213,
+    214,
+    215,
+    216,
+    217
+   ],
+   "apelidos": [
+    "laranja",
+    "laranjas"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Tangerina",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 251,
+   "taco_nome": "Tangerina, Poncã, crua",
+   "nota": "Poncã, a fruta (o suco é outro item).",
+   "candidatos": [
+    251,
+    252
+   ],
+   "apelidos": [
+    "tangerina",
+    "tangerinas"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Mamão",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 226,
+   "taco_nome": "Mamão, Papaia, cru",
+   "nota": "Papaia, cru.",
+   "candidatos": [
+    224,
+    225,
+    226
+   ],
+   "apelidos": [
+    "mamao",
+    "mamaos"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Melão",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 236,
+   "taco_nome": "Melão, cru",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    236
+   ],
+   "apelidos": [
+    "melao",
+    "melaos"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Melancia",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 235,
+   "taco_nome": "Melancia, crua",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    235
+   ],
+   "apelidos": [
+    "melancia",
+    "melancias"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Abacaxi",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 164,
+   "taco_nome": "Abacaxi, cru",
+   "nota": "Fruta crua, variedade mais comum no mercado.",
+   "candidatos": [
+    164,
+    165
+   ],
+   "apelidos": [
+    "abacaxi",
+    "abacaxis"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Manga",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 231,
+   "taco_nome": "Manga, Tommy Atkins, crua",
+   "nota": "Tommy Atkins, crua.",
+   "candidatos": [
+    228,
+    229,
+    230,
+    231
+   ],
+   "apelidos": [
+    "manga",
+    "mangas"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Uva",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 256,
+   "taco_nome": "Uva, Itália, crua",
+   "nota": "Uva Itália, crua.",
+   "candidatos": [
+    256,
+    257,
+    258
+   ],
+   "apelidos": [
+    "uva",
+    "uvas"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Morango",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 239,
+   "taco_nome": "Morango, cru",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    239
+   ],
+   "apelidos": [
+    "morango",
+    "morangos"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Kiwi",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 207,
+   "taco_nome": "Kiwi, cru",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    207
+   ],
+   "apelidos": [
+    "kiwi",
+    "kiwis"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Mirtilo",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "mirtilo",
+    "mirtilos"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Maracujá",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 232,
+   "taco_nome": "Maracujá, cru",
+   "nota": "Fruta crua, variedade mais comum no mercado.",
+   "candidatos": [
+    232,
+    233,
+    234
+   ],
+   "apelidos": [
+    "maracuja",
+    "maracujas"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Goiaba",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 200,
+   "taco_nome": "Goiaba, vermelha, com casca, crua",
+   "nota": "Goiaba vermelha, crua.",
+   "candidatos": [
+    197,
+    198,
+    199,
+    200
+   ],
+   "apelidos": [
+    "goiaba",
+    "goiabas"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Acerola",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 169,
+   "taco_nome": "Acerola, crua",
+   "nota": "Fruta crua, variedade mais comum no mercado.",
+   "candidatos": [
+    169,
+    170
+   ],
+   "apelidos": [
+    "acerola",
+    "acerolas"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Caju",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 186,
+   "taco_nome": "Caju, cru",
+   "nota": "Fruta crua, variedade mais comum no mercado.",
+   "candidatos": [
+    186,
+    187,
+    188
+   ],
+   "apelidos": [
+    "caju",
+    "cajus"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Caqui",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 189,
+   "taco_nome": "Caqui, chocolate, cru",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    189
+   ],
+   "apelidos": [
+    "caqui",
+    "caquis"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Pêssego",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 244,
+   "taco_nome": "Pêssego, Aurora, cru",
+   "nota": "Fruta crua, variedade mais comum no mercado.",
+   "candidatos": [
+    244,
+    245
+   ],
+   "apelidos": [
+    "pessego",
+    "pessegos"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Ameixa",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 172,
+   "taco_nome": "Ameixa, crua",
+   "nota": "Fruta crua, variedade mais comum no mercado.",
+   "candidatos": [
+    171,
+    172,
+    173
+   ],
+   "apelidos": [
+    "ameixa",
+    "ameixas"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Figo",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 194,
+   "taco_nome": "Figo, cru",
+   "nota": "Fruta crua, variedade mais comum no mercado.",
+   "candidatos": [
+    194,
+    195
+   ],
+   "apelidos": [
+    "figo",
+    "figos"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Abacate",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 163,
+   "taco_nome": "Abacate, cru",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    163
+   ],
+   "apelidos": [
+    "abacate",
+    "abacates"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Coco",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 590,
+   "taco_nome": "Coco, cru",
+   "nota": "Polpa crua (a água de coco é outro item da TACO).",
+   "candidatos": [
+    478,
+    590,
+    591
+   ],
+   "apelidos": [
+    "coco",
+    "cocos"
+   ]
+  },
+  {
+   "grupo": "3. Frutas",
+   "item": "Limão",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 220,
+   "taco_nome": "Limão, tahiti, cru",
+   "nota": "Limão taiti.",
+   "candidatos": [
+    218,
+    219,
+    220
+   ],
+   "apelidos": [
+    "limao",
+    "limaos"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Alface",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 78,
+   "taco_nome": "Alface, crespa, crua",
+   "nota": "Alface crespa, crua.",
+   "candidatos": [
+    77,
+    78,
+    79,
+    80
+   ],
+   "apelidos": [
+    "alface",
+    "alfaces"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Rúcula",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 152,
+   "taco_nome": "Rúcula, crua",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    152
+   ],
+   "apelidos": [
+    "rucula",
+    "ruculas"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Agrião",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 75,
+   "taco_nome": "Agrião, cru",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    75
+   ],
+   "apelidos": [
+    "agriao",
+    "agriaos"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Couve",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 116,
+   "taco_nome": "Couve, manteiga, refogada ",
+   "nota": "Couve refogada, como costuma ir ao prato; para suco ou salada, a crua.",
+   "candidatos": [
+    115,
+    116
+   ],
+   "apelidos": [
+    "couve",
+    "couves"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Espinafre",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 120,
+   "taco_nome": "Espinafre, Nova Zelândia, refogado",
+   "nota": "Refogado, como costuma ser comido.",
+   "candidatos": [
+    119,
+    120
+   ],
+   "apelidos": [
+    "espinafre",
+    "espinafres"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Acelga",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 74,
+   "taco_nome": "Acelga, crua",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    74
+   ],
+   "apelidos": [
+    "acelga",
+    "acelgas"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Repolho",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 149,
+   "taco_nome": "Repolho, branco, cru",
+   "nota": "Repolho branco cru (salada).",
+   "candidatos": [
+    149,
+    150,
+    151
+   ],
+   "apelidos": [
+    "repolho",
+    "repolhos"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Brócolis",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 100,
+   "taco_nome": "Brócolis, cozido",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    100,
+    101
+   ],
+   "apelidos": [
+    "brocoli",
+    "brocolis"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Couve-flor",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 118,
+   "taco_nome": "Couve-flor, cozida",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    117,
+    118
+   ],
+   "apelidos": [
+    "couve flor",
+    "couve flors"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Cenoura",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 110,
+   "taco_nome": "Cenoura, crua",
+   "nota": "Como costuma ir à salada.",
+   "candidatos": [
+    109,
+    110
+   ],
+   "apelidos": [
+    "cenoura",
+    "cenouras"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Beterraba",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 97,
+   "taco_nome": "Beterraba, cozida",
+   "nota": "Cozida, como costuma ir à salada.",
+   "candidatos": [
+    97,
+    98
+   ],
+   "apelidos": [
+    "beterraba",
+    "beterrabas"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Abobrinha",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 70,
+   "taco_nome": "Abobrinha, italiana, cozida",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    70,
+    71,
+    72,
+    73
+   ],
+   "apelidos": [
+    "abobrinha",
+    "abobrinhas"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Berinjela",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 95,
+   "taco_nome": "Berinjela, cozida",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    95,
+    96
+   ],
+   "apelidos": [
+    "berinjela",
+    "berinjelas"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Chuchu",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 112,
+   "taco_nome": "Chuchu, cozido",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    112,
+    113
+   ],
+   "apelidos": [
+    "chuchu",
+    "chuchus"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Pepino",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 142,
+   "taco_nome": "Pepino, cru",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    142
+   ],
+   "apelidos": [
+    "pepino",
+    "pepinos"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Tomate",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 157,
+   "taco_nome": "Tomate, com semente, cru",
+   "nota": "Como costuma ir à salada.",
+   "candidatos": [
+    157,
+    158,
+    159,
+    160,
+    161
+   ],
+   "apelidos": [
+    "tomate",
+    "tomates"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Vagem",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 162,
+   "taco_nome": "Vagem, crua",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    162
+   ],
+   "apelidos": [
+    "vagem",
+    "vagems"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Quiabo",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 147,
+   "taco_nome": "Quiabo, cru",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    147
+   ],
+   "apelidos": [
+    "quiabo",
+    "quiabos"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Pimentão",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 144,
+   "taco_nome": "Pimentão, verde, cru",
+   "nota": "Pimentão verde, o mais comum.",
+   "candidatos": [
+    143,
+    144,
+    145
+   ],
+   "apelidos": [
+    "pimentao",
+    "pimentaos"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Cebola",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 107,
+   "taco_nome": "Cebola, crua",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    107
+   ],
+   "apelidos": [
+    "cebola",
+    "cebolas"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Alho",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 82,
+   "taco_nome": "Alho, cru",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    82
+   ],
+   "apelidos": [
+    "alho",
+    "alhos"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Milho",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 45,
+   "taco_nome": "Milho, verde, enlatado, drenado",
+   "nota": "Milho verde em lata, drenado, é o mais usado.",
+   "candidatos": [
+    42,
+    43,
+    44,
+    45
+   ],
+   "apelidos": [
+    "milho",
+    "milhos"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Ervilha",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 560,
+   "taco_nome": "Ervilha, enlatada, drenada",
+   "nota": "Ervilha em lata, drenada, é a mais usada.",
+   "candidatos": [
+    559,
+    560
+   ],
+   "apelidos": [
+    "ervilha",
+    "ervilhas"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Aspargos",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "aspargo",
+    "aspargos"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Cogumelos",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "cogumelo",
+    "cogumelos"
+   ]
+  },
+  {
+   "grupo": "4. Verduras e legumes",
+   "item": "Palmito",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 139,
+   "taco_nome": "Palmito, pupunha, em conserva",
+   "nota": "Pupunha em conserva, o mais vendido hoje.",
+   "candidatos": [
+    138,
+    139
+   ],
+   "apelidos": [
+    "palmito",
+    "palmitos"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Azeite de oliva",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 260,
+   "taco_nome": "Azeite, de oliva, extra virgem",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    260
+   ],
+   "apelidos": [
+    "azeite de oliva",
+    "azeite de olivas"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Óleo de coco",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "oleo de coco",
+    "oleo de cocos"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Óleo de canola",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 268,
+   "taco_nome": "Óleo, de canola",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    268
+   ],
+   "apelidos": [
+    "oleo de canola",
+    "oleo de canolas"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Manteiga",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 261,
+   "taco_nome": "Manteiga, com sal",
+   "nota": "Com sal, a mais comum.",
+   "candidatos": [
+    261,
+    262
+   ],
+   "apelidos": [
+    "manteiga",
+    "manteigas"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Pasta de amendoim",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "pasta de amendoim",
+    "pasta de amendoims"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Amendoim",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 557,
+   "taco_nome": "Amendoim, grão, cru",
+   "nota": "Grão cru, sem sal; o torrado e salgado é outro item.",
+   "candidatos": [
+    557,
+    558
+   ],
+   "apelidos": [
+    "amendoim",
+    "amendoims"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Castanha-do-Pará",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 589,
+   "taco_nome": "Castanha-do-Brasil, crua",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    589
+   ],
+   "apelidos": [
+    "castanha do para",
+    "castanha do paras"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Castanha de caju",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 588,
+   "taco_nome": "Castanha-de-caju, torrada, salgada",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    588
+   ],
+   "apelidos": [
+    "castanha de caju",
+    "castanha de cajus"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Amêndoas",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 587,
+   "taco_nome": "Amêndoa, torrada, salgada",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    587
+   ],
+   "apelidos": [
+    "amendoa",
+    "amendoas"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Nozes",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 597,
+   "taco_nome": "Noz, crua",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    597
+   ],
+   "apelidos": [
+    "noze",
+    "nozes"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Pistache",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "pistache",
+    "pistaches"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Macadâmia",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "macadamia",
+    "macadamias"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Semente de chia",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "semente de chia",
+    "semente de chias"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Linhaça",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 594,
+   "taco_nome": "Linhaça, semente",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    594
+   ],
+   "apelidos": [
+    "linhaca",
+    "linhacas"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Gergelim",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 593,
+   "taco_nome": "Gergelim, semente",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    593
+   ],
+   "apelidos": [
+    "gergelim",
+    "gergelims"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Semente de abóbora",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "semente de abobora",
+    "semente de aboboras"
+   ]
+  },
+  {
+   "grupo": "5. Gorduras e oleaginosas",
+   "item": "Tahine",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "tahine",
+    "tahines"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Leite integral",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 458,
+   "taco_nome": "Leite, de vaca, integral",
+   "nota": "Leite fluido (o em pó é outro item).",
+   "candidatos": [
+    458,
+    459
+   ],
+   "apelidos": [
+    "leite integral",
+    "leite integrals"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Leite desnatado",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 457,
+   "taco_nome": "Leite, de vaca, desnatado, UHT",
+   "nota": "Desnatado UHT (de caixinha).",
+   "candidatos": [
+    456,
+    457
+   ],
+   "apelidos": [
+    "leite desnatado",
+    "leite desnatados"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Leite semidesnatado",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "leite semidesnatado",
+    "leite semidesnatados"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Leite zero lactose",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "leite zero lactose",
+    "leite zero lactoses"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Iogurte natural",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 448,
+   "taco_nome": "Iogurte, natural",
+   "nota": "Natural integral; o desnatado é outro item.",
+   "candidatos": [
+    448,
+    449
+   ],
+   "apelidos": [
+    "iogurte natural",
+    "iogurte naturals"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Iogurte grego",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "iogurte grego",
+    "iogurte gregos"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Iogurte zero lactose",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "iogurte zero lactose",
+    "iogurte zero lactoses"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Kefir",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "kefir",
+    "kefirs"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Queijo minas",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 461,
+   "taco_nome": "Queijo, minas, frescal",
+   "nota": "Minas frescal, o mais usado em dieta.",
+   "candidatos": [
+    461,
+    462
+   ],
+   "apelidos": [
+    "queijo mina",
+    "queijo minas"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Muçarela",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 463,
+   "taco_nome": "Queijo, mozarela",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    463
+   ],
+   "apelidos": [
+    "mucarela",
+    "mucarelas"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Cottage",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "cottage",
+    "cottages"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Ricota",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 469,
+   "taco_nome": "Queijo, ricota",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    469
+   ],
+   "apelidos": [
+    "ricota",
+    "ricotas"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Cream cheese",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "cream cheese",
+    "cream cheeses"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Requeijão",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 468,
+   "taco_nome": "Queijo, requeijão, cremoso",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    468
+   ],
+   "apelidos": [
+    "requeijao",
+    "requeijaos"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Requeijão light",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "requeijao light",
+    "requeijao lights"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Bebida de soja",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 582,
+   "taco_nome": "Soja, extrato solúvel, natural, fluido",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    582
+   ],
+   "apelidos": [
+    "bebida de soja",
+    "bebida de sojas"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Bebida de amêndoas",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "bebida de amendoa",
+    "bebida de amendoas"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Bebida de aveia",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "bebida de aveia",
+    "bebida de aveias"
+   ]
+  },
+  {
+   "grupo": "6. Lácteos e alternativas",
+   "item": "Bebida de coco",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "bebida de coco",
+    "bebida de cocos"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Peito de peru",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 425,
+   "taco_nome": "Peru, congelado, assado",
+   "nota": "Peito de peru pronto (assado), como o fatiado de frios.",
+   "candidatos": [
+    425,
+    426
+   ],
+   "apelidos": [
+    "peito de peru",
+    "peito de perus"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Presunto",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 439,
+   "taco_nome": "Presunto, sem capa de gordura",
+   "nota": "Sem capa de gordura.",
+   "candidatos": [
+    438,
+    439
+   ],
+   "apelidos": [
+    "presunto",
+    "presuntos"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Atum em água",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "atum em agua",
+    "atum em aguas"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Sardinha em lata",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 319,
+   "taco_nome": "Sardinha, conserva em óleo",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    319
+   ],
+   "apelidos": [
+    "sardinha em lata",
+    "sardinha em latas"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Frango pronto/desfiado",
+   "status_original": "nao_encontrado",
+   "escolha": "taco",
+   "taco_numero": 408,
+   "taco_nome": "Frango, peito, sem pele, cozido",
+   "nota": "Frango desfiado é peito de frango sem pele cozido.",
+   "candidatos": [],
+   "apelidos": [
+    "frango pronto desfiado",
+    "frango pronto desfiados"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Hambúrguer bovino",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 417,
+   "taco_nome": "Hambúrguer, bovino, grelhado",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    415,
+    416,
+    417
+   ],
+   "apelidos": [
+    "hamburguer bovino",
+    "hamburguer bovinos"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Hambúrguer de frango",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "hamburguer de frango",
+    "hamburguer de frangos"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Hambúrguer vegetal",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "hamburguer vegetal",
+    "hamburguer vegetals"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Queijo light",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "queijo light",
+    "queijo lights"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Pão integral",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 52,
+   "taco_nome": "Pão, trigo, forma, integral",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    52
+   ],
+   "apelidos": [
+    "pao integral",
+    "pao integrals"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Wrap integral",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "wrap integral",
+    "wrap integrals"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Granola sem açúcar",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "granola sem acucar",
+    "granola sem acucars"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Pasta de amendoim",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "pasta de amendoim",
+    "pasta de amendoims"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Geleia sem açúcar",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "geleia sem acucar",
+    "geleia sem acucars"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Chocolate 70%",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "chocolate 70%",
+    "chocolate 70%s"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Cacau em pó",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "cacau em po",
+    "cacau em pos"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Leite em pó",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 459,
+   "taco_nome": "Leite, de vaca, integral, pó",
+   "nota": "Integral, o mais vendido.",
+   "candidatos": [
+    456,
+    459
+   ],
+   "apelidos": [
+    "leite em po",
+    "leite em pos"
+   ]
+  },
+  {
+   "grupo": "7. Alimentos práticos para dieta",
+   "item": "Whey",
+   "status_original": "fora_da_taco",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Produto de rótulo/marca: valores do rótulo que você usar.",
+   "candidatos": [],
+   "apelidos": [
+    "whey",
+    "wheys"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Arroz carreteiro",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 526,
+   "taco_nome": "Arroz carreteiro",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    526
+   ],
+   "apelidos": [
+    "arroz carreteiro",
+    "arroz carreteiros"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Feijoada",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 540,
+   "taco_nome": "L",
+   "nota": "Único candidato da TACO. Na planilha o nome do nº 540 está só como \"L\" (defeito do arquivo); é a feijoada.",
+   "candidatos": [
+    540
+   ],
+   "apelidos": [
+    "feijoada",
+    "feijoadas"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Farofa",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 131,
+   "taco_nome": "Mandioca, farofa, temperada",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    131
+   ],
+   "apelidos": [
+    "farofa",
+    "farofas"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Polenta",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 62,
+   "taco_nome": "Polenta, pré-cozida",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    62
+   ],
+   "apelidos": [
+    "polenta",
+    "polentas"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Pinhão",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 595,
+   "taco_nome": "Pinhão, cozido",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    595
+   ],
+   "apelidos": [
+    "pinhao",
+    "pinhaos"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Chimarrão",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 476,
+   "taco_nome": "Chá, mate, infusão 5%",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    476
+   ],
+   "apelidos": [
+    "chimarrao",
+    "chimarraos"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Cuca",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "cuca",
+    "cucas"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Sagu",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "sagu",
+    "sagus"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Churrasco",
+   "status_original": "nao_encontrado",
+   "escolha": "nao_incluir",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Genérico: na dieta, escreva o corte (picanha, maminha...).",
+   "candidatos": [],
+   "apelidos": [
+    "churrasco",
+    "churrascos"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Vina",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "vina",
+    "vinas"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Linguiça",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 423,
+   "taco_nome": "Lingüiça, porco, grelhada",
+   "nota": "Linguiça de porco grelhada; se for de frango, troque.",
+   "candidatos": [
+    418,
+    419,
+    420,
+    421,
+    422,
+    423
+   ],
+   "apelidos": [
+    "linguica",
+    "linguicas"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Charque",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 338,
+   "taco_nome": "Carne, bovina, charque, cozido",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    338,
+    339
+   ],
+   "apelidos": [
+    "charque",
+    "charques"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Carne seca",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 384,
+   "taco_nome": "Carne, bovina, seca, cozida",
+   "nota": "Preparação como o alimento costuma ser comido e pesado na dieta (pronto).",
+   "candidatos": [
+    384,
+    385
+   ],
+   "apelidos": [
+    "carne seca",
+    "carne secas"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Paçoca",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 579,
+   "taco_nome": "Paçoca, amendoim",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    579
+   ],
+   "apelidos": [
+    "pacoca",
+    "pacocas"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Tapioca",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 551,
+   "taco_nome": "Tapioca, com manteiga",
+   "nota": "Único da TACO, mas inclui manteiga; para tapioca sem manteiga use Goma de tapioca.",
+   "candidatos": [
+    551
+   ],
+   "apelidos": [
+    "tapioca",
+    "tapiocas"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Cuscuz nordestino",
+   "status_original": "precisa_revisao",
+   "escolha": "taco",
+   "taco_numero": 533,
+   "taco_nome": "Cuscuz, de milho, cozido com sal",
+   "nota": "Cuscuz de milho, cozido.",
+   "candidatos": [
+    533
+   ],
+   "apelidos": [
+    "cuscuz nordestino",
+    "cuscuz nordestinos"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Acarajé",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 525,
+   "taco_nome": "Acarajé",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    525
+   ],
+   "apelidos": [
+    "acaraje",
+    "acarajes"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Moqueca",
+   "status_original": "nao_encontrado",
+   "escolha": "fora_rotulo",
+   "taco_numero": null,
+   "taco_nome": null,
+   "nota": "Não está na TACO: cadastrar com valores de rótulo ou de outra tabela que você aprovar.",
+   "candidatos": [],
+   "apelidos": [
+    "moqueca",
+    "moquecas"
+   ]
+  },
+  {
+   "grupo": "8. Alimentos brasileiros/regionais",
+   "item": "Baião de dois",
+   "status_original": "encontrado",
+   "escolha": "taco",
+   "taco_numero": 527,
+   "taco_nome": "Baião de dois, arroz e feijão-de-corda",
+   "nota": "Único candidato da TACO.",
+   "candidatos": [
+    527
+   ],
+   "apelidos": [
+    "baiao de doi",
+    "baiao de dois"
+   ]
+  }
+ ]
+}
