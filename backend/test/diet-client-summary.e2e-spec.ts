@@ -67,6 +67,18 @@ describe('DietClientSummaryDto', () => {
     expect(keys).not.toContain('targetCalories');
   });
 
+  it('formato novo leva a observação do alimento ("sem pele"); o formato antigo (APKs instalados) não muda', () => {
+    const version = {
+      ...fullVersion,
+      meals: [{ ...fullVersion.meals[0], foods: [{ ...fullVersion.meals[0].foods[0], notes: 'sem pele' }, { customFoodName: 'Salada', isFreeQuantity: true }] }],
+    };
+    const dto = DietClientSummaryDto.fromPublishedVersion(version as never)!;
+    const [arroz, salada] = dto.days[0].meals[0].groups[0].choices[0].foods;
+    expect(arroz).toMatchObject({ foodName: 'Arroz branco cozido', notes: 'sem pele' });
+    expect(salada).toMatchObject({ foodName: 'Salada', notes: null, isFreeQuantity: true });
+    expect(Object.keys(dto.meals[0].foods[0]).sort()).toEqual(['carbG', 'fatG', 'foodName', 'kcal', 'proteinG', 'quantity', 'substitutions', 'unit']);
+  });
+
   it('alimento sem substituição cadastrada devolve lista vazia, não erro', () => {
     const dto = DietClientSummaryDto.fromPublishedVersion(fullVersion as never)!;
     expect(dto.meals[0].foods[0].substitutions).toEqual([]);

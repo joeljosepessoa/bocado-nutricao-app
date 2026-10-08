@@ -1,35 +1,13 @@
-import type {
-  DietClientDay,
-  DietClientFoodItem,
-  DietClientGroup,
-  DietClientSummary,
-  DietClientSupplement,
-  MealGroupKind,
-  NutritionRange,
-} from '../types/api';
+import type { DietClientDay, DietClientSummary, DietClientSupplement } from '../types/api';
 
 /**
- * Apoio da tela de dieta do paciente. A nutrição NÃO é calculada aqui: faixas
- * e totais vêm prontos da API (opções/alternativas nunca somadas, dias nunca
- * somados). Este módulo só organiza e formata o que a API envia.
+ * Base da dieta do paciente: dias vindos da API (com o caminho de volta para a
+ * API antiga), títulos e formatação de números. A montagem do que a tela
+ * mostra fica em `dietPresentation.ts`.
  */
 
-const UNIT_LABELS: Record<string, string> = {
-  g: 'g',
-  ml: 'ml',
-  unit: 'unidade(s)',
-  tablespoon: 'colher(es) de sopa',
-  teaspoon: 'colher(es) de chá',
-  cup: 'xícara(s)',
-  slice: 'fatia(s)',
-};
-
-export function unitLabel(unit: string): string {
-  return UNIT_LABELS[unit] ?? unit;
-}
-
 /** pt-BR sem depender de Intl: "1.800", "2,5". */
-function formatNumber(value: number, decimals: number): string {
+export function formatNumber(value: number, decimals: number): string {
   const factor = 10 ** decimals;
   const rounded = Math.round(value * factor) / factor;
   const [int, frac] = String(Math.abs(rounded)).split('.');
@@ -37,59 +15,15 @@ function formatNumber(value: number, decimals: number): string {
   return `${rounded < 0 ? '-' : ''}${grouped}${frac ? `,${frac}` : ''}`;
 }
 
-function span(min: number, max: number, decimals: number): string {
-  const a = formatNumber(min, decimals);
-  const b = formatNumber(max, decimals);
-  return a === b ? a : `${a}–${b}`;
-}
-
-/** "350 kcal" ou "320–350 kcal" (menor e maior escolha possível — nunca a soma). */
-export function formatKcal(range: NutritionRange): string {
-  return `${span(range.min.kcal, range.max.kcal, 0)} kcal`;
-}
-
-export function formatMacros(range: NutritionRange): string {
-  const part = (label: string, key: 'proteinG' | 'carbG' | 'fatG') => `${label} ${span(range.min[key], range.max[key], 1)}g`;
-  return [part('P', 'proteinG'), part('C', 'carbG'), part('G', 'fatG')].join(' · ');
-}
-
-export function isRange(range: NutritionRange): boolean {
-  return Math.round(range.min.kcal) !== Math.round(range.max.kcal);
-}
-
-/** "110 g", "3–5 g", "2 fatia(s)", "à vontade" — vazio quando não há quantidade. */
-export function quantityText(food: Pick<DietClientFoodItem, 'quantity' | 'quantityMax' | 'unit' | 'isFreeQuantity'>): string {
-  if (food.isFreeQuantity) return 'à vontade';
-  if (food.quantity == null) return '';
-  const amount = food.quantityMax != null ? `${formatNumber(food.quantity, 2)}–${formatNumber(food.quantityMax, 2)}` : formatNumber(food.quantity, 2);
-  return food.unit ? `${amount} ${unitLabel(food.unit)}` : amount;
-}
-
-/** Item sem cálculo (à vontade, fora do catálogo, sem quantidade): nunca mostra kcal inventado. */
-export function foodStatus(food: DietClientFoodItem): 'À vontade' | 'Sem cálculo' | null {
-  if (food.isFreeQuantity) return 'À vontade';
-  if (food.isCustom || food.quantity == null || food.kcal == null) return 'Sem cálculo';
-  return null;
+/** "3" ou "3–5" (faixa de quantidade). */
+export function amountText(quantity: number, quantityMax: number | null | undefined): string {
+  return quantityMax != null ? `${formatNumber(quantity, 2)}–${formatNumber(quantityMax, 2)}` : formatNumber(quantity, 2);
 }
 
 export function supplementQuantityText(s: Pick<DietClientSupplement, 'quantity' | 'quantityMax' | 'unitText'>): string {
   if (s.quantity == null) return s.unitText ?? '';
-  const amount = s.quantityMax != null ? `${formatNumber(s.quantity, 2)}–${formatNumber(s.quantityMax, 2)}` : formatNumber(s.quantity, 2);
+  const amount = amountText(s.quantity, s.quantityMax);
   return s.unitText ? `${amount} ${s.unitText}` : amount;
-}
-
-export const GROUP_TEXT: Record<MealGroupKind, { title: string; instruction: string }> = {
-  fixed: { title: 'Itens fixos', instruction: 'Consumir todos' },
-  meal_options: { title: 'Opções', instruction: 'Escolha 1 opção' },
-  alternatives: { title: 'Alternativas', instruction: 'Escolha 1' },
-};
-
-export function groupTitle(group: Pick<DietClientGroup, 'kind' | 'label'>): string {
-  return group.kind === 'alternatives' ? (group.label ?? GROUP_TEXT.alternatives.title) : GROUP_TEXT[group.kind].title;
-}
-
-export function choiceTitle(label: string | null, index: number): string {
-  return label ?? `Opção ${index + 1}`;
 }
 
 export function dayTitle(day: Pick<DietClientDay, 'label' | 'kind'>, index: number): string {
@@ -149,7 +83,7 @@ export function dietDays(diet: DietClientSummary): DietClientDay[] {
                   label: null,
                   order: 0,
                   nutrition: null,
-                  foods: meal.foods.map((f) => ({ ...f, isCustom: false, quantityMax: null, isFreeQuantity: false })),
+                  foods: meal.foods.map((f) => ({ ...f, isCustom: false, quantityMax: null, isFreeQuantity: false, notes: null })),
                 },
               ],
             },

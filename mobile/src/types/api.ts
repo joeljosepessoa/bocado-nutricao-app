@@ -87,6 +87,8 @@ export interface DietClientFoodItem {
   proteinG: number | null;
   carbG: number | null;
   fatG: number | null;
+  /** Observação do item para o paciente ("sem pele"). Ausente em APIs anteriores. */
+  notes?: string | null;
   substitutions: SubstitutionOption[];
 }
 

@@ -1,0 +1,4110 @@
+{
+ "dietId": "dieta-patricia",
+ "versionId": "versao-patricia",
+ "meals": [
+  {
+   "name": "DIA DE TREINO · CAFÉ DA MANHÃ — Opção 1 (escolha 1 opção)",
+   "order": 0,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "aveia",
+     "quantity": 10,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "fruta",
+     "quantity": 110,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "ovos",
+     "quantity": 2,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "claras",
+     "quantity": 3,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE TREINO · CAFÉ DA MANHÃ — Opção 2 (escolha 1 opção)",
+   "order": 1,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "aveia",
+     "quantity": 20,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "fruta",
+     "quantity": 120,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "whey protein",
+     "quantity": 30,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE TREINO · CAFÉ DA MANHÃ — Opção 3 (escolha 1 opção)",
+   "order": 2,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "pão integral",
+     "quantity": 2,
+     "unit": "slice",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "ovos",
+     "quantity": 2,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "claras",
+     "quantity": 2,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE TREINO · ALMOÇO",
+   "order": 3,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "Carboidrato (escolha 1): arroz",
+     "quantity": 65,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Carboidrato (escolha 1): batata inglesa",
+     "quantity": 160,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Carboidrato (escolha 1): aipim",
+     "quantity": 65,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Carboidrato (escolha 1): batata-doce",
+     "quantity": 110,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Carboidrato (escolha 1): polenta",
+     "quantity": 120,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1): peito de frango",
+     "quantity": 120,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1): carne vermelha magra",
+     "quantity": 145,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1): filé mignon suíno",
+     "quantity": 135,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1): sobrecoxa",
+     "quantity": 150,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "feijão",
+     "quantity": 50,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "legumes",
+     "quantity": 100,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "salada de folhas (à vontade)",
+     "quantity": null,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "azeite",
+     "quantity": 4,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE TREINO · LANCHE DA TARDE (PRÉ OU PÓS-TREINO) — Opção 1 (escolha 1 opção)",
+   "order": 4,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "aveia",
+     "quantity": 10,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "fruta",
+     "quantity": 110,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "ovos",
+     "quantity": 2,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "claras",
+     "quantity": 3,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE TREINO · LANCHE DA TARDE (PRÉ OU PÓS-TREINO) — Opção 2 (escolha 1 opção)",
+   "order": 5,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "aveia",
+     "quantity": 20,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "fruta",
+     "quantity": 120,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "whey protein",
+     "quantity": 30,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE TREINO · LANCHE DA TARDE (PRÉ OU PÓS-TREINO) — Opção 3 (escolha 1 opção)",
+   "order": 6,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "pão integral",
+     "quantity": 2,
+     "unit": "slice",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "ovos",
+     "quantity": 2,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "claras",
+     "quantity": 2,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE TREINO · JANTAR",
+   "order": 7,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "Carboidrato (escolha 1): arroz",
+     "quantity": 65,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Carboidrato (escolha 1): batata inglesa",
+     "quantity": 160,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Carboidrato (escolha 1): aipim",
+     "quantity": 65,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Carboidrato (escolha 1): batata-doce",
+     "quantity": 110,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Carboidrato (escolha 1): polenta",
+     "quantity": 120,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1): peito de frango",
+     "quantity": 120,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1): carne vermelha magra",
+     "quantity": 145,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1): filé mignon suíno",
+     "quantity": 135,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1): sobrecoxa",
+     "quantity": 150,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "feijão",
+     "quantity": 50,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "legumes",
+     "quantity": 100,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "salada de folhas (à vontade)",
+     "quantity": null,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "azeite",
+     "quantity": 4,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE TREINO · CEIA",
+   "order": 8,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "Danone natural",
+     "quantity": 100,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "aveia",
+     "quantity": 10,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "amêndoas",
+     "quantity": 5,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "whey protein",
+     "quantity": 15,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE DESCANSO · CAFÉ DA MANHÃ — Opção 1 (escolha 1 opção)",
+   "order": 9,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "ovos",
+     "quantity": 2,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "claras",
+     "quantity": 3,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "abacate",
+     "quantity": 90,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE DESCANSO · CAFÉ DA MANHÃ — Opção 2 (escolha 1 opção)",
+   "order": 10,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "ovos",
+     "quantity": 2,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "claras",
+     "quantity": 2,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "muçarela",
+     "quantity": 35,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE DESCANSO · CAFÉ DA MANHÃ — Opção 3 (escolha 1 opção)",
+   "order": 11,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "ovo",
+     "quantity": 1,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "claras",
+     "quantity": 4,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Danone natural",
+     "quantity": 150,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "castanhas",
+     "quantity": 10,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE DESCANSO · ALMOÇO",
+   "order": 12,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "Proteína (escolha 1) — opção 1: peito de frango",
+     "quantity": 135,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1) — opção 1: azeite",
+     "quantity": 10,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1) — opção 2: carne vermelha magra",
+     "quantity": 160,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1) — opção 2: azeite",
+     "quantity": 8,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1) — opção 3: filé mignon suíno",
+     "quantity": 145,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1) — opção 3: azeite",
+     "quantity": 8,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1) — opção 4: sobrecoxa",
+     "quantity": 165,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1) — opção 4: azeite",
+     "quantity": 2,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "legumes",
+     "quantity": 150,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "salada de folhas (à vontade)",
+     "quantity": null,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE DESCANSO · LANCHE DA TARDE — Opção 1 (escolha 1 opção)",
+   "order": 13,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "ovos",
+     "quantity": 2,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "claras",
+     "quantity": 3,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "abacate",
+     "quantity": 90,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE DESCANSO · LANCHE DA TARDE — Opção 2 (escolha 1 opção)",
+   "order": 14,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "ovos",
+     "quantity": 2,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "claras",
+     "quantity": 2,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "muçarela",
+     "quantity": 35,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE DESCANSO · LANCHE DA TARDE — Opção 3 (escolha 1 opção)",
+   "order": 15,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "ovo",
+     "quantity": 1,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "claras",
+     "quantity": 4,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Danone natural",
+     "quantity": 150,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "castanhas",
+     "quantity": 10,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE DESCANSO · JANTAR",
+   "order": 16,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "Proteína (escolha 1) — opção 1: peito de frango",
+     "quantity": 135,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1) — opção 1: azeite",
+     "quantity": 10,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1) — opção 2: carne vermelha magra",
+     "quantity": 160,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1) — opção 2: azeite",
+     "quantity": 8,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1) — opção 3: filé mignon suíno",
+     "quantity": 145,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1) — opção 3: azeite",
+     "quantity": 8,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1) — opção 4: sobrecoxa",
+     "quantity": 165,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "Proteína (escolha 1) — opção 4: azeite",
+     "quantity": 2,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "legumes",
+     "quantity": 150,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "salada de folhas (à vontade)",
+     "quantity": null,
+     "unit": null,
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  },
+  {
+   "name": "DIA DE DESCANSO · CEIA",
+   "order": 17,
+   "time": null,
+   "notes": null,
+   "foods": [
+    {
+     "foodName": "Danone natural",
+     "quantity": 150,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "whey protein",
+     "quantity": 15,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    },
+    {
+     "foodName": "castanhas",
+     "quantity": 10,
+     "unit": "g",
+     "kcal": null,
+     "proteinG": null,
+     "carbG": null,
+     "fatG": null,
+     "substitutions": []
+    }
+   ]
+  }
+ ],
+ "days": [
+  {
+   "label": "DIA DE TREINO",
+   "kind": "training",
+   "usageNotes": "Usar nos 5 dias de musculação na semana. Escolher 1 opção em cada refeição ou bloco.",
+   "order": 0,
+   "nutrition": {
+    "min": {
+     "kcal": 0,
+     "proteinG": 0,
+     "carbG": 0,
+     "fatG": 0,
+     "fiberG": 0
+    },
+    "max": {
+     "kcal": 0,
+     "proteinG": 0,
+     "carbG": 0,
+     "fatG": 0,
+     "fiberG": 0
+    },
+    "partial": true
+   },
+   "meals": [
+    {
+     "name": "CAFÉ DA MANHÃ",
+     "order": 0,
+     "time": null,
+     "notes": null,
+     "nutrition": {
+      "min": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "max": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "partial": true
+     },
+     "groups": [
+      {
+       "kind": "meal_options",
+       "label": null,
+       "order": 0,
+       "nutrition": {
+        "min": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "max": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "partial": true
+       },
+       "choices": [
+        {
+         "label": "Opção 1",
+         "order": 0,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "aveia",
+           "isCustom": true,
+           "quantity": 10,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "fruta",
+           "isCustom": true,
+           "quantity": 110,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "ovos",
+           "isCustom": true,
+           "quantity": 2,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "claras",
+           "isCustom": true,
+           "quantity": 3,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": "Opção 2",
+         "order": 1,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "aveia",
+           "isCustom": true,
+           "quantity": 20,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "fruta",
+           "isCustom": true,
+           "quantity": 120,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "whey protein",
+           "isCustom": true,
+           "quantity": 30,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": "Opção 3",
+         "order": 2,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "pão integral",
+           "isCustom": true,
+           "quantity": 2,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "slice",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "ovos",
+           "isCustom": true,
+           "quantity": 2,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "claras",
+           "isCustom": true,
+           "quantity": 2,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "ALMOÇO",
+     "order": 1,
+     "time": null,
+     "notes": null,
+     "nutrition": {
+      "min": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "max": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "partial": true
+     },
+     "groups": [
+      {
+       "kind": "alternatives",
+       "label": "Carboidrato",
+       "order": 0,
+       "nutrition": {
+        "min": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "max": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "partial": true
+       },
+       "choices": [
+        {
+         "label": null,
+         "order": 0,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "arroz",
+           "isCustom": true,
+           "quantity": 65,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 1,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "batata inglesa",
+           "isCustom": true,
+           "quantity": 160,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 2,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "aipim",
+           "isCustom": true,
+           "quantity": 65,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 3,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "batata-doce",
+           "isCustom": true,
+           "quantity": 110,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 4,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "polenta",
+           "isCustom": true,
+           "quantity": 120,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "alternatives",
+       "label": "Proteína",
+       "order": 1,
+       "nutrition": {
+        "min": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "max": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "partial": true
+       },
+       "choices": [
+        {
+         "label": null,
+         "order": 0,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "peito de frango",
+           "isCustom": true,
+           "quantity": 120,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 1,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "carne vermelha magra",
+           "isCustom": true,
+           "quantity": 145,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 2,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "filé mignon suíno",
+           "isCustom": true,
+           "quantity": 135,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 3,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "sobrecoxa",
+           "isCustom": true,
+           "quantity": 150,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": "sem pele",
+           "substitutions": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "fixed",
+       "label": null,
+       "order": 2,
+       "nutrition": {
+        "min": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "max": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "partial": true
+       },
+       "choices": [
+        {
+         "label": null,
+         "order": 0,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "feijão",
+           "isCustom": true,
+           "quantity": 50,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "legumes",
+           "isCustom": true,
+           "quantity": 100,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "salada de folhas",
+           "isCustom": true,
+           "quantity": null,
+           "quantityMax": null,
+           "isFreeQuantity": true,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "azeite",
+           "isCustom": true,
+           "quantity": 4,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "LANCHE DA TARDE (PRÉ OU PÓS-TREINO)",
+     "order": 2,
+     "time": null,
+     "notes": null,
+     "nutrition": {
+      "min": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "max": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "partial": true
+     },
+     "groups": [
+      {
+       "kind": "meal_options",
+       "label": null,
+       "order": 0,
+       "nutrition": {
+        "min": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "max": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "partial": true
+       },
+       "choices": [
+        {
+         "label": "Opção 1",
+         "order": 0,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "aveia",
+           "isCustom": true,
+           "quantity": 10,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "fruta",
+           "isCustom": true,
+           "quantity": 110,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "ovos",
+           "isCustom": true,
+           "quantity": 2,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "claras",
+           "isCustom": true,
+           "quantity": 3,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": "Opção 2",
+         "order": 1,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "aveia",
+           "isCustom": true,
+           "quantity": 20,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "fruta",
+           "isCustom": true,
+           "quantity": 120,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "whey protein",
+           "isCustom": true,
+           "quantity": 30,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": "Opção 3",
+         "order": 2,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "pão integral",
+           "isCustom": true,
+           "quantity": 2,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "slice",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "ovos",
+           "isCustom": true,
+           "quantity": 2,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "claras",
+           "isCustom": true,
+           "quantity": 2,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "JANTAR",
+     "order": 3,
+     "time": null,
+     "notes": null,
+     "nutrition": {
+      "min": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "max": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "partial": true
+     },
+     "groups": [
+      {
+       "kind": "alternatives",
+       "label": "Carboidrato",
+       "order": 0,
+       "nutrition": {
+        "min": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "max": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "partial": true
+       },
+       "choices": [
+        {
+         "label": null,
+         "order": 0,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "arroz",
+           "isCustom": true,
+           "quantity": 65,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 1,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "batata inglesa",
+           "isCustom": true,
+           "quantity": 160,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 2,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "aipim",
+           "isCustom": true,
+           "quantity": 65,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 3,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "batata-doce",
+           "isCustom": true,
+           "quantity": 110,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 4,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "polenta",
+           "isCustom": true,
+           "quantity": 120,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "alternatives",
+       "label": "Proteína",
+       "order": 1,
+       "nutrition": {
+        "min": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "max": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "partial": true
+       },
+       "choices": [
+        {
+         "label": null,
+         "order": 0,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "peito de frango",
+           "isCustom": true,
+           "quantity": 120,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 1,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "carne vermelha magra",
+           "isCustom": true,
+           "quantity": 145,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 2,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "filé mignon suíno",
+           "isCustom": true,
+           "quantity": 135,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 3,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "sobrecoxa",
+           "isCustom": true,
+           "quantity": 150,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": "sem pele",
+           "substitutions": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "fixed",
+       "label": null,
+       "order": 2,
+       "nutrition": {
+        "min": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "max": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "partial": true
+       },
+       "choices": [
+        {
+         "label": null,
+         "order": 0,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "feijão",
+           "isCustom": true,
+           "quantity": 50,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "legumes",
+           "isCustom": true,
+           "quantity": 100,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "salada de folhas",
+           "isCustom": true,
+           "quantity": null,
+           "quantityMax": null,
+           "isFreeQuantity": true,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "azeite",
+           "isCustom": true,
+           "quantity": 4,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "CEIA",
+     "order": 4,
+     "time": null,
+     "notes": null,
+     "nutrition": {
+      "min": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "max": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "partial": true
+     },
+     "groups": [
+      {
+       "kind": "fixed",
+       "label": null,
+       "order": 0,
+       "nutrition": {
+        "min": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "max": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "partial": true
+       },
+       "choices": [
+        {
+         "label": null,
+         "order": 0,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "Danone natural",
+           "isCustom": true,
+           "quantity": 100,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "aveia",
+           "isCustom": true,
+           "quantity": 10,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "amêndoas",
+           "isCustom": true,
+           "quantity": 5,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "whey protein",
+           "isCustom": true,
+           "quantity": 15,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "label": "DIA DE DESCANSO",
+   "kind": "rest",
+   "usageNotes": "Usar nos 2 dias sem treino na semana. Escolher 1 opção em cada refeição ou bloco.",
+   "order": 1,
+   "nutrition": {
+    "min": {
+     "kcal": 0,
+     "proteinG": 0,
+     "carbG": 0,
+     "fatG": 0,
+     "fiberG": 0
+    },
+    "max": {
+     "kcal": 0,
+     "proteinG": 0,
+     "carbG": 0,
+     "fatG": 0,
+     "fiberG": 0
+    },
+    "partial": true
+   },
+   "meals": [
+    {
+     "name": "CAFÉ DA MANHÃ",
+     "order": 0,
+     "time": null,
+     "notes": null,
+     "nutrition": {
+      "min": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "max": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "partial": true
+     },
+     "groups": [
+      {
+       "kind": "meal_options",
+       "label": null,
+       "order": 0,
+       "nutrition": {
+        "min": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "max": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "partial": true
+       },
+       "choices": [
+        {
+         "label": "Opção 1",
+         "order": 0,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "ovos",
+           "isCustom": true,
+           "quantity": 2,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "claras",
+           "isCustom": true,
+           "quantity": 3,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "abacate",
+           "isCustom": true,
+           "quantity": 90,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": "Opção 2",
+         "order": 1,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "ovos",
+           "isCustom": true,
+           "quantity": 2,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "claras",
+           "isCustom": true,
+           "quantity": 2,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "muçarela",
+           "isCustom": true,
+           "quantity": 35,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": "Opção 3",
+         "order": 2,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "ovo",
+           "isCustom": true,
+           "quantity": 1,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "claras",
+           "isCustom": true,
+           "quantity": 4,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "Danone natural",
+           "isCustom": true,
+           "quantity": 150,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "castanhas",
+           "isCustom": true,
+           "quantity": 10,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "ALMOÇO",
+     "order": 1,
+     "time": null,
+     "notes": null,
+     "nutrition": {
+      "min": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "max": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "partial": true
+     },
+     "groups": [
+      {
+       "kind": "alternatives",
+       "label": "Proteína",
+       "order": 0,
+       "nutrition": {
+        "min": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "max": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "partial": true
+       },
+       "choices": [
+        {
+         "label": null,
+         "order": 0,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "peito de frango",
+           "isCustom": true,
+           "quantity": 135,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "azeite",
+           "isCustom": true,
+           "quantity": 10,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 1,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "carne vermelha magra",
+           "isCustom": true,
+           "quantity": 160,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "azeite",
+           "isCustom": true,
+           "quantity": 8,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 2,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "filé mignon suíno",
+           "isCustom": true,
+           "quantity": 145,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "azeite",
+           "isCustom": true,
+           "quantity": 8,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 3,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "sobrecoxa",
+           "isCustom": true,
+           "quantity": 165,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": "sem pele",
+           "substitutions": []
+          },
+          {
+           "foodName": "azeite",
+           "isCustom": true,
+           "quantity": 2,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "fixed",
+       "label": null,
+       "order": 1,
+       "nutrition": {
+        "min": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "max": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "partial": true
+       },
+       "choices": [
+        {
+         "label": null,
+         "order": 0,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "legumes",
+           "isCustom": true,
+           "quantity": 150,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "salada de folhas",
+           "isCustom": true,
+           "quantity": null,
+           "quantityMax": null,
+           "isFreeQuantity": true,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "LANCHE DA TARDE",
+     "order": 2,
+     "time": null,
+     "notes": null,
+     "nutrition": {
+      "min": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "max": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "partial": true
+     },
+     "groups": [
+      {
+       "kind": "meal_options",
+       "label": null,
+       "order": 0,
+       "nutrition": {
+        "min": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "max": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "partial": true
+       },
+       "choices": [
+        {
+         "label": "Opção 1",
+         "order": 0,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "ovos",
+           "isCustom": true,
+           "quantity": 2,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "claras",
+           "isCustom": true,
+           "quantity": 3,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "abacate",
+           "isCustom": true,
+           "quantity": 90,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": "Opção 2",
+         "order": 1,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "ovos",
+           "isCustom": true,
+           "quantity": 2,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "claras",
+           "isCustom": true,
+           "quantity": 2,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "muçarela",
+           "isCustom": true,
+           "quantity": 35,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": "Opção 3",
+         "order": 2,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "ovo",
+           "isCustom": true,
+           "quantity": 1,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "claras",
+           "isCustom": true,
+           "quantity": 4,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "Danone natural",
+           "isCustom": true,
+           "quantity": 150,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "castanhas",
+           "isCustom": true,
+           "quantity": 10,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "JANTAR",
+     "order": 3,
+     "time": null,
+     "notes": null,
+     "nutrition": {
+      "min": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "max": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "partial": true
+     },
+     "groups": [
+      {
+       "kind": "alternatives",
+       "label": "Proteína",
+       "order": 0,
+       "nutrition": {
+        "min": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "max": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "partial": true
+       },
+       "choices": [
+        {
+         "label": null,
+         "order": 0,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "peito de frango",
+           "isCustom": true,
+           "quantity": 135,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "azeite",
+           "isCustom": true,
+           "quantity": 10,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 1,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "carne vermelha magra",
+           "isCustom": true,
+           "quantity": 160,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "azeite",
+           "isCustom": true,
+           "quantity": 8,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 2,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "filé mignon suíno",
+           "isCustom": true,
+           "quantity": 145,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "azeite",
+           "isCustom": true,
+           "quantity": 8,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        },
+        {
+         "label": null,
+         "order": 3,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "sobrecoxa",
+           "isCustom": true,
+           "quantity": 165,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": "sem pele",
+           "substitutions": []
+          },
+          {
+           "foodName": "azeite",
+           "isCustom": true,
+           "quantity": 2,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "fixed",
+       "label": null,
+       "order": 1,
+       "nutrition": {
+        "min": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "max": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "partial": true
+       },
+       "choices": [
+        {
+         "label": null,
+         "order": 0,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "legumes",
+           "isCustom": true,
+           "quantity": 150,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "salada de folhas",
+           "isCustom": true,
+           "quantity": null,
+           "quantityMax": null,
+           "isFreeQuantity": true,
+           "unit": null,
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "CEIA",
+     "order": 4,
+     "time": null,
+     "notes": null,
+     "nutrition": {
+      "min": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "max": {
+       "kcal": 0,
+       "proteinG": 0,
+       "carbG": 0,
+       "fatG": 0,
+       "fiberG": 0
+      },
+      "partial": true
+     },
+     "groups": [
+      {
+       "kind": "fixed",
+       "label": null,
+       "order": 0,
+       "nutrition": {
+        "min": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "max": {
+         "kcal": 0,
+         "proteinG": 0,
+         "carbG": 0,
+         "fatG": 0,
+         "fiberG": 0
+        },
+        "partial": true
+       },
+       "choices": [
+        {
+         "label": null,
+         "order": 0,
+         "nutrition": {
+          "min": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "max": {
+           "kcal": 0,
+           "proteinG": 0,
+           "carbG": 0,
+           "fatG": 0,
+           "fiberG": 0
+          },
+          "partial": true
+         },
+         "foods": [
+          {
+           "foodName": "Danone natural",
+           "isCustom": true,
+           "quantity": 150,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "whey protein",
+           "isCustom": true,
+           "quantity": 15,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          },
+          {
+           "foodName": "castanhas",
+           "isCustom": true,
+           "quantity": 10,
+           "quantityMax": null,
+           "isFreeQuantity": false,
+           "unit": "g",
+           "kcal": null,
+           "proteinG": null,
+           "carbG": null,
+           "fatG": null,
+           "notes": null,
+           "substitutions": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "supplements": [
+  {
+   "name": "Creatina",
+   "quantity": 3,
+   "quantityMax": 5,
+   "unitText": "g",
+   "timing": "antes do café da manhã",
+   "notes": "também nos dias sem treino",
+   "order": 0
+  },
+  {
+   "name": "Ômega-3",
+   "quantity": 1,
+   "quantityMax": null,
+   "unitText": "cápsula",
+   "timing": "no almoço e 1 cápsula no jantar",
+   "notes": "junto com a refeição",
+   "order": 1
+  },
+  {
+   "name": "Whey protein",
+   "quantity": null,
+   "quantityMax": null,
+   "unitText": null,
+   "timing": null,
+   "notes": "nas porções indicadas em cada refeição",
+   "order": 2
+  }
+ ],
+ "patientGuidelines": "Água: no mínimo 2,5 litros por dia.\nEscolha: 1 opção em cada bloco (proteína, carboidrato, café/lanche), sem misturar itens de opções diferentes.\nDias de treino: qualquer dia em que fizer musculação (5 dias na semana). Dias de descanso: os outros 2 dias.\nLanche da tarde: nos dias de treino, pode ser feito antes ou depois do treino, conforme o seu horário.\nPesos: alimentos pesados cozidos (arroz, batata, aipim, polenta, carnes, feijão e legumes).\nFruta: escolha 1 tipo por refeição (banana, maçã, mamão, laranja, morango ou kiwi).\nSalada: de folhas à vontade, temperada com limão, vinagre e sal. Azeite somente o indicado.\nEvite ultraprocessados, frituras e açúcar. Durma de 7 a 9 horas por noite."
+}

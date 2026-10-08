@@ -53,6 +53,8 @@ export interface DietClientFoodItem {
   proteinG: number | null;
   carbG: number | null;
   fatG: number | null;
+  /** Observação do item escrita para o paciente ("sem pele", "opcional"). */
+  notes: string | null;
   substitutions: SubstitutionOption[];
 }
 
@@ -181,6 +183,7 @@ export class DietClientSummaryDto {
               proteinG: f.proteinG,
               carbG: f.carbG,
               fatG: f.fatG,
+              notes: f.notes,
               substitutions: substitutions(f),
             })),
           })),
