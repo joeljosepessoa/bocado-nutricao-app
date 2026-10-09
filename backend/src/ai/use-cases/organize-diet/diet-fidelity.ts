@@ -548,12 +548,23 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
 
     // Itens que o texto junta ("frango + azeite") separados em escolhas diferentes.
     // Item presente nas duas escolhas ("2 ovos" na Opção 1 e na 3) não serve de prova.
+    const choiceOption = (choiceIndex: number): number | null => {
+      const label = group.choices[choiceIndex].label;
+      const match = label ? OPTION_PATTERN.exec(normalizeDietText(label)) : null;
+      return match ? Number(match[1]) : null;
+    };
     for (let c1 = 0; c1 < cores.length; c1++) {
       for (let c2 = c1 + 1; c2 < cores.length; c2++) {
+        const option1 = choiceOption(c1);
+        const option2 = choiceOption(c2);
+        // Coocorrência numa opção numerada só prova relação dentro dessa opção.
+        // Escolhas numeradas diferentes são alternativas completas entre si.
+        if (option1 !== null && option2 !== null && option1 !== option2) continue;
+        const scopedLines = option1 !== null && option1 === option2 ? lines.filter((line) => line.option === option1) : lines;
         for (const a of cores[c1]) {
           for (const b of cores[c2]) {
             if (!a || !b || a === b || cores[c2].includes(a) || cores[c1].includes(b)) continue;
-            if (relation(lines, a, b, true) === 'together' && relation(lines, a, b) !== 'apart') {
+            if (relation(scopedLines, a, b, true) === 'together' && relation(scopedLines, a, b) !== 'apart') {
               problems.push(`${where}: "${a}" e "${b}" aparecem juntos no texto, mas foram separados em escolhas diferentes.`);
             }
           }
