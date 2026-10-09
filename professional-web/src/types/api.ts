@@ -828,3 +828,31 @@ export interface Subscription {
   plan: Plan;
   invoices: Invoice[];
 }
+
+// --- Acompanhamento: o que o paciente registra no app -------------------------
+
+export interface TrackingWeightEntry {
+  /** null quando o peso veio de uma avaliação liberada. */
+  id: string | null;
+  weightKg: number;
+  recordedAt: string;
+  source: 'self' | 'evaluation';
+}
+
+export interface TrackingWeights {
+  targetWeightKg: number | null;
+  items: TrackingWeightEntry[];
+}
+
+export interface TrackingWaterHistory {
+  goalMl: number;
+  goalSource: 'professional' | 'weight' | 'default';
+  days: Array<{ date: string; totalMl: number }>;
+}
+
+export interface TrackingPhotos {
+  /** O paciente autorizou o nutricionista a ver as fotos? */
+  shared: boolean;
+  sharedAt: string | null;
+  items: Array<{ id: string; contentType: string; takenAt: string; createdAt: string }>;
+}

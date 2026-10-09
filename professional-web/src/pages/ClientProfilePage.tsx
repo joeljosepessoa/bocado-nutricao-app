@@ -9,6 +9,7 @@ const TAB_ITEMS = [
   { key: '', label: 'Visão geral' },
   { key: 'evaluations', label: 'Avaliação física' },
   { key: 'evolution', label: 'Evolução' },
+  { key: 'tracking', label: 'Acompanhamento' },
   { key: 'diet', label: 'Dieta' },
   { key: 'workout', label: 'Treino' },
   { key: 'reports', label: 'Relatórios' },

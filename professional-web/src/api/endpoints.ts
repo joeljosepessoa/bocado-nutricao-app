@@ -1,5 +1,8 @@
 import { apiClient } from './client';
 import type {
+  TrackingPhotos,
+  TrackingWaterHistory,
+  TrackingWeights,
   AdminModerationExercise,
   AdminModerationFood,
   AdminProfessional,
@@ -828,3 +831,25 @@ export async function cancelSubscription(): Promise<Subscription> {
 }
 
 export type { SessionUser };
+
+// --- Acompanhamento (registros do paciente no app) ----------------------------
+
+export async function getClientWeights(clientId: string): Promise<TrackingWeights> {
+  const res = await apiClient.get<TrackingWeights>(`/clients/${clientId}/tracking/weights`);
+  return res.data;
+}
+
+export async function getClientWater(clientId: string, days = 30): Promise<TrackingWaterHistory> {
+  const res = await apiClient.get<TrackingWaterHistory>(`/clients/${clientId}/tracking/water`, { params: { days } });
+  return res.data;
+}
+
+export async function getClientProgressPhotos(clientId: string): Promise<TrackingPhotos> {
+  const res = await apiClient.get<TrackingPhotos>(`/clients/${clientId}/tracking/progress-photos`);
+  return res.data;
+}
+
+export async function getClientProgressPhotoUrl(clientId: string, photoId: string): Promise<SignedUrl> {
+  const res = await apiClient.get<SignedUrl>(`/clients/${clientId}/tracking/progress-photos/${photoId}/download-url`);
+  return res.data;
+}

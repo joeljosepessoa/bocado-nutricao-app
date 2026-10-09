@@ -235,11 +235,62 @@ export class ClientTrackingService {
     await this.storage.delete(photo.storageKey);
   }
 
+  // ----------------------------------- compartilhamento das fotos (paciente)
+
+  async getPhotoSharing(clientId: string) {
+    const client = await this.prisma.client.findUniqueOrThrow({ where: { id: clientId }, select: { progressPhotosSharedAt: true } });
+    return { shared: client.progressPhotosSharedAt !== null, sharedAt: client.progressPhotosSharedAt };
+  }
+
+  /** O paciente liga ou desliga, quando quiser, o acesso do nutricionista às fotos que ele envia. */
+  async setPhotoSharing(clientId: string, shared: boolean) {
+    const current = await this.getPhotoSharing(clientId);
+    if (current.shared === shared) return current;
+    const client = await this.prisma.client.update({
+      where: { id: clientId },
+      data: { progressPhotosSharedAt: shared ? new Date() : null },
+      select: { progressPhotosSharedAt: true },
+    });
+    return { shared: client.progressPhotosSharedAt !== null, sharedAt: client.progressPhotosSharedAt };
+  }
+
+  // ---------------------------------------- leitura pelo nutricionista
+
+  /** Só o nutricionista do paciente; qualquer outro recebe 404 (sem revelar que o paciente existe). */
+  private async assertOwnedClient(professionalId: string, clientId: string): Promise<void> {
+    const client = await this.prisma.client.findFirst({ where: { id: clientId, professionalId }, select: { id: true } });
+    if (!client) throw new NotFoundException('Cliente não encontrado.');
+  }
+
+  async professionalWeights(professionalId: string, clientId: string, days?: number) {
+    await this.assertOwnedClient(professionalId, clientId);
+    return this.listWeights(clientId, days);
+  }
+
+  async professionalWaterHistory(professionalId: string, clientId: string, days?: number) {
+    await this.assertOwnedClient(professionalId, clientId);
+    return this.waterHistory(clientId, days);
+  }
+
+  /** Fotos do paciente: só quando ELE autorizou; sem autorização, a lista vem vazia. */
+  async professionalPhotos(professionalId: string, clientId: string) {
+    await this.assertOwnedClient(professionalId, clientId);
+    const sharing = await this.getPhotoSharing(clientId);
+    return { ...sharing, items: sharing.shared ? await this.listPhotos(clientId) : [] };
+  }
+
+  async professionalPhotoUrl(professionalId: string, clientId: string, photoId: string) {
+    await this.assertOwnedClient(professionalId, clientId);
+    const sharing = await this.getPhotoSharing(clientId);
+    if (!sharing.shared) throw new NotFoundException('Foto não encontrada.');
+    return this.getPhotoUrl(clientId, photoId);
+  }
+
   // --------------------------------------------------------------- LGPD
 
   /** Tudo o que o paciente registrou no app (para a exportação de dados). */
   async exportOwnRecords(clientId: string) {
-    const [weights, water, progressPhotos] = await Promise.all([
+    const [weights, water, progressPhotos, photoSharing] = await Promise.all([
       this.prisma.clientWeightLog.findMany({
         where: { clientId },
         orderBy: { recordedAt: 'asc' },
@@ -251,8 +302,9 @@ export class ClientTrackingService {
         select: { amountMl: true, loggedOn: true, loggedAt: true },
       }),
       this.listPhotos(clientId),
+      this.getPhotoSharing(clientId),
     ]);
-    return { weights, water, progressPhotos };
+    return { weights, water, progressPhotos, photoSharing };
   }
 
   /**

@@ -469,6 +469,12 @@ export interface WaterHistory {
   days: Array<{ date: string; totalMl: number }>;
 }
 
+/** Autorização do paciente para o nutricionista ver as fotos de progresso. */
+export interface PhotoSharing {
+  shared: boolean;
+  sharedAt: string | null;
+}
+
 export interface ProgressPhoto {
   id: string;
   contentType: string;

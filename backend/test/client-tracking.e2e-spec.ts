@@ -192,5 +192,51 @@ describe('Registros do paciente: metas, peso, água e fotos (e2e)', () => {
     expect(exported.body.ownRecords.weights).toHaveLength(1);
     expect(exported.body.ownRecords.water).toHaveLength(1);
     expect(exported.body.ownRecords.progressPhotos).toEqual([]);
+    expect(exported.body.ownRecords.photoSharing).toEqual({ shared: false, sharedAt: null });
+  });
+
+  it('nutricionista vê peso e água do próprio paciente; fotos só com autorização do paciente', async () => {
+    const { professionalAuth, clientId, auth } = await setup();
+    const outsider = await setup();
+    const http = () => request(app.getHttpServer());
+    const base = `/clients/${clientId}/tracking`;
+
+    await http().post('/client/weights').set(auth).send({ weightKg: 71.5 }).expect(201);
+    await http().post('/client/water').set(auth).send({ amountMl: 400, date: today() }).expect(201);
+    const photo = await http()
+      .post('/client/progress-photos')
+      .set(auth)
+      .attach('file', PNG, { filename: 'foto.png', contentType: 'image/png' })
+      .expect(201);
+
+    const weights = await http().get(`${base}/weights`).set(professionalAuth).expect(200);
+    expect(weights.body.items.map((w: { weightKg: number }) => w.weightKg)).toEqual([71.5]);
+    const water = await http().get(`${base}/water?days=7`).set(professionalAuth).expect(200);
+    expect(water.body.days).toEqual([{ date: today(), totalMl: 400 }]);
+
+    // Sem autorização: nenhuma foto, e o link direto também não abre.
+    expect((await http().get(`${base}/progress-photos`).set(professionalAuth).expect(200)).body).toEqual({ shared: false, sharedAt: null, items: [] });
+    await http().get(`${base}/progress-photos/${photo.body.id}/download-url`).set(professionalAuth).expect(404);
+
+    // O paciente autoriza: o nutricionista passa a ver e abrir.
+    expect((await http().get('/client/progress-photos/sharing').set(auth).expect(200)).body).toEqual({ shared: false, sharedAt: null });
+    const on = await http().post('/client/progress-photos/sharing').set(auth).send({ shared: true }).expect(200);
+    expect(on.body.shared).toBe(true);
+    const shared = await http().get(`${base}/progress-photos`).set(professionalAuth).expect(200);
+    expect(shared.body.items.map((p: { id: string }) => p.id)).toEqual([photo.body.id]);
+    const url = await http().get(`${base}/progress-photos/${photo.body.id}/download-url`).set(professionalAuth).expect(200);
+    expect(url.body.url).toMatch(/^\/files\//);
+
+    // Outro nutricionista nunca vê nada deste paciente.
+    await http().get(`${base}/weights`).set(outsider.professionalAuth).expect(404);
+    await http().get(`${base}/progress-photos`).set(outsider.professionalAuth).expect(404);
+    // O paciente não usa as rotas do nutricionista.
+    await http().get(`${base}/weights`).set(auth).expect(403);
+
+    // O paciente desliga: as fotos somem de novo para o nutricionista.
+    await http().post('/client/progress-photos/sharing').set(auth).send({ shared: false }).expect(200);
+    expect((await http().get(`${base}/progress-photos`).set(professionalAuth).expect(200)).body.items).toEqual([]);
+    await http().get(`${base}/progress-photos/${photo.body.id}/download-url`).set(professionalAuth).expect(404);
+    await http().post('/client/progress-photos/sharing').set(auth).send({ shared: 'sim' }).expect(400);
   });
 });

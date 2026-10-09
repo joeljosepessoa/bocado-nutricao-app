@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera, ImagePlus, Images, Trash2, WifiOff } from 'lucide-react-native';
+import { Camera, ImagePlus, Images, Lock, Trash2, Users, WifiOff } from 'lucide-react-native';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { ScreenContainer } from '../components/ScreenContainer';
@@ -12,7 +12,7 @@ import { PhotoLightbox } from '../components/PhotoLightbox';
 import * as api from '../api/endpoints';
 import { API_BASE_URL } from '../api/client';
 import { resolvePhotoSource } from '../media/reportPhoto';
-import type { EvolutionEntry, ProgressPhoto } from '../types/api';
+import type { EvolutionEntry, PhotoSharing, ProgressPhoto } from '../types/api';
 import { formatDay } from '../tracking/trackingModel';
 import { radius, spacing, typography } from '../theme/tokens';
 import { useStyles, useTheme, type ThemeColors } from '../theme/theme';
@@ -37,10 +37,17 @@ export function PhotosScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [sharing, setSharing] = useState<PhotoSharing | null>(null);
+  const [savingSharing, setSavingSharing] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [own, evolution] = await Promise.all([api.listProgressPhotos(), api.getEvolution(1, 50)]);
+      const [own, evolution, sharingState] = await Promise.all([
+        api.listProgressPhotos(),
+        api.getEvolution(1, 50),
+        api.getPhotoSharing().catch(() => null),
+      ]);
+      setSharing(sharingState);
       const loaded = await Promise.all(
         own.map(async (photo) => {
           try {
@@ -101,6 +108,32 @@ export function PhotosScreen() {
     }
   };
 
+  // Ligar pede confirmação (é o consentimento do paciente); desligar vale na hora.
+  const changeSharing = (next: boolean) => {
+    const apply = async () => {
+      setSavingSharing(true);
+      try {
+        setSharing(await api.setPhotoSharing(next));
+      } catch {
+        Alert.alert('Erro', 'Não foi possível salvar agora. Tente novamente.');
+      } finally {
+        setSavingSharing(false);
+      }
+    };
+    if (!next) {
+      apply();
+      return;
+    }
+    Alert.alert(
+      'Compartilhar fotos',
+      'Seu nutricionista vai poder ver as fotos de progresso que você enviou e as que enviar daqui em diante. Você pode desligar quando quiser.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Compartilhar', onPress: apply },
+      ],
+    );
+  };
+
   const remove = (photo: LoadedPhoto) => {
     Alert.alert('Apagar foto', `Apagar a foto de ${formatDay(photo.takenAt)}? Essa ação não pode ser desfeita.`, [
       { text: 'Cancelar', style: 'cancel' },
@@ -143,7 +176,9 @@ export function PhotosScreen() {
       <FadeIn>
         <Card>
           <Text style={styles.cardTitle}>Nova foto</Text>
-          <Text style={styles.muted}>Só você vê as fotos que envia por aqui.</Text>
+          <Text style={styles.muted}>
+            {sharing?.shared ? 'Você e seu nutricionista veem as fotos que você envia por aqui.' : 'Só você vê as fotos que envia por aqui.'}
+          </Text>
           {uploading ? (
             <View style={styles.uploading}>
               <ActivityIndicator color={colors.primary} />
@@ -161,6 +196,32 @@ export function PhotosScreen() {
           )}
         </Card>
       </FadeIn>
+
+      {sharing ? (
+        <FadeIn delay={30}>
+          <Card>
+            <View style={styles.shareRow}>
+              {sharing.shared ? <Users size={22} color={colors.primary} /> : <Lock size={22} color={colors.textSecondary} />}
+              <View style={styles.flex}>
+                <Text style={styles.shareTitle}>Compartilhar com meu nutricionista</Text>
+                <Text style={styles.muted}>
+                  {sharing.shared
+                    ? 'Ligado: seu nutricionista vê suas fotos de progresso. Desligue quando quiser.'
+                    : 'Desligado: só você vê suas fotos de progresso.'}
+                </Text>
+              </View>
+              <Switch
+                value={sharing.shared}
+                onValueChange={changeSharing}
+                disabled={savingSharing}
+                trackColor={{ true: colors.primary, false: colors.border }}
+                thumbColor={colors.surface}
+                accessibilityLabel="Compartilhar minhas fotos com meu nutricionista"
+              />
+            </View>
+          </Card>
+        </FadeIn>
+      ) : null}
 
       {photos.length === 0 ? (
         <EmptyState icon={Images} title="Nenhuma foto enviada" description="Tire fotos de frente, lado e costas, sempre na mesma luz, para comparar sua evolução." />
@@ -226,5 +287,7 @@ const makeStyles = (colors: ThemeColors) =>
     thumbFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
     thumbLabel: { ...typography.caption, color: colors.textSecondary },
     evaluation: { gap: spacing.xs },
+    shareRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm + 4 },
+    shareTitle: { ...typography.body, fontWeight: '700', color: colors.textPrimary },
     evaluationDate: { ...typography.body, fontWeight: '600', color: colors.textPrimary },
   });

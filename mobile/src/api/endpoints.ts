@@ -21,6 +21,7 @@ import type {
   NotificationPreference,
   PaginatedResult,
   SignedUrl,
+  PhotoSharing,
   ProgressPhoto,
   WaterDay,
   WaterHistory,
@@ -334,4 +335,15 @@ export async function getProgressPhotoUrl(id: string): Promise<SignedUrl> {
 
 export async function deleteProgressPhoto(id: string): Promise<void> {
   await apiClient.delete(`/client/progress-photos/${id}`);
+}
+
+export async function getPhotoSharing(): Promise<PhotoSharing> {
+  const res = await apiClient.get<PhotoSharing>('/client/progress-photos/sharing');
+  return res.data;
+}
+
+/** O paciente liga ou desliga o acesso do nutricionista às fotos que envia. */
+export async function setPhotoSharing(shared: boolean): Promise<PhotoSharing> {
+  const res = await apiClient.post<PhotoSharing>('/client/progress-photos/sharing', { shared });
+  return res.data;
 }

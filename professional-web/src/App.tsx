@@ -21,6 +21,7 @@ import { WorkoutAssistantPage } from './workoutAssistant/WorkoutAssistantPage';
 import { DietAssistantPage } from './dietAssistant/DietAssistantPage';
 import { ReportsTab } from './pages/tabs/ReportsTab';
 import { MessagesTab } from './pages/tabs/MessagesTab';
+import { TrackingTab } from './pages/tabs/TrackingTab';
 import { AgendaPage } from './pages/AgendaPage';
 import { PlanPage } from './pages/PlanPage';
 import { NotFoundPage } from './pages/NotFoundPage';
@@ -60,6 +61,7 @@ function App() {
                 <Route path="evaluations/:evaluationId" element={<EvaluationDetailPage />} />
                 <Route path="evaluations/:evaluationId/edit" element={<EvaluationFormPage />} />
                 <Route path="evolution" element={<EvolutionTab />} />
+                <Route path="tracking" element={<TrackingTab />} />
                 <Route path="diet" element={<DietTab />} />
                 <Route path="diet/assistant" element={<DietAssistantPage />} />
                 <Route path="workout" element={<WorkoutTab />} />

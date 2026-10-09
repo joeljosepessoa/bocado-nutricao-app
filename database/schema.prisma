@@ -158,6 +158,10 @@ model Client {
   // 2000 ml sem peso) só na exibição, sem gravar nada aqui.
   targetWeightKg            Float?       @map("target_weight_kg")
   waterGoalMl               Int?         @map("water_goal_ml")
+  // Autorização do PRÓPRIO paciente para o nutricionista ver as fotos de
+  // progresso que ele envia pelo app (null = não compartilha; LGPD: pode
+  // desligar quando quiser).
+  progressPhotosSharedAt    DateTime?    @map("progress_photos_shared_at")
   createdAt                 DateTime     @default(now()) @map("created_at")
   updatedAt                 DateTime     @default(now()) @updatedAt @map("updated_at")
 

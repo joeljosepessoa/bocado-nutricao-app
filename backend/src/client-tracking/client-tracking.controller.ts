@@ -21,6 +21,7 @@ import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { ClientTrackingService, MAX_PROGRESS_PHOTO_BYTES } from './client-tracking.service';
 import { CreateWeightLogDto } from './dto/create-weight-log.dto';
 import { CreateWaterLogDto } from './dto/create-water-log.dto';
+import { PhotoSharingDto } from './dto/photo-sharing.dto';
 
 /** Limites do multipart do upload de foto de progresso (mesma linha de PHOTO_UPLOAD_LIMITS). */
 export const PROGRESS_PHOTO_UPLOAD_LIMITS = {
@@ -34,7 +35,7 @@ export const PROGRESS_PHOTO_UPLOAD_LIMITS = {
   fieldArrayIndexLimit: 0,
 };
 
-function optionalDays(value: string | undefined): number | undefined {
+export function optionalDays(value: string | undefined): number | undefined {
   if (value === undefined || value === '') return undefined;
   const days = Number(value);
   if (!Number.isInteger(days) || days < 1 || days > 3660) {
@@ -106,6 +107,17 @@ export class ClientTrackingController {
       throw new BadRequestException('Nenhum arquivo enviado.');
     }
     return this.tracking.uploadPhoto(user.id, { buffer: file.buffer, mimetype: file.mimetype, size: file.size }, takenAt);
+  }
+
+  @Get('progress-photos/sharing')
+  getPhotoSharing(@CurrentUser() user: AuthenticatedUser) {
+    return this.tracking.getPhotoSharing(user.id);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('progress-photos/sharing')
+  setPhotoSharing(@CurrentUser() user: AuthenticatedUser, @Body() dto: PhotoSharingDto) {
+    return this.tracking.setPhotoSharing(user.id, dto.shared);
   }
 
   @Get('progress-photos/:id/download-url')
