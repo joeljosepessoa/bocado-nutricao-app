@@ -8,7 +8,8 @@ import { amountText, dayTitle, dietDays, formatNumber, showDayTabs, supplementQu
  *
  * Calorias: cada alimento traz a própria kcal (ou null quando não há cálculo).
  * Um total só aparece quando TODOS os alimentos com quantidade daquele trecho
- * têm cálculo. Falta de dado nunca vira 0, e uma opção sem dado nunca entra
+ * têm cálculo. Cálculo parcial não mostra número nem aviso ao paciente: a soma
+ * de só alguns alimentos ("a partir de 84 kcal" num dia inteiro) mais confunde do que informa. Falta de dado nunca vira 0, e uma opção sem dado nunca entra
  * como mínimo de uma faixa. "À vontade" não tem quantidade e não conta como falta.
  */
 
@@ -18,7 +19,7 @@ export type CalorieStatus = 'calculated' | 'partial' | 'unavailable';
 
 export interface CalorieInfo {
   status: CalorieStatus;
-  /** "350 kcal", "320–350 kcal" ou "a partir de 120 kcal"; null quando não há o que mostrar. */
+  /** "350 kcal" ou "320–350 kcal"; null quando o cálculo não está completo. */
   text: string | null;
   /** Macros do trecho (só quando calculado por completo). */
   macros: string | null;
@@ -62,7 +63,7 @@ export interface DayView {
   title: string;
   usageNotes: string | null;
   calories: CalorieInfo;
-  /** Aviso discreto, uma vez por dia, quando falta cálculo. */
+  /** Aviso discreto, uma vez por dia, quando nenhum alimento tem cálculo. */
   calorieNote: string | null;
   meals: MealView[];
 }
@@ -91,7 +92,6 @@ export const TEXT = {
   blockInstruction: 'Escolha 1',
   fixed: 'Fixos',
   freeQuantity: 'À vontade',
-  partialNote: 'Cálculo parcial: alguns alimentos ainda não têm informação calórica.',
   unavailableNote: 'Informação calórica indisponível.',
 } as const;
 
@@ -222,10 +222,8 @@ const span = (min: number, max: number, decimals: number) => {
 
 function calories(calc: Calc): CalorieInfo {
   if (calc.calculated === 0) return { status: 'unavailable', text: null, macros: null };
-  if (calc.missing > 0) {
-    // O que tem cálculo é um piso real; o teto é desconhecido. Piso 0 não é mostrado.
-    return { status: 'partial', text: Math.round(calc.min.kcal) > 0 ? `a partir de ${formatNumber(calc.min.kcal, 0)} kcal` : null, macros: null };
-  }
+  // Parte dos alimentos sem cálculo: o total seria só um piso — não é mostrado.
+  if (calc.missing > 0) return { status: 'partial', text: null, macros: null };
   const macros = calc.macrosMissing
     ? null
     : `Proteína ${span(calc.min.proteinG, calc.max.proteinG, 0)} g · Carboidrato ${span(calc.min.carbG, calc.max.carbG, 0)} g · Gordura ${span(calc.min.fatG, calc.max.fatG, 0)} g`;
@@ -274,7 +272,7 @@ function buildMeal(meal: DietClientMealNode, key: string): Built<MealView> {
       time: clean(meal.time),
       notes: clean(meal.notes),
       sections,
-      // Na refeição: total completo, ou o piso quando parcial — nunca só o aviso (ele aparece uma vez no dia).
+      // Na refeição: só o total completo.
       calories: info,
     },
     calc,
@@ -290,7 +288,7 @@ function buildDay(day: DietClientDay, index: number): DayView {
     title: dayTitle(day, index),
     usageNotes: clean(day.usageNotes),
     calories: info,
-    calorieNote: info.status === 'partial' ? TEXT.partialNote : info.status === 'unavailable' && meals.length > 0 ? TEXT.unavailableNote : null,
+    calorieNote: info.status === 'unavailable' && meals.length > 0 ? TEXT.unavailableNote : null,
     meals: meals.map((m) => m.view),
   };
 }

@@ -136,7 +136,7 @@ describe('calorias: calculado, parcial e sem dados', () => {
     expect(view.days[0]).toMatchObject({ calories: { status: 'calculated', text: '320–350 kcal' }, calorieNote: null });
   });
 
-  it('opção sem dados NÃO vira mínimo 0: faixa some e o dia avisa uma vez que o cálculo é parcial', () => {
+  it('opção sem dados NÃO vira mínimo 0: a faixa some, sem número nem aviso de cálculo parcial', () => {
     const view = buildDietPresentation(
       dietWith([group('meal_options', null, [[food('aveia', 10, 'g', 39), food('fruta', 110, 'g', 131)], [food('pão integral', 2, 'slice', null)]])]),
     );
@@ -144,13 +144,15 @@ describe('calorias: calculado, parcial e sem dados', () => {
     expect(meal.calories).toEqual({ status: 'partial', text: null, macros: null });
     const [options] = meal.sections;
     expect(options.kind === 'options' && options.choices.map((c) => c.calories.status)).toEqual(['calculated', 'unavailable']);
-    expect(view.days[0].calorieNote).toBe(TEXT.partialNote);
+    expect(view.days[0]).toMatchObject({ calories: { status: 'partial', text: null }, calorieNote: null });
     expect(JSON.stringify(view)).not.toMatch(/0–\d+ kcal|\b0 kcal/);
   });
 
-  it('parcial com piso real: "a partir de X kcal" (o que tem cálculo é um mínimo verdadeiro)', () => {
+  it('cálculo parcial não mostra piso ("a partir de X kcal") na refeição nem no dia — só o que está completo aparece', () => {
     const view = buildDietPresentation(dietWith([group('fixed', null, [[food('feijão', 100, 'g', 76), food('legumes', 100, 'g', null)]])]));
-    expect(view.days[0].meals[0].calories).toEqual({ status: 'partial', text: 'a partir de 76 kcal', macros: null });
+    expect(view.days[0].meals[0].calories).toEqual({ status: 'partial', text: null, macros: null });
+    expect(view.days[0]).toMatchObject({ calories: { status: 'partial', text: null, macros: null }, calorieNote: null });
+    expect(JSON.stringify(view)).not.toMatch(/a partir de|parcial:/i);
   });
 
   it('"à vontade" não conta como falta de cálculo; faixa de quantidade escala o máximo', () => {

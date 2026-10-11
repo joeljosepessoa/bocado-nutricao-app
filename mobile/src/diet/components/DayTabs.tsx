@@ -30,7 +30,7 @@ export function DayTabs({ days, selected, onSelect }: { days: DayView[]; selecte
   );
 }
 
-/** Instrução de uso e total do dia — o aviso de cálculo aparece aqui, uma única vez. */
+/** Instrução de uso e total do dia (só quando o cálculo está completo). */
 export function DayIntro({ day, showTitle }: { day: DayView; showTitle: boolean }) {
   const styles = useStyles(makeStyles);
   const { calories } = day;
@@ -45,10 +45,7 @@ export function DayIntro({ day, showTitle }: { day: DayView; showTitle: boolean 
       {day.usageNotes ? <Text style={styles.usage}>{day.usageNotes}</Text> : null}
       {calories.text ? (
         <View>
-          <Text style={styles.kcal}>
-            {calories.status === 'calculated' ? 'Total do dia: ' : ''}
-            {calories.text}
-          </Text>
+          <Text style={styles.kcal}>Total do dia: {calories.text}</Text>
           {calories.macros ? <Text style={styles.macros}>{calories.macros}</Text> : null}
         </View>
       ) : null}

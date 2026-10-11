@@ -40,10 +40,7 @@ export function MealCard({ meal, initiallyOpen = false }: { meal: MealView; init
         </View>
         {calories.text ? (
           <View style={styles.footer}>
-            <Text style={styles.kcal}>
-              {calories.text}
-              {calories.status === 'partial' ? <Text style={styles.partial}> · cálculo parcial</Text> : null}
-            </Text>
+            <Text style={styles.kcal}>{calories.text}</Text>
             {calories.macros ? <Text style={styles.macros}>{calories.macros}</Text> : null}
           </View>
         ) : null}
@@ -63,6 +60,5 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   sections: { gap: spacing.md },
   footer: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.sm, gap: 2 },
   kcal: { ...typography.body, color: colors.textPrimary, fontWeight: '700' },
-  partial: { ...typography.caption, color: colors.textSecondary, fontWeight: '400' },
   macros: { ...typography.caption, color: colors.textSecondary },
 });
