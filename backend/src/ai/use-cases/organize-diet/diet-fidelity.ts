@@ -381,6 +381,8 @@ interface SourceLine {
   chunks: LineChunk[];
   /** Número da "Opção N" em vigor nesta linha (null fora de opções numeradas). */
   option: number | null;
+  /** Linha em branco, título, marcador de lista ou "Opção N": nunca é continuação da linha anterior. */
+  starts: boolean;
 }
 
 const OPTION_PATTERN = /\bopcao (\d+)\b/;
@@ -447,11 +449,59 @@ function sourceLines(input: string): SourceLine[] {
   return input.split(/\r?\n/).map((raw) => {
     const norm = normalizeDietText(raw);
     const option = OPTION_PATTERN.exec(norm);
+    const heading = /^\s*\d+\s*[.)-]\s/.test(raw) || (raw === raw.toUpperCase() && /[A-ZÀ-Ý]/.test(raw));
     if (!norm) current = null;
     else if (option) current = Number(option[1]);
-    else if (/^\s*\d+\s*[.)-]\s/.test(raw) || (raw === raw.toUpperCase() && /[A-ZÀ-Ý]/.test(raw))) current = null;
-    return { raw, norm, chunks: lineChunks(raw), option: norm ? current : null };
+    else if (heading) current = null;
+    const starts = !norm || !!option || heading || /^\s*[*•·▪–—-]\s/.test(raw);
+    return { raw, norm, chunks: lineChunks(raw), option: norm ? current : null, starts };
   });
+}
+
+const LEADING_JOINER = /^\s*(?:[+/,]|(?:ou|e)\s)/;
+const TRAILING_JOINER = /(?:[+/,]|\s(?:ou|e|de|da|do|das|dos|com))\s*$/;
+
+/** A frase está escrita metade no fim de `before` e metade no começo de `after`. */
+function straddles(before: string[], after: string[], phrase: string[]): boolean {
+  for (let k = 1; k < phrase.length; k++) {
+    if (k > before.length) break;
+    const rest = Math.min(phrase.length - k, after.length);
+    if (rest > 0 && phrase.slice(0, k).every((t, i) => before[before.length - k + i] === t) && phrase.slice(k, k + rest).every((t, i) => after[i] === t)) return true;
+  }
+  return false;
+}
+
+/**
+ * Linhas como o profissional as escreveu: texto copiado de PDF/Word chega com a
+ * linha quebrada no meio ("... + 145 g de filé mignon suíno +" / "8 g de azeite
+ * / ..."). A linha seguinte é emendada na anterior só com sinal claro de que a
+ * frase não terminou: um trecho conferido partido entre as duas, "+", "/", ","
+ * ou "ou"/"e" na emenda, ou parêntese ainda aberto. Linha em branco, título,
+ * marcador ("*", "-") e "Opção N" sempre começam linha nova — alimentos escritos
+ * um por linha continuam em linhas separadas.
+ */
+function logicalLines(lines: SourceLine[], phrases: string[]): SourceLine[] {
+  const wanted = [...new Set(phrases)].map((phrase) => phrase.split(' ')).filter((phrase) => phrase.length > 1);
+  const result: SourceLine[] = [];
+  for (const line of lines) {
+    const previous = result[result.length - 1];
+    const openParenthesis = !!previous && previous.raw.split('(').length > previous.raw.split(')').length && line.raw.includes(')');
+    const continues =
+      !!previous &&
+      !!previous.norm &&
+      !line.starts &&
+      (TRAILING_JOINER.test(previous.raw) ||
+        LEADING_JOINER.test(line.raw) ||
+        openParenthesis ||
+        wanted.some((phrase) => straddles(previous.norm.split(' '), line.norm.split(' '), phrase)));
+    if (!previous || !continues) {
+      result.push(line);
+      continue;
+    }
+    const raw = `${previous.raw.trimEnd()} ${line.raw.trimStart()}`;
+    result[result.length - 1] = { raw, norm: normalizeDietText(raw), chunks: lineChunks(raw), option: previous.option, starts: previous.starts };
+  }
+  return result;
 }
 
 const CHOICE_MARKER = /\b(escolh\w*|opcao|opcoes|alternativas?|substitui\w*)\b/;
@@ -474,6 +524,23 @@ function relation(lines: SourceLine[], a: string, b: string, onlyOnce = false): 
     else apart = true;
   }
   return together ? 'together' : apart ? 'apart' : 'unknown';
+}
+
+/**
+ * "Opção N" de cada vez que o trecho aparece no texto CORRIDO (null fora de
+ * opções numeradas). Texto copiado de PDF quebra a linha no meio do alimento
+ * ("... + salada à" + "vontade + 8 g de azeite."): a continuação segue na
+ * mesma opção, e o trecho partido conta como escrito nela.
+ */
+function optionsWherePhraseAppears(lines: SourceLine[], phrase: string): Array<number | null> {
+  const wanted = phrase.split(' ').filter(Boolean);
+  if (wanted.length === 0) return [];
+  const tokens = lines.flatMap((line) => line.norm.split(' ').filter(Boolean).map((text) => ({ text, option: line.option })));
+  const found: Array<number | null> = [];
+  for (let i = 0; i + wanted.length <= tokens.length; i++) {
+    if (wanted.every((text, k) => tokens[i + k].text === text)) found.push(tokens[i].option);
+  }
+  return found;
 }
 
 // --- Cobertura ----------------------------------------------------------------------
@@ -541,6 +608,12 @@ function itemLabel(item: AiDietItem): string {
 export function checkDietFidelity(input: string, organized: AiOrganizedDiet): CheckedDiet {
   const source = normalizeDietText(input);
   const lines = sourceLines(input);
+  // As regras de "juntos" x "alternativas" olham a linha como foi escrita, não como o PDF a quebrou.
+  const written = logicalLines(
+    lines,
+    organized.days.flatMap((day) => day.meals.flatMap((meal) => meal.groups.flatMap((group) => group.choices.flatMap((choice) => choice.items.flatMap((item) => [item.sourceText, item.notes ?? ''])))))
+      .map(normalizeDietText),
+  );
   const problems: string[] = [];
   const covered: string[] = [];
   const coreUse = new Map<string, number>();
@@ -643,7 +716,7 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
       const known = [...new Set(choiceCores.filter((x): x is string => !!x))];
       for (let a = 0; a < known.length; a++) {
         for (let b = a + 1; b < known.length; b++) {
-          if (relation(lines, known[a], known[b]) === 'apart') {
+          if (relation(written, known[a], known[b]) === 'apart') {
             problems.push(`${where}: "${known[a]}" e "${known[b]}" são alternativas no texto (separados por "/" ou "ou"), mas foram juntados${group.kind === 'fixed' ? ' como itens fixos' : ` em ${group.choices[c].label ?? 'uma mesma escolha'}`}.`);
           }
         }
@@ -666,7 +739,7 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
         // Coocorrência numa opção numerada só prova relação dentro dessa opção.
         // Escolhas numeradas diferentes são alternativas completas entre si.
         if (option1 !== null && option2 !== null && option1 !== option2) continue;
-        const scopedLines = option1 !== null && option1 === option2 ? lines.filter((line) => line.option === option1) : lines;
+        const scopedLines = option1 !== null && option1 === option2 ? written.filter((line) => line.option === option1) : written;
         for (const a of cores[c1]) {
           for (const b of cores[c2]) {
             if (!a || !b || a === b || cores[c2].includes(a) || cores[c1].includes(b)) continue;
@@ -678,22 +751,21 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
       }
     }
 
-    // "Opção N": cada item precisa estar numa linha dessa opção (opções misturadas).
+    // "Opção N": cada item precisa estar escrito dentro dessa opção (opções misturadas).
     group.choices.forEach((choice, c) => {
       const number = choice.label ? OPTION_PATTERN.exec(normalizeDietText(choice.label)) : null;
       if (!number) return;
       for (const core of cores[c]) {
         if (!core) continue;
-        const withCore = lines.filter((line) => containsPhrase(line.norm, core));
-        const numbered = withCore.filter((line) => line.option !== null);
-        if (numbered.length > 0 && !numbered.some((line) => line.option === Number(number[1]))) {
+        const numbered = optionsWherePhraseAppears(lines, core).filter((option) => option !== null);
+        if (numbered.length > 0 && !numbered.includes(Number(number[1]))) {
           problems.push(`${where}: "${core}" não faz parte da ${choice.label} no texto (opções misturadas).`);
         }
       }
     });
 
     // "Escolher 1" precisa estar indicado no texto (escolher/opção/ou/"/").
-    const evidence = lines.filter(
+    const evidence = written.filter(
       (line) =>
         cores.some((choiceCores) => choiceCores.some((core) => core && containsPhrase(line.norm, core))) ||
         (group.label && containsPhrase(line.norm, normalizeDietText(group.label))) ||

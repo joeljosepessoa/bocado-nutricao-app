@@ -3,6 +3,7 @@ import { checkDietFidelity, DIET_WARNINGS, itemCore, mapUnit, normalizeDietText,
 import type { AiDietItem, AiGroup, AiMeal, AiOrganizedDiet } from './organized-diet.schema';
 import { faithfulUserDiet, it_ as item, USER_EXAMPLE_DIET, wholeLineUserDiet } from '../../../../test/fixtures/user-example-diet';
 import { faithfulOptionsDiet, leanMeat, OPTIONS_EXAMPLE_DIET } from '../../../../test/fixtures/options-example-diet';
+import { hardWrap } from '../../../../test/fixtures/hard-wrap';
 
 const TEXT = [
   'CAFÉ DA MANHÃ',
@@ -517,6 +518,96 @@ describe('"ou" e "/" entre parênteses: detalhe de um alimento × alternativas d
     const potato = () => item('120 g de batata', 'batata', 120, 'g');
     expect(rejection(diet([meal('ALMOÇO', [chicken(), rice(), potato()])]), text)).toMatch(/"90 g de arroz" e "120 g de batata" são alternativas no texto/);
     expect(() => checkDietFidelity(text, asChoices('ALMOÇO', [[chicken(), rice()], [potato()]]))).not.toThrow();
+  });
+});
+
+describe('texto colado com a linha quebrada no meio da frase (cópia de PDF/Word)', () => {
+  const WIDTHS = Array.from({ length: 141 }, (_, i) => 40 + i);
+  const optionsDiet = (change: (organized: AiOrganizedDiet) => void = () => undefined) => {
+    const organized = faithfulOptionsDiet();
+    change(organized);
+    return organized;
+  };
+  const userDiet = (change: (organized: AiOrganizedDiet) => void = () => undefined) => {
+    const organized = faithfulUserDiet();
+    change(organized);
+    return organized;
+  };
+  const widthsWhereAccepted = (text: string, organized: AiOrganizedDiet) =>
+    WIDTHS.filter((width) => {
+      try {
+        checkDietFidelity(hardWrap(text, width), organized);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+
+  it('regressão: a dieta com opções quebrada em ~115 colunas era recusada por "opções misturadas"', () => {
+    const pasted = hardWrap(OPTIONS_EXAMPLE_DIET, 115);
+    // O alimento fica metade em cada linha; a continuação pertence à mesma opção.
+    expect(pasted).toContain('+ salada à\nvontade + 8 g de azeite.');
+    expect(pasted).toContain('por cima + 3 a 5 g\nde creatina.');
+    expect(pasted).toContain('+ 8 g de semente de\nabóbora + 3 a 5 g de creatina.');
+    const checked = checkDietFidelity(pasted, faithfulOptionsDiet());
+    expect(checked.warnings).toEqual([]);
+    expect(checked.days[0].meals.map((m) => m.groups[0].choices.map((c) => c.items.length))).toEqual([[4, 5, 4], [5, 5, 5], [4, 5, 5], [3], [5, 4, 5]]);
+  });
+
+  it('as duas dietas reais são aceitas com a quebra em qualquer largura', () => {
+    for (const width of WIDTHS) {
+      expect(() => checkDietFidelity(hardWrap(OPTIONS_EXAMPLE_DIET, width), faithfulOptionsDiet())).not.toThrow();
+      expect(() => checkDietFidelity(hardWrap(USER_EXAMPLE_DIET, width), faithfulUserDiet())).not.toThrow();
+    }
+  });
+
+  it.each([
+    ['item da Opção 1 dentro da Opção 3', OPTIONS_EXAMPLE_DIET, optionsDiet((d) => (d.days[0].meals[1].groups[0].choices[2].items[4] = item('9 g de azeite', 'azeite', 9, 'g')))],
+    ['item da Opção 3 dentro da Opção 1', OPTIONS_EXAMPLE_DIET, optionsDiet((d) => d.days[0].meals[1].groups[0].choices[0].items.push(item('60 g de lentilha cozida', 'lentilha cozida', 60, 'g')))],
+    [
+      'patinho e coxão mole como dois alimentos',
+      OPTIONS_EXAMPLE_DIET,
+      optionsDiet((d) => d.days[0].meals[1].groups[0].choices[2].items.splice(0, 1, item('95 g de carne magra', 'carne magra', 95, 'g'), item('patinho', 'patinho', null, null), item('coxão mole', 'coxão mole', null, null))),
+    ],
+    ['quantidade trocada', OPTIONS_EXAMPLE_DIET, optionsDiet((d) => (d.days[0].meals[1].groups[0].choices[2].items[0].quantity = 85))],
+    [
+      'alternativas ("/") viradas itens fixos',
+      USER_EXAMPLE_DIET,
+      userDiet((d) => {
+        const group = d.days[0].meals[1].groups[0];
+        group.kind = 'fixed';
+        group.label = null;
+        group.choices = [{ label: null, items: group.choices.flatMap((c) => c.items) }];
+      }),
+    ],
+    [
+      'itens ligados por "+" separados em escolhas diferentes',
+      USER_EXAMPLE_DIET,
+      userDiet((d) => {
+        const group = d.days[1].meals[1].groups[0];
+        const [chicken, oil] = group.choices[0].items;
+        group.choices.splice(0, 1, { label: null, items: [chicken] }, { label: null, items: [oil] });
+      }),
+    ],
+  ])('a quebra de linha não afrouxa nada: %s segue recusado em qualquer largura', (_name, text, organized) => {
+    expect(widthsWhereAccepted(text, organized)).toEqual([]);
+  });
+
+  it('alimentos escritos um por linha não são emendados: lista fixa e bloco "escolher 1" continuam valendo', () => {
+    expect(checkDietFidelity(TEXT, faithful()).warnings).toEqual([]);
+    const block = 'ALMOÇO\nCarboidrato (escolher 1):\n65 g de arroz\n160 g de batata';
+    const rice = () => item('65 g de arroz', 'arroz', 65, 'g');
+    const potato = () => item('160 g de batata', 'batata', 160, 'g');
+    const asBlock = diet([meal('ALMOÇO', [], { groups: [{ kind: 'alternatives', label: 'Carboidrato', choices: [{ label: null, items: [rice()] }, { label: null, items: [potato()] }] }] })]);
+    expect(() => checkDietFidelity(block, asBlock)).not.toThrow();
+  });
+
+  it('linha que continua a anterior por "ou" é lida junto: as alternativas não podem virar itens fixos', () => {
+    const bread = () => item('2 fatias de pão integral', 'pão integral', 2, 'fatias');
+    const tapioca = () => item('1 tapioca', 'tapioca', 1, null);
+    for (const text of ['LANCHE\n2 fatias de pão integral\nou 1 tapioca', 'LANCHE\n2 fatias de pão integral ou\n1 tapioca']) {
+      expect(rejection(diet([meal('LANCHE', [bread(), tapioca()])]), text)).toMatch(/"2 fatias de pao integral" e "1 tapioca" são alternativas no texto/);
+    }
   });
 });
 
