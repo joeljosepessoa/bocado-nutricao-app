@@ -2,6 +2,7 @@ import { AiOutputValidationError } from '../../ai-errors';
 import { checkDietFidelity, DIET_WARNINGS, itemCore, mapUnit, normalizeDietText, parseMealTime, quantitySpellings } from './diet-fidelity';
 import type { AiDietItem, AiGroup, AiMeal, AiOrganizedDiet } from './organized-diet.schema';
 import { faithfulUserDiet, it_ as item, USER_EXAMPLE_DIET, wholeLineUserDiet } from '../../../../test/fixtures/user-example-diet';
+import { faithfulOptionsDiet, leanMeat, OPTIONS_EXAMPLE_DIET } from '../../../../test/fixtures/options-example-diet';
 
 const TEXT = [
   'CAFÉ DA MANHÃ',
@@ -39,6 +40,9 @@ const faithful = (): AiOrganizedDiet =>
   ]);
 
 const items = (organized: AiOrganizedDiet, m = 0) => organized.days[0].meals[m].groups[0].choices[0].items;
+/** Todos os itens, de todos os dias/refeições/blocos/escolhas, na ordem. */
+const allItems = <T>(days: Array<{ meals: Array<{ groups: Array<{ choices: Array<{ items: T[] }> }> }> }>): T[] =>
+  days.flatMap((d) => d.meals.flatMap((m) => m.groups.flatMap((g) => g.choices.flatMap((c) => c.items))));
 
 function rejection(organized: AiOrganizedDiet, text = TEXT): string {
   try {
@@ -146,6 +150,25 @@ describe('checkDietFidelity — a IA só organiza, nunca altera a prescrição',
 describe('v2 — a dieta real do profissional (dia de treino/descanso, opções, blocos, suplementos, orientações)', () => {
   it('é aceita inteira, sem nenhum aviso, com a estrutura preservada', () => {
     const checked = checkDietFidelity(USER_EXAMPLE_DIET, faithfulUserDiet());
+    const written = faithfulUserDiet();
+    // A proposta inteira, campo a campo, contra o que está escrito na dieta.
+    expect(checked.days.map((d) => [d.label, d.kind, d.usageNotes, d.warnings])).toEqual(written.days.map((d) => [d.label, d.kind, d.usageNotes, []]));
+    expect(checked.days.map((d) => d.meals.map((m) => [m.name, m.time, m.notes, m.warnings]))).toEqual(written.days.map((d) => d.meals.map((m) => [m.name, null, null, []])));
+    expect(checked.days.map((d) => d.meals.map((m) => m.groups.map((g) => [g.kind, g.label, g.choices.map((c) => [c.label, c.items.length])])))).toEqual(
+      written.days.map((d) => d.meals.map((m) => m.groups.map((g) => [g.kind, g.label, g.choices.map((c) => [c.label, c.items.length])]))),
+    );
+    const keptItems = allItems(checked.days);
+    expect(keptItems.map((i) => [i.sourceText, i.rawFood, i.quantity, i.quantityMax, i.unitText, i.freeQuantity, i.notes])).toEqual(
+      allItems(written.days).map((i) => [i.sourceText, i.food, i.quantity, i.quantityMax, i.unit, i.freeQuantity, i.notes]),
+    );
+    expect(keptItems).toHaveLength(93);
+    // Unidade do sistema: só tradução da grafia; sem unidade escrita vira "unidade" com aviso; "à vontade" fica sem unidade.
+    expect([...new Set(keptItems.map((i) => `${i.unitText} → ${i.unit}`))].sort()).toEqual(['fatias → slice', 'g → g', 'null → null', 'null → unit']);
+    for (const kept of keptItems) {
+      expect(kept.warnings).toEqual(kept.quantity !== null && kept.unitText === null ? [DIET_WARNINGS.unitAssumed] : []);
+    }
+    expect(checked.supplements.map(({ unitText, warnings, ...supplement }) => [{ ...supplement, unit: unitText }, warnings])).toEqual(written.supplements.map((s) => [s, []]));
+    expect(checked.guidelines).toEqual(written.guidelines);
     expect(checked.warnings).toEqual([]);
     expect(checked.days.map((d) => [d.label, d.kind, d.meals.length])).toEqual([
       ['DIA DE TREINO', 'training', 5],
@@ -170,6 +193,74 @@ describe('v2 — a dieta real do profissional (dia de treino/descanso, opções,
     expect(checked.days[1].meals[1].groups[0].choices[0].items.map((i) => `${i.quantity} g ${i.rawFood}`)).toEqual(['135 g peito de frango', '10 g azeite']);
     expect(checked.supplements[0]).toMatchObject({ name: 'Creatina', quantity: 3, quantityMax: 5, unitText: 'g', timing: 'antes do café da manhã' });
     expect(checked.guidelines).toHaveLength(8);
+  });
+
+  it.each([
+    ['ou dentro de parênteses', '95 g de carne magra (patinho ou coxão mole)', 'carne magra', 95, 'g'],
+    ['ou dentro de parênteses no preparo', '150 g de frango (grelhado ou assado)', 'frango', 150, 'g'],
+  ] as const)('preserva como um único alimento quando há %s', (_label, sourceText, food, quantity, unit) => {
+    const text = `ALMOÇO\n${sourceText} + 90 g de arroz`;
+    const organized = diet([
+      meal('ALMOÇO', [item(sourceText, food, quantity, unit), item('90 g de arroz', 'arroz', 90, 'g')]),
+    ]);
+
+    const checked = checkDietFidelity(text, organized);
+    const checkedItems = checked.days[0].meals[0].groups[0].choices[0].items;
+    expect(checkedItems.map(({ sourceText: source, rawFood, quantity: amount, unit: mappedUnit }) => [source, rawFood, amount, mappedUnit])).toEqual([
+      [sourceText, food, quantity, unit],
+      ['90 g de arroz', 'arroz', 90, 'g'],
+    ]);
+    expect(checked.warnings).toEqual([]);
+  });
+
+  it('preserva como um alimento único a barra dentro de parênteses', () => {
+    const sourceText = '130 g de peixe (tilápia / merluza)';
+    const checked = checkDietFidelity(
+      `ALMOÇO\n${sourceText}`,
+      diet([meal('ALMOÇO', [item(sourceText, 'peixe', 130, 'g')])]),
+    );
+    expect(checked.days[0].meals[0].groups[0].choices[0].items[0]).toMatchObject({
+      sourceText,
+      rawFood: 'peixe',
+      quantity: 130,
+      unit: 'g',
+    });
+    expect(checked.warnings).toEqual([]);
+  });
+
+  it('continua tratando a barra fora de parênteses como alternativa real', () => {
+    const text = 'ALMOÇO\nPROTEÍNA (escolher 1): 120 g de frango / 130 g de peixe';
+    const organized = diet([
+      meal('ALMOÇO', [], {
+        groups: [
+          {
+            kind: 'alternatives',
+            label: 'PROTEÍNA',
+            choices: [
+              { label: null, items: [item('120 g de frango', 'frango', 120, 'g')] },
+              { label: null, items: [item('130 g de peixe', 'peixe', 130, 'g')] },
+            ],
+          },
+        ],
+      }),
+    ]);
+    expect(checkDietFidelity(text, organized).warnings).toEqual([]);
+  });
+
+  it('não considera barra ou "ou" entre parênteses um marcador de escolha', () => {
+    const text = 'ALMOÇO\n130 g de peixe (tilápia / merluza)';
+    const organized = diet([
+      meal('ALMOÇO', [], {
+        groups: [
+          {
+            kind: 'alternatives',
+            label: null,
+            choices: [{ label: null, items: [item('130 g de peixe (tilápia / merluza)', 'peixe', 130, 'g')] }],
+          },
+        ],
+      }),
+    ]);
+    expect(rejection(organized, text)).toMatch(/o texto não indica escolha/);
   });
 
   it('texto copiado de PDF com linha quebrada no meio do alimento ("120 g de" ↵ "polenta") não gera aviso de trecho não organizado', () => {
@@ -334,6 +425,169 @@ describe('trecho mínimo do item (quantidade colada no alimento)', () => {
     expect(core('1 scoop (30 g) de whey', 'whey', 30, 'g')).toBe('30 g de whey');
     expect(core('3 a 5 g de creatina', 'creatina', 3, 'g', { quantityMax: 5 })).toBe('3 a 5 g de creatina');
     expect(core('salada de folhas à vontade', 'salada de folhas', null, null, { freeQuantity: true })).toBe('salada de folhas a vontade');
+  });
+});
+
+describe('dieta real com opções em quase todas as refeições e "(patinho ou coxão mole)" dentro de um alimento', () => {
+  const lunchOption3 = (organized: AiOrganizedDiet) => organized.days[0].meals[1].groups[0].choices[2].items;
+
+  it('é aceita inteira e sem aviso: quatro refeições com 3 opções e o lanche antes do jantar sem opções', () => {
+    const checked = checkDietFidelity(OPTIONS_EXAMPLE_DIET, faithfulOptionsDiet());
+    const threeOptions = [['meal_options', ['Opção 1', 'Opção 2', 'Opção 3']]];
+    expect(checked.warnings).toEqual([]);
+    expect(checked.days).toHaveLength(1);
+    expect(checked.days[0].meals.map((m) => [m.name, m.groups.map((g) => [g.kind, g.choices.map((c) => c.label)])])).toEqual([
+      ['CAFÉ DA MANHÃ', threeOptions],
+      ['ALMOÇO', threeOptions],
+      ['LANCHE DA TARDE', threeOptions],
+      ['LANCHE ANTES DO JANTAR', [['fixed', [null]]]],
+      ['JANTAR', threeOptions],
+    ]);
+  });
+
+  it('todo alimento, quantidade, faixa, unidade, "à vontade" e observação sai exatamente como escrito', () => {
+    const checked = checkDietFidelity(OPTIONS_EXAMPLE_DIET, faithfulOptionsDiet());
+    const written = allItems(faithfulOptionsDiet().days).map((i) => [i.sourceText, i.food, i.quantity, i.quantityMax, i.unit, i.freeQuantity, i.notes]);
+    const kept = allItems(checked.days).map((i) => [i.sourceText, i.rawFood, i.quantity, i.quantityMax, i.unitText, i.freeQuantity, i.notes]);
+    expect(kept).toEqual(written);
+    expect(kept).toHaveLength(59);
+    expect(kept).toContainEqual(['3 a 5 g de creatina', 'creatina', 3, 5, 'g', false, null]);
+    expect(kept).toContainEqual(['salada à vontade', 'salada', null, null, null, true, null]);
+    expect(kept).toContainEqual(['60 ml de leite vegetal', 'leite vegetal', 60, null, 'ml', false, null]);
+  });
+
+  it('"patinho ou coxão mole" fica como detalhe de UM item (carne magra), junto dos outros alimentos da Opção 3', () => {
+    const checked = checkDietFidelity(OPTIONS_EXAMPLE_DIET, faithfulOptionsDiet());
+    const option3 = checked.days[0].meals[1].groups[0].choices[2].items;
+    expect(option3.map((i) => i.rawFood)).toEqual(['carne magra', 'arroz cozido', 'lentilha cozida', 'salada', 'azeite']);
+    expect(option3[0]).toMatchObject({ sourceText: '95 g de carne magra (patinho ou coxão mole)', quantity: 95, unit: 'g', notes: 'patinho ou coxão mole' });
+  });
+
+  it('patinho e coxão mole como dois alimentos obrigatórios são recusados', () => {
+    const organized = faithfulOptionsDiet();
+    lunchOption3(organized).splice(0, 1, item('95 g de carne magra', 'carne magra', 95, 'g'), item('patinho', 'patinho', null, null), item('coxão mole', 'coxão mole', null, null));
+    expect(rejection(organized, OPTIONS_EXAMPLE_DIET)).toMatch(/"patinho" e "coxao mole" são alternativas no texto/);
+  });
+
+  it('as demais conferências seguem valendo nessa linha: quantidade trocada e item de outra opção são recusados', () => {
+    const changed = faithfulOptionsDiet();
+    lunchOption3(changed)[0] = { ...leanMeat(), quantity: 85 };
+    expect(rejection(changed, OPTIONS_EXAMPLE_DIET)).toMatch(/quantidade 85 não está escrita/);
+
+    const mixed = faithfulOptionsDiet();
+    lunchOption3(mixed)[4] = item('9 g de azeite', 'azeite', 9, 'g');
+    expect(rejection(mixed, OPTIONS_EXAMPLE_DIET)).toMatch(/"9 g de azeite" não faz parte da Opção 3/);
+  });
+});
+
+describe('"ou" e "/" entre parênteses: detalhe de um alimento × alternativas de verdade', () => {
+  const banana = () => item('1 banana', 'banana', 1, null);
+  const apple = () => item('1 maçã', 'maçã', 1, null);
+  const asChoices = (name: string, choices: AiDietItem[][]) =>
+    diet([meal(name, [], { groups: [{ kind: 'alternatives', label: null, choices: choices.map((items) => ({ label: null, items })) }] })]);
+  const QUANTIFIED_INSIDE = [
+    'LANCHE\n1 fruta (1 banana ou 1 maçã)',
+    'LANCHE\nFruta (1 banana / 1 maçã)',
+    'LANCHE\n1 banana (ou 1 maçã)',
+    // Parêntese que não fecha não esconde separador nenhum.
+    'LANCHE\nFruta (1 banana / 1 maçã',
+  ];
+
+  it.each(QUANTIFIED_INSIDE)('alternativas escritas dentro do parêntese não podem virar itens fixos: %j', (text) => {
+    expect(rejection(diet([meal('LANCHE', [banana(), apple()])]), text)).toMatch(/"1 banana" e "1 maca" são alternativas no texto/);
+  });
+
+  it.each(QUANTIFIED_INSIDE)('e são aceitas como "escolha 1": %j', (text) => {
+    expect(() => checkDietFidelity(text, asChoices('LANCHE', [[banana()], [apple()]]))).not.toThrow();
+  });
+
+  it.each([
+    'LANCHE\n2 fatias de pão integral\nou 1 tapioca',
+    'LANCHE\n2 fatias de pão integral\nOu 1 tapioca',
+    'LANCHE\n2 fatias de pão integral ou\n1 tapioca',
+  ])('linha que começa ou termina com "ou" indica escolha: %j', (text) => {
+    const organized = asChoices('LANCHE', [[item('2 fatias de pão integral', 'pão integral', 2, 'fatias')], [item('1 tapioca', 'tapioca', 1, null)]]);
+    expect(checkDietFidelity(text, organized).warnings).toEqual([]);
+  });
+
+  it('detalhe entre parênteses não separa o alimento do resto da linha, mas "ou" fora dele continua separando', () => {
+    const text = 'ALMOÇO\n150 g de frango (grelhado ou assado) + 90 g de arroz ou 120 g de batata';
+    const chicken = () => item('150 g de frango (grelhado ou assado)', 'frango', 150, 'g');
+    const rice = () => item('90 g de arroz', 'arroz', 90, 'g');
+    const potato = () => item('120 g de batata', 'batata', 120, 'g');
+    expect(rejection(diet([meal('ALMOÇO', [chicken(), rice(), potato()])]), text)).toMatch(/"90 g de arroz" e "120 g de batata" são alternativas no texto/);
+    expect(() => checkDietFidelity(text, asChoices('ALMOÇO', [[chicken(), rice()], [potato()]]))).not.toThrow();
+  });
+});
+
+describe('quantidade no meio do nome do alimento ("Omelete de 1 ovo") e faixa de quantidade', () => {
+  const core = (sourceText: string, food: string, quantity: number | null, unit: string | null = null) =>
+    itemCore({ sourceText, food, quantity, unit, quantityMax: null, freeQuantity: false });
+  const breakfastOption2 = (first: AiDietItem) => {
+    const organized = faithfulOptionsDiet();
+    organized.days[0].meals[0].groups[0].choices[1].items[0] = first;
+    return organized;
+  };
+  const single = (text: string, only: AiDietItem) => ({ text: `LANCHE\n${text}`, organized: diet([meal('LANCHE', [only])]) });
+
+  it.each([
+    ['ovo', '1 ovo'],
+    ['Omelete de ovo', 'omelete de 1 ovo'],
+    ['Omelete de 1 ovo', 'omelete de 1 ovo'],
+  ])('"Omelete de 1 ovo" com o alimento "%s" e quantidade 1 é aceito', (food, expectedCore) => {
+    expect(core('Omelete de 1 ovo', food, 1)).toBe(expectedCore);
+    const checked = checkDietFidelity(OPTIONS_EXAMPLE_DIET, breakfastOption2(item('Omelete de 1 ovo', food, 1, null)));
+    const kept = checked.days[0].meals[0].groups[0].choices[1].items[0];
+    expect(kept).toMatchObject({ sourceText: 'Omelete de 1 ovo', rawFood: food, quantity: 1, unit: 'unit' });
+    // Quantidade no meio do nome sempre vai para a revisão do profissional.
+    expect(kept.warnings.includes(DIET_WARNINGS.quantityInsideName)).toBe(food !== 'ovo');
+    expect(checked.warnings).toEqual([]);
+  });
+
+  it('a quantidade do ingrediente não vira quantidade da preparação: "Omelete" com quantidade 1 segue recusado', () => {
+    expect(core('Omelete de 1 ovo', 'Omelete', 1)).toBeNull();
+    expect(rejection(breakfastOption2(item('Omelete de 1 ovo', 'Omelete', 1, null)), OPTIONS_EXAMPLE_DIET)).toMatch(/quantidade 1 não está junto de "Omelete"/);
+  });
+
+  it('juntar dois alimentos num item só continua recusado ("Omelete de 1 ovo + 3 claras" como um alimento)', () => {
+    const organized = faithfulOptionsDiet();
+    organized.days[0].meals[0].groups[0].choices[1].items.splice(0, 2, item('Omelete de 1 ovo + 3 claras', 'Omelete de ovo e claras', 1, null));
+    expect(rejection(organized, OPTIONS_EXAMPLE_DIET)).toMatch(/quantidade 1 não está junto de "Omelete de ovo e claras"/);
+  });
+
+  it('outras preparações "de N ingrediente" são aceitas com o mesmo aviso', () => {
+    const juice = single('Suco de 2 laranjas', item('Suco de 2 laranjas', 'suco de laranja', 2, null));
+    expect(checkDietFidelity(juice.text, juice.organized).days[0].meals[0].groups[0].choices[0].items[0]).toMatchObject({ quantity: 2, warnings: expect.arrayContaining([DIET_WARNINGS.quantityInsideName]) });
+    const shake = single('Vitamina de 200 ml de leite', item('Vitamina de 200 ml de leite', 'vitamina de leite', 200, 'ml'));
+    expect(checkDietFidelity(shake.text, shake.organized).days[0].meals[0].groups[0].choices[0].items[0]).toMatchObject({ quantity: 200, unit: 'ml', warnings: [DIET_WARNINGS.quantityInsideName] });
+  });
+
+  it('não vale para quantidade de OUTRO alimento, nem quando já há quantidade antes do nome', () => {
+    // "com" liga dois alimentos; sem "de" antes do número, ele é do alimento anterior.
+    expect(core('pão com 2 ovos', 'pão com ovos', 2)).toBeNull();
+    expect(core('pão com 2 ovos', 'pão', 2)).toBeNull();
+    expect(core('arroz 150 g + feijão', 'arroz feijão', 150, 'g')).toBeNull();
+    expect(core('2 omeletes de 1 ovo', 'omelete de ovo', 1)).toBeNull();
+    const bread = single('pão com 2 ovos', item('pão com 2 ovos', 'pão com ovos', 2, null));
+    expect(rejection(bread.organized, bread.text)).toMatch(/quantidade 2 não está junto de "pão com ovos"/);
+  });
+
+  it('faixa "3 a 5 g": só o mínimo ou só o máximo altera a prescrição e é recusado', () => {
+    expect(core('3 a 5 g de creatina', 'creatina', 3, 'g')).toBeNull();
+    expect(core('3 a 5 g de creatina', 'creatina', 5, 'g')).toBeNull();
+    expect(itemCore({ sourceText: '3 a 5 g de creatina', food: 'creatina', quantity: 3, quantityMax: 5, unit: 'g', freeQuantity: false })).toBe('3 a 5 g de creatina');
+    for (const quantity of [3, 5]) {
+      const organized = faithfulOptionsDiet();
+      organized.days[0].meals[2].groups[0].choices[0].items[3] = item('3 a 5 g de creatina', 'creatina', quantity, 'g');
+      expect(rejection(organized, OPTIONS_EXAMPLE_DIET)).toMatch(new RegExp(`quantidade ${quantity} não está junto de "creatina"`));
+    }
+  });
+
+  it('"1 e 1/2" é 1,5 — nunca 0,5; e o "e" entre dois alimentos não é faixa', () => {
+    expect(core('1 e 1/2 xícara de arroz', 'arroz', 1.5, 'xícara')).toBe('1 e 1/2 xicara de arroz');
+    expect(core('1 e 1/2 xícara de arroz', 'arroz', 0.5, 'xícara')).toBeNull();
+    expect(core('2 ovos e 3 claras', 'clara', 3)).toBe('3 claras');
+    expect(core('100 g de arroz e 50 g de feijão', 'feijão', 50, 'g')).toBe('50 g de feijao');
   });
 });
 

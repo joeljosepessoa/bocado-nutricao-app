@@ -27,6 +27,7 @@ export const DIET_WARNINGS = {
   mealNameMissing: 'Refeição sem título no texto — dê um nome.',
   mealWithoutItems: 'Nenhum alimento identificado nesta refeição.',
   singleChoice: 'Bloco "escolha 1" com uma única opção — confira.',
+  quantityInsideName: 'Quantidade escrita no meio do nome do alimento — confira a que ela se refere.',
   uncovered: (line: string) => `Trecho não organizado: "${line}" — revisar.`,
   dayLabelSuggested: (label: string) => `O título "${label}" não está escrito no texto — foi sugerido pela IA. Confirme ou corrija o nome do dia.`,
 } as const;
@@ -285,11 +286,39 @@ function quantityEnd(tokens: string[], at: number, quantity: number, quantityMax
   return -1;
 }
 
+const NUMBER_TOKEN = /^\d+(?:[./]\d+)?$/;
+
+/** O número em `at` é o MÁXIMO de uma faixa escrita ("3 a 5 g", "1 e 1/2"): sozinho, não é a quantidade do item. */
+function isRangeMaximum(tokens: string[], at: number): boolean {
+  return at >= 2 && RANGE_WORDS.has(tokens[at - 1]) && NUMBER_TOKEN.test(tokens[at - 2]);
+}
+
 /**
- * Trecho mínimo normalizado do item ("3 claras", "10 g de aveia") — ou null
- * se a quantidade escrita não está COLADA no alimento dentro do trecho.
+ * "Omelete de 1 ovo" com o alimento "Omelete de ovo": a quantidade está no MEIO
+ * do nome, logo depois de "de/da/do". Só vale se o resto do miolo for o próprio
+ * nome, conector ou unidade, e se não houver outra quantidade colada antes do
+ * nome ("2 omeletes de 1 ovo"). "pão com 2 ovos" e "arroz 150 g + feijão" não valem.
  */
-export function itemCore(item: Pick<AiDietItem, 'sourceText' | 'food' | 'quantity' | 'quantityMax' | 'unit' | 'freeQuantity'>): string | null {
+function quantityInsideName(tokens: string[], span: Span, p: number, qEnd: number, food: string, extraUnits: Set<string>): boolean {
+  if (p <= span.start || qEnd > span.end || !CONNECTORS.has(tokens[p - 1])) return false;
+  const name = new Set(stemsOf(food));
+  for (let j = span.start; j <= span.end; j++) {
+    if (j >= p && j < qEnd) continue;
+    const t = tokens[j];
+    if (!(name.has(stem(t)) || CONNECTORS.has(t) || UNIT_WORDS.has(t) || extraUnits.has(t))) return false;
+  }
+  let before = span.start - 1;
+  while (before >= 0 && (CONNECTORS.has(tokens[before]) || UNIT_WORDS.has(tokens[before]) || extraUnits.has(tokens[before]))) before -= 1;
+  return before < 0 || !NUMBER_TOKEN.test(tokens[before]);
+}
+
+interface LocatedCore {
+  core: string;
+  /** A quantidade está no meio do nome do alimento ("omelete de 1 ovo"). */
+  insideName: boolean;
+}
+
+function locateItemCore(item: Pick<AiDietItem, 'sourceText' | 'food' | 'quantity' | 'quantityMax' | 'unit' | 'freeQuantity'>): LocatedCore | null {
   const tokens = normalizeDietText(item.sourceText).split(' ').filter(Boolean);
   const spans = foodSpans(tokens, item.food);
   if (spans.length === 0) return null;
@@ -304,38 +333,114 @@ export function itemCore(item: Pick<AiDietItem, 'sourceText' | 'food' | 'quantit
         }
       }
     }
-    return tokens.slice(start, last + 1).join(' ');
+    return { core: tokens.slice(start, last + 1).join(' '), insideName: false };
   }
   const extraUnits = new Set(item.unit ? normalizeDietText(item.unit).split(' ') : []);
   for (const span of spans) {
     for (let p = 0; p < tokens.length; p++) {
       const qEnd = quantityEnd(tokens, p, item.quantity, item.quantityMax);
       if (qEnd < 0) continue;
+      // "3 a 5 g de creatina" não é "5 g": o máximo sem o mínimo altera a prescrição.
+      if (item.quantityMax === null && isRangeMaximum(tokens, p)) continue;
       // "10 g de aveia": quantidade antes do alimento.
-      if (qEnd <= span.start && bridges(tokens, qEnd, span.start, extraUnits)) return tokens.slice(p, span.end + 1).join(' ');
+      if (qEnd <= span.start && bridges(tokens, qEnd, span.start, extraUnits)) return { core: tokens.slice(p, span.end + 1).join(' '), insideName: false };
       // "arroz 150 g": depois do alimento, só se nada além de unidade vier colado depois ("ovos 3 claras" não vale).
       if (p > span.end && bridges(tokens, span.end + 1, p, extraUnits)) {
         const after = skipUnits(tokens, qEnd, extraUnits);
         const next = tokens[after];
-        if (next === undefined || next === 'e' || next === 'mais') return tokens.slice(span.start, after).join(' ');
+        if (next === undefined || next === 'e' || next === 'mais') return { core: tokens.slice(span.start, after).join(' '), insideName: false };
       }
+      if (quantityInsideName(tokens, span, p, qEnd, item.food, extraUnits)) return { core: tokens.slice(span.start, span.end + 1).join(' '), insideName: true };
     }
   }
   return null;
 }
 
+/**
+ * Trecho mínimo normalizado do item ("3 claras", "10 g de aveia") — ou null
+ * se a quantidade escrita não está COLADA no alimento dentro do trecho.
+ */
+export function itemCore(item: Pick<AiDietItem, 'sourceText' | 'food' | 'quantity' | 'quantityMax' | 'unit' | 'freeQuantity'>): string | null {
+  return locateItemCore(item)?.core ?? null;
+}
+
 // --- Linhas do texto: opção em vigor e segmentos "/" e "ou" ----------------------
+
+interface LineChunk {
+  /** Texto corrido, ou o conteúdo de um parêntese (com um espaço em cada ponta). */
+  text: string;
+  norm: string;
+  /** true = conteúdo de um parêntese FECHADO. */
+  parenthetical: boolean;
+}
 
 interface SourceLine {
   raw: string;
   norm: string;
-  /** Partes separadas por "/" ou "ou" — alternativas entre si. */
-  segments: string[];
+  /** A linha na ordem em que foi escrita, separando o texto corrido de cada parêntese fechado. */
+  chunks: LineChunk[];
   /** Número da "Opção N" em vigor nesta linha (null fora de opções numeradas). */
   option: number | null;
 }
 
 const OPTION_PATTERN = /\bopcao (\d+)\b/;
+const SLASH_SEPARATOR = /(?<!\d)\/|\/(?!\d)/;
+const ALTERNATIVE_SEPARATOR = /(?<!\d)\/|\/(?!\d)|\s+ou\s+/i;
+
+/** Posição do ")" que fecha o "(" em `open`; -1 se a linha não o fecha. */
+function closingParenthesis(text: string, open: number): number {
+  let depth = 0;
+  for (let i = open; i < text.length; i++) {
+    if (text[i] === '(') depth += 1;
+    else if (text[i] === ')' && --depth === 0) return i;
+  }
+  return -1;
+}
+
+/** Parêntese sem fechamento não vira trecho à parte: segue como texto corrido, com as regras de sempre. */
+function lineChunks(raw: string): LineChunk[] {
+  const chunks: LineChunk[] = [];
+  const push = (text: string, parenthetical: boolean) => {
+    const norm = normalizeDietText(text);
+    if (norm) chunks.push({ text, norm, parenthetical });
+  };
+  let start = 0;
+  let index = 0;
+  while (index < raw.length) {
+    const close = raw[index] === '(' ? closingParenthesis(raw, index) : -1;
+    if (close < 0) {
+      index += 1;
+      continue;
+    }
+    push(raw.slice(start, index), false);
+    push(` ${raw.slice(index + 1, close)} `, true);
+    index = close + 1;
+    start = index;
+  }
+  push(raw.slice(start), false);
+  return chunks;
+}
+
+/**
+ * "/" e "ou" dentro de um parêntese só separam alternativas quando algum dos
+ * trechos conferidos está escrito ali dentro ("1 fruta (1 banana ou 1 maçã)").
+ * Senão o parêntese é detalhe de UM alimento ("95 g de carne magra (patinho ou
+ * coxão mole)") e não parte a linha.
+ */
+function isDetail(chunk: LineChunk, phrases: string[]): boolean {
+  return chunk.parenthetical && !phrases.some((phrase) => containsPhrase(chunk.norm, phrase));
+}
+
+/** Partes da linha que são alternativas entre si, do ponto de vista dos trechos conferidos. */
+function alternativeSegments(line: SourceLine, phrases: string[]): string[] {
+  const segments = [''];
+  for (const chunk of line.chunks) {
+    const parts = isDetail(chunk, phrases) ? [chunk.text] : chunk.text.split(ALTERNATIVE_SEPARATOR);
+    segments[segments.length - 1] += ` ${parts[0]}`;
+    segments.push(...parts.slice(1));
+  }
+  return segments.map(normalizeDietText).filter(Boolean);
+}
 
 function sourceLines(input: string): SourceLine[] {
   let current: number | null = null;
@@ -345,18 +450,16 @@ function sourceLines(input: string): SourceLine[] {
     if (!norm) current = null;
     else if (option) current = Number(option[1]);
     else if (/^\s*\d+\s*[.)-]\s/.test(raw) || (raw === raw.toUpperCase() && /[A-ZÀ-Ý]/.test(raw))) current = null;
-    const segments = raw
-      .split(/(?<!\d)\/|\/(?!\d)|\s+ou\s+/i)
-      .map(normalizeDietText)
-      .filter(Boolean);
-    return { raw, norm, segments, option: norm ? current : null };
+    return { raw, norm, chunks: lineChunks(raw), option: norm ? current : null };
   });
 }
 
-const CHOICE_MARKER = /\b(escolh\w*|opcao|opcoes|ou|alternativas?|substitui\w*)\b/;
+const CHOICE_MARKER = /\b(escolh\w*|opcao|opcoes|alternativas?|substitui\w*)\b/;
 
-function hasChoiceMarker(line: SourceLine): boolean {
-  return CHOICE_MARKER.test(line.norm) || /(?<!\d)\/|\/(?!\d)/.test(line.raw);
+/** A linha indica escolha: palavra de escolha, ou "ou"/"/" que não seja detalhe entre parênteses de um alimento só. */
+function hasChoiceMarker(line: SourceLine, cores: string[]): boolean {
+  if (CHOICE_MARKER.test(line.norm)) return true;
+  return line.chunks.some((chunk) => !isDetail(chunk, cores) && (/\bou\b/.test(chunk.norm) || SLASH_SEPARATOR.test(chunk.text)));
 }
 
 /** together: há segmento com os dois; apart: aparecem juntos só em linhas que os separam por "/"/"ou". */
@@ -366,7 +469,8 @@ function relation(lines: SourceLine[], a: string, b: string, onlyOnce = false): 
   for (const line of lines) {
     if (!containsPhrase(line.norm, a) || !containsPhrase(line.norm, b)) continue;
     if (onlyOnce && (countPhrase(line.norm, a) !== 1 || countPhrase(line.norm, b) !== 1)) continue;
-    if (line.segments.length < 2 || line.segments.some((s) => containsPhrase(s, a) && containsPhrase(s, b))) together = true;
+    const segments = alternativeSegments(line, [a, b]);
+    if (segments.length < 2 || segments.some((s) => containsPhrase(s, a) && containsPhrase(s, b))) together = true;
     else apart = true;
   }
   return together ? 'together' : apart ? 'apart' : 'unknown';
@@ -472,7 +576,9 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
     } else if (item.quantityMax !== null && !quantityWritten(item.quantityMax, normalizedSource)) {
       problems.push(`${at}: a quantidade máxima ${item.quantityMax} não está escrita em ${itemLabel(item)}.`);
     } else {
-      core = itemCore(item);
+      const located = locateItemCore(item);
+      core = located?.core ?? null;
+      if (located?.insideName) warnings.push(DIET_WARNINGS.quantityInsideName);
       if (core === null && item.quantity !== null) {
         problems.push(`${at}: a quantidade ${item.quantity} não está junto de "${item.food}" em ${itemLabel(item)}.`);
       }
@@ -593,7 +699,8 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
         (group.label && containsPhrase(line.norm, normalizeDietText(group.label))) ||
         (mealName && containsPhrase(line.norm, normalizeDietText(mealName))),
     );
-    if (!evidence.some(hasChoiceMarker)) {
+    const groupCores = cores.flat().filter((core): core is string => !!core);
+    if (!evidence.some((line) => hasChoiceMarker(line, groupCores))) {
       problems.push(`${where}: ${groupName} foi marcado como "escolha 1", mas o texto não indica escolha (escolher, opção, "ou" ou "/").`);
     }
   };
