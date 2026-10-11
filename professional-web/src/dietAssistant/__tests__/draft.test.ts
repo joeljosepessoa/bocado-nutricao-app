@@ -202,4 +202,13 @@ describe('rascunho do Assistente de Dieta — nome igual ao texto, catálogo só
     expect(draftToPayload(draft, true).replaceDraft).toBe(true);
     expect(JSON.stringify(draftToPayload(draft))).not.toMatch(/publish/);
   });
+
+  it('dia que ficou sem nenhuma refeição não vai no payload (o servidor recusa dia vazio)', () => {
+    const draft = proposalToDraft(proposal);
+    const emptied = { ...draft, days: [draft.days[0], { ...draft.days[0], key: 'day-vazio', label: 'DIA DE DESCANSO', meals: [] }] };
+    const payload = draftToPayload(emptied);
+    expect(payload.days?.map((day) => [day.label, day.meals.length])).toEqual([['DIA DE TREINO', draft.days[0].meals.length]]);
+    // Sem nenhuma refeição em dia nenhum, a criação já é bloqueada antes de enviar.
+    expect(draftProblems({ ...draft, days: draft.days.map((day) => ({ ...day, meals: [] })) })).toContain('Inclua ao menos uma refeição.');
+  });
 });

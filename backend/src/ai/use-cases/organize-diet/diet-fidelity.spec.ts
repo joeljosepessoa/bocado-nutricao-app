@@ -521,6 +521,33 @@ describe('"ou" e "/" entre parênteses: detalhe de um alimento × alternativas d
   });
 });
 
+describe('dia sem nenhuma refeição devolvido pela IA', () => {
+  const emptyDay = (label: string | null) => ({ label, kind: 'other' as const, usageNotes: null, meals: [] });
+
+  it('sai da proposta (o servidor não salva dia vazio) e vira aviso para o profissional conferir', () => {
+    const organized = faithfulOptionsDiet();
+    organized.days.push(emptyDay(null));
+    const checked = checkDietFidelity(OPTIONS_EXAMPLE_DIET, organized);
+    expect(checked.days).toHaveLength(1);
+    expect(checked.days[0].meals).toHaveLength(5);
+    expect(checked.warnings).toEqual([DIET_WARNINGS.dayWithoutMeals(null)]);
+  });
+
+  it('o aviso cita o título do dia; as refeições dos outros dias ficam como estavam', () => {
+    const organized = faithfulUserDiet();
+    organized.days[1].meals = [];
+    const checked = checkDietFidelity(USER_EXAMPLE_DIET, organized);
+    expect(checked.days.map((d) => [d.label, d.meals.length])).toEqual([['DIA DE TREINO', 5]]);
+    expect(checked.warnings).toContain('O dia "DIA DE DESCANSO" veio sem nenhuma refeição e não foi incluído — confira o texto.');
+    // O que estava escrito para esse dia não some: aparece como trecho não organizado.
+    expect(checked.warnings.some((w) => w.startsWith('Trecho não organizado') && w.includes('35 g de muçarela'))).toBe(true);
+  });
+
+  it('só dias vazios: continua recusado', () => {
+    expect(rejection({ days: [emptyDay(null)], supplements: [], guidelines: [], warnings: [] }, OPTIONS_EXAMPLE_DIET)).toMatch(/Nenhuma refeição foi organizada/);
+  });
+});
+
 describe('texto colado com a linha quebrada no meio da frase (cópia de PDF/Word)', () => {
   const WIDTHS = Array.from({ length: 141 }, (_, i) => 40 + i);
   const optionsDiet = (change: (organized: AiOrganizedDiet) => void = () => undefined) => {

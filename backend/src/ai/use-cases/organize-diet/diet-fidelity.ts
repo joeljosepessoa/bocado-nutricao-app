@@ -28,6 +28,8 @@ export const DIET_WARNINGS = {
   mealWithoutItems: 'Nenhum alimento identificado nesta refeição.',
   singleChoice: 'Bloco "escolha 1" com uma única opção — confira.',
   quantityInsideName: 'Quantidade escrita no meio do nome do alimento — confira a que ela se refere.',
+  dayWithoutMeals: (label: string | null) =>
+    label ? `O dia "${label}" veio sem nenhuma refeição e não foi incluído — confira o texto.` : 'Um dia sem nenhuma refeição não foi incluído — confira o texto.',
   uncovered: (line: string) => `Trecho não organizado: "${line}" — revisar.`,
   dayLabelSuggested: (label: string) => `O título "${label}" não está escrito no texto — foi sugerido pela IA. Confirme ou corrija o nome do dia.`,
 } as const;
@@ -779,7 +781,7 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
 
   const totalMeals = organized.days.reduce((sum, d) => sum + d.meals.length, 0);
   let mealNumber = 0;
-  const days: CheckedDay[] = organized.days.map((day) => {
+  const checkedDays: CheckedDay[] = organized.days.map((day) => {
     const dayWarnings: string[] = [];
     // Nome de dia não é prescrição: texto que só titula o 2º dia ("DIA DE DESCANSO")
     // deixa o 1º sem título, e a IA sugere um. A sugestão fica, mas como aviso que o
@@ -837,6 +839,9 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
     return { label: day.label, kind: day.kind, usageNotes, meals, warnings: dayWarnings };
   });
   if (totalMeals === 0) problems.push('Nenhuma refeição foi organizada.');
+  // Dia sem refeição não prescreve nada e não pode ser salvo: sai da proposta, com aviso para o profissional conferir.
+  const days = checkedDays.filter((day) => day.meals.length > 0);
+  const emptyDays = checkedDays.filter((day) => day.meals.length === 0).map((day) => DIET_WARNINGS.dayWithoutMeals(day.label));
 
   const supplements: CheckedSupplement[] = organized.supplements.map((s, i) => {
     const at = `Suplemento ${i + 1} (${s.name})`;
@@ -880,6 +885,6 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
     );
   }
 
-  const warnings = [...organized.warnings, ...uncoveredLines(input, covered).map(DIET_WARNINGS.uncovered)];
+  const warnings = [...organized.warnings, ...emptyDays, ...uncoveredLines(input, covered).map(DIET_WARNINGS.uncovered)];
   return { days, supplements, guidelines, warnings: [...new Set(warnings)] };
 }

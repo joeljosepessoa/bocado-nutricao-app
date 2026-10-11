@@ -308,9 +308,11 @@ function foodPayload(food: DraftFood): ProposalChoiceFoodInput {
 
 /** Só o que o profissional revisou — vira RASCUNHO, nunca publica. */
 export function draftToPayload(draft: DietDraft, replaceDraft = false): CreateDietFromProposalInput {
+  // Dia sem refeição não tem o que salvar (o servidor recusa): fica de fora.
+  const days = draft.days.filter((day) => day.meals.length > 0);
   return {
     ...(replaceDraft ? { replaceDraft: true } : {}),
-    days: draft.days.map((day) => ({
+    days: days.map((day) => ({
       label: text(day.label),
       kind: day.kind,
       usageNotes: text(day.usageNotes),
