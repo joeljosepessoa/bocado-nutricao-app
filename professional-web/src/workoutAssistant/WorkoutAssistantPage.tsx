@@ -6,11 +6,25 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { draftProblems, draftToPayload, proposalToDraft, type WorkoutDraft } from './draft';
+import { applyRegistered, pendingExercises, registerPending } from './registerExercises';
 import { WorkoutProposalEditor } from './WorkoutProposalEditor';
 
 const MAX_TEXT_LENGTH = 12000;
 
 type Step = 'input' | 'organizing' | 'needsConsent' | 'review';
+
+/**
+ * `withGifs`: cada exercício é ligado ao catálogo (com a demonstração, quando
+ * houver) — o que não for achado, o profissional escolhe ou cadastra.
+ * `withoutGifs`: vale o nome que o profissional escreveu; o que não está no
+ * catálogo é cadastrado no catálogo dele ao criar o treino, sem demonstração.
+ */
+type GifMode = 'withGifs' | 'withoutGifs';
+
+const MODE_HINT: Record<GifMode, string> = {
+  withGifs: 'Com GIFs: cada exercício é ligado ao catálogo, com a demonstração quando houver. O que não for encontrado, você escolhe ou cadastra.',
+  withoutGifs: 'Sem GIFs: vale o nome que você escreveu. O que não estiver no catálogo entra no seu catálogo ao criar o treino, sem demonstração.',
+};
 
 function errorMessage(err: unknown, fallback: string): string {
   const message = (err as { response?: { data?: { message?: unknown } } })?.response?.data?.message;
@@ -34,6 +48,8 @@ export function WorkoutAssistantPage() {
 
   const [text, setText] = useState('');
   const [step, setStep] = useState<Step>('input');
+  const [mode, setMode] = useState<GifMode>('withGifs');
+  const withoutGifs = mode === 'withoutGifs';
   const [draft, setDraft] = useState<WorkoutDraft | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [consentReason, setConsentReason] = useState<string | null>(null);
@@ -44,7 +60,8 @@ export function WorkoutAssistantPage() {
 
   const backToWorkout = () => navigate(`/clients/${clientId}/workout`);
 
-  async function organize() {
+  async function organize(chosen: GifMode = mode) {
+    setMode(chosen);
     setStep('organizing');
     setError(null);
     try {
@@ -75,14 +92,25 @@ export function WorkoutAssistantPage() {
 
   async function createDraft() {
     if (!draft) return;
-    const found = draftProblems(draft);
+    const found = draftProblems(draft, { withoutGifs });
     setProblems(found);
     if (found.length > 0) return;
 
     setCreating(true);
     setError(null);
     try {
-      await api.createWorkoutFromProposal(clientId!, draftToPayload(draft));
+      let ready = draft;
+      if (withoutGifs) {
+        // Só agora, com o treino confirmado, os nomes escritos entram no catálogo do profissional.
+        const { registered, failed } = await registerPending(pendingExercises(draft));
+        ready = applyRegistered(draft, registered);
+        setDraft(ready);
+        if (failed.length > 0) {
+          setError(`Não foi possível cadastrar no seu catálogo: ${failed.join(', ')}. Nada foi salvo — tente de novo.`);
+          return;
+        }
+      }
+      await api.createWorkoutFromProposal(clientId!, draftToPayload(ready));
       await queryClient.invalidateQueries({ queryKey: ['workouts', clientId] });
       navigate(`/clients/${clientId}/workout`, { state: { assistantCreated: true } });
     } catch (err) {
@@ -147,10 +175,24 @@ export function WorkoutAssistantPage() {
               <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
                 A IA só organiza o que você escreveu — não cria nem completa a prescrição. {text.length}/{MAX_TEXT_LENGTH}
               </span>
-              <Button onClick={organize} loading={step === 'organizing'} disabled={!text.trim()}>
-                Organizar com IA
-              </Button>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <Button onClick={() => organize('withGifs')} loading={step === 'organizing' && !withoutGifs} disabled={!text.trim() || step === 'organizing'}>
+                  Organizar com GIFs
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => organize('withoutGifs')}
+                  loading={step === 'organizing' && withoutGifs}
+                  disabled={!text.trim() || step === 'organizing'}
+                >
+                  Organizar sem GIFs
+                </Button>
+              </div>
             </div>
+            <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: 'var(--color-text-secondary)' }}>
+              <li>{MODE_HINT.withGifs}</li>
+              <li>{MODE_HINT.withoutGifs}</li>
+            </ul>
             {step === 'organizing' ? (
               <div role="status" style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
                 Organizando… isso pode levar até um minuto.
@@ -168,7 +210,7 @@ export function WorkoutAssistantPage() {
                 </p>
                 {consentReason?.includes('sua conta') ? (
                   <div>
-                    <Button onClick={activateConsent} loading={consenting}>
+                    <Button onClick={() => activateConsent()} loading={consenting}>
                       Ativar assistente de IA para minha conta
                     </Button>
                   </div>
@@ -196,7 +238,33 @@ export function WorkoutAssistantPage() {
             Proposta de treino organizada por IA — revise e corrija antes de criar. Nada foi salvo ainda.
           </div>
 
-          <WorkoutProposalEditor draft={draft} onChange={setDraft} />
+          <div role="radiogroup" aria-label="Como tratar os exercícios" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            {(['withGifs', 'withoutGifs'] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                role="radio"
+                aria-checked={mode === option}
+                onClick={() => {
+                  setMode(option);
+                  setProblems([]);
+                }}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  border: mode === option ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                  background: mode === option ? 'var(--color-primary-light)' : 'transparent',
+                  fontWeight: mode === option ? 700 : 500,
+                  cursor: 'pointer',
+                }}
+              >
+                {option === 'withGifs' ? 'Com GIFs' : 'Sem GIFs'}
+              </button>
+            ))}
+            <span style={{ fontSize: 12, color: 'var(--color-text-secondary)', flex: 1, minWidth: 220 }}>{MODE_HINT[mode]}</span>
+          </div>
+
+          <WorkoutProposalEditor draft={draft} onChange={setDraft} withoutGifs={withoutGifs} />
 
           {problems.length > 0 ? (
             <Card title="Corrija antes de criar o treino">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type React from 'react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -15,17 +15,21 @@ import {
   selectExercise,
   updateDay,
   updateExercise,
+  usesWrittenName,
   withoutNotice,
   type DraftDay,
   type DraftExercise,
   type WorkoutDraft,
 } from './draft';
 import { ExercisePickerModal } from './ExercisePickerModal';
+import { applyRegistered, distinctNames, pendingExercises, pendingWithoutSuggestions, registerPending, type PendingExercise } from './registerExercises';
 import { SetsEditor } from './SetsEditor';
 
 interface Props {
   draft: WorkoutDraft;
   onChange: (draft: WorkoutDraft) => void;
+  /** Modo "Organizar sem GIFs": vale o nome escrito; nada de demonstração nem de escolha obrigatória no catálogo. */
+  withoutGifs?: boolean;
 }
 
 type Picker = { mode: 'replace'; dayKey: string; exerciseKey: string; search: string; muscleGroup: string | null } | { mode: 'add'; dayKey: string };
@@ -69,7 +73,8 @@ const warningStyle: React.CSSProperties = {
   borderRadius: 4,
 };
 
-function matchBadge(exercise: DraftExercise): { label: string; color: string } {
+function matchBadge(exercise: DraftExercise, withoutGifs: boolean): { label: string; color: string } {
+  if (usesWrittenName(exercise, { withoutGifs })) return { label: '✓ Nome como você escreveu — entra no seu catálogo ao criar o treino', color: 'var(--color-success)' };
   if (exercise.exercise) {
     return exercise.match === 'matched'
       ? { label: '✓ Encontrado no catálogo', color: 'var(--color-success)' }
@@ -88,6 +93,9 @@ function ExerciseCard({
   onMove,
   onRemove,
   onOpenPicker,
+  onRegister,
+  registering,
+  withoutGifs,
 }: {
   exercise: DraftExercise;
   index: number;
@@ -96,8 +104,12 @@ function ExerciseCard({
   onMove: (direction: -1 | 1) => void;
   onRemove: () => void;
   onOpenPicker: () => void;
+  /** Cadastra no catálogo do profissional o nome lido do texto e já o usa neste exercício. */
+  onRegister: () => void;
+  registering: boolean;
+  withoutGifs: boolean;
 }) {
-  const badge = matchBadge(exercise);
+  const badge = matchBadge(exercise, withoutGifs);
   const title = exercise.exercise?.name ?? exercise.rawName ?? 'Exercício';
   const detail = exercise.exercise ? describeExercise(exercise.exercise) : exercise.muscleGroupHint;
 
@@ -121,6 +133,11 @@ function ExerciseCard({
           <Button size="small" variant="secondary" onClick={onOpenPicker}>
             {exercise.exercise ? 'Trocar exercício' : 'Selecionar do catálogo'}
           </Button>
+          {!withoutGifs && !exercise.exercise && exercise.rawName?.trim() ? (
+            <Button size="small" onClick={onRegister} loading={registering} aria-label={`Cadastrar “${exercise.rawName.trim()}” no meu catálogo`}>
+              Cadastrar no meu catálogo
+            </Button>
+          ) : null}
           <Button size="small" variant="ghost" aria-label="Mover exercício para cima" disabled={index === 0} onClick={() => onMove(-1)}>
             ↑
           </Button>
@@ -133,13 +150,13 @@ function ExerciseCard({
         </div>
       </div>
 
-      {exercise.exercise ? (
+      {exercise.exercise && !withoutGifs ? (
         <div aria-label={`GIF de ${exercise.exercise.name}`}>
           <ExerciseGif exercise={exercise.exercise} />
         </div>
       ) : null}
 
-      {!exercise.exercise && exercise.candidates.length > 0 ? (
+      {!withoutGifs && !exercise.exercise && exercise.candidates.length > 0 ? (
         <div style={{ fontSize: 12.5 }}>
           <div style={{ fontWeight: 600, marginBottom: 4 }}>Possíveis correspondências no catálogo — escolha uma:</div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -175,7 +192,7 @@ function ExerciseCard({
       <SetsEditor sets={exercise.sets} onChange={(sets) => onChange({ ...exercise, sets })} />
 
       <WarningList
-        warnings={exerciseWarnings(exercise)}
+        warnings={exerciseWarnings(exercise, { withoutGifs })}
         notices={exercise.notices}
         onDismiss={(notice) => onChange({ ...exercise, notices: withoutNotice(exercise.notices, notice) })}
       />
@@ -189,12 +206,18 @@ function DayCard({
   draft,
   onChange,
   onPicker,
+  onRegister,
+  registeringKeys,
+  withoutGifs,
 }: {
   day: DraftDay;
   index: number;
   draft: WorkoutDraft;
   onChange: (draft: WorkoutDraft) => void;
   onPicker: (picker: Picker) => void;
+  onRegister: (exerciseKey: string) => void;
+  registeringKeys: string[];
+  withoutGifs: boolean;
 }) {
   return (
     <Card>
@@ -230,6 +253,9 @@ function DayCard({
             onChange={(next) => onChange(updateExercise(draft, day.key, exercise.key, () => next))}
             onMove={(direction) => onChange(moveExercise(draft, day.key, exercise.key, direction))}
             onRemove={() => onChange(removeExercise(draft, day.key, exercise.key))}
+            onRegister={() => onRegister(exercise.key)}
+            registering={registeringKeys.includes(exercise.key)}
+            withoutGifs={withoutGifs}
             onOpenPicker={() =>
               onPicker({
                 mode: 'replace',
@@ -253,8 +279,29 @@ function DayCard({
 }
 
 /** Revisão editável da proposta — nada vai ao servidor até "Criar treino como rascunho". */
-export function WorkoutProposalEditor({ draft, onChange }: Props) {
+export function WorkoutProposalEditor({ draft, onChange, withoutGifs = false }: Props) {
   const [picker, setPicker] = useState<Picker | null>(null);
+  const [registeringKeys, setRegisteringKeys] = useState<string[]>([]);
+  const [registerError, setRegisterError] = useState<string | null>(null);
+  // O cadastro é assíncrono: ao terminar, liga o exercício ao rascunho MAIS RECENTE (o profissional pode ter editado no meio).
+  const latestDraft = useRef(draft);
+  useEffect(() => {
+    latestDraft.current = draft;
+  }, [draft]);
+
+  const missing = pendingWithoutSuggestions(draft);
+  const missingNames = distinctNames(missing);
+
+  /** Cadastra (ou reaproveita) no catálogo do profissional e já liga ao exercício — sempre por um clique dele. */
+  async function register(items: PendingExercise[]) {
+    if (items.length === 0) return;
+    setRegisterError(null);
+    setRegisteringKeys((keys) => [...keys, ...items.map((item) => item.exerciseKey)]);
+    const { registered, failed } = await registerPending(items);
+    onChange(applyRegistered(latestDraft.current, registered));
+    setRegisteringKeys((keys) => keys.filter((key) => !items.some((item) => item.exerciseKey === key)));
+    if (failed.length > 0) setRegisterError(`Não foi possível cadastrar: ${failed.join(', ')}. Tente de novo ou selecione do catálogo.`);
+  }
 
   function handlePick(chosen: CatalogExerciseRef) {
     if (!picker) return;
@@ -270,8 +317,45 @@ export function WorkoutProposalEditor({ draft, onChange }: Props) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <WarningList warnings={[]} notices={draft.notices} onDismiss={(notice) => onChange({ ...draft, notices: withoutNotice(draft.notices, notice) })} />
 
+      {!withoutGifs && missing.length > 0 ? (
+        <section
+          aria-label="Exercícios que não estão no catálogo"
+          style={{ border: '1px solid var(--color-border)', borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--color-primary-light)' }}
+        >
+          <div style={{ fontSize: 13.5 }}>
+            <strong>
+              {missingNames.length === 1 ? '1 exercício do seu texto não está' : `${missingNames.length} exercícios do seu texto não estão`} no catálogo:
+            </strong>{' '}
+            {missingNames.join(', ')}.
+          </div>
+          <div style={{ fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
+            Eles entram no seu catálogo (só você vê) com o nome que você escreveu, sem GIF, e já ficam ligados ao treino. Você pode trocar qualquer um depois.
+          </div>
+          <div>
+            <Button onClick={() => register(missing)} loading={registeringKeys.length > 0}>
+              {missingNames.length === 1 ? 'Cadastrar no meu catálogo' : `Cadastrar os ${missingNames.length} no meu catálogo`}
+            </Button>
+          </div>
+        </section>
+      ) : null}
+      {registerError ? (
+        <div role="alert" style={{ color: 'var(--color-danger)', fontSize: 13 }}>
+          {registerError}
+        </div>
+      ) : null}
+
       {draft.days.map((day, i) => (
-        <DayCard key={day.key} day={day} index={i} draft={draft} onChange={onChange} onPicker={setPicker} />
+        <DayCard
+          key={day.key}
+          day={day}
+          index={i}
+          draft={draft}
+          onChange={onChange}
+          onPicker={setPicker}
+          onRegister={(exerciseKey) => register(pendingExercises(draft).filter((item) => item.exerciseKey === exerciseKey))}
+          registeringKeys={registeringKeys}
+          withoutGifs={withoutGifs}
+        />
       ))}
 
       {picker ? (

@@ -12,6 +12,7 @@ vi.mock('../../api/endpoints', () => ({
   createWorkoutFromProposal: vi.fn(),
   acceptProfessionalAiConsent: vi.fn(),
   listExercises: vi.fn(),
+  createExercise: vi.fn(),
   fetchExerciseMedia: vi.fn(),
   publishWorkoutVersion: vi.fn(),
 }));
@@ -133,7 +134,7 @@ function renderPage() {
 async function organizeProposal(user: ReturnType<typeof userEvent.setup>) {
   vi.mocked(api.organizeWorkout).mockResolvedValueOnce(aiResult);
   await user.type(screen.getByLabelText('Cole aqui o treino que você já possui'), 'Supino reto com barra 4x6-10 90s');
-  await user.click(screen.getByRole('button', { name: 'Organizar com IA' }));
+  await user.click(screen.getByRole('button', { name: 'Organizar com GIFs' }));
   await screen.findByDisplayValue('SEGUNDA - PEITO + TRÍCEPS');
 }
 
@@ -151,7 +152,7 @@ describe('WorkoutAssistantPage', () => {
 
     expect(screen.getByRole('heading', { name: /Assistente de Treino/ })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /Organizar treino existente/ })).toHaveAttribute('aria-checked', 'true');
-    const button = screen.getByRole('button', { name: 'Organizar com IA' });
+    const button = screen.getByRole('button', { name: 'Organizar com GIFs' });
     expect(button).toBeDisabled();
 
     await user.type(screen.getByLabelText('Cole aqui o treino que você já possui'), 'Agachamento 3x10');
@@ -362,7 +363,7 @@ describe('WorkoutAssistantPage', () => {
     renderPage();
 
     await user.type(screen.getByLabelText('Cole aqui o treino que você já possui'), 'Supino 4x6-10');
-    await user.click(screen.getByRole('button', { name: 'Organizar com IA' }));
+    await user.click(screen.getByRole('button', { name: 'Organizar com GIFs' }));
     await user.click(await screen.findByRole('button', { name: 'Ativar assistente de IA para minha conta' }));
 
     expect(api.acceptProfessionalAiConsent).toHaveBeenCalled();
@@ -377,10 +378,101 @@ describe('WorkoutAssistantPage', () => {
     renderPage();
 
     await user.type(screen.getByLabelText('Cole aqui o treino que você já possui'), 'Supino 4x6-10');
-    await user.click(screen.getByRole('button', { name: 'Organizar com IA' }));
+    await user.click(screen.getByRole('button', { name: 'Organizar com GIFs' }));
 
     expect(await screen.findByText(/formato inválido/)).toBeInTheDocument();
     expect(screen.getByLabelText('Cole aqui o treino que você já possui')).toHaveValue('Supino 4x6-10');
     expect(api.createWorkoutFromProposal).not.toHaveBeenCalled();
+  });
+});
+
+describe('Assistente de Treino — "Organizar sem GIFs"', () => {
+  const asExercise = (id: string, name: string, imageUrl: string | null = null) => ({ id, name, type: 'strength', muscleGroup: null, equipment: null, videoUrl: null, imageUrl, scope: 'private' as const });
+
+  async function organizeWithoutGifs(user: ReturnType<typeof userEvent.setup>) {
+    vi.mocked(api.organizeWorkout).mockResolvedValueOnce(aiResult);
+    await user.type(screen.getByLabelText('Cole aqui o treino que você já possui'), 'Supino reto com barra 4x6-10 90s');
+    await user.click(screen.getByRole('button', { name: 'Organizar sem GIFs' }));
+    await screen.findByDisplayValue('SEGUNDA - PEITO + TRÍCEPS');
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockMedia();
+    vi.mocked(api.createWorkoutFromProposal).mockResolvedValue({} as never);
+    // O catálogo já tem dois "Tríceps pulley" (um com GIF, um sem) e nenhum "Crucifixo xyz".
+    vi.mocked(api.listExercises).mockImplementation(async (search) =>
+      search === 'Tríceps pulley' ? [asExercise('ex-tri-b', 'Tríceps pulley', '/exercise-media/triceps-barra'), asExercise('ex-tri-a', 'Tríceps pulley')] : [],
+    );
+    vi.mocked(api.createExercise).mockImplementation(async (input) => asExercise('novo-crucifixo', input.name));
+  });
+
+  it('a tela oferece os dois modos e explica a diferença', () => {
+    renderPage();
+    expect(screen.getByRole('button', { name: 'Organizar com GIFs' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Organizar sem GIFs' })).toBeDisabled();
+    expect(screen.getByText(/Sem GIFs: vale o nome que você escreveu/)).toBeInTheDocument();
+  });
+
+  it('exercício fora do catálogo não trava: fica com o nome escrito, sem GIF e sem pedir escolha', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await organizeWithoutGifs(user);
+
+    const crucifixoCard = section(/Exercício 3: Crucifixo xyz/);
+    expect(within(crucifixoCard).getByText(/Nome como você escreveu — entra no seu catálogo ao criar o treino/)).toBeInTheDocument();
+    expect(within(crucifixoCard).queryByText('Exercício não encontrado no catálogo.')).not.toBeInTheDocument();
+    // Nenhuma demonstração na revisão, nem as opções com GIF do nome ambíguo.
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Possíveis correspondências no catálogo/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Exercícios que não estão no catálogo' })).not.toBeInTheDocument();
+    // Nada é cadastrado só por organizar.
+    expect(api.createExercise).not.toHaveBeenCalled();
+  });
+
+  it('ao criar o treino, o que falta entra no catálogo do profissional e o rascunho é salvo com os ids da API', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await organizeWithoutGifs(user);
+
+    await user.click(screen.getByRole('button', { name: 'Criar treino como rascunho' }));
+    expect(await screen.findByText('Aba treino')).toBeInTheDocument();
+
+    // Só o que não existia é cadastrado (particular, sem GIF); nome repetido no catálogo usa o que não tem demonstração.
+    expect(vi.mocked(api.createExercise).mock.calls.map(([input]) => input)).toEqual([{ name: 'Crucifixo xyz', type: 'strength', scope: 'private' }]);
+    const [clientId, payload] = vi.mocked(api.createWorkoutFromProposal).mock.calls[0];
+    expect(clientId).toBe('c1');
+    expect(payload.days[0].exercises.map((e) => e.exerciseId)).toEqual(['ex-supino', 'ex-tri-a', 'novo-crucifixo']);
+    expect(payload.days[0].exercises[2]).toMatchObject({ notes: 'até a falha' });
+    expect(payload.days[0].exercises[0].sets[0]).toMatchObject({ repsMin: 6, repsMax: 10, restSeconds: 90 });
+    expect(api.publishWorkoutVersion).not.toHaveBeenCalled();
+  });
+
+  it('se o cadastro de um exercício falhar, o treino não é criado e a mensagem diz qual', async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.createExercise).mockRejectedValue(new Error('rede'));
+    renderPage();
+    await organizeWithoutGifs(user);
+
+    await user.click(screen.getByRole('button', { name: 'Criar treino como rascunho' }));
+    expect(await screen.findByText(/Não foi possível cadastrar no seu catálogo: Crucifixo xyz\. Nada foi salvo/)).toBeInTheDocument();
+    expect(api.createWorkoutFromProposal).not.toHaveBeenCalled();
+  });
+
+  it('dá para trocar de modo na revisão, sem organizar de novo: "Com GIFs" volta a exigir a escolha no catálogo', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await organizeWithoutGifs(user);
+
+    await user.click(screen.getByRole('radio', { name: 'Com GIFs' }));
+    await user.click(screen.getByRole('button', { name: 'Criar treino como rascunho' }));
+    expect(await screen.findByText(/exercício 3 \("Crucifixo xyz"\): selecione um exercício do catálogo/)).toBeInTheDocument();
+    expect(api.createWorkoutFromProposal).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('radio', { name: 'Sem GIFs' }));
+    expect(screen.queryByText(/selecione um exercício do catálogo/)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Criar treino como rascunho' }));
+    expect(await screen.findByText('Aba treino')).toBeInTheDocument();
+    expect(api.createWorkoutFromProposal).toHaveBeenCalledTimes(1);
   });
 });

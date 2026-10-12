@@ -151,9 +151,23 @@ export function manualExercise(exercise: CatalogExerciseRef): DraftExercise {
   };
 }
 
-export function exerciseWarnings(exercise: DraftExercise): string[] {
+/**
+ * `withoutGifs`: modo "Organizar sem GIFs" — o exercício lido do texto vale pelo
+ * nome que o profissional escreveu e é cadastrado no catálogo dele ao criar o
+ * treino; não precisa ser escolhido no catálogo antes.
+ */
+export interface DraftRules {
+  withoutGifs?: boolean;
+}
+
+/** Fica com o nome escrito no texto (modo "sem GIFs"), sem exercício do catálogo escolhido. */
+export function usesWrittenName(exercise: DraftExercise, rules: DraftRules = {}): boolean {
+  return !!rules.withoutGifs && !exercise.exercise && !!exercise.rawName?.trim();
+}
+
+export function exerciseWarnings(exercise: DraftExercise, rules: DraftRules = {}): string[] {
   const warnings: string[] = [];
-  if (!exercise.exercise) {
+  if (!exercise.exercise && !usesWrittenName(exercise, rules)) {
     if (exercise.match === 'ambiguous') warnings.push(LIVE_WARNINGS.exerciseAmbiguous);
     else if (exercise.match === 'not_found') warnings.push(LIVE_WARNINGS.exerciseNotFound);
     else warnings.push(LIVE_WARNINGS.exerciseNotSelected);
@@ -177,7 +191,7 @@ export function dayWarnings(day: DraftDay): string[] {
 }
 
 /** Só o que impede gravar um treino estruturalmente válido — avisos nunca bloqueiam. */
-export function draftProblems(draft: WorkoutDraft): string[] {
+export function draftProblems(draft: WorkoutDraft, rules: DraftRules = {}): string[] {
   const problems: string[] = [];
   if (draft.days.length === 0) problems.push('Adicione pelo menos um dia.');
   draft.days.forEach((day, d) => {
@@ -185,7 +199,7 @@ export function draftProblems(draft: WorkoutDraft): string[] {
     if (!day.name.trim()) problems.push(`${dayLabel}: informe o nome do dia.`);
     day.exercises.forEach((exercise, e) => {
       const exLabel = `${dayLabel}, exercício ${e + 1}${exercise.rawName ? ` ("${exercise.rawName}")` : ''}`;
-      if (!exercise.exercise) problems.push(`${exLabel}: selecione um exercício do catálogo.`);
+      if (!exercise.exercise && !usesWrittenName(exercise, rules)) problems.push(`${exLabel}: selecione um exercício do catálogo.`);
       exercise.sets.forEach((set, s) => {
         const setLabel = `${exLabel}, série ${s + 1}`;
         if (set.repsMode === 'exact' && set.reps === null) {
