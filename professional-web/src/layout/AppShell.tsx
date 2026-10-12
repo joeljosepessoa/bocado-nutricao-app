@@ -17,7 +17,7 @@ interface NavItem {
 const PROFESSIONAL_NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: 'dashboard', end: true },
   { to: '/clients', label: 'Pacientes', icon: 'users' },
-  { label: 'Anamnese', icon: 'clipboard' },
+  { to: '/anamnese', label: 'Anamnese', icon: 'clipboard' },
   { label: 'Avaliação', icon: 'ruler' },
   { to: '/agenda', label: 'Agenda', icon: 'calendar' },
   { label: 'Relatórios', icon: 'barChart' },

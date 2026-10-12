@@ -23,6 +23,7 @@ import { ReportsTab } from './pages/tabs/ReportsTab';
 import { MessagesTab } from './pages/tabs/MessagesTab';
 import { TrackingTab } from './pages/tabs/TrackingTab';
 import { AgendaPage } from './pages/AgendaPage';
+import { AnamnesisPage } from './pages/AnamnesisPage';
 import { PlanPage } from './pages/PlanPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
@@ -53,6 +54,7 @@ function App() {
             >
               <Route path="/" element={<DashboardPage />} />
               <Route path="/clients" element={<ClientsListPage />} />
+              <Route path="/anamnese" element={<AnamnesisPage />} />
               <Route path="/agenda" element={<AgendaPage />} />
               <Route path="/plano" element={<PlanPage />} />
               <Route path="/configuracoes" element={<SettingsPage />} />

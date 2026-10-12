@@ -8,6 +8,8 @@ import type {
   AdminProfessional,
   AiGenerationResult,
   AiInteractionSummary,
+  AnamnesisStatus,
+  AnamnesisView,
   Appointment,
   AvailabilitySlot,
   ClientDetail,
@@ -40,6 +42,7 @@ import type {
   PlatformMetrics,
   ReportAudience,
   ReportSummary,
+  SaveAnamnesisInput,
   SessionUser,
   SignedUrl,
   Subscription,
@@ -116,6 +119,24 @@ export async function listClients(params: {
   pageSize?: number;
 } = {}): Promise<PaginatedResult<ClientListItem>> {
   const res = await apiClient.get<PaginatedResult<ClientListItem>>('/clients', { params });
+  return res.data;
+}
+
+// --- Anamnese -----------------------------------------------------------
+
+/** Situação da ficha de cada paciente (sem conteúdo). */
+export async function listAnamneses(): Promise<AnamnesisStatus[]> {
+  const res = await apiClient.get<AnamnesisStatus[]>('/anamneses');
+  return res.data;
+}
+
+export async function getAnamnesis(clientId: string): Promise<AnamnesisView> {
+  const res = await apiClient.get<AnamnesisView>(`/clients/${clientId}/anamnesis`);
+  return res.data;
+}
+
+export async function saveAnamnesis(clientId: string, input: SaveAnamnesisInput): Promise<AnamnesisView> {
+  const res = await apiClient.put<AnamnesisView>(`/clients/${clientId}/anamnesis`, input);
   return res.data;
 }
 

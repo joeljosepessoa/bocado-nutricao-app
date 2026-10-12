@@ -655,6 +655,73 @@ export interface AiGenerationResult {
 
 // --- Assistente de Treino (organizar treino existente) ---------------------
 
+// --- Anamnese ---------------------------------------------------------
+
+/** Medicamento, suplemento ou hormônio em uso. */
+export interface AnamnesisItem {
+  name: string;
+  dosage: string | null;
+  frequency: string | null;
+}
+
+/** A ficha em si (12 etapas). Caixas de marcar guardam os códigos das opções. */
+export interface AnamnesisContent {
+  maritalStatus: string | null;
+  cpf: string | null;
+  rg: string | null;
+  occupation: string | null;
+  address: string | null;
+  goals: string[];
+  goalDescription: string | null;
+  conditions: string[];
+  otherConditions: string | null;
+  medications: AnamnesisItem[];
+  supplements: AnamnesisItem[];
+  hormones: AnamnesisItem[];
+  surgeries: string | null;
+  allergies: string | null;
+  familyHistory: string[];
+  smoking: string | null;
+  alcohol: string | null;
+  waterIntake: string | null;
+  sleepHours: string | null;
+  sleepQuality: string | null;
+  stressLevel: string | null;
+  bowelFrequency: string | null;
+  trainingFrequency: string | null;
+  trainingDuration: string | null;
+  trainingModality: string | null;
+  cardio: string | null;
+  dailySteps: string | null;
+  mealsPerDay: string | null;
+  mealTimes: string | null;
+  foodPreferences: string | null;
+  intolerances: string | null;
+  restrictions: string | null;
+  aversions: string | null;
+  notes: string | null;
+}
+
+export interface AnamnesisView {
+  /** Dados do cadastro mostrados na etapa "Dados Pessoais" (nome e e-mail só para leitura). */
+  client: { id: string; fullName: string; email: string; birthDate: string | null; gender: string | null; phone: string | null };
+  anamnesis: AnamnesisContent & { completedAt: string | null; updatedAt: string | null };
+}
+
+/** O que o painel envia a cada etapa: a ficha + nascimento, sexo e WhatsApp (que vão para o cadastro). */
+export type SaveAnamnesisInput = Partial<AnamnesisContent> & {
+  birthDate?: string | null;
+  gender?: string | null;
+  phone?: string | null;
+  completed?: boolean;
+};
+
+export interface AnamnesisStatus {
+  clientId: string;
+  completedAt: string | null;
+  updatedAt: string;
+}
+
 export interface CatalogExerciseRef {
   id: string;
   name: string;
