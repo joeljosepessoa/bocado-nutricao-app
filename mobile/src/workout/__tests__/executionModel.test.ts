@@ -2,10 +2,14 @@ import type { WorkoutClientDay } from '../../types/api';
 import {
   buildExecution,
   buildExecutionPayload,
+  commonLoad,
+  dayTabLabel,
   executionProgress,
   exerciseSummary,
   parseDecimal,
+  prescriptionSummary,
   prescriptionText,
+  restLabel,
   repsText,
 } from '../executionModel';
 
@@ -136,5 +140,36 @@ describe('faixa de repetições, observações e "como fazer" que o profissional
     const [exercise] = buildExecution(day);
     expect(exercise).toMatchObject({ notes: null, instructions: null, equipment: null });
     expect(exercise.sets[0]).toMatchObject({ repsTarget: '12', notes: null });
+  });
+});
+
+describe('layout de Meus Treinos: botões de dia, resumo "4x 6–8" e carga única', () => {
+  it('rótulo do dia: dia da semana abreviado, nome curto como está e "Dia N" para nome longo', () => {
+    expect(dayTabLabel('SEGUNDA - PEITO + TRÍCEPS', 0)).toBe('Seg');
+    expect(dayTabLabel('Terça-feira', 1)).toBe('Ter');
+    expect(dayTabLabel('Sábado: pernas', 5)).toBe('Sáb');
+    expect(dayTabLabel('Treino A', 0)).toBe('Treino A');
+    expect(dayTabLabel('Treino B — Costas e bíceps', 1)).toBe('Treino B');
+    expect(dayTabLabel('Dia 1', 0)).toBe('Dia 1');
+    expect(dayTabLabel('GLÚTEO E POSTERIOR', 0)).toBe('Dia 1');
+    expect(dayTabLabel('', 2)).toBe('Dia 3');
+  });
+
+  it('resumo do exercício: "4x" + repetições (ou faixa); séries diferentes aparecem todas; sem repetições, só a contagem', () => {
+    const range = set(1, { reps: null, repsMin: 6, repsMax: 8 });
+    const sets = (items: ReturnType<typeof set>[]) => buildExecution({ ...day, exercises: [{ ...day.exercises[0], sets: items }] })[0].sets;
+    expect(prescriptionSummary(sets([range, { ...range, order: 2 }, { ...range, order: 3 }, { ...range, order: 4 }]))).toEqual({ count: '4x', reps: '6–8' });
+    expect(prescriptionSummary(sets([set(1), set(2, { reps: 10 }), set(3, { reps: 8 })]))).toEqual({ count: '3x', reps: '12 / 10 / 8' });
+    expect(prescriptionSummary(sets([set(1, { reps: null })]))).toEqual({ count: '1x', reps: null });
+    expect(restLabel(90)).toBe('90 segundos');
+    expect(restLabel(1)).toBe('1 segundo');
+  });
+
+  it('carga única: mostra o valor quando todas as séries têm a mesma; em branco quando diferem', () => {
+    const [exercise] = buildExecution(day).filter((e) => e.name === 'Agachamento');
+    // Prescrição com 20 kg numa série e 22,5 kg na outra: o campo único fica em branco.
+    expect(commonLoad(exercise.sets)).toBe('');
+    expect(commonLoad(exercise.sets.map((s) => ({ ...s, load: '30' })))).toBe('30');
+    expect(commonLoad(buildExecution(day).find((e) => e.name === 'Remada')!.sets)).toBe('');
   });
 });

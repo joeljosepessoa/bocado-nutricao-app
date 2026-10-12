@@ -1,7 +1,7 @@
 import type { CompositeNavigationProp, NavigatorScreenParams } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { EvolutionEntry, WorkoutClientDay, WorkoutClientSummary } from '../types/api';
+import type { EvolutionEntry } from '../types/api';
 
 /**
  * Área do paciente: Dashboard, Dieta, Treinos e Evolução aparecem na barra
@@ -35,11 +35,10 @@ export type RootStackParamList = {
   ChangePassword: undefined;
   PrivacyConsent: undefined;
   Main: NavigatorScreenParams<MainTabParamList>;
-  WorkoutExecution: { workout: WorkoutClientSummary; day: WorkoutClientDay };
   // A lista inteira (não só o item) viaja com a navegação: o gráfico de
   // evolução e a comparação "inicial vs. atual" precisam de todo o
-  // histórico liberado, não só da avaliação escolhida — mesmo padrão de
-  // WorkoutExecution (objeto completo, sem endpoint dedicado por avaliação).
+  // histórico liberado, não só da avaliação escolhida (objeto completo, sem
+  // endpoint dedicado por avaliação).
   ReportDetail: { entries: EvolutionEntry[]; evaluationId: string };
   ConnectDevice: undefined;
 };

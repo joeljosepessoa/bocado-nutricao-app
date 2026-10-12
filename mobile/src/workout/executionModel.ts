@@ -114,6 +114,51 @@ export function exerciseSummary(sets: WorkoutClientSet[]): string {
   return reps.length > 0 ? `${count} · ${reps.join(' / ')} reps` : count;
 }
 
+const WEEKDAYS: Array<[string, string]> = [
+  ['segunda', 'Seg'],
+  ['terca', 'Ter'],
+  ['quarta', 'Qua'],
+  ['quinta', 'Qui'],
+  ['sexta', 'Sex'],
+  ['sabado', 'Sáb'],
+  ['domingo', 'Dom'],
+];
+
+/**
+ * Rótulo curto do dia para os botões do topo: "Seg" para "SEGUNDA - PEITO",
+ * o próprio nome quando é curto ("Treino A", "Dia 1") e "Dia N" quando o nome é
+ * longo ("GLÚTEO E POSTERIOR") — o nome inteiro aparece no título logo abaixo.
+ */
+export function dayTabLabel(name: string, index: number): string {
+  const head = name.split(/\s[-–—]\s|:|\+/)[0].trim();
+  const plain = head.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const weekday = WEEKDAYS.find(([prefix]) => plain.startsWith(prefix));
+  if (weekday) return weekday[1];
+  return head.length > 0 && head.length <= 9 ? head : `Dia ${index + 1}`;
+}
+
+/** "4x" + "6–8": o resumo do exercício. Séries diferentes entre si viram "12 / 10 / 8"; sem repetições, só a contagem. */
+export function prescriptionSummary(sets: ExecutionSet[]): { count: string; reps: string | null } {
+  const reps = [...new Set(sets.map((set) => set.repsTarget).filter((r): r is string => r != null))];
+  return { count: `${sets.length}x`, reps: reps.length > 0 ? reps.join(' / ') : null };
+}
+
+/** "90 segundos" / "1 segundo". */
+export function restLabel(seconds: number): string {
+  return `${seconds} ${seconds === 1 ? 'segundo' : 'segundos'}`;
+}
+
+/** Carga única do exercício: o valor quando todas as séries têm a mesma; "" quando diferem ou não há. */
+export function commonLoad(sets: ExecutionSet[]): string {
+  const loads = [...new Set(sets.map((set) => set.load.trim()))];
+  return loads.length === 1 ? loads[0] : '';
+}
+
+/** Unidade da carga do exercício (a da prescrição; kg quando não há). */
+export function loadUnitOf(sets: ExecutionSet[]): string {
+  return sets.find((set) => set.loadUnit)?.loadUnit ?? 'kg';
+}
+
 export function executionProgress(exercises: ExecutionExercise[]): { done: number; total: number; percent: number } {
   const all = exercises.flatMap((e) => e.sets);
   const done = all.filter((s) => s.done).length;

@@ -5,7 +5,6 @@ import { SplashScreen } from '../screens/SplashScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { ChangePasswordScreen } from '../screens/ChangePasswordScreen';
 import { PrivacyConsentScreen } from '../screens/PrivacyConsentScreen';
-import { WorkoutExecutionScreen } from '../screens/WorkoutExecutionScreen';
 import { ReportDetailScreen } from '../screens/ReportDetailScreen';
 import { ConnectDeviceScreen } from '../screens/ConnectDeviceScreen';
 import { MainTabs } from './MainTabs';
@@ -59,7 +58,6 @@ export function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ header: ({ navigation, options }) => <AppHeader title={options.title ?? ''} onBack={() => navigation.goBack()} /> }}>
       <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
-      <Stack.Screen name="WorkoutExecution" component={WorkoutExecutionScreen} options={{ title: 'Execução de treino' }} />
       <Stack.Screen name="ReportDetail" component={ReportDetailScreen} options={{ title: 'Meu relatório' }} />
       <Stack.Screen name="ConnectDevice" component={ConnectDeviceScreen} options={{ title: 'Conectar dispositivo' }} />
     </Stack.Navigator>
