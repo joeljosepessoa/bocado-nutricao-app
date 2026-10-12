@@ -6,6 +6,7 @@ import {
   exerciseSummary,
   parseDecimal,
   prescriptionText,
+  repsText,
 } from '../executionModel';
 
 const set = (order: number, extra: Record<string, unknown> = {}) => ({
@@ -89,5 +90,51 @@ describe('execução do treino', () => {
     expect(prescriptionText(set(1))).toBe('12 reps · 20 kg · descanso 90s');
     expect(exerciseSummary([set(1), set(2)])).toBe('2 séries · 12 reps');
     expect(parseDecimal('abc')).toBeUndefined();
+  });
+});
+
+describe('faixa de repetições, observações e "como fazer" que o profissional prescreveu', () => {
+  const range = set(1, { reps: null, repsMin: 8, repsMax: 12, loadValue: null, loadUnit: null });
+
+  it('faixa aparece como faixa ("8–12") — nunca some nem vira um número só', () => {
+    expect(repsText(range)).toBe('8–12');
+    expect(repsText(set(1))).toBe('12');
+    expect(repsText(set(1, { reps: null }))).toBeNull();
+    expect(prescriptionText(range)).toBe('8–12 reps · descanso 90s');
+    expect(exerciseSummary([range, range, set(3, { reps: 15 })])).toBe('3 séries · 8–12 / 15 reps');
+  });
+
+  it('na execução, a faixa é só a dica do campo: o aluno digita o que fez', () => {
+    const [exercise] = buildExecution({ ...day, exercises: [{ ...day.exercises[0], sets: [range, set(2)] }] });
+    expect(exercise.sets.map((s) => [s.reps, s.repsTarget])).toEqual([
+      ['', '8–12'],
+      ['12', '12'],
+    ]);
+    // Série em faixa marcada sem digitar nada não inventa repetições.
+    exercise.sets[0].done = true;
+    expect(buildExecutionPayload('day-a', [exercise], '', new Date())?.sets[0].repsPerformed).toBeUndefined();
+  });
+
+  it('observação/técnica, equipamento e instruções acompanham o exercício; texto vazio vira null', () => {
+    const [exercise] = buildExecution({
+      ...day,
+      exercises: [
+        {
+          ...day.exercises[0],
+          equipment: 'Barra',
+          notes: ' Drop-set na última série ',
+          instructions: 'Puxe a barra até o abdômen.',
+          sets: [set(1, { notes: 'até a falha' }), set(2, { notes: '  ' })],
+        },
+      ],
+    });
+    expect(exercise).toMatchObject({ equipment: 'Barra', notes: 'Drop-set na última série', instructions: 'Puxe a barra até o abdômen.' });
+    expect(exercise.sets.map((s) => s.notes)).toEqual(['até a falha', null]);
+  });
+
+  it('servidor antigo, que ainda não envia esses campos, não quebra a tela', () => {
+    const [exercise] = buildExecution(day);
+    expect(exercise).toMatchObject({ notes: null, instructions: null, equipment: null });
+    expect(exercise.sets[0]).toMatchObject({ repsTarget: '12', notes: null });
   });
 });

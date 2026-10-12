@@ -25,14 +25,32 @@ export interface ExecutionSet {
   load: string;
   loadUnit: string | null;
   restSeconds: number;
+  /** O que foi prescrito ("12" ou "8–12") — aparece como dica no campo de repetições. */
+  repsTarget: string | null;
+  /** Observação do profissional para esta série. */
+  notes: string | null;
 }
 
 export interface ExecutionExercise {
   workoutExerciseId: string;
   name: string;
   muscleGroup: string | null;
+  equipment: string | null;
+  /** Observação/técnica do profissional para este exercício. */
+  notes: string | null;
+  /** Como executar (cadastro do exercício). */
+  instructions: string | null;
   imageUrl: string | null;
   sets: ExecutionSet[];
+}
+
+const clean = (text: string | null | undefined): string | null => (text && text.trim() ? text.trim() : null);
+
+/** "12" ou "8–12" (faixa nunca vira um número só); null quando não há repetições prescritas. */
+export function repsText(set: Pick<WorkoutClientSet, 'reps' | 'repsMin' | 'repsMax'>): string | null {
+  if (set.reps != null) return String(set.reps);
+  if (set.repsMin != null && set.repsMax != null) return `${set.repsMin}–${set.repsMax}`;
+  return null;
 }
 
 /** Estado inicial: prescrição do dia, já com repetições e carga sugeridas. */
@@ -43,6 +61,9 @@ export function buildExecution(day: WorkoutClientDay): ExecutionExercise[] {
       workoutExerciseId: exercise.workoutExerciseId,
       name: exercise.exerciseName,
       muscleGroup: exercise.muscleGroup,
+      equipment: clean(exercise.equipment),
+      notes: clean(exercise.notes),
+      instructions: clean(exercise.instructions),
       imageUrl: exercise.imageUrl,
       sets: [...exercise.sets]
         .sort((a, b) => a.order - b.order)
@@ -56,6 +77,8 @@ export function buildExecution(day: WorkoutClientDay): ExecutionExercise[] {
           load: set.loadValue != null ? formatNumber(set.loadValue, 2) : '',
           loadUnit: set.loadUnit,
           restSeconds: set.restSeconds ?? DEFAULT_REST_SECONDS,
+          repsTarget: repsText(set),
+          notes: clean(set.notes),
         })),
     }));
 }
@@ -72,11 +95,13 @@ export function parseInteger(text: string): number | undefined {
   return /^\d+$/.test(normalized) ? Number(normalized) : undefined;
 }
 
-/** Resumo da prescrição: "12 reps · 20 kg · descanso 60s". */
+/** Resumo da prescrição: "12 reps · 20 kg · descanso 60s"; faixa vira "8–12 reps". */
 export function prescriptionText(set: WorkoutClientSet): string {
   const parts: string[] = [];
-  if (set.reps != null) parts.push(`${set.reps} reps`);
+  const reps = repsText(set);
+  if (reps) parts.push(`${reps} reps`);
   if (set.durationSeconds != null) parts.push(`${set.durationSeconds}s`);
+  if (set.distanceMeters != null) parts.push(`${formatNumber(set.distanceMeters, 2)} m`);
   if (set.loadValue != null) parts.push(`${formatNumber(set.loadValue, 2)} ${set.loadUnit ?? 'kg'}`);
   if (set.restSeconds != null) parts.push(`descanso ${set.restSeconds}s`);
   return parts.join(' · ') || 'Conforme orientação';
@@ -85,8 +110,8 @@ export function prescriptionText(set: WorkoutClientSet): string {
 /** "3 séries · 12 reps" — resumo do exercício na lista de treinos. */
 export function exerciseSummary(sets: WorkoutClientSet[]): string {
   const count = `${sets.length} ${sets.length === 1 ? 'série' : 'séries'}`;
-  const reps = [...new Set(sets.map((s) => s.reps).filter((r): r is number => r != null))];
-  return reps.length > 0 ? `${count} · ${reps.join('/')} reps` : count;
+  const reps = [...new Set(sets.map(repsText).filter((r): r is string => r != null))];
+  return reps.length > 0 ? `${count} · ${reps.join(' / ')} reps` : count;
 }
 
 export function executionProgress(exercises: ExecutionExercise[]): { done: number; total: number; percent: number } {

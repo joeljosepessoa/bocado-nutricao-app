@@ -150,13 +150,18 @@ export interface DietClientSummary {
 
 export interface WorkoutClientSet {
   order: number;
+  /** Repetições exatas; null quando a prescrição é uma faixa. */
   reps: number | null;
+  /** Faixa ("8–12"): mínimo e máximo, sempre juntos. */
+  repsMin?: number | null;
+  repsMax?: number | null;
   loadValue: number | null;
   loadUnit: string | null;
   durationSeconds: number | null;
   distanceMeters: number | null;
   restSeconds: number | null;
   tempo: string | null;
+  notes?: string | null;
 }
 
 export interface WorkoutClientExercise {
@@ -164,6 +169,10 @@ export interface WorkoutClientExercise {
   exerciseName: string;
   muscleGroup: string | null;
   equipment: string | null;
+  /** Como executar (cadastro do exercício). */
+  instructions?: string | null;
+  /** Observação/técnica prescrita pelo profissional para este exercício. */
+  notes?: string | null;
   videoUrl: string | null;
   imageUrl: string | null;
   order: number;
@@ -173,6 +182,7 @@ export interface WorkoutClientExercise {
 export interface WorkoutClientDay {
   workoutDayId: string;
   name: string;
+  notes?: string | null;
   order: number;
   exercises: WorkoutClientExercise[];
 }

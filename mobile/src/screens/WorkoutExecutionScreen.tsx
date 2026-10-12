@@ -7,6 +7,7 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Collapsible } from '../components/Collapsible';
 import { ExerciseDemo } from '../components/ExerciseDemo';
+import { ExerciseGuidance } from '../components/ExerciseGuidance';
 import { RestTimerModal } from '../components/RestTimerModal';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { FadeIn, GradientCard, ProgressBar } from '../components/ui';
@@ -177,12 +178,13 @@ export function WorkoutExecutionScreen() {
                     <View style={styles.flex}>
                       <Text style={styles.exerciseName}>{exercise.name}</Text>
                       <Text style={styles.exerciseMeta}>
-                        {[exercise.muscleGroup, `${done}/${exercise.sets.length} séries`].filter(Boolean).join(' · ')}
+                        {[exercise.muscleGroup, exercise.equipment, `${done}/${exercise.sets.length} séries`].filter(Boolean).join(' · ')}
                       </Text>
                     </View>
                   </View>
                 }
               >
+                <ExerciseGuidance exerciseName={exercise.name} notes={exercise.notes} instructions={exercise.instructions} />
                 <ExerciseDemo
                   imageUrl={exercise.imageUrl}
                   exerciseName={exercise.name}
@@ -196,40 +198,44 @@ export function WorkoutExecutionScreen() {
                   <Text style={[styles.setHeaderText, styles.checkCol]}>Feita</Text>
                 </View>
                 {exercise.sets.map((set) => (
-                  <View key={set.key} style={[styles.setRow, set.done && styles.setRowDone]}>
-                    <Text style={[styles.setNumber, styles.setNumberCol]}>{set.number}</Text>
-                    <TextInput
-                      style={[styles.input, styles.inputCol]}
-                      keyboardType="number-pad"
-                      value={set.reps}
-                      placeholder="—"
-                      placeholderTextColor={colors.textMuted}
-                      onChangeText={(value) => updateSet(set.key, { reps: value })}
-                      accessibilityLabel={`Repetições da série ${set.number}`}
-                    />
-                    <View style={[styles.loadBox, styles.inputCol]}>
+                  <React.Fragment key={set.key}>
+                    <View style={[styles.setRow, set.done && styles.setRowDone]}>
+                      <Text style={[styles.setNumber, styles.setNumberCol]}>{set.number}</Text>
                       <TextInput
-                        style={[styles.input, styles.flex]}
-                        keyboardType="decimal-pad"
-                        value={set.load}
-                        placeholder="—"
+                        style={[styles.input, styles.inputCol]}
+                        keyboardType="number-pad"
+                        value={set.reps}
+                        // Faixa prescrita ("8–12") fica como dica: o aluno digita o que fez.
+                        placeholder={set.repsTarget ?? '—'}
                         placeholderTextColor={colors.textMuted}
-                        onChangeText={(value) => updateSet(set.key, { load: value })}
-                        accessibilityLabel={`Carga da série ${set.number}`}
+                        onChangeText={(value) => updateSet(set.key, { reps: value })}
+                        accessibilityLabel={`Repetições da série ${set.number}`}
                       />
-                      <Text style={styles.unit}>{UNIT_LABEL[set.loadUnit ?? 'kg'] ?? ''}</Text>
+                      <View style={[styles.loadBox, styles.inputCol]}>
+                        <TextInput
+                          style={[styles.input, styles.flex]}
+                          keyboardType="decimal-pad"
+                          value={set.load}
+                          placeholder="—"
+                          placeholderTextColor={colors.textMuted}
+                          onChangeText={(value) => updateSet(set.key, { load: value })}
+                          accessibilityLabel={`Carga da série ${set.number}`}
+                        />
+                        <Text style={styles.unit}>{UNIT_LABEL[set.loadUnit ?? 'kg'] ?? ''}</Text>
+                      </View>
+                      <Pressable
+                        onPress={() => toggleSet(set)}
+                        hitSlop={6}
+                        accessibilityRole="checkbox"
+                        accessibilityState={{ checked: set.done }}
+                        accessibilityLabel={`Série ${set.number} feita`}
+                        style={styles.checkCol}
+                      >
+                        {set.done ? <CheckCircle2 size={30} color={colors.success} /> : <Circle size={30} color={colors.textMuted} />}
+                      </Pressable>
                     </View>
-                    <Pressable
-                      onPress={() => toggleSet(set)}
-                      hitSlop={6}
-                      accessibilityRole="checkbox"
-                      accessibilityState={{ checked: set.done }}
-                      accessibilityLabel={`Série ${set.number} feita`}
-                      style={styles.checkCol}
-                    >
-                      {set.done ? <CheckCircle2 size={30} color={colors.success} /> : <Circle size={30} color={colors.textMuted} />}
-                    </Pressable>
-                  </View>
+                    {set.notes ? <Text style={styles.setNote}>Série {set.number}: {set.notes}</Text> : null}
+                  </React.Fragment>
                 ))}
                 <Pressable onPress={() => startRest(exercise.sets[0]?.restSeconds ?? DEFAULT_REST_SECONDS)} accessibilityRole="button" style={styles.restLink}>
                   <Timer size={16} color={colors.primary} />
@@ -293,6 +299,7 @@ const makeStyles = (colors: ThemeColors) =>
     setHeaderText: { ...typography.tiny, color: colors.textMuted, textTransform: 'uppercase', textAlign: 'center' },
     setRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.xs, borderRadius: radius.md },
     setRowDone: { backgroundColor: colors.successSoft },
+    setNote: { ...typography.caption, color: colors.textSecondary, fontStyle: 'italic', marginLeft: spacing.xs },
     setNumber: { ...typography.body, fontWeight: '700', color: colors.textPrimary, textAlign: 'center' },
     setNumberCol: { width: 40 },
     inputCol: { flex: 1 },

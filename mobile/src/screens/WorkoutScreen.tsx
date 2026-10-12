@@ -6,6 +6,7 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Collapsible } from '../components/Collapsible';
 import { ExerciseDemo } from '../components/ExerciseDemo';
+import { ExerciseGuidance } from '../components/ExerciseGuidance';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { EmptyState, ErrorState, FadeIn, IconBox, LoadingState, PageTitle } from '../components/ui';
 import * as api from '../api/endpoints';
@@ -108,6 +109,7 @@ export function WorkoutScreen() {
                   </View>
                 }
               >
+                {day.notes && day.notes.trim() ? <Text style={styles.dayNotes}>{day.notes.trim()}</Text> : null}
                 {exercises.map((exercise, i) => (
                   <View key={exercise.workoutExerciseId} style={[styles.exercise, i > 0 && styles.exerciseBorder]}>
                     <View style={styles.exerciseTop}>
@@ -115,7 +117,7 @@ export function WorkoutScreen() {
                       <View style={styles.flex}>
                         <Text style={styles.exerciseName}>{exercise.exerciseName}</Text>
                         <Text style={styles.dayMeta}>
-                          {[exercise.muscleGroup, exerciseSummary(exercise.sets)].filter(Boolean).join(' · ')}
+                          {[exercise.muscleGroup, exercise.equipment, exerciseSummary(exercise.sets)].filter(Boolean).join(' · ')}
                         </Text>
                       </View>
                     </View>
@@ -124,8 +126,10 @@ export function WorkoutScreen() {
                       .map((set, s) => (
                         <Text key={set.order} style={styles.setLine}>
                           Série {s + 1}: {prescriptionText(set)}
+                          {set.notes && set.notes.trim() ? ` — ${set.notes.trim()}` : ''}
                         </Text>
                       ))}
+                    <ExerciseGuidance exerciseName={exercise.exerciseName} notes={exercise.notes} instructions={exercise.instructions} />
                     <ExerciseDemo
                       imageUrl={exercise.imageUrl}
                       exerciseName={exercise.exerciseName}
@@ -155,6 +159,7 @@ const makeStyles = (colors: ThemeColors) =>
     dayHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm + 4 },
     dayName: { ...typography.subtitle, color: colors.textPrimary },
     dayMeta: { ...typography.caption, color: colors.textSecondary },
+    dayNotes: { ...typography.caption, color: colors.textPrimary, fontStyle: 'italic' },
     exercise: { gap: 4, paddingTop: spacing.sm },
     exerciseBorder: { borderTopWidth: 1, borderTopColor: colors.border },
     exerciseTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
