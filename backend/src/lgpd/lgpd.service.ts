@@ -13,6 +13,7 @@ import { DevicesService } from '../devices/devices.service';
 import { NotificationPreferencesService } from '../notifications/notification-preferences.service';
 import { ClientSubscriptionsService } from '../client-billing/client-subscriptions.service';
 import { ClientTrackingService } from '../client-tracking/client-tracking.service';
+import { AnamnesisService } from '../anamnesis/anamnesis.service';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 
 const EXPORT_PAGE_SIZE = 10_000;
@@ -50,6 +51,8 @@ export interface ClientDataExport {
   aiInteractions: unknown[];
   /** Registros feitos pelo próprio paciente no app: peso, água e fotos de progresso (só metadados das fotos). */
   ownRecords: unknown;
+  /** A anamnese preenchida pelo profissional sobre o paciente (null se não existe). */
+  anamnesis: unknown;
 }
 
 @Injectable()
@@ -68,6 +71,7 @@ export class LgpdService {
     private readonly notificationPreferencesService: NotificationPreferencesService,
     private readonly clientSubscriptions: ClientSubscriptionsService,
     private readonly clientTracking: ClientTrackingService,
+    private readonly anamnesis: AnamnesisService,
   ) {}
 
   async exportClientData(clientId: string): Promise<ClientDataExport> {
@@ -92,7 +96,7 @@ export class LgpdService {
       orderBy: { createdAt: 'asc' },
     });
 
-    const [aiConsent, aiInteractions, ownRecords] = await Promise.all([
+    const [aiConsent, aiInteractions, ownRecords, anamnesis] = await Promise.all([
       this.prisma.client.findUniqueOrThrow({ where: { id: clientId }, select: { aiDataProcessingConsentAt: true } }),
       this.prisma.aiInteractionLog.findMany({
         where: { clientId },
@@ -100,6 +104,7 @@ export class LgpdService {
         orderBy: { createdAt: 'asc' },
       }),
       this.clientTracking.exportOwnRecords(clientId),
+      this.anamnesis.exportForClient(clientId),
     ]);
 
     const request = await this.prisma.dataExportRequest.create({ data: { clientId } });
@@ -119,6 +124,7 @@ export class LgpdService {
       aiConsent,
       aiInteractions,
       ownRecords,
+      anamnesis,
     };
   }
 
@@ -178,5 +184,7 @@ export class LgpdService {
     // Peso, água e fotos que o próprio paciente registrou: dado pessoal dele,
     // sem valor de integridade para o profissional — apagado, não anonimizado.
     await this.clientTracking.deleteOwnRecords(clientId);
+    // Anamnese: CPF, RG, endereço e histórico de saúde — apagada junto com a conta.
+    await this.anamnesis.deleteForClient(clientId);
   }
 }

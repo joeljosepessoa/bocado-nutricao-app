@@ -10,6 +10,7 @@ import { DevicesModule } from '../devices/devices.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { ClientBillingModule } from '../client-billing/client-billing.module';
 import { ClientTrackingModule } from '../client-tracking/client-tracking.module';
+import { AnamnesisModule } from '../anamnesis/anamnesis.module';
 import { LgpdService } from './lgpd.service';
 
 @Module({
@@ -25,6 +26,7 @@ import { LgpdService } from './lgpd.service';
     NotificationsModule,
     ClientBillingModule,
     ClientTrackingModule,
+    AnamnesisModule,
   ],
   providers: [LgpdService],
   exports: [LgpdService],

@@ -199,9 +199,111 @@ model Client {
   weightLogs              ClientWeightLog[]
   waterLogs               ClientWaterLog[]
   progressPhotos          ClientProgressPhoto[]
+  anamnesis               Anamnesis?
+  anamnesisAuditLogs      AnamnesisAuditLog[]
 
   @@index([professionalId, status])
   @@map("clients")
+}
+
+// ---------------------------------------------------------------------------
+// Anamnese — ficha do paciente em 12 etapas, preenchida pelo profissional
+// ---------------------------------------------------------------------------
+
+// Uma ficha por paciente. Nome, e-mail, nascimento, sexo e WhatsApp NÃO ficam
+// aqui: são do cadastro (User/Client). Caixas de marcar guardam os códigos
+// das opções (validados na aplicação — anamnesis-options.ts); as listas de
+// medicamentos/suplementos/hormônios são [{ name, dosage, frequency }].
+model Anamnesis {
+  id             String @id @default(uuid())
+  clientId       String @unique @map("client_id")
+  professionalId String @map("professional_id")
+
+  // 1. Dados pessoais (o que não existe no cadastro)
+  maritalStatus String? @map("marital_status")
+  cpf           String?
+  rg            String?
+  occupation    String?
+  address       String? @db.Text
+
+  // 2. Objetivo
+  goals           String[] @default([])
+  goalDescription String?  @map("goal_description") @db.Text
+
+  // 3. Histórico clínico
+  conditions      String[] @default([])
+  otherConditions String?  @map("other_conditions") @db.Text
+
+  // 4–6. Medicamentos, suplementos e hormônios em uso
+  medications Json @default("[]")
+  supplements Json @default("[]")
+  hormones    Json @default("[]")
+
+  // 7. Cirurgias e alergias
+  surgeries String? @db.Text
+  allergies String? @db.Text
+
+  // 8. Histórico familiar
+  familyHistory String[] @default([]) @map("family_history")
+
+  // 9. Hábitos
+  smoking        String?
+  alcohol        String?
+  waterIntake    String? @map("water_intake")
+  sleepHours     String? @map("sleep_hours")
+  sleepQuality   String? @map("sleep_quality")
+  stressLevel    String? @map("stress_level")
+  bowelFrequency String? @map("bowel_frequency")
+
+  // 10. Atividade física
+  trainingFrequency String? @map("training_frequency")
+  trainingDuration  String? @map("training_duration")
+  trainingModality  String? @map("training_modality")
+  cardio            String?
+  dailySteps        String? @map("daily_steps")
+
+  // 11. Alimentação
+  mealsPerDay     String? @map("meals_per_day")
+  mealTimes       String? @map("meal_times")
+  foodPreferences String? @map("food_preferences") @db.Text
+  intolerances    String? @db.Text
+  restrictions    String? @db.Text
+  aversions       String? @db.Text
+
+  // 12. Observações
+  notes String? @db.Text
+
+  // "Concluir Anamnese": null enquanto está em andamento.
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  @@index([professionalId])
+  @@map("anamneses")
+}
+
+enum AnamnesisAuditAction {
+  read
+  saved
+  completed
+}
+
+// Quem abriu/alterou a ficha de quem e quando — nunca o conteúdo.
+model AnamnesisAuditLog {
+  id             String               @id @default(uuid())
+  professionalId String               @map("professional_id")
+  clientId       String               @map("client_id")
+  action         AnamnesisAuditAction
+  ipAddress      String?              @map("ip_address")
+  createdAt      DateTime             @default(now()) @map("created_at")
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  @@index([clientId, createdAt])
+  @@index([professionalId, createdAt])
+  @@map("anamnesis_audit_logs")
 }
 
 // ---------------------------------------------------------------------------
