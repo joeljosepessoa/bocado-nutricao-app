@@ -60,14 +60,9 @@ describe('dieta do dia', () => {
     expect(hasTrainingAndRest([{ kind: 'other' }, { kind: 'rest' }])).toBe(false);
   });
 
-  it('metas diárias vêm do dia da dieta; sem cálculo, kcal null (nunca um valor fixo)', () => {
+  it('do dia da dieta o Dashboard mostra só a quantidade de refeições — calorias ficam no painel do profissional', () => {
     const meal = { name: 'Almoço', time: '12:00' } as MealView;
-    const day = (status: 'calculated' | 'partial' | 'unavailable', text: string | null) =>
-      ({ calories: { status, text, macros: null }, meals: [meal, meal, meal] }) as unknown as DayView;
-    expect(dailyGoals(day('calculated', '1.850 kcal'))).toEqual({ kcalText: '1.850 kcal', mealCount: 3 });
-    expect(dailyGoals(day('unavailable', null))).toEqual({ kcalText: null, mealCount: 3 });
-    // Cálculo parcial também não vira meta: o dia não traz número nesse caso.
-    expect(dailyGoals(day('partial', null))).toEqual({ kcalText: null, mealCount: 3 });
+    expect(dailyGoals({ meals: [meal, meal, meal] } as unknown as DayView)).toEqual({ mealCount: 3 });
     expect(dailyGoals(null)).toBeNull();
   });
 });

@@ -69,18 +69,14 @@ export function dietDayIndex(days: Pick<DietClientDay, 'kind'>[], choice: DietDa
   return index >= 0 ? index : 0;
 }
 
+/** O que o Dashboard mostra da dieta do dia. Calorias ficam só no painel do profissional. */
 export interface DailyGoals {
-  /** Calorias do dia escolhido, calculadas da dieta; null quando não há cálculo. */
-  kcalText: string | null;
   mealCount: number;
 }
 
 export function dailyGoals(day: DayView | null): DailyGoals | null {
   if (!day) return null;
-  return {
-    kcalText: day.calories.status === 'unavailable' ? null : day.calories.text,
-    mealCount: day.meals.length,
-  };
+  return { mealCount: day.meals.length };
 }
 
 /** "7:30", "07h30", "7h", "12:00 h" → minutos desde 00:00; null se não for um horário. */

@@ -8,11 +8,10 @@ import { useStyles, type ThemeColors } from '../../theme/theme';
 
 import { MealSection } from './MealSection';
 
-/** Refeição em card que expande/recolhe: cabeçalho com horário e calorias; alimentos no corpo. */
+/** Refeição em card que expande/recolhe: cabeçalho com horário; alimentos no corpo. */
 export function MealCard({ meal, initiallyOpen = false }: { meal: MealView; initiallyOpen?: boolean }) {
   const styles = useStyles(makeStyles);
-  const { calories } = meal;
-  const summary = [meal.time, calories.text].filter(Boolean).join(' · ');
+  const summary = meal.time;
   return (
     <Card>
       <Collapsible
@@ -38,12 +37,6 @@ export function MealCard({ meal, initiallyOpen = false }: { meal: MealView; init
             <MealSection key={i} section={section} />
           ))}
         </View>
-        {calories.text ? (
-          <View style={styles.footer}>
-            <Text style={styles.kcal}>{calories.text}</Text>
-            {calories.macros ? <Text style={styles.macros}>{calories.macros}</Text> : null}
-          </View>
-        ) : null}
       </Collapsible>
     </Card>
   );
@@ -58,7 +51,4 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   summary: { ...typography.caption, color: colors.textSecondary, fontWeight: '600' },
   notes: { ...typography.caption, color: colors.textSecondary, fontStyle: 'italic' },
   sections: { gap: spacing.md },
-  footer: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.sm, gap: 2 },
-  kcal: { ...typography.body, color: colors.textPrimary, fontWeight: '700' },
-  macros: { ...typography.caption, color: colors.textSecondary },
 });

@@ -30,11 +30,10 @@ export function DayTabs({ days, selected, onSelect }: { days: DayView[]; selecte
   );
 }
 
-/** Instrução de uso e total do dia (só quando o cálculo está completo). */
+/** Título e instrução de uso do dia. Calorias não aparecem para o paciente. */
 export function DayIntro({ day, showTitle }: { day: DayView; showTitle: boolean }) {
   const styles = useStyles(makeStyles);
-  const { calories } = day;
-  if (!showTitle && !day.usageNotes && !calories.text && !day.calorieNote) return null;
+  if (!showTitle && !day.usageNotes) return null;
   return (
     <Card style={styles.intro}>
       {showTitle ? (
@@ -43,13 +42,6 @@ export function DayIntro({ day, showTitle }: { day: DayView; showTitle: boolean 
         </Text>
       ) : null}
       {day.usageNotes ? <Text style={styles.usage}>{day.usageNotes}</Text> : null}
-      {calories.text ? (
-        <View>
-          <Text style={styles.kcal}>Total do dia: {calories.text}</Text>
-          {calories.macros ? <Text style={styles.macros}>{calories.macros}</Text> : null}
-        </View>
-      ) : null}
-      {day.calorieNote ? <Text style={styles.note}>{day.calorieNote}</Text> : null}
     </Card>
   );
 }
@@ -72,7 +64,4 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   intro: { gap: spacing.xs },
   title: { ...typography.subtitle, color: colors.textPrimary },
   usage: { ...typography.body, color: colors.textSecondary },
-  kcal: { ...typography.body, color: colors.textPrimary, fontWeight: '700' },
-  macros: { ...typography.caption, color: colors.textSecondary },
-  note: { ...typography.caption, color: colors.textSecondary, fontStyle: 'italic' },
 });

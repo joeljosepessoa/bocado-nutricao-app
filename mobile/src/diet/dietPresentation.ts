@@ -1,29 +1,17 @@
 import type { DietClientDay, DietClientFoodItem, DietClientGroup, DietClientMealNode, DietClientSummary, DietDayKind, SubstitutionOption } from '../types/api';
-import { amountText, dayTitle, dietDays, formatNumber, showDayTabs, supplementQuantityText } from './dietView';
+import { amountText, dayTitle, dietDays, showDayTabs, supplementQuantityText } from './dietView';
 
 /**
  * Modelo da tela "Minha dieta" montado a partir da resposta da API. PURO:
  * sem chamada de API, sem estado e sem regra de banco — só organiza o que a
  * API envia (P1–P5: dia → refeição → grupo → escolha → alimento).
  *
- * Calorias: cada alimento traz a própria kcal (ou null quando não há cálculo).
- * Um total só aparece quando TODOS os alimentos com quantidade daquele trecho
- * têm cálculo. Cálculo parcial não mostra número nem aviso ao paciente: a soma
- * de só alguns alimentos ("a partir de 84 kcal" num dia inteiro) mais confunde do que informa. Falta de dado nunca vira 0, e uma opção sem dado nunca entra
- * como mínimo de uma faixa. "À vontade" não tem quantidade e não conta como falta.
+ * Calorias e macros NÃO aparecem para o paciente: essa informação fica só no
+ * painel do profissional. O que a API envia por alimento (kcal, proteína,
+ * carboidrato, gordura) é ignorado aqui — nenhum total, faixa ou aviso de cálculo.
  */
 
 // --- Modelo da tela -----------------------------------------------------------
-
-export type CalorieStatus = 'calculated' | 'partial' | 'unavailable';
-
-export interface CalorieInfo {
-  status: CalorieStatus;
-  /** "350 kcal" ou "320–350 kcal"; null quando o cálculo não está completo. */
-  text: string | null;
-  /** Macros do trecho (só quando calculado por completo). */
-  macros: string | null;
-}
 
 export interface FoodLineView {
   /** "110 g de fruta", "2 fatias de pão integral", "2 ovos", "Salada de folhas". */
@@ -39,7 +27,6 @@ export interface ChoiceView {
   /** "Opção 1" nas opções completas; nos blocos só quando o profissional nomeou. */
   title: string | null;
   foods: FoodLineView[];
-  calories: CalorieInfo;
 }
 
 export type SectionView =
@@ -54,7 +41,6 @@ export interface MealView {
   time: string | null;
   notes: string | null;
   sections: SectionView[];
-  calories: CalorieInfo;
 }
 
 export interface DayView {
@@ -62,9 +48,6 @@ export interface DayView {
   icon: string;
   title: string;
   usageNotes: string | null;
-  calories: CalorieInfo;
-  /** Aviso discreto, uma vez por dia, quando nenhum alimento tem cálculo. */
-  calorieNote: string | null;
   meals: MealView[];
 }
 
@@ -92,7 +75,6 @@ export const TEXT = {
   blockInstruction: 'Escolha 1',
   fixed: 'Fixos',
   freeQuantity: 'À vontade',
-  unavailableNote: 'Informação calórica indisponível.',
 } as const;
 
 // --- Textos -------------------------------------------------------------------
@@ -153,143 +135,39 @@ export function guidelineItems(text: string | null | undefined): string[] {
     .filter(Boolean);
 }
 
-// --- Calorias -----------------------------------------------------------------
-
-interface Macros {
-  kcal: number;
-  proteinG: number;
-  carbG: number;
-  fatG: number;
-}
-
-/** Soma do que tem cálculo + quantos alimentos ficaram sem cálculo. */
-interface Calc {
-  min: Macros;
-  max: Macros;
-  calculated: number;
-  missing: number;
-  /** Algum alimento com kcal mas sem algum macro (marcador da TACO) — macros não são mostrados. */
-  macrosMissing: boolean;
-}
-
-const ZERO: Macros = { kcal: 0, proteinG: 0, carbG: 0, fatG: 0 };
-const KEYS: (keyof Macros)[] = ['kcal', 'proteinG', 'carbG', 'fatG'];
-const add = (a: Macros, b: Macros): Macros => ({ kcal: a.kcal + b.kcal, proteinG: a.proteinG + b.proteinG, carbG: a.carbG + b.carbG, fatG: a.fatG + b.fatG });
-const empty = (): Calc => ({ min: ZERO, max: ZERO, calculated: 0, missing: 0, macrosMissing: false });
-
-function foodCalc(food: DietClientFoodItem): Calc {
-  if (food.isFreeQuantity) return empty();
-  if (food.kcal == null) return { ...empty(), missing: 1 };
-  const min: Macros = { kcal: food.kcal, proteinG: food.proteinG ?? 0, carbG: food.carbG ?? 0, fatG: food.fatG ?? 0 };
-  // Faixa de quantidade ("3 a 5 g"): o valor da API é o da quantidade mínima.
-  const factor = food.quantityMax != null && food.quantity ? food.quantityMax / food.quantity : 1;
-  const max = Object.fromEntries(KEYS.map((k) => [k, min[k] * factor])) as unknown as Macros;
-  return { min, max, calculated: 1, missing: 0, macrosMissing: food.proteinG == null || food.carbG == null || food.fatG == null };
-}
-
-function sum(parts: Calc[]): Calc {
-  return parts.reduce(
-    (acc, c) => ({
-      min: add(acc.min, c.min),
-      max: add(acc.max, c.max),
-      calculated: acc.calculated + c.calculated,
-      missing: acc.missing + c.missing,
-      macrosMissing: acc.macrosMissing || c.macrosMissing,
-    }),
-    empty(),
-  );
-}
-
-/** "Escolha 1": faixa entre a menor e a maior escolha — nunca a soma. */
-function chooseOne(parts: Calc[]): Calc {
-  if (parts.length === 0) return empty();
-  const pick = (fn: (...n: number[]) => number, side: 'min' | 'max') =>
-    Object.fromEntries(KEYS.map((k) => [k, fn(...parts.map((p) => p[side][k]))])) as unknown as Macros;
-  return {
-    min: pick(Math.min, 'min'),
-    max: pick(Math.max, 'max'),
-    calculated: parts.reduce((n, p) => n + p.calculated, 0),
-    missing: parts.reduce((n, p) => n + p.missing, 0),
-    macrosMissing: parts.some((p) => p.macrosMissing),
-  };
-}
-
-const span = (min: number, max: number, decimals: number) => {
-  const a = formatNumber(min, decimals);
-  const b = formatNumber(max, decimals);
-  return a === b ? a : `${a}–${b}`;
-};
-
-function calories(calc: Calc): CalorieInfo {
-  if (calc.calculated === 0) return { status: 'unavailable', text: null, macros: null };
-  // Parte dos alimentos sem cálculo: o total seria só um piso — não é mostrado.
-  if (calc.missing > 0) return { status: 'partial', text: null, macros: null };
-  const macros = calc.macrosMissing
-    ? null
-    : `Proteína ${span(calc.min.proteinG, calc.max.proteinG, 0)} g · Carboidrato ${span(calc.min.carbG, calc.max.carbG, 0)} g · Gordura ${span(calc.min.fatG, calc.max.fatG, 0)} g`;
-  return { status: 'calculated', text: `${span(calc.min.kcal, calc.max.kcal, 0)} kcal`, macros };
-}
-
 // --- Montagem -----------------------------------------------------------------
 
-interface Built<T> {
-  view: T;
-  calc: Calc;
-}
-
-function buildGroup(group: DietClientGroup): Built<SectionView> | null {
+function buildGroup(group: DietClientGroup): SectionView | null {
   const choices = group.choices.filter((c) => c.foods.length > 0);
   if (choices.length === 0) return null;
-  const choiceCalcs = choices.map((c) => sum(c.foods.map(foodCalc)));
 
   if (group.kind === 'fixed') {
-    return { view: { kind: 'fixed', title: null, foods: choices.flatMap((c) => c.foods.map(foodLine)) }, calc: sum(choiceCalcs) };
+    return { kind: 'fixed', title: null, foods: choices.flatMap((c) => c.foods.map(foodLine)) };
   }
   const views: ChoiceView[] = choices.map((c, i) => ({
     title: group.kind === 'meal_options' ? (clean(c.label) ?? `Opção ${i + 1}`) : clean(c.label),
     foods: c.foods.map(foodLine),
-    calories: calories(choiceCalcs[i]),
   }));
-  const view: SectionView =
-    group.kind === 'meal_options'
-      ? { kind: 'options', title: TEXT.options, choices: views }
-      : { kind: 'block', title: clean(group.label) ?? 'Alternativas', instruction: TEXT.blockInstruction, choices: views };
-  return { view, calc: chooseOne(choiceCalcs) };
+  return group.kind === 'meal_options'
+    ? { kind: 'options', title: TEXT.options, choices: views }
+    : { kind: 'block', title: clean(group.label) ?? 'Alternativas', instruction: TEXT.blockInstruction, choices: views };
 }
 
-function buildMeal(meal: DietClientMealNode, key: string): Built<MealView> {
-  const built = meal.groups.map(buildGroup).filter((g): g is Built<SectionView> => g !== null);
-  const hasChoices = built.some((g) => g.view.kind !== 'fixed');
+function buildMeal(meal: DietClientMealNode, key: string): MealView {
+  const built = meal.groups.map(buildGroup).filter((g): g is SectionView => g !== null);
+  const hasChoices = built.some((g) => g.kind !== 'fixed');
   // "Fixos" só identifica quando divide a refeição com opções/blocos; refeição só com fixos é uma lista normal.
-  const sections = built.map((g) => (g.view.kind === 'fixed' && hasChoices ? { ...g.view, title: TEXT.fixed } : g.view));
-  const calc = sum(built.map((g) => g.calc));
-  const info = calories(calc);
-  return {
-    view: {
-      key,
-      icon: mealIcon(meal.name),
-      name: meal.name,
-      time: clean(meal.time),
-      notes: clean(meal.notes),
-      sections,
-      // Na refeição: só o total completo.
-      calories: info,
-    },
-    calc,
-  };
+  const sections = built.map((g) => (g.kind === 'fixed' && hasChoices ? { ...g, title: TEXT.fixed } : g));
+  return { key, icon: mealIcon(meal.name), name: meal.name, time: clean(meal.time), notes: clean(meal.notes), sections };
 }
 
 function buildDay(day: DietClientDay, index: number): DayView {
-  const meals = day.meals.map((meal, i) => buildMeal(meal, `${index}-${i}`));
-  const info = calories(sum(meals.map((m) => m.calc)));
   return {
     key: String(index),
     icon: dayIcon(day.kind),
     title: dayTitle(day, index),
     usageNotes: clean(day.usageNotes),
-    calories: info,
-    calorieNote: info.status === 'unavailable' && meals.length > 0 ? TEXT.unavailableNote : null,
-    meals: meals.map((m) => m.view),
+    meals: day.meals.map((meal, i) => buildMeal(meal, `${index}-${i}`)),
   };
 }
 

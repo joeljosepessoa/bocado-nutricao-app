@@ -20,7 +20,6 @@ function Alternative({ choice }: { choice: ChoiceView }) {
             <FoodLine food={food} />
           </View>
         ))}
-        {choice.calories.status === 'calculated' && choice.foods.length > 1 ? <Text style={styles.kcal}>{choice.calories.text}</Text> : null}
       </View>
     </View>
   );
@@ -34,7 +33,6 @@ function Option({ choice }: { choice: ChoiceView }) {
       <View style={styles.optionHeader}>
         <View style={styles.radio} accessibilityElementsHidden importantForAccessibility="no" />
         <Text style={styles.optionTitle}>{choice.title}</Text>
-        {choice.calories.status === 'calculated' ? <Text style={styles.kcal}>{choice.calories.text}</Text> : null}
       </View>
       <View style={styles.optionFoods}>
         {choice.foods.map((food, i) => (
@@ -108,5 +106,4 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   plus: { ...typography.body, color: colors.textSecondary, lineHeight: 21 },
   choiceTitle: { ...typography.caption, color: colors.textPrimary, fontWeight: '700' },
   radio: { width: 16, height: 16, borderRadius: 8, borderWidth: 2, borderColor: colors.accent, marginTop: 3 },
-  kcal: { ...typography.caption, color: colors.textSecondary, fontWeight: '600' },
 });

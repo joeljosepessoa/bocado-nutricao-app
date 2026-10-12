@@ -103,14 +103,9 @@ describe('Minha dieta — dieta da Patrícia (API real)', () => {
     expect(texts(ceia)).toEqual(['100 g de Danone natural', '10 g de aveia', '5 g de amêndoas', '15 g de whey protein']);
   });
 
-  it('sem cálculo: NUNCA "0 kcal", nem faixa falsa, nem "Sem cálculo" por linha — só um aviso discreto por dia', () => {
-    const all = JSON.stringify(view);
-    expect(all).not.toMatch(/\b0 kcal|0–\d+ kcal|Sem cálculo|Total parcial|Itens fixos|Consumir todos/);
-    for (const day of view.days) {
-      expect(day.calories).toEqual({ status: 'unavailable', text: null, macros: null });
-      expect(day.calorieNote).toBe('Informação calórica indisponível.');
-      for (const meal of day.meals) expect(meal.calories.text).toBeNull();
-    }
+  it('nenhuma informação calórica na tela do paciente: sem número, sem total e sem aviso de "indisponível"', () => {
+    expect(JSON.stringify(view)).not.toMatch(/kcal|calóric|caloria|Sem cálculo|Total parcial|Total do dia|Itens fixos|Consumir todos/i);
+    for (const day of view.days) expect(Object.keys(day).sort()).toEqual(['icon', 'key', 'meals', 'title', 'usageNotes']);
   });
 
   it('suplementação organizada (nome, dose, momento, observação) e orientações em tópicos', () => {
@@ -125,48 +120,35 @@ describe('Minha dieta — dieta da Patrícia (API real)', () => {
   });
 });
 
-describe('calorias: calculado, parcial e sem dados', () => {
-  it('tudo calculado: opções mostram kcal e a refeição a faixa (menor e maior opção — nunca a soma)', () => {
-    const view = buildDietPresentation(dietWith([group('meal_options', null, [[food('aveia', 30, 'g', 120), food('ovos', 2, null, 230)], [food('whey', 30, 'g', 320)]])]));
-    const meal = view.days[0].meals[0];
-    const [options] = meal.sections;
-    expect(options.kind === 'options' && options.choices.map((c) => c.calories.text)).toEqual(['350 kcal', '320 kcal']);
-    expect(meal.calories).toMatchObject({ status: 'calculated', text: '320–350 kcal' });
-    expect(meal.calories.macros).toBe('Proteína 32–35 g · Carboidrato 64–70 g · Gordura 8–9 g');
-    expect(view.days[0]).toMatchObject({ calories: { status: 'calculated', text: '320–350 kcal' }, calorieNote: null });
-  });
-
-  it('opção sem dados NÃO vira mínimo 0: a faixa some, sem número nem aviso de cálculo parcial', () => {
-    const view = buildDietPresentation(
-      dietWith([group('meal_options', null, [[food('aveia', 10, 'g', 39), food('fruta', 110, 'g', 131)], [food('pão integral', 2, 'slice', null)]])]),
-    );
-    const meal = view.days[0].meals[0];
-    expect(meal.calories).toEqual({ status: 'partial', text: null, macros: null });
-    const [options] = meal.sections;
-    expect(options.kind === 'options' && options.choices.map((c) => c.calories.status)).toEqual(['calculated', 'unavailable']);
-    expect(view.days[0]).toMatchObject({ calories: { status: 'partial', text: null }, calorieNote: null });
-    expect(JSON.stringify(view)).not.toMatch(/0–\d+ kcal|\b0 kcal/);
-  });
-
-  it('cálculo parcial não mostra piso ("a partir de X kcal") na refeição nem no dia — só o que está completo aparece', () => {
-    const view = buildDietPresentation(dietWith([group('fixed', null, [[food('feijão', 100, 'g', 76), food('legumes', 100, 'g', null)]])]));
-    expect(view.days[0].meals[0].calories).toEqual({ status: 'partial', text: null, macros: null });
-    expect(view.days[0]).toMatchObject({ calories: { status: 'partial', text: null, macros: null }, calorieNote: null });
-    expect(JSON.stringify(view)).not.toMatch(/a partir de|parcial:/i);
-  });
-
-  it('"à vontade" não conta como falta de cálculo; faixa de quantidade escala o máximo', () => {
-    const view = buildDietPresentation(
+describe('calorias e macros ficam só no painel do profissional', () => {
+  // A API continua enviando kcal e macros por alimento; a tela do paciente ignora.
+  const calculated = () =>
+    buildDietPresentation(
       dietWith([
-        group('fixed', null, [[food('arroz', 100, 'g', 130), food('salada de folhas', null, null, null, { isFreeQuantity: true }), food('creatina', 3, 'g', 12, { quantityMax: 5 })]]),
+        group('meal_options', null, [[food('aveia', 30, 'g', 120), food('ovos', 2, null, 230)], [food('whey', 30, 'g', 320)]]),
+        group('fixed', null, [[food('arroz', 100, 'g', 130), food('salada de folhas', null, null, null, { isFreeQuantity: true })]], 1),
       ]),
     );
-    expect(view.days[0].meals[0].calories).toMatchObject({ status: 'calculated', text: '142–150 kcal' });
+
+  it('mesmo com todos os alimentos calculados: nenhum total, faixa, macro ou aviso', () => {
+    const view = calculated();
+    expect(JSON.stringify(view)).not.toMatch(/kcal|calóric|caloria|Proteína \d|Carboidrato \d|Gordura \d|\b(120|230|320|350|130)\b/i);
+    const [day] = view.days;
+    const [meal] = day.meals;
+    expect(Object.keys(day).sort()).toEqual(['icon', 'key', 'meals', 'title', 'usageNotes']);
+    expect(Object.keys(meal).sort()).toEqual(['icon', 'key', 'name', 'notes', 'sections', 'time']);
+    const [options] = meal.sections;
+    expect(options.kind === 'options' && options.choices.map((c) => Object.keys(c).sort())).toEqual([
+      ['foods', 'title'],
+      ['foods', 'title'],
+    ]);
   });
 
-  it('kcal presente mas macro sem número (marcador da TACO): mostra kcal, esconde macros', () => {
-    const view = buildDietPresentation(dietWith([group('fixed', null, [[food('azeite', 10, 'g', 88, { proteinG: null, carbG: null })]])]));
-    expect(view.days[0].meals[0].calories).toEqual({ status: 'calculated', text: '88 kcal', macros: null });
+  it('a prescrição em si continua inteira: opções, fixos, quantidades e "à vontade"', () => {
+    const [options, fixed] = calculated().days[0].meals[0].sections;
+    expect(texts(options)).toEqual([['30 g de aveia', '2 ovos'], ['30 g de whey']]);
+    expect(fixed).toMatchObject({ kind: 'fixed', title: TEXT.fixed });
+    expect(texts(fixed)).toEqual(['100 g de arroz', 'Salada de folhas']);
   });
 
   it('alimento nunca mostra kcal na linha', () => {
@@ -211,7 +193,7 @@ describe('linha de alimento', () => {
 });
 
 describe('compatibilidade e dados incompletos', () => {
-  it('API antiga (só "meals"): um dia sem abas, lista simples e total calculado pelos itens', () => {
+  it('API antiga (só "meals"): um dia sem abas e lista simples', () => {
     const view = buildDietPresentation({
       dietId: 'd',
       versionId: 'v',
@@ -220,7 +202,7 @@ describe('compatibilidade e dados incompletos', () => {
     expect(view.showDayTabs).toBe(false);
     expect(view.instruction).toBeNull();
     const meal = view.days[0].meals[0];
-    expect(meal).toMatchObject({ icon: '☀️', name: 'Almoço', time: '12:00', notes: 'Mastigar devagar', calories: { status: 'calculated', text: '130 kcal' } });
+    expect(meal).toMatchObject({ icon: '☀️', name: 'Almoço', time: '12:00', notes: 'Mastigar devagar' });
     expect(meal.sections).toEqual([{ kind: 'fixed', title: null, foods: [expect.objectContaining({ text: '100 g de Arroz', notes: null })] }]);
     expect(view.supplements).toEqual([]);
     expect(view.guidelines).toEqual([]);

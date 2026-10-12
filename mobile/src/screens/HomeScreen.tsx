@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ChevronRight, Droplets, Dumbbell, Flame, Moon, Plus, Scale, Target, TrendingUp, UtensilsCrossed, WifiOff } from 'lucide-react-native';
+import { ChevronRight, Droplets, Dumbbell, Moon, Plus, Scale, Target, TrendingUp, UtensilsCrossed, WifiOff } from 'lucide-react-native';
 import { useAuth } from '../auth/AuthContext';
 import { Card } from '../components/Card';
 import { ScreenContainer } from '../components/ScreenContainer';
@@ -190,11 +190,11 @@ export function HomeScreen() {
         />
         <StatCard icon={Target} tint={colors.success} label="Meta" value={view.goalText} />
         <StatCard
-          icon={Flame}
+          icon={UtensilsCrossed}
           tint={colors.danger}
-          label="Calorias do dia"
-          value={view.goals?.kcalText ?? '--'}
-          detail={view.goals ? `${view.goals.mealCount} ${view.goals.mealCount === 1 ? 'refeição' : 'refeições'}` : 'Sem dieta ativa'}
+          label="Refeições do dia"
+          value={view.goals ? String(view.goals.mealCount) : '--'}
+          detail={view.goals ? 'na sua dieta' : 'Sem dieta ativa'}
           onPress={() => navigation.navigate('Diet')}
         />
         <StatCard
