@@ -223,7 +223,7 @@ function DayEditor({
         {editing ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <TextField label="Nome do dia" value={name} onChange={(e) => setName(e.target.value)} />
-            <TextField label="Observações do dia" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <TextField label="Observações do dia (o aluno vê no app)" value={notes} onChange={(e) => setNotes(e.target.value)} />
             <div>
               <Button
                 size="small"
@@ -322,7 +322,7 @@ function ExerciseEditor({
 
         <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
           <div style={{ flex: 1 }}>
-            <TextField label="Observações / técnica" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <TextField label="Observações / técnica (o aluno vê no app)" value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
           {notesChanged ? (
             <Button size="small" onClick={() => onSaveNotes(notes.trim())}>

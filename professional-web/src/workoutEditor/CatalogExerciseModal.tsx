@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from '../api/endpoints';
 import { Button } from '../components/Button';
 import { ExercisePreview } from '../components/ExercisePreview';
+import { NewExerciseForm } from '../components/NewExerciseForm';
 import { Modal } from '../components/Modal';
 import { TextField } from '../components/TextField';
 import { describeExercise } from '../lib/exerciseMedia';
+import type { Exercise } from '../types/api';
 
 /**
  * Escolha de um exercício do CATÁLOGO (id estruturado vindo da API; o GIF é
@@ -28,9 +30,21 @@ export function CatalogExerciseModal({
   const [search, setSearch] = useState('');
   const [exerciseId, setExerciseId] = useState('');
   const [saving, setSaving] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [created, setCreated] = useState<Exercise | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: exercises } = useQuery({ queryKey: ['exercises', search], queryFn: () => api.listExercises(search || undefined) });
-  const selectedExercise = (exercises ?? []).find((ex) => ex.id === exerciseId);
+  const selectedExercise = (exercises ?? []).find((ex) => ex.id === exerciseId) ?? (created?.id === exerciseId ? created : undefined);
+
+  // Exercício recém-cadastrado já fica selecionado; a busca passa a mostrar só ele.
+  function selectCreated(exercise: Exercise) {
+    setCreated(exercise);
+    setExerciseId(exercise.id);
+    setSearch(exercise.name);
+    setCreating(false);
+    void queryClient.invalidateQueries({ queryKey: ['exercises'] });
+  }
 
   async function confirm() {
     setSaving(true);
@@ -50,14 +64,15 @@ export function CatalogExerciseModal({
           <Button variant="ghost" onClick={onClose}>
             Cancelar
           </Button>
-          <Button onClick={confirm} loading={saving} disabled={!exerciseId}>
+          <Button onClick={confirm} loading={saving} disabled={!exerciseId || creating}>
             {confirmLabel}
           </Button>
         </>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <TextField label="Buscar exercício" value={search} onChange={(e) => setSearch(e.target.value)} />
+      {creating ? <NewExerciseForm initialName={search} onCreated={selectCreated} onCancel={() => setCreating(false)} /> : null}
+      <div style={{ display: creating ? 'none' : 'flex', flexDirection: 'column', gap: 12 }}>
+        <TextField label="Buscar por nome, grupo muscular ou equipamento" value={search} onChange={(e) => setSearch(e.target.value)} />
         <div
           role="listbox"
           aria-label="Exercícios"
@@ -103,6 +118,11 @@ export function CatalogExerciseModal({
               </button>
             );
           })}
+        </div>
+        <div>
+          <Button size="small" variant="ghost" onClick={() => setCreating(true)}>
+            Não achou? Cadastrar novo exercício
+          </Button>
         </div>
         {selectedExercise ? <ExercisePreview key={selectedExercise.id} exercise={selectedExercise} /> : null}
         {error ? (

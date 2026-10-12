@@ -28,7 +28,7 @@ interface Props {
   onChange: (draft: WorkoutDraft) => void;
 }
 
-type Picker = { mode: 'replace'; dayKey: string; exerciseKey: string; search: string } | { mode: 'add'; dayKey: string };
+type Picker = { mode: 'replace'; dayKey: string; exerciseKey: string; search: string; muscleGroup: string | null } | { mode: 'add'; dayKey: string };
 
 const textareaStyle: React.CSSProperties = {
   width: '100%',
@@ -231,7 +231,13 @@ function DayCard({
             onMove={(direction) => onChange(moveExercise(draft, day.key, exercise.key, direction))}
             onRemove={() => onChange(removeExercise(draft, day.key, exercise.key))}
             onOpenPicker={() =>
-              onPicker({ mode: 'replace', dayKey: day.key, exerciseKey: exercise.key, search: exercise.exercise?.name ?? exercise.rawName ?? '' })
+              onPicker({
+                mode: 'replace',
+                dayKey: day.key,
+                exerciseKey: exercise.key,
+                search: exercise.exercise?.name ?? exercise.rawName ?? '',
+                muscleGroup: exercise.muscleGroupHint,
+              })
             }
           />
         ))}
@@ -273,6 +279,7 @@ export function WorkoutProposalEditor({ draft, onChange }: Props) {
           title={picker.mode === 'replace' ? 'Selecionar exercício do catálogo' : 'Adicionar exercício do catálogo'}
           confirmLabel={picker.mode === 'replace' ? 'Usar este exercício' : 'Adicionar'}
           initialSearch={picker.mode === 'replace' ? picker.search : ''}
+          suggestedMuscleGroup={picker.mode === 'replace' ? picker.muscleGroup : null}
           onPick={handlePick}
           onClose={() => setPicker(null)}
         />

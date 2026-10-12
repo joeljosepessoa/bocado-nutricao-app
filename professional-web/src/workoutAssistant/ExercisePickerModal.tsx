@@ -1,31 +1,49 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from '../api/endpoints';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
 import { TextField } from '../components/TextField';
 import { ExercisePreview } from '../components/ExercisePreview';
+import { NewExerciseForm } from '../components/NewExerciseForm';
 import { describeExercise } from '../lib/exerciseMedia';
-import type { CatalogExerciseRef } from '../types/api';
+import type { CatalogExerciseRef, Exercise } from '../types/api';
 
 interface Props {
   title: string;
   initialSearch?: string;
+  /** Grupo muscular lido do texto (cabeçalho "Peito:") — só sugestão para o cadastro. */
+  suggestedMuscleGroup?: string | null;
   confirmLabel: string;
   onPick: (exercise: CatalogExerciseRef) => void;
   onClose: () => void;
 }
 
-/** Só exercícios do catálogo visível ao profissional — nunca cria exercício novo. */
-export function ExercisePickerModal({ title, initialSearch = '', confirmLabel, onPick, onClose }: Props) {
+/**
+ * Só exercícios do catálogo visível ao profissional. Quando o exercício não
+ * existe, é o PROFISSIONAL que o cadastra aqui (catálogo particular) — a IA
+ * nunca cria exercício nem escolhe id.
+ */
+export function ExercisePickerModal({ title, initialSearch = '', suggestedMuscleGroup, confirmLabel, onPick, onClose }: Props) {
   const [search, setSearch] = useState(initialSearch);
   const [selectedId, setSelectedId] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [created, setCreated] = useState<Exercise | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: exercises, isLoading } = useQuery({
     queryKey: ['exercises', search],
     queryFn: () => api.listExercises(search || undefined),
   });
-  const selected = (exercises ?? []).find((exercise) => exercise.id === selectedId);
+  const selected = (exercises ?? []).find((exercise) => exercise.id === selectedId) ?? (created?.id === selectedId ? created : undefined);
+
+  function selectCreated(exercise: Exercise) {
+    setCreated(exercise);
+    setSelectedId(exercise.id);
+    setSearch(exercise.name);
+    setCreating(false);
+    void queryClient.invalidateQueries({ queryKey: ['exercises'] });
+  }
 
   return (
     <Modal
@@ -37,7 +55,7 @@ export function ExercisePickerModal({ title, initialSearch = '', confirmLabel, o
             Cancelar
           </Button>
           <Button
-            disabled={!selected}
+            disabled={!selected || creating}
             onClick={() => {
               if (!selected) return;
               onPick({
@@ -54,8 +72,11 @@ export function ExercisePickerModal({ title, initialSearch = '', confirmLabel, o
         </>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <TextField label="Buscar no catálogo" value={search} onChange={(e) => setSearch(e.target.value)} />
+      {creating ? (
+        <NewExerciseForm initialName={search} initialMuscleGroup={suggestedMuscleGroup ?? ''} onCreated={selectCreated} onCancel={() => setCreating(false)} />
+      ) : null}
+      <div style={{ display: creating ? 'none' : 'flex', flexDirection: 'column', gap: 12 }}>
+        <TextField label="Buscar no catálogo (nome, grupo muscular ou equipamento)" value={search} onChange={(e) => setSearch(e.target.value)} />
         <div
           role="listbox"
           aria-label="Exercícios do catálogo"
@@ -101,6 +122,11 @@ export function ExercisePickerModal({ title, initialSearch = '', confirmLabel, o
               </button>
             );
           })}
+        </div>
+        <div>
+          <Button size="small" variant="ghost" onClick={() => setCreating(true)}>
+            Não achou? Cadastrar novo exercício
+          </Button>
         </div>
         {selected ? <ExercisePreview key={selected.id} exercise={selected} /> : null}
       </div>

@@ -60,12 +60,14 @@ export function WorkoutTab() {
     enabled: !!workoutId,
   });
 
-  const refresh = () =>
-    Promise.all([
+  const refresh = () => {
+    setActionError(null);
+    return Promise.all([
       queryClient.invalidateQueries({ queryKey: ['workout', clientId, workoutId] }),
       queryClient.invalidateQueries({ queryKey: ['workout-version', clientId, workoutId] }),
       queryClient.invalidateQueries({ queryKey: ['workouts', clientId] }),
     ]);
+  };
 
   const createWorkoutMutation = useMutation({
     mutationFn: () => api.createWorkout(clientId!),

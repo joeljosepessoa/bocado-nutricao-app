@@ -16,6 +16,7 @@ import type {
   CreateClientInput,
   CreateWorkoutFromProposalInput,
   CreateDietFromProposalInput,
+  CreateExerciseInput,
   CreateDietWithAiInput,
   CreateEvaluationInput,
   DashboardSummary,
@@ -426,6 +427,11 @@ export async function deleteDietSupplement(ref: DraftRef, supplementId: string) 
 
 export async function listExercises(search?: string): Promise<Exercise[]> {
   const res = await apiClient.get<Exercise[]>('/exercises', { params: { search } });
+  return res.data;
+}
+
+export async function createExercise(input: CreateExerciseInput): Promise<Exercise> {
+  const res = await apiClient.post<Exercise>('/exercises', input);
   return res.data;
 }
 

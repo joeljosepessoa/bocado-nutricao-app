@@ -565,12 +565,25 @@ export interface Workout {
   currentVersion: WorkoutVersion | null;
 }
 
+export type ExerciseType = 'strength' | 'cardio' | 'mobility' | 'stretching' | 'bodyweight' | 'other';
+
+/** Cadastro de exercício pelo profissional — `private` fica só no catálogo dele. */
+export interface CreateExerciseInput {
+  name: string;
+  type: ExerciseType;
+  scope: 'global' | 'private';
+  muscleGroup?: string;
+  equipment?: string;
+  instructions?: string;
+}
+
 export interface Exercise {
   id: string;
   name: string;
   type: string;
   muscleGroup: string | null;
   equipment: string | null;
+  instructions?: string | null;
   videoUrl: string | null;
   imageUrl: string | null;
   scope: 'global' | 'private';

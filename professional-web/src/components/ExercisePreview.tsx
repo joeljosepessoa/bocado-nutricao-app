@@ -4,7 +4,7 @@ import * as api from '../api/endpoints';
 import { describeExercise, isApiMediaPath, isExternalImageUrl } from '../lib/exerciseMedia';
 import type { Exercise } from '../types/api';
 
-type PreviewExercise = Pick<Exercise, 'name' | 'muscleGroup' | 'equipment' | 'imageUrl'>;
+type PreviewExercise = Pick<Exercise, 'name' | 'muscleGroup' | 'equipment' | 'imageUrl'> & Pick<Partial<Exercise>, 'instructions'>;
 
 const frame: React.CSSProperties = {
   aspectRatio: '16 / 9',
@@ -53,13 +53,15 @@ export function ExercisePreview({ exercise, compact = false }: { exercise: Previ
   const media = useApiMedia(exercise.imageUrl);
   const external = isExternalImageUrl(exercise.imageUrl) ? exercise.imageUrl : null;
   const detail = describeExercise(exercise);
+  const hasMedia = media.enabled || !!external;
+  const instructions = exercise.instructions?.trim();
 
   return (
     <div
       style={{ display: 'flex', flexDirection: 'column', gap: 8, ...(compact ? { width: 220, maxWidth: '100%' } : {}) }}
       data-testid="exercise-preview"
     >
-      <div style={frame}>
+      <div style={hasMedia ? frame : { ...frame, aspectRatio: undefined, padding: '8px 12px', justifyContent: 'flex-start' }}>
         {media.loading ? (
           <span>Carregando demonstração…</span>
         ) : media.failed ? (
@@ -78,6 +80,7 @@ export function ExercisePreview({ exercise, compact = false }: { exercise: Previ
         <div>
           <div style={{ fontWeight: 600 }}>{exercise.name}</div>
           {detail ? <div style={{ fontSize: 13, color: 'var(--color-text-secondary, #6b7a72)' }}>{detail}</div> : null}
+          {instructions ? <div style={{ fontSize: 13, marginTop: 4 }}>Como executar: {instructions}</div> : null}
         </div>
       )}
     </div>
