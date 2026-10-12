@@ -31,6 +31,26 @@ describe('Catálogo de exercícios (e2e)', () => {
     expect(exercise.muscleGroup).toBe('quadríceps');
   });
 
+  it('busca do catálogo: por nome, grupo muscular ou equipamento, sem depender de acento; quem bate pelo nome vem primeiro', async () => {
+    const professional = await registerProfessional(app);
+    const auth = { Authorization: `Bearer ${professional.accessToken}` };
+    const tag = `zq${Date.now()}`;
+    const make = (name: string, muscleGroup: string, equipment: string) =>
+      createExercise(app, professional.accessToken, { name: `${name} ${tag}`, muscleGroup, equipment, scope: 'private' });
+    await make('Tríceps na polia', 'Tríceps', 'Polia alta');
+    await make('Supino reto', 'Peitoral, tríceps', 'Barra e anilhas');
+    await make('Rosca direta', 'Bíceps', 'Barra W');
+    const names = async (search: string) =>
+      (await request(app.getHttpServer()).get('/exercises').query({ search }).set(auth).expect(200)).body.map((e: { name: string }) => e.name.replace(` ${tag}`, ''));
+
+    // Sem acento e em outra caixa; o que tem o termo no NOME vem antes do que só tem no grupo muscular.
+    expect(await names(`TRICEPS ${tag}`)).toEqual(['Tríceps na polia', 'Supino reto']);
+    expect(await names(`peitoral ${tag}`)).toEqual(['Supino reto']);
+    expect(await names(`barra ${tag}`)).toEqual(['Rosca direta', 'Supino reto']);
+    expect(await names(`polia ${tag}`)).toEqual(['Tríceps na polia']);
+    expect(await names(`inexistente ${tag}`)).toEqual([]);
+  });
+
   it('exercício privado não é visível para outro profissional', async () => {
     const professionalA = await registerProfessional(app);
     const professionalB = await registerProfessional(app);

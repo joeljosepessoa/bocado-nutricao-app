@@ -4,12 +4,13 @@ import { PrismaService } from '../common/prisma/prisma.service';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
-import type { CatalogExerciseRef } from './exercise-name-matching';
+import { normalizeExerciseName, type CatalogExerciseRef } from './exercise-name-matching';
 import { ExerciseMediaStorage, PRIMARY_EXERCISE_MEDIA_QUERY, type ExerciseWithMedia } from './exercise-media-storage.service';
 
 const LOCKED_IDENTITY_FIELDS = ['name', 'muscleGroup', 'equipment', 'type'] as const;
 // Teto de sanidade: acima disso o matching só deixa de achar (vira "não encontrado"), nunca associa errado.
 const CATALOG_MATCHING_LIMIT = 5000;
+const LIST_LIMIT = 100;
 
 @Injectable()
 export class ExercisesService {
@@ -51,18 +52,41 @@ export class ExercisesService {
     return this.mediaStorage.toDisplay(exercise);
   }
 
+  /**
+   * Busca do catálogo: por nome, grupo muscular ou equipamento, ignorando
+   * acento e caixa ("triceps" acha "Tríceps na polia"; "peit" acha os de
+   * "Peitoral"). Todas as palavras digitadas precisam aparecer; quem bate
+   * pelo nome vem primeiro.
+   */
   async list(professionalId: string, search?: string, type?: string) {
+    const where = { ...this.visibilityFilter(professionalId), ...(type ? { type: type as never } : {}) };
+    const words = normalizeExerciseName(search ?? '').split(' ').filter(Boolean);
+    let ids: string[] | null = null;
+    if (words.length > 0) {
+      const refs = await this.prisma.exercise.findMany({
+        where,
+        select: { id: true, name: true, muscleGroup: true, equipment: true },
+        orderBy: { name: 'asc' },
+        take: CATALOG_MATCHING_LIMIT,
+      });
+      const byName: string[] = [];
+      const byDetail: string[] = [];
+      for (const ref of refs) {
+        const name = normalizeExerciseName(ref.name);
+        const detail = normalizeExerciseName(`${ref.name} ${ref.muscleGroup ?? ''} ${ref.equipment ?? ''}`);
+        if (words.every((word) => name.includes(word))) byName.push(ref.id);
+        else if (words.every((word) => detail.includes(word))) byDetail.push(ref.id);
+      }
+      ids = [...byName, ...byDetail].slice(0, LIST_LIMIT);
+    }
     const exercises = await this.prisma.exercise.findMany({
-      where: {
-        ...this.visibilityFilter(professionalId),
-        ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
-        ...(type ? { type: type as never } : {}),
-      },
+      where: ids ? { id: { in: ids } } : where,
       include: { media: PRIMARY_EXERCISE_MEDIA_QUERY },
       orderBy: { name: 'asc' },
-      take: 100,
+      take: LIST_LIMIT,
     });
-    return Promise.all(exercises.map((exercise) => this.mediaStorage.toDisplay(exercise)));
+    const ordered = ids ? [...exercises].sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id)) : exercises;
+    return Promise.all(ordered.map((exercise) => this.mediaStorage.toDisplay(exercise)));
   }
 
   /** Catálogo visível ao profissional (mesmo filtro de `list`), só os campos usados no matching por nome. */

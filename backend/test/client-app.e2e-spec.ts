@@ -212,6 +212,70 @@ describe('Aplicativo do cliente (e2e)', () => {
     expect(list.body.total).toBe(1);
   });
 
+  // 6b. O aluno recebe a prescrição inteira: faixa de repetições, técnica, observações e o "como fazer"
+  it('GET /client/workout leva faixa de repetições, observações e instruções do exercício', async () => {
+    const professional = await registerProfessional(app);
+    const { client, temporaryPassword } = await createClient(app, professional.accessToken);
+    const pro = { Authorization: `Bearer ${professional.accessToken}` };
+    const exercise = await createExercise(app, professional.accessToken, { name: 'Supino inclinado', equipment: 'Halteres', instructions: 'Banco a 30°, desça até a linha do peito.' });
+    const workout = await createWorkout(app, professional.accessToken, client.id);
+    const versionUrl = `/clients/${client.id}/workouts/${workout.id}/versions/${workout.currentVersion.id}`;
+    const { day, workoutExercise } = await addDayWithExercise(app, professional.accessToken, client.id, workout.id, workout.currentVersion.id, exercise.id);
+    await request(app.getHttpServer()).patch(`${versionUrl}/days/${day.id}`).set(pro).send({ notes: 'Aquecer 5 min antes' }).expect(200);
+    await request(app.getHttpServer()).patch(`${versionUrl}/days/${day.id}/exercises/${workoutExercise.id}`).set(pro).send({ notes: 'Drop-set na última série' }).expect(200);
+    await request(app.getHttpServer()).post(`${versionUrl}/days/${day.id}/exercises/${workoutExercise.id}/sets`).set(pro).send({ repsMin: 8, repsMax: 12, restSeconds: 90 }).expect(201);
+    await request(app.getHttpServer()).post(`${versionUrl}/publish`).set(pro).expect(200);
+
+    const session = await login(app, client.user.email, temporaryPassword);
+    const res = await request(app.getHttpServer()).get('/client/workout').set('Authorization', `Bearer ${session.accessToken}`).expect(200);
+    const [clientDay] = res.body.workout.days;
+    expect(clientDay.notes).toBe('Aquecer 5 min antes');
+    expect(clientDay.exercises[0]).toMatchObject({
+      exerciseName: 'Supino inclinado',
+      equipment: 'Halteres',
+      instructions: 'Banco a 30°, desça até a linha do peito.',
+      notes: 'Drop-set na última série',
+      imageUrl: null,
+    });
+    expect(clientDay.exercises[0].sets[0]).toMatchObject({ reps: null, repsMin: 8, repsMax: 12, restSeconds: 90 });
+  });
+
+  // 6c. Execução só aponta para exercício do próprio dia
+  it('execução com série de exercício de outro dia/aluno é recusada e nada é gravado', async () => {
+    const professional = await registerProfessional(app);
+    const mine = await createClient(app, professional.accessToken);
+    const other = await createClient(app, professional.accessToken);
+    const exercise = await createExercise(app, professional.accessToken);
+    const publish = async (clientId: string) => {
+      const workout = await createWorkout(app, professional.accessToken, clientId);
+      const added = await addDayWithExercise(app, professional.accessToken, clientId, workout.id, workout.currentVersion.id, exercise.id);
+      await request(app.getHttpServer())
+        .post(`/clients/${clientId}/workouts/${workout.id}/versions/${workout.currentVersion.id}/publish`)
+        .set('Authorization', `Bearer ${professional.accessToken}`)
+        .expect(200);
+      return added;
+    };
+    const myWorkout = await publish(mine.client.id);
+    const otherWorkout = await publish(other.client.id);
+
+    const session = await login(app, mine.client.user.email, mine.temporaryPassword);
+    const auth = { Authorization: `Bearer ${session.accessToken}` };
+    const refused = await request(app.getHttpServer())
+      .post('/client/workout/execution-logs')
+      .set(auth)
+      .send({ workoutDayId: myWorkout.day.id, sets: [{ workoutExerciseId: otherWorkout.workoutExercise.id, setOrder: 1, repsPerformed: 10 }] })
+      .expect(400);
+    expect(refused.body.message).toMatch(/não pertencem a este dia/);
+    const list = await request(app.getHttpServer()).get('/client/workout/execution-logs').set(auth).expect(200);
+    expect(list.body.total).toBe(0);
+
+    await request(app.getHttpServer())
+      .post('/client/workout/execution-logs')
+      .set(auth)
+      .send({ workoutDayId: myWorkout.day.id, sets: [{ workoutExerciseId: myWorkout.workoutExercise.id, setOrder: 1, repsPerformed: 10 }] })
+      .expect(201);
+  });
+
   // 7. Isolamento entre clientes
   it('cliente A não vê treino nem dieta do cliente B', async () => {
     const professional = await registerProfessional(app);

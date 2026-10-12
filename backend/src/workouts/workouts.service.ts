@@ -53,6 +53,7 @@ const VERSION_DETAIL_INCLUDE = {
               type: true,
               muscleGroup: true,
               equipment: true,
+              instructions: true,
               videoUrl: true,
               imageUrl: true,
               media: PRIMARY_EXERCISE_MEDIA_QUERY,
@@ -500,6 +501,11 @@ export class WorkoutsService {
     const version = await this.getVersionOrThrow(workoutId, versionId);
     if (version.status !== WorkoutVersionStatus.draft) {
       throw new ConflictException('Só é possível publicar uma versão em rascunho.');
+    }
+    // Publicar substitui o treino que o aluno vê: um rascunho sem exercício deixaria o aluno sem treino.
+    const exercises = await this.prisma.workoutExercise.count({ where: { workoutDay: { workoutVersionId: versionId } } });
+    if (exercises === 0) {
+      throw new BadRequestException('Inclua ao menos um exercício antes de publicar o treino.');
     }
 
     await this.prisma.$transaction(async (tx) => {
@@ -1022,6 +1028,15 @@ export class WorkoutsService {
     });
   }
 
+  /** Série executada só pode apontar para um exercício do próprio dia — nunca de outro dia, treino ou cliente. */
+  private async assertSetsBelongToDay(workoutDayId: string, dto: CreateExecutionLogDto): Promise<void> {
+    const ids = [...new Set(dto.sets.map((set) => set.workoutExerciseId))];
+    const found = await this.prisma.workoutExercise.count({ where: { id: { in: ids }, workoutDayId } });
+    if (found !== ids.length) {
+      throw new BadRequestException('As séries registradas não pertencem a este dia de treino.');
+    }
+  }
+
   async createExecutionLog(
     professionalId: string,
     clientId: string,
@@ -1037,6 +1052,7 @@ export class WorkoutsService {
     if (!day) {
       throw new NotFoundException('Dia de treino não encontrado.');
     }
+    await this.assertSetsBelongToDay(day.id, dto);
 
     const log = await this.prisma.workoutExecutionLog.create({
       data: {
@@ -1135,6 +1151,7 @@ export class WorkoutsService {
     if (!day) {
       throw new NotFoundException('Dia de treino não encontrado.');
     }
+    await this.assertSetsBelongToDay(day.id, dto);
 
     return this.prisma.workoutExecutionLog.create({
       data: {

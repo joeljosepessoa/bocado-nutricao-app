@@ -4,7 +4,7 @@ import request from 'supertest';
 import { NotificationEventType, PrismaClient } from '@prisma/client';
 import { AppModule } from '../src/app.module';
 import { ConsoleNotificationService } from '../src/notifications/console-notification.service';
-import { createClient, createDiet, createWorkout, registerProfessional, uniqueEmail } from './helpers';
+import { createClient, createDiet, createExercise, createWorkout, registerProfessional, uniqueEmail } from './helpers';
 
 const prisma = new PrismaClient();
 
@@ -305,6 +305,15 @@ describe('Notificações (e2e — Fase 16)', () => {
       await registerToken(app, clientAccessToken, uniqueEmail('push-token-workout')).expect(201);
 
       const workout = await createWorkout(app, professional.accessToken, client.id);
+      // Só dá para publicar treino com ao menos um exercício.
+      const versionUrl = `/clients/${client.id}/workouts/${workout.id}/versions/${workout.currentVersion.id}`;
+      const exercise = await createExercise(app, professional.accessToken);
+      const day = await request(app.getHttpServer()).post(`${versionUrl}/days`).set('Authorization', `Bearer ${professional.accessToken}`).send({ name: 'Dia A' }).expect(201);
+      await request(app.getHttpServer())
+        .post(`${versionUrl}/days/${day.body.id}/exercises`)
+        .set('Authorization', `Bearer ${professional.accessToken}`)
+        .send({ exerciseId: exercise.id })
+        .expect(201);
       await request(app.getHttpServer())
         .post(`/clients/${client.id}/workouts/${workout.id}/versions/${workout.currentVersion.id}/publish`)
         .set('Authorization', `Bearer ${professional.accessToken}`)

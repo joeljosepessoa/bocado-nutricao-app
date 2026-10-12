@@ -70,6 +70,8 @@ describe('Treinos (e2e)', () => {
       .set('Authorization', `Bearer ${professional.accessToken}`)
       .send({ notes: 'Foco em membros superiores' })
       .expect(200);
+    const exercise = await createExercise(app, professional.accessToken);
+    await addDayWithExercise(app, professional.accessToken, client.id, workout.id, versionId, exercise.id);
 
     await request(app.getHttpServer())
       .post(`/clients/${client.id}/workouts/${workout.id}/versions/${versionId}/publish`)
@@ -89,6 +91,22 @@ describe('Treinos (e2e)', () => {
     const { client } = await createClient(app, professional.accessToken);
     const workout = await createWorkout(app, professional.accessToken, client.id);
     const versionId = workout.currentVersion.id;
+    const publishUrl = `/clients/${client.id}/workouts/${workout.id}/versions/${versionId}/publish`;
+
+    // Rascunho sem exercício não vai para o aluno: substituiria o treino atual por nada.
+    const empty = await request(app.getHttpServer()).post(publishUrl).set('Authorization', `Bearer ${professional.accessToken}`).expect(400);
+    expect(empty.body.message).toMatch(/ao menos um exercício/);
+    const emptyDay = await request(app.getHttpServer())
+      .post(`/clients/${client.id}/workouts/${workout.id}/versions/${versionId}/days`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .send({ name: 'Dia sem exercício' })
+      .expect(201);
+    await request(app.getHttpServer()).post(publishUrl).set('Authorization', `Bearer ${professional.accessToken}`).expect(400);
+    expect((await prisma.workoutVersion.findUniqueOrThrow({ where: { id: versionId } })).status).toBe('draft');
+    expect(emptyDay.body.name).toBe('Dia sem exercício');
+
+    const exercise = await createExercise(app, professional.accessToken);
+    await addDayWithExercise(app, professional.accessToken, client.id, workout.id, versionId, exercise.id);
 
     const published = await request(app.getHttpServer())
       .post(`/clients/${client.id}/workouts/${workout.id}/versions/${versionId}/publish`)
