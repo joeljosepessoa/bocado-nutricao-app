@@ -74,6 +74,12 @@ export async function getMe(): Promise<{ user: { fullName: string; email: string
   return res.data;
 }
 
+/** O profissional altera o nome da própria conta (tela Configurações). */
+export async function updateMyProfile(fullName: string): Promise<{ user: { fullName: string; email: string } }> {
+  const res = await apiClient.patch('/professionals/me', { fullName });
+  return res.data;
+}
+
 // Fase 13 — endpoint mobile-shaped (mesmo usado pelo app do cliente), sem
 // cookie/sessão: o cadastro em si não estabelece a sessão do painel — a
 // tela chama login() (fluxo web) logo em seguida.

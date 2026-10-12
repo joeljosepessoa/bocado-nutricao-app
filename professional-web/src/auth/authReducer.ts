@@ -13,6 +13,7 @@ export type AuthEvent =
   | { type: 'BOOT_RESTORE_FAILED' }
   | { type: 'SESSION_RESTORED'; user: SessionUser; accessToken: string }
   | { type: 'LOGIN_SUCCESS'; user: SessionUser; accessToken: string }
+  | { type: 'PROFILE_UPDATED'; fullName: string }
   | { type: 'SESSION_EXPIRED' }
   | { type: 'LOGOUT' };
 
@@ -38,6 +39,10 @@ export function authReducer(state: AuthState, event: AuthEvent): AuthState {
     case 'SESSION_RESTORED':
     case 'LOGIN_SUCCESS':
       return { status: 'authenticated', user: event.user, accessToken: event.accessToken };
+
+    // Só o nome exibido muda; sessão e token seguem os mesmos.
+    case 'PROFILE_UPDATED':
+      return state.user ? { ...state, user: { ...state.user, fullName: event.fullName } } : state;
 
     default:
       return state;

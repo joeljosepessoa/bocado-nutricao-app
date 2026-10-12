@@ -7,6 +7,8 @@ import { clearAllEvaluationDrafts } from '../utils/evaluationDraft';
 interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  /** Altera o nome da própria conta e atualiza o que o painel mostra. */
+  updateProfile: (fullName: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -64,7 +66,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const value = useMemo<AuthContextValue>(() => ({ ...state, login, logout }), [state, login, logout]);
+  const updateProfile = useCallback(async (fullName: string) => {
+    const updated = await api.updateMyProfile(fullName);
+    dispatch({ type: 'PROFILE_UPDATED', fullName: updated.user.fullName });
+  }, []);
+
+  const value = useMemo<AuthContextValue>(() => ({ ...state, login, logout, updateProfile }), [state, login, logout, updateProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -23,7 +23,7 @@ const PROFESSIONAL_NAV_ITEMS: NavItem[] = [
   { label: 'Relatórios', icon: 'barChart' },
   { label: 'Inteligência Artificial', icon: 'sparkles' },
   { to: '/plano', label: 'Plano', icon: 'card' },
-  { label: 'Configurações', icon: 'settings' },
+  { to: '/configuracoes', label: 'Configurações', icon: 'settings' },
 ];
 
 // Fase 15 — mesmo shell, nav diferente por role: admin nunca vê as telas

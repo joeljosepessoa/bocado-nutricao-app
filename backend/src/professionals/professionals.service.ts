@@ -4,6 +4,7 @@ import { PrismaService } from '../common/prisma/prisma.service';
 import { PasswordService } from '../auth/password.service';
 import { RefreshTokenService } from '../auth/refresh-token.service';
 import { CreateClientDto } from './dto/create-client.dto';
+import { UpdateProfessionalProfileDto } from './dto/update-professional-profile.dto';
 import { DashboardSummaryDto, RecentActivityItem } from './dto/dashboard-summary.dto';
 
 const RECENT_ACTIVITY_LIMIT = 10;
@@ -28,6 +29,13 @@ export class ProfessionalsService {
       throw new NotFoundException('Profissional não encontrado.');
     }
     return professional;
+  }
+
+  /** Nome exibido no painel, nos relatórios e para os pacientes. Nada além do nome da própria conta é tocado. */
+  async updateProfile(professionalId: string, dto: UpdateProfessionalProfileDto) {
+    await this.me(professionalId);
+    await this.prisma.user.update({ where: { id: professionalId }, data: { fullName: dto.fullName } });
+    return this.me(professionalId);
   }
 
   async createClient(professionalId: string, dto: CreateClientDto) {
