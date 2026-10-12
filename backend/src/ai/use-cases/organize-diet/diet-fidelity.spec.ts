@@ -309,12 +309,27 @@ describe('v2 — a dieta real do profissional (dia de treino/descanso, opções,
     expect(rejection(split, USER_EXAMPLE_DIET)).toMatch(/"135 g de peito de frango" e "10 g de azeite" aparecem juntos no texto/);
   });
 
-  it('nome de dia que não está no texto NÃO recusa a dieta: fica como sugestão com aviso obrigatório de revisão', () => {
+  it('nome de dia que não está no texto NÃO recusa a dieta: o título criado pela IA é descartado, com aviso, e o dia fica só com o tipo', () => {
     const day = faithfulUserDiet();
     day.days[1].label = 'DIA DE FOLGA';
     const checked = checkDietFidelity(USER_EXAMPLE_DIET, day);
-    expect(checked.days[1]).toMatchObject({ label: 'DIA DE FOLGA', warnings: [DIET_WARNINGS.dayLabelSuggested('DIA DE FOLGA')] });
-    expect(checked.days[0].warnings).toEqual([]);
+    expect(checked.days[1]).toMatchObject({ label: null, kind: 'rest', warnings: [DIET_WARNINGS.dayLabelDiscarded('DIA DE FOLGA')] });
+    expect(checked.days[1].meals).toHaveLength(5);
+    // O título que ESTÁ escrito continua como está.
+    expect(checked.days[0]).toMatchObject({ label: 'DIA DE TREINO', warnings: [] });
+  });
+
+  it('caso real: a IA transforma o rodapé do PDF em título do dia ("BOCA DO NUTRIÇÃO") — o paciente nunca vê esse nome', () => {
+    const organized = faithfulUserDiet();
+    organized.days[0].label = 'BOCA DO NUTRIÇÃO';
+    const checked = checkDietFidelity(`${USER_EXAMPLE_DIET}\nBOCADODENUTRIÇÃO`, organized);
+    expect(checked.days.map((d) => [d.label, d.kind])).toEqual([
+      [null, 'training'],
+      ['DIA DE DESCANSO', 'rest'],
+    ]);
+    expect(checked.days[0].warnings).toEqual(['O título "BOCA DO NUTRIÇÃO" não está escrito no texto — foi criado pela IA e descartado. Confira o nome do dia.']);
+    // O nome inventado só aparece no aviso para o profissional — nunca como título do dia.
+    expect(JSON.stringify(checked.days.map(({ warnings: _warnings, ...day }) => day))).not.toMatch(/BOCA DO NUTRI/);
   });
 
   it('regressão: texto colado sem o título do 1º dia (só "DIA DE DESCANSO" escrito) e com rodapé do PDF é organizado, com avisos', () => {
@@ -330,11 +345,12 @@ describe('v2 — a dieta real do profissional (dia de treino/descanso, opções,
     const organized = { ...faithfulUserDiet(), supplements: [], guidelines: [] };
 
     const checked = checkDietFidelity(pasted, organized);
+    // O 1º dia não tem título no texto: fica sem nome (as telas mostram "Dia de treino", pelo tipo).
     expect(checked.days.map((d) => [d.label, d.kind, d.meals.length])).toEqual([
-      ['DIA DE TREINO', 'training', 5],
+      [null, 'training', 5],
       ['DIA DE DESCANSO', 'rest', 5],
     ]);
-    expect(checked.days[0].warnings).toEqual([DIET_WARNINGS.dayLabelSuggested('DIA DE TREINO'), DIET_WARNINGS.usageNotesDiscarded]);
+    expect(checked.days[0].warnings).toEqual([DIET_WARNINGS.dayLabelDiscarded('DIA DE TREINO'), DIET_WARNINGS.usageNotesDiscarded]);
     expect(checked.days[0].usageNotes).toBeNull();
     expect(checked.days[1].warnings).toEqual([]);
     expect(checked.warnings).toEqual([DIET_WARNINGS.uncovered('BOCADODENUTRIÇÃO')]);

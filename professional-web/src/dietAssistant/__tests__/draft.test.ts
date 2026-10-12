@@ -212,3 +212,24 @@ describe('rascunho do Assistente de Dieta — nome igual ao texto, catálogo só
     expect(draftProblems({ ...draft, days: draft.days.map((day) => ({ ...day, meals: [] })) })).toContain('Inclua ao menos uma refeição.');
   });
 });
+
+describe('dia sem título escrito no texto (a IA não pode criar um)', () => {
+  const [first] = proposal.days;
+  const untitled = (kind: 'training' | 'rest' | 'other') => ({ ...first, label: null, kind });
+  const titled = (label: string, kind: 'training' | 'rest') => ({ ...first, label, kind });
+  const names = (days: OrganizedDietProposal['days']) => proposalToDraft({ ...proposal, days }).days.map((d) => d.label);
+
+  it('caso real: só "DIA DE DESCANSO" estava escrito — o outro dia já vem como "DIA DE TREINO", na mesma caixa, e pode ser editado', () => {
+    expect(names([untitled('training'), titled('DIA DE DESCANSO', 'rest')])).toEqual(['DIA DE TREINO', 'DIA DE DESCANSO']);
+    expect(names([titled('Dia de treino', 'training'), untitled('rest')])).toEqual(['Dia de treino', 'Dia de descanso']);
+    expect(draftToPayload(proposalToDraft({ ...proposal, warnings: [], days: [untitled('training'), titled('DIA DE DESCANSO', 'rest')] })).days?.map((d) => [d.label, d.kind])).toEqual([
+      ['DIA DE TREINO', 'training'],
+      ['DIA DE DESCANSO', 'rest'],
+    ]);
+  });
+
+  it('dieta de um dia só, ou dia sem tipo definido, continua sem nome', () => {
+    expect(names([untitled('training')])).toEqual(['']);
+    expect(names([untitled('other'), titled('DIA DE DESCANSO', 'rest')])).toEqual(['', 'DIA DE DESCANSO']);
+  });
+});

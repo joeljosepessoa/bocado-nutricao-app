@@ -31,7 +31,7 @@ export const DIET_WARNINGS = {
   dayWithoutMeals: (label: string | null) =>
     label ? `O dia "${label}" veio sem nenhuma refeição e não foi incluído — confira o texto.` : 'Um dia sem nenhuma refeição não foi incluído — confira o texto.',
   uncovered: (line: string) => `Trecho não organizado: "${line}" — revisar.`,
-  dayLabelSuggested: (label: string) => `O título "${label}" não está escrito no texto — foi sugerido pela IA. Confirme ou corrija o nome do dia.`,
+  dayLabelDiscarded: (label: string) => `O título "${label}" não está escrito no texto — foi criado pela IA e descartado. Confira o nome do dia.`,
 } as const;
 
 export interface CheckedDietItem {
@@ -784,9 +784,15 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
   const checkedDays: CheckedDay[] = organized.days.map((day) => {
     const dayWarnings: string[] = [];
     // Nome de dia não é prescrição: texto que só titula o 2º dia ("DIA DE DESCANSO")
-    // deixa o 1º sem título, e a IA sugere um. A sugestão fica, mas como aviso que o
-    // profissional precisa revisar — nunca recusa a dieta inteira por isso.
-    if (day.label && !literal(day.label)) dayWarnings.push(DIET_WARNINGS.dayLabelSuggested(day.label));
+    // deixa o 1º sem título, e a IA cria um — às vezes a partir do rodapé do PDF
+    // ("BOCA DO NUTRIÇÃO"). Título que não está escrito é descartado, com aviso: o dia
+    // fica sem nome e as telas mostram o nome do TIPO ("Dia de treino"). Nunca recusa
+    // a dieta inteira por isso.
+    let label: string | null = day.label;
+    if (label && !literal(label)) {
+      dayWarnings.push(DIET_WARNINGS.dayLabelDiscarded(label));
+      label = null;
+    }
     let usageNotes: string | null = null;
     if (day.usageNotes) {
       usageNotes = literal(day.usageNotes);
@@ -836,7 +842,7 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
       if (groups.every((g) => g.choices.every((c) => c.items.length === 0))) warnings.push(DIET_WARNINGS.mealWithoutItems);
       return { name: meal.name, time, notes, groups, warnings };
     });
-    return { label: day.label, kind: day.kind, usageNotes, meals, warnings: dayWarnings };
+    return { label, kind: day.kind, usageNotes, meals, warnings: dayWarnings };
   });
   if (totalMeals === 0) problems.push('Nenhuma refeição foi organizada.');
   // Dia sem refeição não prescreve nada e não pode ser salvo: sai da proposta, com aviso para o profissional conferir.

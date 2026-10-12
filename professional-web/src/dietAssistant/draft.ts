@@ -148,6 +148,21 @@ function itemToFood(item: ProposalDietItem): DraftFood {
   };
 }
 
+const DEFAULT_DAY_NAME: Partial<Record<DietDayKind, string>> = { training: 'Dia de treino', rest: 'Dia de descanso' };
+
+/**
+ * Dia sem título escrito (a IA não pode criar um): numa dieta com mais de um
+ * dia, já vem com o nome do tipo — "Dia de treino" / "Dia de descanso" —, na
+ * mesma caixa dos títulos que o profissional escreveu. Ele pode trocar.
+ */
+function dayName(day: OrganizedDietProposal['days'][number], proposal: OrganizedDietProposal): string {
+  if (day.label) return day.label;
+  const name = proposal.days.length > 1 ? DEFAULT_DAY_NAME[day.kind] : undefined;
+  if (!name) return '';
+  const written = proposal.days.map((d) => d.label).filter((label): label is string => !!label);
+  return written.length > 0 && written.every((label) => label === label.toLocaleUpperCase('pt-BR')) ? name.toLocaleUpperCase('pt-BR') : name;
+}
+
 export function proposalToDraft(proposal: OrganizedDietProposal): DietDraft {
   return {
     notices: [...proposal.warnings],
@@ -164,7 +179,7 @@ export function proposalToDraft(proposal: OrganizedDietProposal): DietDraft {
     })),
     days: proposal.days.map((day) => ({
       key: nextKey('day'),
-      label: day.label ?? '',
+      label: dayName(day, proposal),
       kind: day.kind,
       usageNotes: day.usageNotes ?? '',
       notices: [...day.warnings],
