@@ -191,7 +191,8 @@ describe('Templates de relatório', () => {
     expect(html).toContain('90 mg/dL'); // glicemia
     expect(html).toContain('70 bpm'); // frequência cardíaca
     expect(html).toContain('Nota clínica confidencial');
-    expect(html).toContain('skinfolds'); // fonte do %gordura
+    expect(html).toContain('Fonte do %gordura: dobras cutâneas');
+    expect(html).not.toContain('skinfolds'); // o código interno nunca vai para o papel
   });
 
   it('relatório cliente NUNCA inclui dobras, protocolo, pressão, glicemia, notas ou origem de bioimpedância', () => {
@@ -286,6 +287,33 @@ describe('Templates de relatório', () => {
     expect(html).not.toContain('class="pie-chart-svg"');
     expect(html).toContain('Sem % de gordura calculado nesta avaliação.');
     expect(html).toContain('Sem dados suficientes para este gráfico.'); // tetra também depende de bodyFatPercent
+  });
+
+  it('pizza tetra-compartimental não é desenhada sem músculo esquelético ou massa óssea — o que falta nunca vira "massa residual"', () => {
+    // Avaliação só com dobras (sem bioimpedância): há % de gordura e peso, mas não os outros compartimentos.
+    const onlySkinfolds: ProfessionalEvaluationReportData = { ...core, generatedAt: '2026-01-15T00:00:00Z', composition: null };
+    const html = renderProfessionalReportHtml(onlySkinfolds);
+    expect(html.match(/<svg[^>]*class="pie-chart-svg"/g)?.length).toBe(1); // só a bi-compartimental
+    expect(html).toContain('Sem músculo esquelético e massa óssea registrados nesta avaliação.');
+    expect(html).not.toContain('Massa residual');
+
+    const withoutSkeletalMuscle: ProfessionalEvaluationReportData = {
+      ...core,
+      generatedAt: '2026-01-15T00:00:00Z',
+      composition: { ...core.composition!, skeletalMuscleMassKg: null },
+    };
+    expect(renderProfessionalReportHtml(withoutSkeletalMuscle)).not.toContain('Massa residual');
+  });
+
+  it('tabela de dobras traz só os locais de dobra — identificadores do registro nunca vão para o relatório', () => {
+    // O serviço entrega o registro como veio do banco, com id e evaluationId junto das medidas.
+    const rawRow = { id: '512046f4-f79c-4f46-9758-841aa581b3b8', evaluationId: '8679070d-c115-4631-99ba-5666ab12dc4f', ...core.skinfolds! };
+    const data = { ...core, generatedAt: '2026-01-15T00:00:00Z', skinfolds: rawRow } as ProfessionalEvaluationReportData;
+    const html = renderProfessionalReportHtml(data);
+    expect(html).toContain('<td>Tórax</td><td class="num">8 mm</td>');
+    expect(html).not.toContain('512046f4');
+    expect(html).not.toContain('8679070d');
+    expect(html).not.toContain('evaluationId');
   });
 
   it('com apenas uma avaliação (sem histórico), os gráficos de linha não quebram — mostram cartão de valor atual (as pizzas continuam, são instantâneo)', () => {

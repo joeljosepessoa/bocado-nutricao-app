@@ -344,8 +344,13 @@ function tetraCompartimentalPie(core: EvaluationReportCore): string {
   if (weight == null || gordura == null) {
     return `<div class="chart-card"><h3 class="chart-title">Composição corporal — Tetra-compartimental</h3><div class="chart-empty">Sem dados suficientes para este gráfico.</div></div>`;
   }
-  const musculo = percentOf(core.composition?.skeletalMuscleMassKg ?? null, weight) ?? 0;
-  const ossea = percentOf(core.composition?.boneMassKg ?? null, weight) ?? 0;
+  // Sem músculo esquelético ou massa óssea o "restante" não é massa residual —
+  // engoliria o que falta (já saiu "residual 70%"). Sem os quatro, não desenha.
+  const musculo = percentOf(core.composition?.skeletalMuscleMassKg ?? null, weight);
+  const ossea = percentOf(core.composition?.boneMassKg ?? null, weight);
+  if (musculo == null || ossea == null) {
+    return `<div class="chart-card"><h3 class="chart-title">Composição corporal — Tetra-compartimental</h3><div class="chart-empty">Sem músculo esquelético e massa óssea registrados nesta avaliação.</div></div>`;
+  }
   const residual = Math.max(0, 100 - gordura - musculo - ossea);
   const svg = renderPieChartSvg([
     { label: 'Massa gorda', color: PIE_GORDURA, value: gordura },
@@ -436,12 +441,21 @@ const SKINFOLD_LABELS: Record<string, string> = {
   calfMm: 'Panturrilha',
 };
 
+const BODY_FAT_SOURCE_LABELS: Record<string, string> = {
+  skinfolds: 'dobras cutâneas',
+  bioimpedance: 'bioimpedância',
+  manual: 'informado manualmente',
+};
+
 function skinfoldsSection(data: ProfessionalEvaluationReportData): string {
   const skinfolds = data.skinfolds;
+  // Só os locais de dobra conhecidos: o registro que vem do banco traz também
+  // os identificadores internos, que não são medida e não podem ir para o papel.
   const rows = skinfolds
-    ? Object.entries(skinfolds)
-        .filter((entry): entry is [string, number] => entry[1] != null)
-        .map(([k, v]) => `<tr><td>${SKINFOLD_LABELS[k] ?? escapeHtml(k)}</td><td class="num">${v} mm</td></tr>`)
+    ? Object.keys(SKINFOLD_LABELS)
+        .map((key) => [key, (skinfolds as unknown as Record<string, unknown>)[key]] as const)
+        .filter((entry): entry is readonly [string, number] => typeof entry[1] === 'number')
+        .map(([k, v]) => `<tr><td>${SKINFOLD_LABELS[k]}</td><td class="num">${v} mm</td></tr>`)
         .join('')
     : '';
 
@@ -456,7 +470,7 @@ function skinfoldsSection(data: ProfessionalEvaluationReportData): string {
   return `
     <h2 class="section-title">Dobras cutâneas</h2>
     <table class="data-table"><thead><tr><th>Local</th><th class="num">Medida</th></tr></thead><tbody>${rows}</tbody></table>
-    <div style="font-size:10px;color:#8b988e;">Protocolo: ${escapeHtml(data.protocolLabel ?? 'não informado')} · Fonte do %gordura: ${escapeHtml(data.bodyFatPercentSource ?? '—')}</div>
+    <div style="font-size:10px;color:#8b988e;">Protocolo: ${escapeHtml(data.protocolLabel ?? 'não informado')} · Fonte do %gordura: ${escapeHtml(BODY_FAT_SOURCE_LABELS[data.bodyFatPercentSource ?? ''] ?? data.bodyFatPercentSource ?? '—')}</div>
     ${evolutionNote}`;
 }
 
