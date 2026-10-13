@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsEnum,
+  IsIn,
   IsInt,
   IsISO8601,
   IsNumber,
@@ -10,6 +11,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { EvaluationBiologicalSex } from '@prisma/client';
+import { BMR_REFERENCES, BODY_FAT_METHODS, type BmrReference, type BodyFatMethod } from './create-evaluation.dto';
 import { MeasurementsDto } from './measurements.dto';
 import { SkinfoldsDto } from './skinfolds.dto';
 import { BioimpedanceManualDto } from './bioimpedance-manual.dto';
@@ -21,6 +23,8 @@ export class UpdateEvaluationDto {
   @IsOptional() @IsNumber() @Min(30) heightCm?: number;
   @IsOptional() @IsNumber() @Min(0) weightKg?: number;
   @IsOptional() @IsString() protocolCode?: string;
+  @IsOptional() @IsIn(BODY_FAT_METHODS) bodyFatMethod?: BodyFatMethod;
+  @IsOptional() @IsIn(BMR_REFERENCES) bmrReference?: BmrReference;
   @IsOptional() @IsInt() @Min(0) bloodPressureSystolic?: number;
   @IsOptional() @IsInt() @Min(0) bloodPressureDiastolic?: number;
   @IsOptional() @IsInt() @Min(0) heartRate?: number;

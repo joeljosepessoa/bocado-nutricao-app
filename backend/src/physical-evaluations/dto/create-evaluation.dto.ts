@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsEnum,
+  IsIn,
   IsInt,
   IsISO8601,
   IsNumber,
@@ -13,6 +14,14 @@ import { EvaluationBiologicalSex } from '@prisma/client';
 import { MeasurementsDto } from './measurements.dto';
 import { SkinfoldsDto } from './skinfolds.dto';
 import { BioimpedanceManualDto } from './bioimpedance-manual.dto';
+
+/** De onde o profissional quer o % de gordura desta avaliação. */
+export const BODY_FAT_METHODS = ['skinfolds', 'bioimpedance'] as const;
+export type BodyFatMethod = (typeof BODY_FAT_METHODS)[number];
+
+/** Fórmula que dá a faixa de referência do metabolismo basal. */
+export const BMR_REFERENCES = ['harris_benedict', 'mifflin_st_jeor', 'cunningham', 'ten_haaf'] as const;
+export type BmrReference = (typeof BMR_REFERENCES)[number];
 
 export class CreateEvaluationDto {
   @IsOptional()
@@ -40,6 +49,14 @@ export class CreateEvaluationDto {
   @IsOptional()
   @IsString()
   protocolCode?: string;
+
+  @IsOptional()
+  @IsIn(BODY_FAT_METHODS)
+  bodyFatMethod?: BodyFatMethod;
+
+  @IsOptional()
+  @IsIn(BMR_REFERENCES)
+  bmrReference?: BmrReference;
 
   @IsOptional()
   @IsInt()

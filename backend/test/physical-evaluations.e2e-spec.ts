@@ -194,6 +194,118 @@ describe('Avaliação física (e2e)', () => {
     expect(evaluation.ageAtEvaluation).toBe(36);
   });
 
+  it('confere com um laudo de referência: homem, 39 anos, 107,7 kg, 195 cm, 7 dobras somando 168 mm', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+    const evaluation = await createEvaluation(app, professional.accessToken, client.id, {
+      heightCm: 195,
+      weightKg: 107.7,
+      biologicalSexForCalculation: 'male',
+      ageAtEvaluation: 39,
+      protocolCode: 'jackson_pollock_7',
+      measurements: { waistCm: 104.8, hipCm: 108 },
+      // bíceps e panturrilha são anotados, mas não entram no protocolo de 7 dobras
+      skinfolds: { chestMm: 20, axillaryMidMm: 22, tricepsMm: 14, subscapularMm: 26, abdominalMm: 38, suprailiacMm: 26, thighMm: 22, bicepsMm: 8, calfMm: 10 },
+    });
+
+    expect(evaluation.calculatedMetrics.bmi).toBe(28.3);
+    expect(evaluation.calculatedMetrics.waistHipRatio).toBe(0.97);
+    expect(evaluation.calculatedMetrics.bodyFatPercent).toBe(24.5);
+    expect(evaluation.calculatedMetrics.fatMassKg).toBeCloseTo(26.4, 1);
+    expect(evaluation.calculatedMetrics.leanMassKg).toBeCloseTo(81.3, 1);
+  });
+
+  it('avaliação criada sem idade passa a calcular o %gordura quando o nascimento é cadastrado e ela é editada', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken); // sem data de nascimento
+    const created = await createEvaluation(app, professional.accessToken, client.id, {
+      evaluatedAt: '2026-01-10T12:00:00.000Z',
+      biologicalSexForCalculation: 'male',
+      protocolCode: 'jackson_pollock_7',
+      skinfolds: FULL_JP7_SKINFOLDS,
+    });
+    expect(created.ageAtEvaluation).toBeNull();
+    expect(created.calculatedMetrics.bodyFatPercent).toBeNull();
+
+    await prisma.client.update({ where: { id: client.id }, data: { birthDate: new Date('1990-01-01') } });
+
+    const edited = await request(app.getHttpServer())
+      .patch(`/clients/${client.id}/evaluations/${created.id}`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .send({ heightCm: 178 })
+      .expect(200);
+    expect(edited.body.ageAtEvaluation).toBe(36);
+    expect(edited.body.calculatedMetrics.bodyFatPercent).toBeCloseTo(12.3, 1);
+
+    // Idade já gravada não é recalculada por uma edição que não a informa.
+    await prisma.client.update({ where: { id: client.id }, data: { birthDate: new Date('1980-01-01') } });
+    const again = await request(app.getHttpServer())
+      .patch(`/clients/${client.id}/evaluations/${created.id}`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .send({ heightCm: 178 })
+      .expect(200);
+    expect(again.body.ageAtEvaluation).toBe(36);
+  });
+
+  it('"calcular % de gordura por": bioimpedância vale sobre as dobras só quando o profissional escolhe', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+    const both = {
+      biologicalSexForCalculation: 'male',
+      ageAtEvaluation: 36,
+      protocolCode: 'jackson_pollock_7',
+      skinfolds: FULL_JP7_SKINFOLDS,
+      bioimpedance: { equipment: 'Omron', bodyFatPercent: 18.4, skeletalMuscleMassKg: 35.2 },
+    };
+
+    // Sem escolha: as dobras completas têm preferência (comportamento de sempre).
+    const byDefault = await createEvaluation(app, professional.accessToken, client.id, both);
+    expect(byDefault.bodyFatMethod).toBeNull();
+    expect(byDefault.calculatedMetrics.bodyFatPercentSource).toBe('skinfolds');
+    expect(byDefault.bioimpedance.equipment).toBe('Omron');
+    expect(byDefault.bioimpedance.skeletalMuscleMassKg).toBe(35.2);
+
+    const byBioimpedance = await createEvaluation(app, professional.accessToken, client.id, {
+      ...both,
+      bodyFatMethod: 'bioimpedance',
+      bmrReference: 'harris_benedict',
+    });
+    expect(byBioimpedance.bodyFatMethod).toBe('bioimpedance');
+    expect(byBioimpedance.bmrReference).toBe('harris_benedict');
+    expect(byBioimpedance.calculatedMetrics.bodyFatPercentSource).toBe('bioimpedance');
+    expect(byBioimpedance.calculatedMetrics.bodyFatPercent).toBe(18.4);
+    expect(byBioimpedance.calculatedMetrics.fatMassKg).toBeCloseTo(14.72, 2);
+
+    // Trocar a escolha na edição recalcula.
+    const backToSkinfolds = await request(app.getHttpServer())
+      .patch(`/clients/${client.id}/evaluations/${byBioimpedance.id}`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .send({ bodyFatMethod: 'skinfolds' })
+      .expect(200);
+    expect(backToSkinfolds.body.calculatedMetrics.bodyFatPercentSource).toBe('skinfolds');
+    expect(backToSkinfolds.body.calculatedMetrics.bodyFatPercent).toBeCloseTo(12.3, 1);
+
+    // Escolheu bioimpedância mas não digitou o % do aparelho: usa as dobras, não fica em branco.
+    const withoutDeviceValue = await createEvaluation(app, professional.accessToken, client.id, {
+      ...both,
+      bodyFatMethod: 'bioimpedance',
+      bioimpedance: { equipment: 'Omron' },
+    });
+    expect(withoutDeviceValue.calculatedMetrics.bodyFatPercentSource).toBe('skinfolds');
+  });
+
+  it('rejeita método de % de gordura e referência de metabolismo basal desconhecidos', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+    for (const invalid of [{ bodyFatMethod: 'manual' }, { bmrReference: 'katch' }]) {
+      await request(app.getHttpServer())
+        .post(`/clients/${client.id}/evaluations`)
+        .set('Authorization', `Bearer ${professional.accessToken}`)
+        .send({ heightCm: 178, ...invalid })
+        .expect(400);
+    }
+  });
+
   // 8. Fotos
   it('upload, leitura via URL assinada e remoção de foto funcionam', async () => {
     const professional = await registerProfessional(app);

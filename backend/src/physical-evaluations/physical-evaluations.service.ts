@@ -191,6 +191,8 @@ export class PhysicalEvaluationsService {
           heightCm: dto.heightCm,
           weightKg: dto.weightKg,
           protocolId,
+          bodyFatMethod: dto.bodyFatMethod,
+          bmrReference: dto.bmrReference,
           bloodPressureSystolic: dto.bloodPressureSystolic,
           bloodPressureDiastolic: dto.bloodPressureDiastolic,
           heartRate: dto.heartRate,
@@ -288,7 +290,18 @@ export class PhysicalEvaluationsService {
     dto: UpdateEvaluationDto,
     meta: RequestMeta = {},
   ) {
-    await this.assertOwnedEvaluation(professionalId, clientId, evaluationId);
+    const current = await this.assertOwnedEvaluation(professionalId, clientId, evaluationId);
+
+    // Avaliação gravada sem idade (paciente ainda sem data de nascimento) não
+    // calcula % de gordura. Se o nascimento foi cadastrado depois, a edição
+    // completa a idade — senão a avaliação ficaria sem o cálculo para sempre.
+    let ageAtEvaluation = dto.ageAtEvaluation;
+    if (ageAtEvaluation == null && current.ageAtEvaluation == null) {
+      const client = await this.prisma.client.findUnique({ where: { id: clientId }, select: { birthDate: true } });
+      if (client?.birthDate) {
+        ageAtEvaluation = calculateAge(client.birthDate, dto.evaluatedAt ? new Date(dto.evaluatedAt) : current.evaluatedAt);
+      }
+    }
 
     let protocolId: string | null | undefined;
     if (dto.protocolCode !== undefined) {
@@ -304,11 +317,13 @@ export class PhysicalEvaluationsService {
         where: { id: evaluationId },
         data: {
           evaluatedAt: dto.evaluatedAt ? new Date(dto.evaluatedAt) : undefined,
-          ageAtEvaluation: dto.ageAtEvaluation,
+          ageAtEvaluation,
           biologicalSexForCalculation: dto.biologicalSexForCalculation,
           heightCm: dto.heightCm,
           weightKg: dto.weightKg,
           protocolId,
+          bodyFatMethod: dto.bodyFatMethod,
+          bmrReference: dto.bmrReference,
           bloodPressureSystolic: dto.bloodPressureSystolic,
           bloodPressureDiastolic: dto.bloodPressureDiastolic,
           heartRate: dto.heartRate,
@@ -691,7 +706,13 @@ export class PhysicalEvaluationsService {
     let bodyFatPercentSource: BodyFatSource | null = null;
     let protocolVersionUsed: string | null = null;
 
-    if (evaluation.skinfolds && evaluation.protocol?.code === 'jackson_pollock_7') {
+    // "Calcular % de gordura por": se o profissional escolheu bioimpedância, vale
+    // o valor do aparelho mesmo com as dobras completas. Sem escolha (ou com
+    // "dobras"), as dobras têm preferência e a bioimpedância é o recurso.
+    const bioimpedanceFirst =
+      evaluation.bodyFatMethod === BodyFatSource.bioimpedance && evaluation.bioimpedance?.bodyFatPercent != null;
+
+    if (!bioimpedanceFirst && evaluation.skinfolds && evaluation.protocol?.code === 'jackson_pollock_7') {
       const percent = this.calculation.computeJacksonPollock7Percent(
         evaluation.skinfolds,
         evaluation.biologicalSexForCalculation,

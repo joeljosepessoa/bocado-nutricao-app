@@ -1,6 +1,7 @@
-import { IsNumber, IsOptional, Min } from 'class-validator';
+import { IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 
 export class BioimpedanceManualDto {
+  @IsOptional() @IsString() @MaxLength(60) equipment?: string;
   @IsOptional() @IsNumber() @Min(0) weightKg?: number;
   @IsOptional() @IsNumber() @Min(0) bodyFatPercent?: number;
   @IsOptional() @IsNumber() @Min(0) fatMassKg?: number;

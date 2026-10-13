@@ -373,6 +373,10 @@ model PhysicalEvaluation {
   heightCm                    Float                    @map("height_cm")
   weightKg                    Float?                   @map("weight_kg")
   protocolId                  String?                  @map("protocol_id")
+  /// De onde o profissional quer o % de gordura (dobras ou bioimpedância); null = dobras quando completas, senão bioimpedância.
+  bodyFatMethod               BodyFatSource?           @map("body_fat_method")
+  /// Fórmula da faixa de referência do metabolismo basal (harris_benedict, mifflin_st_jeor, cunningham, ten_haaf).
+  bmrReference                String?                  @map("bmr_reference")
   bloodPressureSystolic       Int?                     @map("blood_pressure_systolic")
   bloodPressureDiastolic      Int?                     @map("blood_pressure_diastolic")
   heartRate                   Int?                     @map("heart_rate")
@@ -446,6 +450,8 @@ model Bioimpedance {
   id                     String             @id @default(uuid())
   evaluationId           String             @unique @map("evaluation_id")
   origin                 BioimpedanceOrigin
+  /// Aparelho usado na leitura digitada (ex.: "Omron"); texto livre.
+  equipment              String?
   recordedAt             DateTime           @default(now()) @map("recorded_at")
   weightKg               Float?             @map("weight_kg")
   bodyFatPercent         Float?             @map("body_fat_percent")
