@@ -188,6 +188,49 @@ export function toPayload(form: AnamnesisForm, completed?: boolean): SaveAnamnes
   };
 }
 
+export interface SummaryRow {
+  label: string;
+  value: string;
+  /** O que não pode passar despercebido na consulta (patologias e alergias). */
+  alert?: boolean;
+}
+
+const labelsOf = (codes: string[], options: Option[]) => options.filter((option) => codes.includes(option.value)).map((option) => option.label);
+
+const itemsText = (items: AnamnesisContent['medications']) =>
+  items.map((item) => {
+    const detail = [item.dosage, item.frequency].filter(Boolean).join(', ');
+    return detail ? `${item.name} (${detail})` : item.name;
+  });
+
+const joined = (...parts: Array<string | null | undefined>) =>
+  parts
+    .map((part) => (part ?? '').trim())
+    .filter(Boolean)
+    .join(' — ');
+
+/**
+ * O que importa na consulta, tirado da ficha como foi preenchida — sem
+ * interpretação: só as linhas que têm conteúdo, na ordem em que o profissional
+ * costuma precisar delas.
+ */
+export function summaryRows(anamnesis: AnamnesisContent): SummaryRow[] {
+  const rows: SummaryRow[] = [
+    { label: 'Objetivo', value: joined(labelsOf(anamnesis.goals, GOAL_OPTIONS).join(', '), anamnesis.goalDescription) },
+    { label: 'Patologias', value: joined(labelsOf(anamnesis.conditions, CONDITION_OPTIONS).join(', '), anamnesis.otherConditions), alert: true },
+    { label: 'Alergias', value: joined(anamnesis.allergies), alert: true },
+    { label: 'Medicamentos', value: itemsText(anamnesis.medications).join('; ') },
+    { label: 'Suplementos', value: itemsText(anamnesis.supplements).join('; ') },
+    { label: 'Hormônios', value: itemsText(anamnesis.hormones).join('; ') },
+    { label: 'Intolerâncias', value: joined(anamnesis.intolerances) },
+    { label: 'Restrições', value: joined(anamnesis.restrictions) },
+    { label: 'Aversões', value: joined(anamnesis.aversions) },
+    { label: 'Cirurgias', value: joined(anamnesis.surgeries) },
+    { label: 'Histórico familiar', value: labelsOf(anamnesis.familyHistory, FAMILY_HISTORY_OPTIONS).join(', ') },
+  ];
+  return rows.filter((row) => row.value !== '');
+}
+
 /** Etapa com alguma coisa preenchida — é o que acende o "✓" na barra de etapas. */
 export function stepHasContent(step: StepKey, form: AnamnesisForm): boolean {
   const any = (...values: string[]) => values.some((value) => value.trim() !== '');

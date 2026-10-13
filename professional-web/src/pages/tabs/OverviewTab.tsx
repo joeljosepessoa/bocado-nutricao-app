@@ -10,6 +10,7 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Modal } from '../../components/Modal';
 import { formatDate } from '../../lib/format';
 import { parseGoals } from '../../lib/clientGoals';
+import { AnamnesisSummaryCard } from '../../anamnesis/AnamnesisSummaryCard';
 
 export function OverviewTab() {
   const { client } = useOutletContext<{ client: ClientDetail }>();
@@ -115,6 +116,8 @@ export function OverviewTab() {
         ) : null}
         {!editing ? <Button onClick={() => setEditing(true)}>Editar dados</Button> : null}
       </Card>
+
+      {clientId ? <AnamnesisSummaryCard clientId={clientId} /> : null}
 
       <Card title="Acesso">
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
