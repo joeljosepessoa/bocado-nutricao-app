@@ -25,6 +25,8 @@ function makeEvaluation(overrides: Partial<EvaluationDetail> = {}): EvaluationDe
     heightCm: 165,
     weightKg: 60,
     protocolId: null,
+    bodyFatMethod: null,
+    bmrReference: null,
     bloodPressureSystolic: null,
     bloodPressureDiastolic: null,
     heartRate: null,

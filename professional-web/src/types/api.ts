@@ -98,8 +98,12 @@ export interface Skinfolds {
   calfMm: number | null;
 }
 
+export type BodyFatMethod = 'skinfolds' | 'bioimpedance';
+export type BmrReference = 'harris_benedict' | 'mifflin_st_jeor' | 'cunningham' | 'ten_haaf';
+
 export interface Bioimpedance {
   origin: 'manual' | 'device_confirmed';
+  equipment: string | null;
   recordedAt: string;
   weightKg: number | null;
   bodyFatPercent: number | null;
@@ -113,6 +117,9 @@ export interface Bioimpedance {
   bodyAgeYears: number | null;
   boneMassKg: number | null;
 }
+
+/** Os valores numéricos da bioimpedância (tudo menos origem, aparelho e data da leitura). */
+export type BioimpedanceNumberKey = Exclude<keyof Bioimpedance, 'origin' | 'equipment' | 'recordedAt'>;
 
 export interface CalculatedMetrics {
   bmi: number | null;
@@ -159,6 +166,8 @@ export interface EvaluationDetail {
   heightCm: number;
   weightKg: number | null;
   protocolId: string | null;
+  bodyFatMethod: BodyFatMethod | null;
+  bmrReference: BmrReference | null;
   bloodPressureSystolic: number | null;
   bloodPressureDiastolic: number | null;
   heartRate: number | null;
@@ -182,6 +191,8 @@ export interface CreateEvaluationInput {
   heightCm: number;
   weightKg?: number;
   protocolCode?: string;
+  bodyFatMethod?: BodyFatMethod;
+  bmrReference?: BmrReference;
   bloodPressureSystolic?: number;
   bloodPressureDiastolic?: number;
   heartRate?: number;
@@ -189,7 +200,7 @@ export interface CreateEvaluationInput {
   notes?: string;
   measurements?: Partial<Measurements>;
   skinfolds?: Partial<Skinfolds>;
-  bioimpedance?: Partial<Record<keyof Bioimpedance, number>>;
+  bioimpedance?: Partial<Record<BioimpedanceNumberKey, number>> & { equipment?: string };
 }
 
 export type UpdateEvaluationInput = Partial<CreateEvaluationInput>;

@@ -13,6 +13,14 @@
 const DRAFT_KEY_PREFIX = 'bocado:eval-draft:';
 
 export interface EvaluationDraftData {
+  /** AAAA-MM-DD e idade — opcionais: rascunhos gravados antes de existirem não os têm. */
+  evaluatedDate?: string;
+  age?: string;
+  bodyFatMethod?: 'skinfolds' | 'bioimpedance';
+  bmrReference?: 'harris_benedict' | 'mifflin_st_jeor' | 'cunningham' | 'ten_haaf';
+  equipment?: string;
+  /** Como o músculo esquelético e a massa muscular foram digitados (kg ou % do peso). */
+  massUnits?: Record<string, 'kg' | 'percent'>;
   heightCm: string;
   weightKg: string;
   biologicalSex: 'male' | 'female' | '';

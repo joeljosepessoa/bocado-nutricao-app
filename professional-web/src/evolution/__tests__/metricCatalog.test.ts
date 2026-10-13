@@ -45,7 +45,7 @@ describe('toChartPoints', () => {
           wristCm: null, femurBicondylarCm: null,
         },
         bioimpedance: {
-          origin: 'manual', recordedAt: '2026-01-01', weightKg: null, bodyFatPercent: null,
+          origin: 'manual', equipment: null, recordedAt: '2026-01-01', weightKg: null, bodyFatPercent: null,
           fatMassKg: null, leanMassKg: null, skeletalMuscleMassKg: null, muscleMassKg: 32,
           bodyWaterPercent: null, visceralFatLevel: null, basalMetabolicRateKcal: null,
           bodyAgeYears: null, boneMassKg: null,

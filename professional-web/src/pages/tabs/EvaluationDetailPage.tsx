@@ -25,6 +25,10 @@ const SKINFOLD_LABELS: Record<keyof Skinfolds, string> = {
   suprailiacMm: 'Suprailíaca', thighMm: 'Coxa', calfMm: 'Panturrilha',
 };
 
+const SEX_LABELS = { male: 'Masculino', female: 'Feminino' } as const;
+
+const BODY_FAT_SOURCE_LABELS = { skinfolds: 'dobras cutâneas', bioimpedance: 'bioimpedância', manual: 'informado manualmente' } as const;
+
 export function EvaluationDetailPage() {
   const { clientId, evaluationId } = useParams<{ clientId: string; evaluationId: string }>();
   const navigate = useNavigate();
@@ -102,10 +106,20 @@ export function EvaluationDetailPage() {
           <Tile label="% de gordura" value={formatNumber(evaluation.calculatedMetrics?.bodyFatPercent ?? null, '%')} />
           <Tile label="Massa gorda" value={formatNumber(evaluation.calculatedMetrics?.fatMassKg ?? null, ' kg')} />
           <Tile label="Massa magra" value={formatNumber(evaluation.calculatedMetrics?.leanMassKg ?? null, ' kg')} />
+          <Tile label="Cintura/quadril" value={formatNumber(evaluation.calculatedMetrics?.waistHipRatio ?? null)} />
         </div>
         <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-          Fonte do %gordura: {evaluation.calculatedMetrics?.bodyFatPercentSource ?? '—'} · Protocolo: {evaluation.protocol?.name ?? '—'}
+          Idade na avaliação: {evaluation.ageAtEvaluation != null ? `${evaluation.ageAtEvaluation} anos` : '—'} · Sexo:{' '}
+          {evaluation.biologicalSexForCalculation ? SEX_LABELS[evaluation.biologicalSexForCalculation] : '—'} · Fonte do % de gordura:{' '}
+          {evaluation.calculatedMetrics?.bodyFatPercentSource ? BODY_FAT_SOURCE_LABELS[evaluation.calculatedMetrics.bodyFatPercentSource] : '—'} · Protocolo:{' '}
+          {evaluation.protocol?.name ?? '—'}
         </div>
+        {evaluation.skinfolds && evaluation.calculatedMetrics?.bodyFatPercent == null ? (
+          <div role="alert" style={{ fontSize: 13, color: 'var(--color-danger)' }}>
+            O % de gordura não foi calculado. O protocolo de 7 dobras precisa da idade, do sexo e das dobras de tórax, axilar média, tríceps,
+            subescapular, abdominal, suprailíaca e coxa — use Editar para completar o que falta.
+          </div>
+        ) : null}
       </Card>
 
       {evaluation.measurements ? (
@@ -133,8 +147,12 @@ export function EvaluationDetailPage() {
       ) : null}
 
       {evaluation.bioimpedance ? (
-        <Card title={`Bioimpedância (${evaluation.bioimpedance.origin === 'device_confirmed' ? 'balança conectada' : 'manual'})`}>
+        <Card
+          title={`Bioimpedância (${evaluation.bioimpedance.origin === 'device_confirmed' ? 'balança conectada' : (evaluation.bioimpedance.equipment ?? 'manual')})`}
+        >
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
+            <Tile label="Gordura corporal" value={formatNumber(evaluation.bioimpedance.bodyFatPercent, '%')} />
+            <Tile label="Músculo esquelético" value={formatNumber(evaluation.bioimpedance.skeletalMuscleMassKg, ' kg')} />
             <Tile label="Massa muscular" value={formatNumber(evaluation.bioimpedance.muscleMassKg, ' kg')} />
             <Tile label="Água corporal" value={formatNumber(evaluation.bioimpedance.bodyWaterPercent, '%')} />
             <Tile label="Gordura visceral" value={formatNumber(evaluation.bioimpedance.visceralFatLevel)} />
