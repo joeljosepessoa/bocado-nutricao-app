@@ -16,6 +16,10 @@ export class FilesController {
     const buffer = await this.storageService.read(storageKey);
     res.setHeader('Content-Type', contentType);
     res.setHeader('Cache-Control', 'private, max-age=0, no-store');
+    // O painel roda em outro domínio que a API: sem isto o navegador recusa mostrar
+    // a foto num <img> (o padrão do helmet é "same-origin"). Liberar aqui é seguro
+    // porque a rota não usa cookie — quem abre o arquivo é só quem tem o token.
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     res.send(buffer);
   }
 }

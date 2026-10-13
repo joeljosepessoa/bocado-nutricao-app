@@ -9,6 +9,7 @@ import { EmptyState } from '../../components/EmptyState';
 import { AiAssistPanel } from '../../components/AiAssistPanel';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { formatDate, formatNumber } from '../../lib/format';
+import { EvaluationPhotosCard } from './EvaluationPhotosCard';
 
 const MEASUREMENT_LABELS: Record<keyof Measurements, string> = {
   chestCm: 'Tórax', waistCm: 'Cintura', abdomenCm: 'Abdômen', hipCm: 'Quadril',
@@ -171,6 +172,8 @@ export function EvaluationDetailPage() {
         </div>
         {evaluation.notes ? <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Notas: {evaluation.notes}</div> : null}
       </Card>
+
+      <EvaluationPhotosCard clientId={clientId!} evaluationId={evaluationId!} photos={evaluation.photos ?? []} />
 
       <Card title="Relatório">
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

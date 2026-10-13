@@ -63,6 +63,8 @@ describe('Storage — arquivos privados, URLs assinadas e isolamento', () => {
     const download = await request(app.getHttpServer()).get(signed.body.url).expect(200);
     expect(download.headers['content-type']).toBe('image/jpeg');
     expect(download.headers['cache-control']).toContain('no-store');
+    // O painel (outro domínio) precisa conseguir mostrar a foto num <img>.
+    expect(download.headers['cross-origin-resource-policy']).toBe('cross-origin');
     expect(Buffer.compare(download.body as Buffer, JPEG)).toBe(0);
   });
 

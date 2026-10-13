@@ -344,8 +344,16 @@ export function EvaluationFormPage() {
       queryClient.invalidateQueries({ queryKey: ['evolution', clientId] });
       navigate(`/clients/${clientId}/evaluations/${result.id}`);
     },
-    onError: (err) =>
-      setError(err instanceof Error && err.message === PERCENT_NEEDS_WEIGHT ? err.message : 'Não foi possível salvar. Confira os valores informados.'),
+    onError: (err) => {
+      if (err instanceof Error && err.message === PERCENT_NEEDS_WEIGHT) {
+        setError(err.message);
+        return;
+      }
+      // O motivo que o servidor deu, quando deu — "confira os valores" sozinho não diz qual.
+      const reason = (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
+      const detail = Array.isArray(reason) ? reason.join('; ') : reason;
+      setError(detail ? `Não foi possível salvar: ${detail}` : 'Não foi possível salvar. Confira os valores informados e tente de novo.');
+    },
   });
 
   // O % de gordura só sai com as 7 dobras do protocolo, a idade e o sexo — avisa
