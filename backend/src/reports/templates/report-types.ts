@@ -65,6 +65,8 @@ export interface EvaluationReportCore {
   fatMassKg: number | null;
   leanMassKg: number | null;
   waistHipRatio: number | null;
+  /** Fórmula escolhida para a faixa de referência do metabolismo basal; ausente = Harris-Benedict. */
+  bmrReference?: string | null;
   measurements: ReportMeasurements | null;
   composition: ReportComposition | null;
   comparison: ReportComparison | null;

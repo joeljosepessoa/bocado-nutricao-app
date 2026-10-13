@@ -24,7 +24,7 @@ function formatShortDate(iso: string): string {
 function formatChartNumber(value: number): string {
   // até 1 casa decimal, sem casas quando o valor já é inteiro — rótulo de eixo legível
   const rounded = Math.round(value * 10) / 10;
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1).replace('.', ',');
 }
 
 export interface ChartSeriesInput {

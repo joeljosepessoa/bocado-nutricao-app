@@ -297,12 +297,62 @@ describe('Templates de relatório', () => {
     expect(html).toContain('Sem músculo esquelético e massa óssea registrados nesta avaliação.');
     expect(html).not.toContain('Massa residual');
 
-    const withoutSkeletalMuscle: ProfessionalEvaluationReportData = {
+    // Sem massa óssea não há como chegar ao músculo esquelético — continua sem a pizza.
+    const withoutBone: ProfessionalEvaluationReportData = {
+      ...core,
+      generatedAt: '2026-01-15T00:00:00Z',
+      composition: { ...core.composition!, skeletalMuscleMassKg: null, boneMassKg: null },
+    };
+    expect(renderProfessionalReportHtml(withoutBone)).not.toContain('Massa residual');
+
+    // Com massa óssea, o músculo esquelético sai das medidas e a pizza volta.
+    const derivable: ProfessionalEvaluationReportData = {
       ...core,
       generatedAt: '2026-01-15T00:00:00Z',
       composition: { ...core.composition!, skeletalMuscleMassKg: null },
     };
-    expect(renderProfessionalReportHtml(withoutSkeletalMuscle)).not.toContain('Massa residual');
+    expect(renderProfessionalReportHtml(derivable)).toContain('Massa residual');
+  });
+
+  it('página 1 confere com o laudo de referência: resultados, avaliação e faixas (homem, 39 anos, 195 cm, 107,7 kg)', () => {
+    const data: ProfessionalEvaluationReportData = {
+      ...core,
+      generatedAt: '2026-10-11T00:00:00Z',
+      ageAtEvaluation: 39,
+      biologicalSexForCalculation: 'male',
+      heightCm: 195,
+      weightKg: 107.7,
+      bmi: 28.3,
+      bmiClassification: 'sobrepeso',
+      bodyFatPercent: 24.5,
+      fatMassKg: 26.39,
+      leanMassKg: 81.31,
+      waistHipRatio: 0.97,
+      bmrReference: 'harris_benedict',
+      // O aparelho deu só estes; músculo esquelético e massa muscular saem das medidas.
+      composition: { muscleMassKg: null, skeletalMuscleMassKg: null, bodyWaterPercent: 57.9, visceralFatLevel: 11, boneMassKg: 5.03, basalMetabolicRateKcal: 2075, bodyAgeYears: 40 },
+      bloodPressureSystolic: 130,
+      bloodPressureDiastolic: 80,
+    };
+    const html = renderProfessionalReportHtml(data);
+    const row = (label: string, reference: string | null, value: string, classification: string) =>
+      `<tr><td>${label}${reference ? `<div style="font-size:9px;color:#8b988e;">Referência: ${reference}</div>` : ''}</td><td class="num">${value}</td><td class="eval">${classification}</td></tr>`;
+
+    expect(html).toContain(row('Peso', '70,3~95,1 kg', '107,7 kg', 'Acima 12,6 kg'));
+    expect(html).toContain(row('IMC', '18,5~25,0 kg/m²', '28,3 kg/m²', 'Acima (sobrepeso)'));
+    expect(html).toContain(row('Músculo esquelético', '33,3~39,3 %', '46,7 % · 50,3 kg', 'Excelente'));
+    expect(html).toContain(row('Massa muscular', null, '70,8 % · 76,3 kg', '—'));
+    expect(html).toContain(row('Gordura corporal', null, '24,5 % · 26,4 kg', '—'));
+    expect(html).toContain(row('Água corporal', null, '57,9 % · 62,4 kg', '—'));
+    expect(html).toContain(row('Massa óssea', null, '5,03 kg', '—'));
+    expect(html).toContain(row('Idade corporal', null, '40 anos', '+1 ano(s)'));
+    expect(html).toContain(row('Gordura visceral', '1~9', '11', 'Acima'));
+    expect(html).toContain(row('Metabolismo basal', '1744~2085 kcal', '2075 kcal', 'Normal'));
+    expect(html).toContain(row('Relação cintura/quadril', '0,84~0,91', '0,97', 'Risco Muito Alto'));
+    expect(html).toContain(row('Pressão arterial', '120/80 mmHg', '130/80 mmHg', 'Pré-hipertensão'));
+    // Números do relatório saem com vírgula.
+    expect(html).not.toContain('107.7 kg');
+    expect(html).toContain('Massa gorda: 24,5%'); // legenda da pizza
   });
 
   it('tabela de dobras traz só os locais de dobra — identificadores do registro nunca vão para o relatório', () => {

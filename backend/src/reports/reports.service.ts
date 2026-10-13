@@ -178,6 +178,7 @@ export class ReportsService {
         heightCm: fullEvaluation.heightCm,
         biologicalSexForCalculation: fullEvaluation.biologicalSexForCalculation,
         waistHipRatio: fullEvaluation.calculatedMetrics?.waistHipRatio ?? null,
+        bmrReference: fullEvaluation.bmrReference ?? null,
       };
 
       if (dto.audience === ReportAudience.client) {

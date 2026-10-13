@@ -1,5 +1,17 @@
 import { REPORT_CSS } from './report-styles';
 import { formatShortDate, renderMetricChart, renderPieChartSvg } from './report-charts';
+import {
+  assessBasalMetabolicRate,
+  assessBloodPressure,
+  assessBmi,
+  assessSkeletalMusclePercent,
+  assessVisceralFat,
+  assessWaistHipRatio,
+  assessWeight,
+  bodyAgeDifference,
+  deriveComposition,
+  formatPlain,
+} from './evaluation-references';
 import type {
   ClientEvaluationReportData,
   EvaluationReportCore,
@@ -27,13 +39,32 @@ function formatDate(iso: string): string {
 }
 
 function num(value: number | null, unit = ''): string {
-  return value == null ? '—' : `${value}${unit}`;
+  return value == null ? '—' : `${formatPlain(value)}${unit}`;
 }
 
 function signed(value: number | null, unit = ''): string {
   if (value == null) return '—';
   const sign = value > 0 ? '+' : '';
-  return `${sign}${value}${unit}`;
+  return `${sign}${formatPlain(value)}${unit}`;
+}
+
+/** "46,7 % · 50,3 kg" — percentual e massa do mesmo indicador; mostra só o que existe. */
+function percentAndKg(percent: number | null, massKg: number | null): string {
+  const parts = [percent != null ? `${formatPlain(percent)} %` : null, massKg != null ? `${formatPlain(massKg)} kg` : null].filter(Boolean);
+  return parts.length ? parts.join(' · ') : '—';
+}
+
+/** Composição da avaliação atual: valor do aparelho quando há, senão o que as medidas permitem calcular. */
+function derivedOf(core: EvaluationReportCore) {
+  return deriveComposition({
+    sex: core.biologicalSexForCalculation,
+    weightKg: core.weightKg,
+    bodyFatPercent: core.bodyFatPercent,
+    skeletalMuscleMassKg: core.composition?.skeletalMuscleMassKg ?? null,
+    muscleMassKg: core.composition?.muscleMassKg ?? null,
+    boneMassKg: core.composition?.boneMassKg ?? null,
+    bodyWaterPercent: core.composition?.bodyWaterPercent ?? null,
+  });
 }
 
 function sexLabel(sex: 'male' | 'female' | null): string {
@@ -207,45 +238,67 @@ function resumoSection(core: EvaluationReportCore, last: ResumoPeriod | null, ov
 interface MetricRow {
   label: string;
   value: string;
-  /** Só preenchido quando há regra de classificação de verdade implementada (hoje: só IMC) — nunca inventado. */
+  /** Só preenchido quando há regra de classificação conferida (ver evaluation-references.ts) — nunca inventado. */
   classification: string | null;
+  /** Faixa de referência, mostrada sob o nome do indicador; ausente = sem faixa conferida. */
+  reference?: string | null;
 }
 
 function metricTableHtml(rows: MetricRow[]): string {
   const body = rows
-    .map(
-      (r) =>
-        `<tr><td>${escapeHtml(r.label)}</td><td class="num">${r.value}</td><td class="eval">${r.classification ? escapeHtml(r.classification) : '—'}</td></tr>`,
-    )
+    .map((r) => {
+      const reference = r.reference ? `<div style="font-size:9px;color:#8b988e;">Referência: ${escapeHtml(r.reference)}</div>` : '';
+      return `<tr><td>${escapeHtml(r.label)}${reference}</td><td class="num">${r.value}</td><td class="eval">${r.classification ? escapeHtml(r.classification) : '—'}</td></tr>`;
+    })
     .join('');
   return `<table class="metric-table"><thead><tr><th>Descrição</th><th class="num">Resultado</th><th class="eval">Avaliação</th></tr></thead><tbody>${body}</tbody></table>`;
 }
 
-/** Duas tabelas lado a lado (Descrição/Resultado/Avaliação), como no relatório de referência — "Avaliação" só vem preenchida onde já existe regra de classificação real (hoje, só IMC). */
+/**
+ * Duas tabelas lado a lado (Descrição/Resultado/Avaliação + Referência), como no
+ * relatório de referência. Gordura corporal, massa muscular, água e massa óssea
+ * ainda saem sem avaliação: as faixas delas não foram conferidas.
+ */
 function compositionTables(core: EvaluationReportCore): string {
+  const sex = core.biologicalSexForCalculation;
+  const age = core.ageAtEvaluation;
+  const derived = derivedOf(core);
+  const composition = core.composition;
+
+  const weight = assessWeight(core.weightKg, core.heightCm);
+  const bmi = assessBmi(core.bmi, core.bmiClassification);
+  const skeletal = assessSkeletalMusclePercent(derived.skeletalMusclePercent, sex, age);
+  const visceral = assessVisceralFat(composition?.visceralFatLevel ?? null);
+  const basal = assessBasalMetabolicRate(composition?.basalMetabolicRateKcal ?? null, core.bmrReference, sex, age, core.heightCm);
+  const waistHip = assessWaistHipRatio(core.waistHipRatio, sex, age);
+
   const left: MetricRow[] = [
-    { label: 'Peso', value: num(core.weightKg, ' kg'), classification: null },
-    { label: 'Músculo esquelético', value: num(core.composition?.skeletalMuscleMassKg ?? null, ' kg'), classification: null },
-    { label: 'Massa muscular', value: num(core.composition?.muscleMassKg ?? null, ' kg'), classification: null },
-    { label: 'Água corporal', value: num(core.composition?.bodyWaterPercent ?? null, '%'), classification: null },
-    { label: 'Massa óssea', value: num(core.composition?.boneMassKg ?? null, ' kg'), classification: null },
-    { label: 'Idade corporal', value: num(core.composition?.bodyAgeYears ?? null, ' anos'), classification: null },
+    { label: 'Peso', value: num(core.weightKg, ' kg'), ...weight },
+    { label: 'Músculo esquelético', value: percentAndKg(derived.skeletalMusclePercent, derived.skeletalMuscleMassKg), ...skeletal },
+    { label: 'Massa muscular', value: percentAndKg(derived.musclePercent, derived.muscleMassKg), classification: null },
+    { label: 'Água corporal', value: percentAndKg(composition?.bodyWaterPercent ?? null, derived.bodyWaterKg), classification: null },
+    { label: 'Massa óssea', value: num(composition?.boneMassKg ?? null, ' kg'), classification: null },
+    { label: 'Idade corporal', value: num(composition?.bodyAgeYears ?? null, ' anos'), classification: bodyAgeDifference(composition?.bodyAgeYears ?? null, age) },
   ];
   const right: MetricRow[] = [
-    { label: 'IMC', value: core.bmi != null ? String(core.bmi) : '—', classification: core.bmiClassification },
-    { label: 'Gordura corporal', value: num(core.bodyFatPercent, '%'), classification: null },
-    { label: 'Gordura visceral', value: num(core.composition?.visceralFatLevel ?? null, ''), classification: null },
-    { label: 'Metabolismo basal', value: num(core.composition?.basalMetabolicRateKcal ?? null, ' kcal'), classification: null },
-    { label: 'Relação cintura/quadril', value: num(core.waistHipRatio, ''), classification: null },
+    { label: 'IMC', value: num(core.bmi, ' kg/m²'), ...bmi },
+    { label: 'Gordura corporal', value: percentAndKg(core.bodyFatPercent, derived.fatMassKg), classification: null },
+    { label: 'Gordura visceral', value: num(composition?.visceralFatLevel ?? null, ''), ...visceral },
+    { label: 'Metabolismo basal', value: num(composition?.basalMetabolicRateKcal ?? null, ' kcal'), ...basal },
+    { label: 'Relação cintura/quadril', value: num(core.waistHipRatio, ''), ...waistHip },
   ];
   return `<h2 class="section-title">Composição corporal</h2><div class="composition-tables">${metricTableHtml(left)}${metricTableHtml(right)}</div>`;
 }
 
-/** "Outros indicadores" da referência — só sinais vitais liberados pro profissional; "Avaliação" fica vazia (sem regra de classificação implementada). */
+/** "Outros indicadores" da referência — só sinais vitais liberados pro profissional; só a pressão arterial tem classificação. */
 function outrosIndicadoresTable(data: ProfessionalEvaluationReportData): string {
   const rows: MetricRow[] = [];
   if (data.bloodPressureSystolic != null || data.bloodPressureDiastolic != null) {
-    rows.push({ label: 'Pressão arterial', value: `${data.bloodPressureSystolic ?? '—'}/${data.bloodPressureDiastolic ?? '—'} mmHg`, classification: null });
+    rows.push({
+      label: 'Pressão arterial',
+      value: `${data.bloodPressureSystolic ?? '—'}/${data.bloodPressureDiastolic ?? '—'} mmHg`,
+      ...assessBloodPressure(data.bloodPressureSystolic, data.bloodPressureDiastolic),
+    });
   }
   if (data.heartRate != null) rows.push({ label: 'Frequência cardíaca', value: num(data.heartRate, ' bpm'), classification: null });
   if (data.glucose != null) rows.push({ label: 'Glicemia', value: num(data.glucose, ' mg/dL'), classification: null });
@@ -346,7 +399,7 @@ function tetraCompartimentalPie(core: EvaluationReportCore): string {
   }
   // Sem músculo esquelético ou massa óssea o "restante" não é massa residual —
   // engoliria o que falta (já saiu "residual 70%"). Sem os quatro, não desenha.
-  const musculo = percentOf(core.composition?.skeletalMuscleMassKg ?? null, weight);
+  const musculo = derivedOf(core).skeletalMusclePercent;
   const ossea = percentOf(core.composition?.boneMassKg ?? null, weight);
   if (musculo == null || ossea == null) {
     return `<div class="chart-card"><h3 class="chart-title">Composição corporal — Tetra-compartimental</h3><div class="chart-empty">Sem músculo esquelético e massa óssea registrados nesta avaliação.</div></div>`;
