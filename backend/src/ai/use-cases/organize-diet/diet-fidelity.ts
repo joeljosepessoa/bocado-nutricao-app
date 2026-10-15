@@ -32,6 +32,8 @@ export const DIET_WARNINGS = {
     label ? `O dia "${label}" veio sem nenhuma refeição e não foi incluído — confira o texto.` : 'Um dia sem nenhuma refeição não foi incluído — confira o texto.',
   uncovered: (line: string) => `Trecho não organizado: "${line}" — revisar.`,
   dayLabelDiscarded: (label: string) => `O título "${label}" não está escrito no texto — foi criado pela IA e descartado. Confira o nome do dia.`,
+  optionsWithOtherBlocks:
+    'As opções desta refeição vieram junto com outro bloco "escolher 1" (ex.: acréscimo) — ficaram como um bloco "escolher 1", com as mesmas opções. Confira.',
 } as const;
 
 export interface CheckedDietItem {
@@ -609,7 +611,9 @@ function itemLabel(item: AiDietItem): string {
  */
 export function checkDietFidelity(input: string, organized: AiOrganizedDiet): CheckedDiet {
   const source = normalizeDietText(input);
-  const lines = sourceLines(input);
+  // Lista copiada de PDF às vezes chega com as opções coladas numa linha só
+  // ("• Opção 1: … • Opção 2: …"): cada "• Opção N" volta a começar linha, como foi escrita.
+  const lines = sourceLines(input.replace(/[ \t]+(•\s*op[cç][aã]o\s*\d)/gi, '\n$1'));
   // As regras de "juntos" x "alternativas" olham a linha como foi escrita, não como o PDF a quebrou.
   const written = logicalLines(
     lines,
@@ -734,6 +738,14 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
       const match = label ? OPTION_PATTERN.exec(normalizeDietText(label)) : null;
       return match ? Number(match[1]) : null;
     };
+    // Onde este bloco está escrito: as linhas com mais alimentos dele. O mesmo par
+    // pode vir junto em outra refeição ("35 g de aveia + … 150 g de banana" no café)
+    // e como alternativas aqui ("150 g de banana / … / 35 g de aveia" no acréscimo) —
+    // a prova de "juntos" só vale na linha do próprio bloco.
+    const blockCores = [...new Set(cores.flat().filter((x): x is string => !!x))];
+    const hits = (line: SourceLine) => blockCores.filter((core) => containsPhrase(line.norm, core)).length;
+    const best = Math.max(0, ...written.map(hits));
+    const groupLines = best >= 2 ? written.filter((line) => hits(line) === best) : written;
     for (let c1 = 0; c1 < cores.length; c1++) {
       for (let c2 = c1 + 1; c2 < cores.length; c2++) {
         const option1 = choiceOption(c1);
@@ -741,7 +753,7 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
         // Coocorrência numa opção numerada só prova relação dentro dessa opção.
         // Escolhas numeradas diferentes são alternativas completas entre si.
         if (option1 !== null && option2 !== null && option1 !== option2) continue;
-        const scopedLines = option1 !== null && option1 === option2 ? written.filter((line) => line.option === option1) : written;
+        const scopedLines = option1 !== null && option1 === option2 ? written.filter((line) => line.option === option1) : groupLines;
         for (const a of cores[c1]) {
           for (const b of cores[c2]) {
             if (!a || !b || a === b || cores[c2].includes(a) || cores[c1].includes(b)) continue;
@@ -821,11 +833,15 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
         if (!notes) warnings.push(DIET_WARNINGS.noteDiscarded);
       }
 
-      if (meal.groups.some((g) => g.kind === 'meal_options') && meal.groups.length > 1) {
-        problems.push(`${where}: refeição com opções completas não pode ter outros blocos.`);
-      }
+      // Opções completas + outro bloco ("Opção 1/2/3" e "Acréscimo (escolher 1)"): a dieta
+      // guarda opções completas só como bloco único da refeição. "Escolher 1 opção" e
+      // "escolher 1 acréscimo" são dois blocos "escolher 1" — as opções viram um deles,
+      // com os mesmos alimentos e os mesmos rótulos, em vez de recusar a dieta.
+      const mixesOptions = meal.groups.some((g) => g.kind === 'meal_options') && meal.groups.length > 1;
+      if (mixesOptions) warnings.push(DIET_WARNINGS.optionsWithOtherBlocks);
+      const mealGroups = mixesOptions ? meal.groups.map((g) => (g.kind === 'meal_options' ? { ...g, kind: 'alternatives' as const } : g)) : meal.groups;
 
-      const groups: CheckedGroup[] = meal.groups.map((group, g) => {
+      const groups: CheckedGroup[] = mealGroups.map((group, g) => {
         requireLabel(group.label, `${where}: o bloco`);
         const cores: Array<Array<string | null>> = [];
         const choices: CheckedChoice[] = group.choices.map((choice, c) => {

@@ -309,6 +309,52 @@ describe('v2 — a dieta real do profissional (dia de treino/descanso, opções,
     expect(rejection(split, USER_EXAMPLE_DIET)).toMatch(/"135 g de peito de frango" e "10 g de azeite" aparecem juntos no texto/);
   });
 
+  it('mesmo par junto numa refeição e como alternativas em outra: vale a linha do próprio bloco', () => {
+    // Caso real: "35 g de aveia + … 150 g de banana" no café e "150 g de banana / … / 35 g de aveia" no acréscimo.
+    const text = [
+      'CAFÉ DA MANHÃ',
+      '35 g de aveia + 100 ml de leite + 150 g de banana',
+      '',
+      'LANCHE DA TARDE',
+      'Acréscimo (escolher 1): 150 g de banana / 50 g de pão integral (2 fatias) / 35 g de aveia.',
+    ].join('\n');
+    const snack: AiGroup = {
+      kind: 'alternatives',
+      label: 'Acréscimo',
+      choices: [
+        { label: null, items: [item('150 g de banana', 'banana', 150, 'g')] },
+        { label: null, items: [{ ...item('50 g de pão integral', 'pão integral', 50, 'g'), notes: '2 fatias' }] },
+        { label: null, items: [item('35 g de aveia', 'aveia', 35, 'g')] },
+      ],
+    };
+    const organized = diet([
+      meal('CAFÉ DA MANHÃ', [item('35 g de aveia', 'aveia', 35, 'g'), item('100 ml de leite', 'leite', 100, 'ml'), item('150 g de banana', 'banana', 150, 'g')]),
+      { name: 'LANCHE DA TARDE', time: null, notes: null, groups: [snack] },
+    ]);
+    expect(() => checkDietFidelity(text, organized)).not.toThrow();
+
+    // No café, onde estão juntos, separar continua recusado.
+    const splitBreakfast = diet([
+      {
+        name: 'CAFÉ DA MANHÃ',
+        time: null,
+        notes: null,
+        groups: [
+          {
+            kind: 'alternatives',
+            label: null,
+            choices: [
+              { label: null, items: [item('35 g de aveia', 'aveia', 35, 'g'), item('100 ml de leite', 'leite', 100, 'ml')] },
+              { label: null, items: [item('150 g de banana', 'banana', 150, 'g')] },
+            ],
+          },
+        ],
+      },
+      { name: 'LANCHE DA TARDE', time: null, notes: null, groups: [snack] },
+    ]);
+    expect(rejection(splitBreakfast, text)).toMatch(/aparecem juntos no texto, mas foram separados em escolhas diferentes/);
+  });
+
   it('nome de dia que não está no texto NÃO recusa a dieta: o título criado pela IA é descartado, com aviso, e o dia fica só com o tipo', () => {
     const day = faithfulUserDiet();
     day.days[1].label = 'DIA DE FOLGA';
@@ -409,7 +455,7 @@ describe('v2 — regras da estrutura', () => {
     expect(rejection(organized, text)).toMatch(/foi marcado como "escolha 1", mas o texto não indica escolha/);
   });
 
-  it('opções completas junto com outro bloco são recusadas', () => {
+  it('"opções completas" inventadas num texto sem escolha continuam recusadas, mesmo junto com outro bloco', () => {
     const organized = diet([
       {
         name: 'ALMOÇO',
@@ -418,7 +464,52 @@ describe('v2 — regras da estrutura', () => {
         groups: [{ kind: 'meal_options', label: null, choices: [{ label: null, items: [item('150 g arroz', 'Arroz', 150, 'g')] }] }, fixed([item('100 g feijão', 'Feijão', 100, 'g')])],
       },
     ]);
-    expect(rejection(organized, text)).toMatch(/opções completas não pode ter outros blocos/);
+    expect(rejection(organized, text)).toMatch(/foi marcado como "escolha 1", mas o texto não indica escolha/);
+  });
+
+  it('opções completas + acréscimo na mesma refeição: as opções viram um bloco "escolher 1", com aviso', () => {
+    const snackText = [
+      'LANCHE DA TARDE — ESCOLHER 1 OPÇÃO',
+      '• Opção 1: 150 g de queijo cottage + 30 g de castanhas.',
+      '• Opção 2: 170 g de iogurte grego + 25 g de amendoim.',
+      'Acréscimo (escolher 1): 150 g de banana / 35 g de aveia.',
+    ].join('\n');
+    const organized = diet([
+      {
+        name: 'LANCHE DA TARDE',
+        time: null,
+        notes: null,
+        groups: [
+          {
+            kind: 'meal_options',
+            label: null,
+            choices: [
+              { label: 'Opção 1', items: [item('150 g de queijo cottage', 'queijo cottage', 150, 'g'), item('30 g de castanhas', 'castanhas', 30, 'g')] },
+              { label: 'Opção 2', items: [item('170 g de iogurte grego', 'iogurte grego', 170, 'g'), item('25 g de amendoim', 'amendoim', 25, 'g')] },
+            ],
+          },
+          {
+            kind: 'alternatives',
+            label: 'Acréscimo',
+            choices: [{ label: null, items: [item('150 g de banana', 'banana', 150, 'g')] }, { label: null, items: [item('35 g de aveia', 'aveia', 35, 'g')] }],
+          },
+        ],
+      },
+    ]);
+    const checked = checkDietFidelity(snackText, organized);
+    const snack = checked.days[0].meals[0];
+    expect(snack.groups.map((g) => [g.kind, g.label, g.choices.map((c) => c.label)])).toEqual([
+      ['alternatives', null, ['Opção 1', 'Opção 2']],
+      ['alternatives', 'Acréscimo', [null, null]],
+    ]);
+    expect(snack.groups[0].choices[1].items.map((i) => i.sourceText)).toEqual(['170 g de iogurte grego', '25 g de amendoim']);
+    expect(snack.warnings).toContain(DIET_WARNINGS.optionsWithOtherBlocks);
+
+    // Item de uma opção trocado para outra continua recusado depois da conversão.
+    const mixed = structuredClone(organized);
+    const [first, second] = mixed.days[0].meals[0].groups[0].choices;
+    first.items.push(second.items.pop()!);
+    expect(rejection(mixed, snackText)).toMatch(/"25 g de amendoim" não faz parte da Opção 1/);
   });
 });
 
@@ -460,6 +551,18 @@ describe('dieta real com opções em quase todas as refeições e "(patinho ou c
       ['LANCHE ANTES DO JANTAR', [['fixed', [null]]]],
       ['JANTAR', threeOptions],
     ]);
+  });
+
+  it('opções coladas numa linha só ("• Opção 1: … • Opção 2: …", como alguns PDFs copiam) contam como linhas separadas', () => {
+    const glued = OPTIONS_EXAMPLE_DIET.replace(/\n(Opção [23]:)/g, ' • $1').replace(/^(Opção 1:)/gm, '• $1');
+    expect(glued).toContain('5 g de psyllium. • Opção 2: Omelete');
+    expect(checkDietFidelity(glued, faithfulOptionsDiet()).warnings).toEqual([]);
+
+    // Opções misturadas continuam recusadas com o texto colado.
+    const mixed = faithfulOptionsDiet();
+    const lunch = mixed.days[0].meals[1].groups[0].choices;
+    lunch[0].items.push(lunch[1].items.pop()!);
+    expect(rejection(mixed, glued)).toMatch(/não faz parte da Opção 1/);
   });
 
   it('todo alimento, quantidade, faixa, unidade, "à vontade" e observação sai exatamente como escrito', () => {
