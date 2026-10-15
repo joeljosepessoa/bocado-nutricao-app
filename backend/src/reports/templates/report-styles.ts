@@ -38,6 +38,9 @@ export const REPORT_CSS = `
   }
   h2.section-title:first-child { margin-top: 0; }
   h3.chart-title { font-size: 11.5px; color: #123c2e; margin: 0 0 6px; font-weight: 700; }
+  .chart-subtitle { font-size: 9px; color: #8b988e; margin: -4px 0 6px; }
+  .sources-note { font-size: 8.5px; color: #8b988e; margin-top: 10px; line-height: 1.45; }
+  .results-note { font-size: 9px; color: #8b988e; margin-top: 6px; font-style: italic; }
 
   .identity-grid, .metric-grid, .measure-grid, .comp-grid {
     display: grid;

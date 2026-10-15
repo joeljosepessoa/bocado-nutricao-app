@@ -104,6 +104,8 @@ export class EvolutionPointDto {
   measurements!: EvolutionMeasurementsPoint | null;
 
   skinfoldSumMm!: number | null;
+  /** Valor de cada local de dobra — os gráficos de evolução das dobras precisam de um por um. */
+  skinfolds!: SkinfoldsMmFields | null;
   protocolCode!: string | null;
   protocolVersion!: number | null;
 
@@ -148,6 +150,10 @@ export class EvolutionPointDto {
 
     dto.measurements = evaluation.measurements;
     dto.skinfoldSumMm = computeSkinfoldSumMm(evaluation.protocol?.requiredSkinfoldSites, evaluation.skinfolds);
+    // Só os locais de dobra (o registro do banco traz também os identificadores).
+    dto.skinfolds = evaluation.skinfolds
+      ? (Object.fromEntries(Object.values(SKINFOLD_FIELD_BY_SITE).map((field) => [field, evaluation.skinfolds![field] ?? null])) as unknown as SkinfoldsMmFields)
+      : null;
     dto.protocolCode = evaluation.protocol?.code ?? null;
     dto.protocolVersion = evaluation.protocol?.version ?? null;
     dto.bioimpedance = evaluation.bioimpedance;

@@ -269,6 +269,10 @@ export class ReportsService {
           bodyWaterPercent: point.bioimpedance?.bodyWaterPercent ?? null,
           bodyAgeYears: point.bioimpedance?.bodyAgeYears ?? null,
           boneMassKg: point.bioimpedance?.boneMassKg ?? null,
+          measurements: point.measurements,
+          bloodPressureSystolic: point.bloodPressureSystolic,
+          bloodPressureDiastolic: point.bloodPressureDiastolic,
+          skinfolds: point.skinfolds,
         }));
 
         const skinfoldSiteCount = fullEvaluation.protocol?.requiredSkinfoldSites?.length ?? 0;

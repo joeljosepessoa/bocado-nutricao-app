@@ -15,12 +15,20 @@ describe('renderLineChartSvg', () => {
       labels: ['jan', 'fev', 'mar'],
       series: [{ label: 'Peso', unit: 'kg', color: '#1f7a5c', values: [60, null, 58] }],
     });
-    // 2 pontos com dado → 2 círculos, mas 2 comandos "M" (moveTo) porque o
-    // null no meio interrompe o traçado em vez de ligar os dois extremos
+    // 2 pontos com dado → 2 círculos, e nenhuma linha ligando os dois extremos:
+    // o null no meio interrompe o traçado (sem segmento, não há linha a desenhar)
     expect((html.match(/<circle/g) ?? []).length).toBe(2);
-    const pathMatch = html.match(/<path d="([^"]+)"/);
+    expect(html).not.toMatch(/<path d="[^"]*L/);
+
+    // Com um segmento de verdade, a linha aparece e continua quebrando no null.
+    const withSegment = renderLineChartSvg({
+      labels: ['jan', 'fev', 'mar', 'abr'],
+      series: [{ label: 'Peso', unit: 'kg', color: '#1f7a5c', values: [60, 59, null, 58] }],
+    });
+    const pathMatch = withSegment.match(/<path d="([^"]+)"/);
     expect(pathMatch).not.toBeNull();
     expect((pathMatch![1].match(/M/g) ?? []).length).toBe(2);
+    expect((pathMatch![1].match(/L/g) ?? []).length).toBe(1);
   });
 
   it('sem nenhum valor numérico em nenhuma série, mostra mensagem de "sem dados" em vez de um SVG vazio', () => {

@@ -175,6 +175,9 @@ describe('Templates de relatório', () => {
       bloodPressureDiastolic: 80,
     },
   };
+  // A série inclui a avaliação atual (última): medidas, pressão e dobras dela
+  // são as mesmas do núcleo — como o serviço monta na vida real.
+  core.series[2] = { ...core.series[2], measurements: core.measurements, bloodPressureSystolic: 120, bloodPressureDiastolic: 80, skinfolds: core.skinfolds };
 
   function countOccurrences(haystack: string, needle: string): number {
     return haystack.split(needle).length - 1;
@@ -242,7 +245,7 @@ describe('Templates de relatório', () => {
     expect(html).not.toContain('dia(s) entre avaliações');
   });
 
-  it('página 2 traz os 5 gráficos de evolução exigidos (peso, composição em 2 pizzas, %, água, idade), todos com dado real', () => {
+  it('página 2 traz peso, as 2 pizzas de composição, % e água; idade corporal vai para a página 3, como no laudo de referência', () => {
     const data: ProfessionalEvaluationReportData = { ...core, generatedAt: '2026-01-15T00:00:00Z' };
     const html = renderProfessionalReportHtml(data);
 
@@ -253,8 +256,9 @@ describe('Templates de relatório', () => {
     expect(html).toContain('Músculo e gordura em percentual');
     expect(html).toContain('Água corporal');
     expect(html).toContain('Idade corporal');
-    // 3 pontos na série → gráficos de linha reais (peso, %, água, idade = 4 svgs de linha)
-    expect(html.match(/<svg[^>]*class="chart-svg"/g)?.length).toBe(4);
+    // 3 pontos na série → linhas reais na página 2 (peso, %, água) e na página 3 (tronco, pressão) = 5
+    expect(html.match(/<svg[^>]*class="chart-svg"/g)?.length).toBe(5);
+    expect(html.indexOf('Idade corporal</h3>')).toBeGreaterThan(html.indexOf('Evolução das medidas'));
     // composição corporal atual (instantâneo, não depende da série) → 2 pizzas sempre que houver dado
     expect(html.match(/<svg[^>]*class="pie-chart-svg"/g)?.length).toBe(2);
   });
@@ -355,12 +359,12 @@ describe('Templates de relatório', () => {
     expect(html).toContain('Massa gorda: 24,5%'); // legenda da pizza
   });
 
-  it('tabela de dobras traz só os locais de dobra — identificadores do registro nunca vão para o relatório', () => {
+  it('dobras trazem só os locais de dobra — identificadores do registro nunca vão para o relatório', () => {
     // O serviço entrega o registro como veio do banco, com id e evaluationId junto das medidas.
     const rawRow = { id: '512046f4-f79c-4f46-9758-841aa581b3b8', evaluationId: '8679070d-c115-4631-99ba-5666ab12dc4f', ...core.skinfolds! };
     const data = { ...core, generatedAt: '2026-01-15T00:00:00Z', skinfolds: rawRow } as ProfessionalEvaluationReportData;
     const html = renderProfessionalReportHtml(data);
-    expect(html).toContain('<td>Tórax</td><td class="num">8 mm</td>');
+    expect(html).toContain('Tórax: 8 mm');
     expect(html).not.toContain('512046f4');
     expect(html).not.toContain('8679070d');
     expect(html).not.toContain('evaluationId');
@@ -378,10 +382,13 @@ describe('Templates de relatório', () => {
     };
     const html = renderProfessionalReportHtml(singlePointData);
 
-    // peso, %, água, idade → cartão de valor único (4); as 2 pizzas usam o
-    // instantâneo atual, não a série, então continuam aparecendo normalmente
-    expect(html).not.toContain('class="chart-svg"');
-    expect(countOccurrences(html, 'class="chart-single-value"')).toBe(4);
+    // peso, % e água (página 2) → cartão de valor único (3); as 2 pizzas usam o
+    // instantâneo atual, não a série, então continuam aparecendo normalmente.
+    // Na página 3, tronco e pressão marcam o ponto único (sem linha) e as barras
+    // desenham a coluna da avaliação.
+    expect(countOccurrences(html, 'class="chart-single-value"')).toBe(3);
+    expect(html.match(/<svg[^>]*class="chart-svg"/g)?.length).toBe(2);
+    expect(html).not.toContain('<path d=');
     expect(html.match(/<svg[^>]*class="pie-chart-svg"/g)?.length).toBe(2);
     expect(html).not.toContain('class="chart-empty"'); // há dado (1 ponto), então não é "sem dados"
   });
@@ -415,18 +422,33 @@ describe('Templates de relatório', () => {
     // série vazia — as pizzas usam `core` diretamente (avaliação atual tem
     // dado no fixture), então continuam aparecendo.
     expect(html).not.toContain('class="chart-svg"');
-    expect(countOccurrences(html, 'class="chart-single-value"')).toBe(4);
+    expect(countOccurrences(html, 'class="chart-single-value"')).toBe(3);
     expect(html.match(/<svg[^>]*class="pie-chart-svg"/g)?.length).toBe(2);
+    expect(html).toContain('Sem dados suficientes para este gráfico.'); // página 3 sem medidas registradas
   });
 
   it('página 3 mostra medidas de tronco, membros e dobras; sem fotos, a página 4 não é gerada', () => {
     const data: ProfessionalEvaluationReportData = { ...core, generatedAt: '2026-01-15T00:00:00Z', photos: [] };
     const html = renderProfessionalReportHtml(data);
 
-    expect(html).toContain('Medidas do tronco');
-    expect(html).toContain('Membros superiores');
-    expect(html).toContain('Membros inferiores');
-    expect(html).toContain('Dobras cutâneas');
+    expect(html).toContain('Evolução das medidas');
+    for (const title of ['Idade corporal', 'Medidas do tronco', 'Membros superiores', 'Membros inferiores', 'Pressão arterial', 'Dobras cutâneas']) {
+      expect(html).toContain(`<h3 class="chart-title">${title}</h3>`);
+    }
+    // Membros e dobras em barras empilhadas; a soma das 7 dobras atuais (8+10+12+9+15+11+14) no topo da coluna.
+    expect(html.match(/<svg[^>]*class="chart-svg bar-chart-svg"/g)?.length).toBe(4); // idade, superiores, inferiores, dobras
+    expect(html).toContain('font-weight="700">79</text>');
+    // Valores atuais na legenda, com vírgula.
+    expect(html).toContain('Braço esq.: 27,5 cm');
+    expect(html).toContain('Panturrilha esq.: 33,5 cm');
+    expect(html).toContain('Abdominal: 15 mm');
+    // Pressão com as linhas de referência.
+    expect(html).toContain('Sistólica até 120');
+    expect(html).toContain('Diastólica até 80');
+    // Fontes das faixas de referência no fim.
+    expect(html).toContain('Fontes: peso de referência e IMC — Organização Mundial da Saúde');
+    // As tabelas antigas (atual/anterior/variação) saíram.
+    expect(html).not.toContain('<th class="num">Anterior</th>');
     // 2 quebras de página (gráficos, medidas) — nenhuma terceira pra fotos
     expect(countOccurrences(html, 'class="page-break"')).toBe(2);
     expect(html).not.toContain('page-title">Fotos');

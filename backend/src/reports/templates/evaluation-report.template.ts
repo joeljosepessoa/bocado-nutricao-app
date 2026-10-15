@@ -1,5 +1,5 @@
 import { REPORT_CSS } from './report-styles';
-import { formatShortDate, renderMetricChart, renderPieChartSvg } from './report-charts';
+import { formatShortDate, renderBarChartSvg, renderChartCard, renderLineChartSvg, renderMetricChart, renderPieChartSvg } from './report-charts';
 import {
   assessBasalMetabolicRate,
   assessBloodPressure,
@@ -356,6 +356,7 @@ function pageOne(
   ${identityGrid(core, protocolMethodLabel)}
   ${resumoSection(core, last, overall)}
   ${compositionTables(core)}
+  <div class="results-note">Estes resultados são um retrato desta avaliação. Use-os junto com o acompanhamento do seu nutricionista, do seu médico ou do profissional que cuida de você.</div>
   ${includeMeasurementsGrid ? measurementsGrid(core.measurements) : ''}
   ${extraBody}`;
 }
@@ -432,11 +433,6 @@ function evolutionChartsPage(data: ProfessionalEvaluationReportData): string {
 
   const waterChart = renderMetricChart('Água corporal', labels, [{ label: 'Água corporal', unit: '%', color: CHART_GREEN, values: series.map((p) => p.bodyWaterPercent) }]);
 
-  const ageChart = renderMetricChart('Idade corporal', labels, [
-    { label: 'Idade real', unit: 'anos', color: CHART_GREEN, values: series.map((p) => p.ageAtEvaluation) },
-    { label: 'Idade corporal', unit: 'anos', color: CHART_AMBER, values: series.map((p) => p.bodyAgeYears) },
-  ]);
-
   return `
   <div class="page-break">
     <h1 class="page-title">Evolução gráfica</h1>
@@ -446,53 +442,25 @@ function evolutionChartsPage(data: ProfessionalEvaluationReportData): string {
       ${tetraCompartimentalPie(data)}
       ${percentChart}
       ${waterChart}
-      ${ageChart}
     </div>
   </div>`;
 }
 
-// --- Página 3 — medidas e dobras (só profissional) --------------------------
+// --- Página 3 — evolução das medidas, da pressão e das dobras (só profissional) ---
 
-function measurementsTable(
-  title: string,
-  keys: Array<keyof ReportMeasurements>,
-  current: ReportMeasurements | null,
-  previous: ReportMeasurements | null,
-): string {
-  if (!current) return '';
-  const rows = keys
-    .filter((key) => current[key] != null)
-    .map((key) => {
-      const curVal = current[key];
-      const prevVal = previous?.[key] ?? null;
-      const delta = prevVal != null && curVal != null ? Math.round((curVal - prevVal) * 100) / 100 : null;
-      const deltaCell =
-        delta == null
-          ? '<td class="num">—</td>'
-          : `<td class="num ${delta < 0 ? 'delta-down' : delta > 0 ? 'delta-up' : ''}">${signed(delta, ' cm')}</td>`;
-      return `<tr><td>${MEASUREMENT_LABELS[key]}</td><td class="num">${num(curVal, ' cm')}</td><td class="num">${num(prevVal, ' cm')}</td>${deltaCell}</tr>`;
-    })
-    .join('');
-  if (!rows) return '';
-  return `
-    <h2 class="section-title">${escapeHtml(title)}</h2>
-    <table class="data-table">
-      <thead><tr><th>Medida</th><th class="num">Atual</th><th class="num">Anterior</th><th class="num">Variação</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
-}
+const BAR_COLORS = ['#6fa8c9', '#8fc9a8', '#e0a458', '#5b7f9e'];
 
-const SKINFOLD_LABELS: Record<string, string> = {
-  chestMm: 'Tórax',
-  axillaryMidMm: 'Axilar média',
-  subscapularMm: 'Subescapular',
-  bicepsMm: 'Bíceps',
-  tricepsMm: 'Tríceps',
-  abdominalMm: 'Abdominal',
-  suprailiacMm: 'Supra-ilíaca',
-  thighMm: 'Coxa',
-  calfMm: 'Panturrilha',
-};
+const SKINFOLD_SERIES: Array<{ key: keyof NonNullable<ReportSeriesPoint['skinfolds']>; label: string; color: string }> = [
+  { key: 'chestMm', label: 'Tórax', color: '#8e9be6' },
+  { key: 'axillaryMidMm', label: 'Axilar média', color: '#e58d8d' },
+  { key: 'tricepsMm', label: 'Tríceps', color: '#9fcf7f' },
+  { key: 'bicepsMm', label: 'Bíceps', color: '#f2cf86' },
+  { key: 'subscapularMm', label: 'Subescapular', color: '#f0a07c' },
+  { key: 'abdominalMm', label: 'Abdominal', color: '#f5e27a' },
+  { key: 'suprailiacMm', label: 'Supra-ilíaca', color: '#5cc0d6' },
+  { key: 'thighMm', label: 'Coxa', color: '#e5c040' },
+  { key: 'calfMm', label: 'Panturrilha', color: '#c9a99a' },
+];
 
 const BODY_FAT_SOURCE_LABELS: Record<string, string> = {
   skinfolds: 'dobras cutâneas',
@@ -500,72 +468,120 @@ const BODY_FAT_SOURCE_LABELS: Record<string, string> = {
   manual: 'informado manualmente',
 };
 
-function skinfoldsSection(data: ProfessionalEvaluationReportData): string {
-  const skinfolds = data.skinfolds;
-  // Só os locais de dobra conhecidos: o registro que vem do banco traz também
-  // os identificadores internos, que não são medida e não podem ir para o papel.
-  const rows = skinfolds
-    ? Object.keys(SKINFOLD_LABELS)
-        .map((key) => [key, (skinfolds as unknown as Record<string, unknown>)[key]] as const)
-        .filter((entry): entry is readonly [string, number] => typeof entry[1] === 'number')
-        .map(([k, v]) => `<tr><td>${SKINFOLD_LABELS[k]}</td><td class="num">${v} mm</td></tr>`)
-        .join('')
-    : '';
-
-  if (!rows) {
-    return `<h2 class="section-title">Dobras cutâneas</h2><div class="comparison-empty">Sem dobras registradas nesta avaliação.</div>`;
-  }
-
-  const evolutionNote = data.previous?.skinfolds
-    ? '<div class="comparison-empty">Comparação individual disponível apenas quando o mesmo protocolo foi usado nas duas avaliações.</div>'
-    : '';
-
-  return `
-    <h2 class="section-title">Dobras cutâneas</h2>
-    <table class="data-table"><thead><tr><th>Local</th><th class="num">Medida</th></tr></thead><tbody>${rows}</tbody></table>
-    <div style="font-size:10px;color:#8b988e;">Protocolo: ${escapeHtml(data.protocolLabel ?? 'não informado')} · Fonte do %gordura: ${escapeHtml(BODY_FAT_SOURCE_LABELS[data.bodyFatPercentSource ?? ''] ?? data.bodyFatPercentSource ?? '—')}</div>
-    ${evolutionNote}`;
+/** Rótulo da legenda com o valor da avaliação atual — o número fica no papel, não só a cor. */
+function withCurrent(label: string, value: number | null | undefined, unit: string): string {
+  return value == null ? label : `${label}: ${formatPlain(value)} ${unit}`;
 }
 
-
-/** Só sistólica/diastólica, numa linha — a página 1 já mostra os sinais vitais completos (freq. cardíaca, glicemia); repetir tudo aqui estouraria a página. */
-function bloodPressureLine(data: ProfessionalEvaluationReportData): string {
-  if (data.bloodPressureSystolic == null && data.bloodPressureDiastolic == null) {
-    return `<h2 class="section-title">Pressão arterial</h2><div class="comparison-empty">Sem pressão arterial registrada nesta avaliação.</div>`;
-  }
-  const prev = data.previous;
-  const prevText =
-    prev && (prev.bloodPressureSystolic != null || prev.bloodPressureDiastolic != null)
-      ? ` · anterior (${formatDate(prev.evaluatedAt)}): ${prev.bloodPressureSystolic ?? '—'}/${prev.bloodPressureDiastolic ?? '—'} mmHg`
-      : '';
-  return `<h2 class="section-title">Pressão arterial</h2><div class="comparison-row"><div>Atual: <b>${data.bloodPressureSystolic ?? '—'}/${data.bloodPressureDiastolic ?? '—'} mmHg</b>${prevText}</div></div>`;
+/** Série de uma medida ao longo das avaliações (null onde ela não foi registrada). */
+function measureSeries(series: ReportSeriesPoint[], key: keyof ReportMeasurements): Array<number | null> {
+  return series.map((point) => point.measurements?.[key] ?? null);
 }
 
-function measurementsAndSkinfoldsPage(data: ProfessionalEvaluationReportData): string {
-  const previousMeasurements: ReportMeasurements | null = data.previous?.measurements ?? null;
-  const trunk = measurementsTable('Medidas do tronco', ['chestCm', 'waistCm', 'abdomenCm', 'hipCm'], data.measurements, previousMeasurements);
-  const upper = measurementsTable(
-    'Membros superiores',
-    ['armRightCm', 'armLeftCm', 'forearmRightCm', 'forearmLeftCm'],
-    data.measurements,
-    previousMeasurements,
+function limbsChart(title: string, series: ReportSeriesPoint[], labels: string[], current: ReportMeasurements | null, keys: Array<keyof ReportMeasurements>): string {
+  return renderChartCard(
+    title,
+    'Evolução das medidas em centímetros (cm)',
+    renderBarChartSvg({
+      labels,
+      mode: 'stacked',
+      series: keys.map((key, k) => ({ label: withCurrent(MEASUREMENT_LABELS[key], current?.[key], 'cm'), color: BAR_COLORS[k], values: measureSeries(series, key) })),
+    }),
   );
-  const lower = measurementsTable(
-    'Membros inferiores',
-    ['thighRightCm', 'thighLeftCm', 'calfRightCm', 'calfLeftCm'],
-    data.measurements,
-    previousMeasurements,
+}
+
+/**
+ * Página 3, no modelo do laudo de referência: idade corporal, tronco, membros
+ * superiores e inferiores, pressão arterial e dobras — cada um como gráfico de
+ * evolução — e, no fim, as fontes das faixas de referência do relatório.
+ */
+function evolutionMeasuresPage(data: ProfessionalEvaluationReportData): string {
+  const series = data.series;
+  const labels = series.map((p) => formatShortDate(p.evaluatedAt));
+
+  const age = renderChartCard(
+    'Idade corporal',
+    'Idade avaliada conforme a composição corporal',
+    renderBarChartSvg({
+      labels,
+      mode: 'grouped',
+      series: [
+        { label: 'Idade real', color: CHART_AMBER, values: series.map((p) => p.ageAtEvaluation) },
+        { label: 'Idade corporal', color: '#6fa8c9', values: series.map((p) => p.bodyAgeYears) },
+      ],
+    }),
+  );
+
+  const trunkKeys: Array<keyof ReportMeasurements> = ['chestCm', 'waistCm', 'abdomenCm', 'hipCm'];
+  const trunkSeries = trunkKeys.map((key, k) => ({
+    label: withCurrent(MEASUREMENT_LABELS[key], data.measurements?.[key], 'cm'),
+    unit: 'cm',
+    color: BAR_COLORS[k],
+    values: measureSeries(series, key),
+  }));
+  const trunk = renderChartCard(
+    'Medidas do tronco',
+    'Evolução das medidas em centímetros (cm)',
+    renderLineChartSvg({ labels, series: trunkSeries }).replace(/ \(cm\)<\/span>/g, '</span>'),
+  );
+
+  const upper = limbsChart('Membros superiores', series, labels, data.measurements, ['armLeftCm', 'armRightCm', 'forearmLeftCm', 'forearmRightCm']);
+  const lower = limbsChart('Membros inferiores', series, labels, data.measurements, ['thighLeftCm', 'thighRightCm', 'calfLeftCm', 'calfRightCm']);
+
+  const pressure = renderChartCard(
+    'Pressão arterial',
+    'Evolução da pressão arterial (mmHg)',
+    renderLineChartSvg({
+      labels,
+      series: [
+        { label: withCurrent('Sistólica', data.bloodPressureSystolic, 'mmHg'), unit: 'mmHg', color: '#6fa8c9', values: series.map((p) => p.bloodPressureSystolic ?? null) },
+        { label: withCurrent('Diastólica', data.bloodPressureDiastolic, 'mmHg'), unit: 'mmHg', color: CHART_AMBER, values: series.map((p) => p.bloodPressureDiastolic ?? null) },
+      ],
+      referenceLines: [
+        { value: 120, label: 'Sistólica até 120', color: '#c0504d' },
+        { value: 80, label: 'Diastólica até 80', color: '#c0504d' },
+      ],
+    }).replace(/ \(mmHg\)<\/span>/g, '</span>'),
+  );
+
+  const protocolNote = `<div class="chart-subtitle" style="margin:6px 0 0;">Protocolo: ${escapeHtml(data.protocolLabel ?? 'não informado')} · Fonte do %gordura: ${escapeHtml(
+    BODY_FAT_SOURCE_LABELS[data.bodyFatPercentSource ?? ''] ?? data.bodyFatPercentSource ?? '—',
+  )}</div>`;
+  const skinfolds = renderChartCard(
+    'Dobras cutâneas',
+    'Evolução das dobras cutâneas em milímetros (mm)',
+    renderBarChartSvg({
+      labels,
+      mode: 'stacked',
+      showTotals: true,
+      series: SKINFOLD_SERIES.map((site) => ({
+        label: withCurrent(site.label, data.skinfolds?.[site.key], 'mm'),
+        color: site.color,
+        values: series.map((p) => p.skinfolds?.[site.key] ?? null),
+      })),
+    }) + protocolNote,
   );
 
   return `
   <div class="page-break">
-    <h1 class="page-title">Medidas e dobras</h1>
-    ${trunk || '<h2 class="section-title">Medidas do tronco</h2><div class="comparison-empty">Sem medidas de tronco registradas.</div>'}
-    ${upper || '<h2 class="section-title">Membros superiores</h2><div class="comparison-empty">Sem medidas de membros superiores registradas.</div>'}
-    ${lower || '<h2 class="section-title">Membros inferiores</h2><div class="comparison-empty">Sem medidas de membros inferiores registradas.</div>'}
-    ${bloodPressureLine(data)}
-    ${skinfoldsSection(data)}
+    <h1 class="page-title">Evolução das medidas</h1>
+    <div class="chart-grid-page">
+      ${age}
+      ${trunk}
+      ${upper}
+      ${lower}
+      ${pressure}
+      ${skinfolds}
+    </div>
+    ${sourcesNote()}
   </div>`;
+}
+
+/** De onde vêm as faixas de referência e as contas usadas no relatório. */
+function sourcesNote(): string {
+  return `<div class="sources-note">Fontes: peso de referência e IMC — Organização Mundial da Saúde; % de gordura por dobras — Jackson &amp; Pollock (7 dobras) com a equação de Siri;
+    massa residual — Würch; músculo esquelético e gordura visceral — tabelas Omron Healthcare; metabolismo basal — fórmula escolhida na avaliação (Harris-Benedict ou Mifflin-St. Jeor) nos pesos de referência;
+    relação cintura/quadril — Bray &amp; Gray (1988), por sexo e idade; pressão arterial — Diretriz Brasileira de Hipertensão Arterial.</div>`;
 }
 
 // --- Página 4 — fotos (só profissional) -------------------------------------
@@ -629,7 +645,7 @@ export function renderProfessionalReportHtml(data: ProfessionalEvaluationReportD
   ${page1}
   ${notesBlock}
   ${evolutionChartsPage(data)}
-  ${measurementsAndSkinfoldsPage(data)}
+  ${evolutionMeasuresPage(data)}
   ${photosPage(data)}
 </body>
 </html>`;

@@ -89,6 +89,11 @@ export interface ReportSeriesPoint {
   bodyWaterPercent: number | null;
   bodyAgeYears: number | null;
   boneMassKg: number | null;
+  /** Para os gráficos de evolução das medidas, da pressão e das dobras (página 3). */
+  measurements?: ReportMeasurements | null;
+  bloodPressureSystolic?: number | null;
+  bloodPressureDiastolic?: number | null;
+  skinfolds?: SkinfoldsMmFields | null;
 }
 
 /** Valores da avaliação anterior usados só nas tabelas de evolução da página 3 (profissional). */
