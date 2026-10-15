@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import * as api from '../../api/endpoints';
 import type { Measurements, Skinfolds } from '../../types/api';
 import { Card } from '../../components/Card';
@@ -33,6 +33,8 @@ const BODY_FAT_SOURCE_LABELS = { skinfolds: 'dobras cutâneas', bioimpedance: 'b
 export function EvaluationDetailPage() {
   const { clientId, evaluationId } = useParams<{ clientId: string; evaluationId: string }>();
   const navigate = useNavigate();
+  // Vindo de "Nova avaliação": quantas fotos escolhidas lá não conseguiram subir.
+  const photosFailed = (useLocation().state as { photosFailed?: number } | null)?.photosFailed ?? 0;
   const queryClient = useQueryClient();
   const [reportMessage, setReportMessage] = useState<string | null>(null);
   const [releaseMessage, setReleaseMessage] = useState<string | null>(null);
@@ -173,6 +175,12 @@ export function EvaluationDetailPage() {
         {evaluation.notes ? <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Notas: {evaluation.notes}</div> : null}
       </Card>
 
+      {photosFailed ? (
+        <div role="alert" style={{ fontSize: 13, color: 'var(--color-danger)' }}>
+          A avaliação foi salva, mas {photosFailed === 1 ? '1 foto não foi enviada' : `${photosFailed} fotos não foram enviadas`}. Envie de novo no
+          quadro Fotos.
+        </div>
+      ) : null}
       <EvaluationPhotosCard clientId={clientId!} evaluationId={evaluationId!} photos={evaluation.photos ?? []} />
 
       <Card title="Relatório">

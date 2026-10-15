@@ -13,6 +13,9 @@ vi.mock('../../../api/endpoints', () => ({
   getEvaluation: vi.fn(),
   generateDraftNote: vi.fn(),
   acceptProfessionalAiConsent: vi.fn(),
+  uploadEvaluationPhoto: vi.fn(),
+  getEvaluationPhotoUrl: vi.fn(),
+  deleteEvaluationPhoto: vi.fn(),
 }));
 
 function renderNewEvaluationPage() {
@@ -333,5 +336,64 @@ describe('EvaluationFormPage — dados do modelo de avaliação (método, refer�
 
     expect(await screen.findByText('Para informar músculo em % é preciso preencher o peso em "Dados básicos".')).toBeInTheDocument();
     expect(api.createEvaluation).not.toHaveBeenCalled();
+  });
+});
+
+describe('EvaluationFormPage — fotos', () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+    vi.clearAllMocks();
+    vi.mocked(api.createEvaluation).mockResolvedValue({ id: 'eval-new' } as EvaluationDetail);
+    vi.mocked(api.uploadEvaluationPhoto).mockResolvedValue({ id: 'photo-1', angle: 'front' });
+    // jsdom não gera prévia de imagem: basta um endereço qualquer.
+    URL.createObjectURL = vi.fn(() => 'blob:previa');
+    URL.revokeObjectURL = vi.fn();
+  });
+
+  afterEach(() => {
+    cleanup();
+    sessionStorage.clear();
+  });
+
+  it('nova avaliação: as quatro vistas aparecem no formulário e a foto escolhida sobe depois de salvar', async () => {
+    renderNewEvaluationPage();
+
+    expect(screen.getByText('Vista frontal')).toBeInTheDocument();
+    expect(screen.getByText('Vista lateral esquerda')).toBeInTheDocument();
+    expect(screen.getByText(/enviadas quando você salvar a avaliação/)).toBeInTheDocument();
+
+    const front = new File(['foto'], 'frente.jpg', { type: 'image/jpeg' });
+    const back = new File(['foto'], 'costas.png', { type: 'image/png' });
+    fireEvent.change(screen.getByLabelText('Arquivo da vista frontal'), { target: { files: [front] } });
+    fireEvent.change(screen.getByLabelText('Arquivo da vista posterior'), { target: { files: [back] } });
+    expect(screen.getByRole('img', { name: 'Vista frontal' })).toHaveAttribute('src', 'blob:previa');
+    // Nada sobe antes de a avaliação existir.
+    expect(api.uploadEvaluationPhoto).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText('Altura (cm)'), { target: { value: '165' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() => expect(api.uploadEvaluationPhoto).toHaveBeenCalledTimes(2));
+    expect(api.uploadEvaluationPhoto).toHaveBeenCalledWith('client-1', 'eval-new', 'front', front);
+    expect(api.uploadEvaluationPhoto).toHaveBeenCalledWith('client-1', 'eval-new', 'back', back);
+  });
+
+  it('nova avaliação: arquivo que não é foto é recusado na hora', () => {
+    renderNewEvaluationPage();
+    fireEvent.change(screen.getByLabelText('Arquivo da vista frontal'), { target: { files: [new File(['x'], 'laudo.pdf', { type: 'application/pdf' })] } });
+    expect(screen.getByRole('alert')).toHaveTextContent('Formato não aceito');
+    expect(screen.queryByRole('img', { name: 'Vista frontal' })).not.toBeInTheDocument();
+  });
+
+  it('foto que falha ao subir não impede salvar a avaliação', async () => {
+    vi.mocked(api.uploadEvaluationPhoto).mockRejectedValue(new Error('falhou'));
+    renderNewEvaluationPage();
+    fireEvent.change(screen.getByLabelText('Arquivo da vista frontal'), { target: { files: [new File(['foto'], 'frente.jpg', { type: 'image/jpeg' })] } });
+    fireEvent.change(screen.getByLabelText('Altura (cm)'), { target: { value: '165' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() => expect(api.uploadEvaluationPhoto).toHaveBeenCalledTimes(1));
+    expect(api.createEvaluation).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText(/Não foi possível salvar/)).not.toBeInTheDocument();
   });
 });

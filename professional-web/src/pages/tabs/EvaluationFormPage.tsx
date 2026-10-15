@@ -7,6 +7,7 @@ import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { TextField } from '../../components/TextField';
 import { AiAssistPanel } from '../../components/AiAssistPanel';
+import { EvaluationPhotosCard, PendingPhotosCard, type PendingPhotos } from './EvaluationPhotosCard';
 import {
   evaluationDraftKey,
   loadEvaluationDraft,
@@ -132,6 +133,7 @@ export function EvaluationFormPage() {
   const [bmrReference, setBmrReference] = useState<BmrReference>('harris_benedict');
   const [equipment, setEquipment] = useState('');
   const [massUnits, setMassUnits] = useState<Record<string, MassUnit>>({});
+  const [pendingPhotos, setPendingPhotos] = useState<PendingPhotos>({});
   const [bloodPressureSystolic, setBloodPressureSystolic] = useState('');
   const [bloodPressureDiastolic, setBloodPressureDiastolic] = useState('');
   const [heartRate, setHeartRate] = useState('');
@@ -283,7 +285,7 @@ export function EvaluationFormPage() {
   ]);
 
   const mutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       // Só inclui measurements/skinfolds/bioimpedance quando ao menos um
       // campo foi preenchido — mandar `{}` faria o backend criar uma linha
       // vazia (measurements/skinfolds/bioimpedance com todo campo null) em
@@ -336,13 +338,26 @@ export function EvaluationFormPage() {
         skinfolds: toCleanRecord(skinfolds),
         bioimpedance: bioimpedanceSnapshot(bioimpedance, equipment, massUnits) === originalBioimpedance ? undefined : bioimpedancePayload,
       };
-      return isEdit ? api.updateEvaluation(clientId!, evaluationId!, payload) : api.createEvaluation(clientId!, payload);
+      if (isEdit) return api.updateEvaluation(clientId!, evaluationId!, payload).then((result) => ({ result, photosFailed: 0 }));
+
+      // Avaliação nova: as fotos escolhidas sobem depois que ela existe. Foto que
+      // falhar não desfaz a avaliação — a tela dela mostra a vista vazia para reenviar.
+      const result = await api.createEvaluation(clientId!, payload);
+      let photosFailed = 0;
+      for (const [angle, file] of Object.entries(pendingPhotos)) {
+        try {
+          await api.uploadEvaluationPhoto(clientId!, result.id, angle, file as File);
+        } catch {
+          photosFailed += 1;
+        }
+      }
+      return { result, photosFailed };
     },
-    onSuccess: (result) => {
+    onSuccess: ({ result, photosFailed }) => {
       removeEvaluationDraft(draftKey);
       queryClient.invalidateQueries({ queryKey: ['evaluations', clientId] });
       queryClient.invalidateQueries({ queryKey: ['evolution', clientId] });
-      navigate(`/clients/${clientId}/evaluations/${result.id}`);
+      navigate(`/clients/${clientId}/evaluations/${result.id}`, { state: photosFailed ? { photosFailed } : undefined });
     },
     onError: (err) => {
       if (err instanceof Error && err.message === PERCENT_NEEDS_WEIGHT) {
@@ -537,6 +552,12 @@ export function EvaluationFormPage() {
           </div>
         ) : null}
       </Card>
+
+      {isEdit ? (
+        existing ? <EvaluationPhotosCard clientId={clientId!} evaluationId={evaluationId!} photos={existing.photos ?? []} /> : null
+      ) : (
+        <PendingPhotosCard files={pendingPhotos} onChange={setPendingPhotos} />
+      )}
 
       <Card title="Notas internas">
         <textarea
