@@ -157,10 +157,11 @@ export function OverviewTab() {
 }
 
 function Field({ label, value }: { label: string; value: string }) {
+  // minWidth 0 + quebra em qualquer ponto: e-mail comprido quebra a linha em vez de invadir a coluna ao lado.
   return (
-    <div>
+    <div style={{ minWidth: 0 }}>
       <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontSize: 14 }}>{value}</div>
+      <div style={{ fontSize: 14, overflowWrap: 'anywhere' }}>{value}</div>
     </div>
   );
 }
