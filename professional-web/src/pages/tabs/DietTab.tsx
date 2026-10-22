@@ -11,6 +11,7 @@ import { DietVersionEditor } from '../../dietEditor/DietVersionEditor';
 import { DietDaysView } from '../../dietEditor/DietStructure';
 import { GuidelinesSection, SupplementsSection } from '../../dietEditor/DietExtras';
 import { structureProblems } from '../../dietEditor/structure';
+import { NutritionTargetCard } from '../../dietEditor/NutritionTargetCard';
 import type { DietVersion } from '../../types/api';
 
 function errorMessage(err: unknown, fallback: string): string {
@@ -192,7 +193,7 @@ export function DietTab() {
       {draft ? (
         <DietVersionEditor key={draft.id} clientId={clientId!} dietId={dietId} version={draft} onChanged={refresh} />
       ) : published ? (
-        <PublishedVersion version={published} />
+        <PublishedVersion clientId={clientId!} dietId={dietId!} version={published} />
       ) : (
         <EmptyState title="Sem versão em edição" />
       )}
@@ -212,7 +213,7 @@ export function DietTab() {
 }
 
 /** Versão publicada: só leitura (sem contexto de edição) — alterar passa por "Editar" (novo rascunho). */
-function PublishedVersion({ version }: { version: DietVersion }) {
+function PublishedVersion({ clientId, dietId, version }: { clientId: string; dietId: string; version: DietVersion }) {
   return (
     <>
       {version.objective || version.notes ? (
@@ -221,6 +222,7 @@ function PublishedVersion({ version }: { version: DietVersion }) {
           {version.notes ? <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Observações internas: {version.notes}</div> : null}
         </Card>
       ) : null}
+      <NutritionTargetCard clientId={clientId} dietId={dietId} version={version} editable={false} />
       <DietDaysView days={version.days ?? []} />
       <SupplementsSection supplements={version.supplements ?? []} />
       <GuidelinesSection guidelines={version.patientGuidelines} />

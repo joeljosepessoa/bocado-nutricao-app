@@ -84,6 +84,25 @@ describe('Dietas (e2e)', () => {
       .expect(409);
   });
 
+  it('meta nutricional do rascunho: grava, mantém o que não foi enviado e apaga com null', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+    const diet = await createDiet(app, professional.accessToken, client.id);
+    const url = `/clients/${client.id}/diets/${diet.id}/versions/${diet.currentVersion.id}`;
+    const patch = (body: Record<string, unknown>) => request(app.getHttpServer()).patch(url).set('Authorization', `Bearer ${professional.accessToken}`).send(body).expect(200);
+
+    const saved = await patch({ targetCalories: 2300, targetProteinG: 140, targetCarbG: 250, targetFatG: 70 });
+    expect(saved.body).toMatchObject({ targetCalories: 2300, targetProteinG: 140, targetCarbG: 250, targetFatG: 70 });
+
+    const partial = await patch({ objective: 'Hipertrofia' });
+    expect(partial.body).toMatchObject({ targetCalories: 2300, targetFatG: 70 });
+
+    const cleared = await patch({ targetCalories: null, targetProteinG: null, targetCarbG: null, targetFatG: null });
+    expect(cleared.body).toMatchObject({ targetCalories: null, targetProteinG: null, targetCarbG: null, targetFatG: null });
+
+    await request(app.getHttpServer()).patch(url).set('Authorization', `Bearer ${professional.accessToken}`).send({ targetCalories: -10 }).expect(400);
+  });
+
   // 3. Publicação
   it('publica um rascunho; publicar de novo a mesma versão retorna 409', async () => {
     const professional = await registerProfessional(app);

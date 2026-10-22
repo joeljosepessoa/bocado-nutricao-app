@@ -1,5 +1,5 @@
 import { unitLabel } from '../dietAssistant/draft';
-import type { DietDayKind, DietDayNode, DietSupplement, MealFood, MealGroupKind, NutritionRange } from '../types/api';
+import type { DietDayKind, DietDayNode, DietGroupNode, DietMealNode, DietSupplement, MealFood, MealGroupKind, Nutrients, NutritionRange } from '../types/api';
 
 /**
  * Apoio da tela da estrutura nova de dieta. A nutrição NÃO é calculada aqui:
@@ -173,4 +173,108 @@ export function reorderPatches<T extends { id: string | null; order: number }>(i
   const [moved] = next.splice(from, 1);
   next.splice(to, 0, moved);
   return next.flatMap((item, index) => (item.id && item.order !== index ? [{ id: item.id, order: index }] : []));
+}
+
+// --- Comparação entre opções e totais com a 1ª opção ---------------------------
+
+/** Diferença de kcal acima da qual uma opção/alternativa "tira o paciente da meta" ao ser escolhida. */
+export const CHOICE_KCAL_TOLERANCE = 0.1;
+
+const middle = (range: NutritionRange, key: keyof Nutrients) => (range.min[key] + range.max[key]) / 2;
+
+/**
+ * Diferença de kcal da escolha em relação à 1ª do mesmo bloco (−0,18 = 18% a
+ * menos). null quando não há o que comparar: 1ª escolha, itens fixos, total
+ * parcial (algum item sem cálculo) ou 1ª escolha sem kcal.
+ */
+export function choiceKcalDiff(group: Pick<DietGroupNode, 'kind' | 'choices'>, index: number): number | null {
+  if (index === 0 || group.kind === 'fixed') return null;
+  const base = group.choices[0]?.nutrition;
+  const own = group.choices[index]?.nutrition;
+  if (!base || !own || base.partial || own.partial) return null;
+  const baseKcal = middle(base, 'kcal');
+  if (baseKcal <= 0) return null;
+  return (middle(own, 'kcal') - baseKcal) / baseKcal;
+}
+
+/** "+4%", "−18%", "igual" (diferença abaixo de 0,5%). */
+export function formatKcalDiff(diff: number): string {
+  const percent = Math.round(diff * 100);
+  if (percent === 0) return 'igual';
+  return `${percent > 0 ? '+' : '−'}${Math.abs(percent)}%`;
+}
+
+export interface ChoiceImbalance {
+  day: string | null;
+  meal: string;
+  choice: string;
+  diff: number;
+  kcal: number;
+  baseKcal: number;
+  baseChoice: string;
+}
+
+/** Escolhas com kcal fora da tolerância em relação à 1ª do bloco, em toda a dieta. */
+export function choiceImbalances(days: DietDayNode[]): ChoiceImbalance[] {
+  const named = days.length > 1;
+  const result: ChoiceImbalance[] = [];
+  days.forEach((day, d) => {
+    for (const meal of day.meals) {
+      for (const group of meal.groups) {
+        const titleOf = (i: number) => group.choices[i].label ?? (group.kind === 'meal_options' ? `Opção ${i + 1}` : `Alternativa ${i + 1}`);
+        group.choices.forEach((choice, i) => {
+          const diff = choiceKcalDiff(group, i);
+          if (diff === null || Math.abs(diff) <= CHOICE_KCAL_TOLERANCE) return;
+          result.push({
+            day: named ? dayTitle(day, d) : null,
+            meal: group.kind === 'alternatives' && group.label ? `${meal.name} · ${group.label}` : meal.name,
+            choice: titleOf(i),
+            diff,
+            kcal: middle(choice.nutrition, 'kcal'),
+            baseKcal: middle(group.choices[0].nutrition, 'kcal'),
+            baseChoice: titleOf(0),
+          });
+        });
+      }
+    }
+  });
+  return result;
+}
+
+export interface FirstChoiceTotals extends Nutrients {
+  /** Algum item da 1ª escolha não entrou na soma (à vontade, sem quantidade ou fora do catálogo). */
+  partial: boolean;
+}
+
+const ZERO: FirstChoiceTotals = { kcal: 0, proteinG: 0, carbG: 0, fatG: 0, fiberG: 0, partial: false };
+
+function addNutrition(total: FirstChoiceTotals, range: NutritionRange): FirstChoiceTotals {
+  return {
+    kcal: total.kcal + middle(range, 'kcal'),
+    proteinG: total.proteinG + middle(range, 'proteinG'),
+    carbG: total.carbG + middle(range, 'carbG'),
+    fatG: total.fatG + middle(range, 'fatG'),
+    fiberG: total.fiberG + middle(range, 'fiberG'),
+    partial: total.partial || range.partial,
+  };
+}
+
+/** A refeição como fica com a 1ª opção/alternativa de cada bloco (faixa de quantidade conta pelo meio). */
+export function mealFirstChoiceTotals(meal: Pick<DietMealNode, 'groups'>): FirstChoiceTotals {
+  return meal.groups.reduce((total, group) => (group.choices[0] ? addNutrition(total, group.choices[0].nutrition) : total), ZERO);
+}
+
+/** O dia somando cada refeição com a 1ª escolha de cada bloco — a mesma base usada para comparar com a meta. */
+export function dayFirstChoiceTotals(day: Pick<DietDayNode, 'meals'>): FirstChoiceTotals {
+  return day.meals.reduce((total, meal) => {
+    const m = mealFirstChoiceTotals(meal);
+    return {
+      kcal: total.kcal + m.kcal,
+      proteinG: total.proteinG + m.proteinG,
+      carbG: total.carbG + m.carbG,
+      fatG: total.fatG + m.fatG,
+      fiberG: total.fiberG + m.fiberG,
+      partial: total.partial || m.partial,
+    };
+  }, ZERO);
 }

@@ -317,3 +317,106 @@
 .supplement:first-of-type {
   border-top: none;
 }
+
+/* Diferença de kcal de uma opção/alternativa em relação à 1ª do bloco. */
+.diff {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.diffWarn {
+  background: #fbf0dd;
+  color: #a2650f;
+}
+
+.imbalance {
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #e9c58a;
+  background: #fbf0dd;
+  color: #7a4a06;
+}
+
+.imbalance summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.imbalance ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+/* Gráfico de macronutrientes por refeição. */
+.macroChart {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.macroChartHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.macroLegend {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.macroLegendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.macroSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.macroTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.macroTable th,
+.macroTable td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: right;
+}
+
+.macroTable th:first-child,
+.macroTable td:first-child {
+  text-align: left;
+}
+
+.macroTable th {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.macroTotalRow td {
+  font-weight: 700;
+  border-bottom: none;
+}

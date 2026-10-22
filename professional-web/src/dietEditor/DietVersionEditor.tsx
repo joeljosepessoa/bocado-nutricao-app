@@ -8,6 +8,7 @@ import { GuidelinesSection, SupplementsSection } from './DietExtras';
 import styles from './DietStructure.module.css';
 import { DietDaysView } from './DietStructure';
 import { DraftEditContext, apiErrorMessage, type DraftEdit } from './draftEdit';
+import { NutritionTargetCard } from './NutritionTargetCard';
 import { structureProblems } from './structure';
 
 interface Props {
@@ -75,6 +76,8 @@ export function DietVersionEditor({ clientId, dietId, version, onChanged }: Prop
             </div>
           </div>
         </Card>
+
+        <NutritionTargetCard clientId={clientId} dietId={dietId} version={version} editable onSaved={onChanged} />
 
         {problems.length > 0 ? (
           <div className={styles.problems} role="status" aria-label="Pendências para publicar">

@@ -8,10 +8,15 @@ import type { DietChoiceNode, DietDayNode, DietGroupNode, DietMealNode, MealFood
 import styles from './DietStructure.module.css';
 import { useDraftEdit, type DraftEdit } from './draftEdit';
 import { DayFormModal, FoodItemModal, LabelModal } from './StructureModals';
+import { MealMacroChart } from './MealMacroChart';
 import {
+  CHOICE_KCAL_TOLERANCE,
   DAY_KIND_LABELS,
   GROUP_KIND_TEXT,
+  choiceImbalances,
+  choiceKcalDiff,
   dayTitle,
+  formatKcalDiff,
   foodCalcStatus,
   foodName,
   formatKcal,
@@ -42,6 +47,7 @@ export function DietDaysView({ days }: { days: DietDayNode[] }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <ChoiceImbalanceAlert days={days} />
       {tabs || edit ? (
         <div className={styles.dayBar} role="tablist" aria-label="Dias da dieta">
           {tabs
@@ -88,6 +94,48 @@ export function DietDaysView({ days }: { days: DietDayNode[] }) {
         />
       ) : null}
     </div>
+  );
+}
+
+const kcalNumber = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
+
+/**
+ * Opções/alternativas com kcal muito diferente da 1ª do bloco: ao trocar, o
+ * paciente sai da meta. Fica fechado com o resumo; abre com a lista.
+ */
+function ChoiceImbalanceAlert({ days }: { days: DietDayNode[] }) {
+  const list = choiceImbalances(days);
+  if (list.length === 0) return null;
+  return (
+    <details className={styles.imbalance} role="status" aria-label="Opções com calorias diferentes">
+      <summary>
+        {list.length === 1 ? '1 opção com calorias diferentes' : `${list.length} opções com calorias diferentes`} da 1ª do bloco (mais de{' '}
+        {Math.round(CHOICE_KCAL_TOLERANCE * 100)}%)
+      </summary>
+      <div style={{ marginTop: 4 }}>Se o paciente trocar por elas, sai da meta do dia. Ajuste as quantidades ou confira se é intencional.</div>
+      <ul>
+        {list.map((item) => (
+          <li key={`${item.day}-${item.meal}-${item.choice}`}>
+            {item.day ? `${item.day} · ` : ''}
+            {item.meal} · {item.choice}: <strong>{formatKcalDiff(item.diff)}</strong> ({kcalNumber.format(item.kcal)} kcal × {kcalNumber.format(item.baseKcal)} kcal da{' '}
+            {item.baseChoice})
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
+/** "+4%" / "−18%" ao lado de uma escolha — em destaque quando passa da tolerância. */
+function ChoiceDiff({ group, index }: { group: DietGroupNode; index: number }) {
+  const diff = choiceKcalDiff(group, index);
+  if (diff === null) return null;
+  const warn = Math.abs(diff) > CHOICE_KCAL_TOLERANCE;
+  const base = group.choices[0].label ?? (group.kind === 'meal_options' ? 'Opção 1' : '1ª alternativa');
+  return (
+    <span className={[styles.diff, warn ? styles.diffWarn : ''].join(' ')} title={`Diferença de calorias em relação à ${base}`}>
+      {formatKcalDiff(diff)}
+    </span>
   );
 }
 
@@ -193,6 +241,12 @@ function DayPanel({ day, index, days, showHeader }: { day: DietDayNode; index: n
       {day.meals.map((meal, i) => (
         <MealCard key={meal.id} meal={meal} index={i} siblings={day.meals} />
       ))}
+
+      {day.meals.length > 0 ? (
+        <Card>
+          <MealMacroChart day={day} />
+        </Card>
+      ) : null}
 
       {edit ? (
         <Card>
@@ -454,6 +508,7 @@ function GroupSection({ meal, group, index, groups, compact }: { meal: DietMealN
               <FoodList mealId={meal.id} foods={choice.foods} />
               <div className={styles.optionFooter}>
                 <span className={styles.kcal}>{formatKcal(choice.nutrition)}</span>
+                <ChoiceDiff group={group} index={i} />
                 {choice.nutrition.partial ? <PartialBadge /> : null}
               </div>
               {canEdit && choice.id ? (
@@ -483,10 +538,15 @@ function GroupSection({ meal, group, index, groups, compact }: { meal: DietMealN
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {choice.foods.length > 1 || choice.label ? <span style={{ fontSize: 12.5, fontWeight: 700 }}>{choiceTitle(choice, i)}</span> : null}
                 <FoodList mealId={meal.id} foods={choice.foods} />
-                {choice.foods.length > 1 ? (
-                  <span className={styles.foodMeta}>
-                    {formatKcal(choice.nutrition)}
-                    {choice.nutrition.partial ? ' (parcial)' : ''}
+                {choice.foods.length > 1 || choiceKcalDiff(group, i) !== null ? (
+                  <span className={styles.foodMeta} style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                    {choice.foods.length > 1 ? (
+                      <span>
+                        {formatKcal(choice.nutrition)}
+                        {choice.nutrition.partial ? ' (parcial)' : ''}
+                      </span>
+                    ) : null}
+                    <ChoiceDiff group={group} index={i} />
                   </span>
                 ) : null}
               </div>

@@ -4,6 +4,7 @@ import * as api from '../api/endpoints';
 import { StatusBadge } from '../components/StatusBadge';
 import { Tabs } from '../components/Tabs';
 import { EmptyState } from '../components/EmptyState';
+import { PatientSheetButton } from './PatientSheet';
 
 const TAB_ITEMS = [
   { key: '', label: 'Visão geral' },
@@ -36,9 +37,12 @@ export function ClientProfilePage() {
   return (
     <>
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <h1 style={{ fontSize: 22, margin: 0 }}>{client.user.fullName}</h1>
           <StatusBadge status={client.status} />
+          <div style={{ marginLeft: 'auto' }}>
+            <PatientSheetButton client={client} />
+          </div>
         </div>
         <div style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>{client.user.email}</div>
       </div>
