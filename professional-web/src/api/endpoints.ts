@@ -1,5 +1,14 @@
 import { apiClient } from './client';
 import type {
+  DietTemplateContent,
+  DietTemplateDetail,
+  SaveTemplateInput,
+  TemplateKind,
+  TemplateSummary,
+  WorkoutTemplateContent,
+  WorkoutTemplateDetail,
+  EvaluationSummaryRow,
+  ReportOverviewItem,
   TrackingPhotos,
   TrackingWaterHistory,
   TrackingWeights,
@@ -127,6 +136,12 @@ export async function listClients(params: {
 /** Situação da ficha de cada paciente (sem conteúdo). */
 export async function listAnamneses(): Promise<AnamnesisStatus[]> {
   const res = await apiClient.get<AnamnesisStatus[]>('/anamneses');
+  return res.data;
+}
+
+/** Tela "Avaliação" do menu: quantas avaliações cada paciente tem e quando foi a última. */
+export async function listEvaluationSummary(): Promise<EvaluationSummaryRow[]> {
+  const res = await apiClient.get<EvaluationSummaryRow[]>('/evaluations/summary');
   return res.data;
 }
 
@@ -659,6 +674,12 @@ export async function generateReport(
   return res.data;
 }
 
+/** Tela "Relatórios" do menu: relatórios de todos os pacientes, do mais novo ao mais antigo. */
+export async function listAllReports(pageSize = 100): Promise<PaginatedResult<ReportOverviewItem>> {
+  const res = await apiClient.get<PaginatedResult<ReportOverviewItem>>('/reports', { params: { pageSize } });
+  return res.data;
+}
+
 export async function getReportDownloadUrl(clientId: string, reportId: string): Promise<SignedUrl> {
   const res = await apiClient.get<SignedUrl>(`/clients/${clientId}/reports/${reportId}/download-url`);
   return res.data;
@@ -742,6 +763,70 @@ export async function createDietWithAi(
 export async function listAiInteractions(clientId: string): Promise<PaginatedResult<AiInteractionSummary>> {
   const res = await apiClient.get<PaginatedResult<AiInteractionSummary>>(`/clients/${clientId}/ai/interactions`);
   return res.data;
+}
+
+// --- Modelos (biblioteca) -------------------------------------------------
+
+const TEMPLATE_PATH: Record<TemplateKind, string> = { diet: '/templates/diets', workout: '/templates/workouts' };
+
+export async function listTemplates(kind: TemplateKind, trash = false): Promise<TemplateSummary[]> {
+  const res = await apiClient.get<TemplateSummary[]>(TEMPLATE_PATH[kind], { params: trash ? { trash: 'true' } : {} });
+  return res.data;
+}
+
+export async function getDietTemplate(id: string): Promise<DietTemplateDetail> {
+  const res = await apiClient.get<DietTemplateDetail>(`${TEMPLATE_PATH.diet}/${id}`);
+  return res.data;
+}
+
+export async function getWorkoutTemplate(id: string): Promise<WorkoutTemplateDetail> {
+  const res = await apiClient.get<WorkoutTemplateDetail>(`${TEMPLATE_PATH.workout}/${id}`);
+  return res.data;
+}
+
+export async function createDietTemplate(input: SaveTemplateInput<DietTemplateContent>): Promise<TemplateSummary> {
+  const res = await apiClient.post<TemplateSummary>(TEMPLATE_PATH.diet, input);
+  return res.data;
+}
+
+export async function createWorkoutTemplate(input: SaveTemplateInput<WorkoutTemplateContent>): Promise<TemplateSummary> {
+  const res = await apiClient.post<TemplateSummary>(TEMPLATE_PATH.workout, input);
+  return res.data;
+}
+
+export async function updateDietTemplate(id: string, input: Partial<SaveTemplateInput<DietTemplateContent>>): Promise<TemplateSummary> {
+  const res = await apiClient.patch<TemplateSummary>(`${TEMPLATE_PATH.diet}/${id}`, input);
+  return res.data;
+}
+
+export async function updateWorkoutTemplate(id: string, input: Partial<SaveTemplateInput<WorkoutTemplateContent>>): Promise<TemplateSummary> {
+  const res = await apiClient.patch<TemplateSummary>(`${TEMPLATE_PATH.workout}/${id}`, input);
+  return res.data;
+}
+
+export async function duplicateTemplate(kind: TemplateKind, id: string): Promise<TemplateSummary> {
+  const res = await apiClient.post<TemplateSummary>(`${TEMPLATE_PATH[kind]}/${id}/duplicate`);
+  return res.data;
+}
+
+export async function deleteTemplate(kind: TemplateKind, id: string): Promise<void> {
+  await apiClient.delete(`${TEMPLATE_PATH[kind]}/${id}`);
+}
+
+export async function restoreTemplate(kind: TemplateKind, id: string): Promise<TemplateSummary> {
+  const res = await apiClient.post<TemplateSummary>(`${TEMPLATE_PATH[kind]}/${id}/restore`);
+  return res.data;
+}
+
+/** "Salvar como modelo": copia a dieta/treino atual do paciente (rascunho, se houver; senão a publicada). */
+export async function createTemplateFromClient(kind: TemplateKind, clientId: string, name: string, description?: string | null): Promise<TemplateSummary> {
+  const res = await apiClient.post<TemplateSummary>(`${TEMPLATE_PATH[kind]}/from-client`, { clientId, name, ...(description ? { description } : {}) });
+  return res.data;
+}
+
+/** Atribui o modelo ao paciente: vira RASCUNHO na ficha dele. Dieta com rascunho aberto responde 409 até confirmar `replaceDraft`. */
+export async function applyTemplate(kind: TemplateKind, id: string, clientId: string, replaceDraft = false): Promise<void> {
+  await apiClient.post(`${TEMPLATE_PATH[kind]}/${id}/apply`, { clientId, ...(replaceDraft ? { replaceDraft: true } : {}) });
 }
 
 // --- Administração (Fase 15) --------------------------------------------

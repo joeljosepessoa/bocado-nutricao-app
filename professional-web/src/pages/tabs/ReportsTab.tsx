@@ -12,7 +12,7 @@ import { formatBytes, formatDate, formatDateTime } from '../../lib/format';
 
 const AUDIENCE_LABEL: Record<string, string> = { professional: 'Profissional', client: 'Cliente' };
 
-function GenerateReportModal({ clientId, onClose, onDone }: { clientId: string; onClose: () => void; onDone: () => void }) {
+export function GenerateReportModal({ clientId, onClose, onDone }: { clientId: string; onClose: () => void; onDone: () => void }) {
   const [evaluationId, setEvaluationId] = useState('');
   const [audience, setAudience] = useState<'professional' | 'client'>('professional');
   const [error, setError] = useState<string | null>(null);

@@ -8,6 +8,7 @@ import type { CatalogExerciseRef } from '../types/api';
 import {
   dayWarnings,
   exerciseWarnings,
+  addDay,
   manualExercise,
   moveExercise,
   removeDay,
@@ -30,6 +31,8 @@ interface Props {
   onChange: (draft: WorkoutDraft) => void;
   /** Modo "Organizar sem GIFs": vale o nome escrito; nada de demonstração nem de escolha obrigatória no catálogo. */
   withoutGifs?: boolean;
+  /** Modelos montados do zero podem ganhar dias novos. */
+  allowDays?: boolean;
 }
 
 type Picker = { mode: 'replace'; dayKey: string; exerciseKey: string; search: string; muscleGroup: string | null } | { mode: 'add'; dayKey: string };
@@ -279,7 +282,7 @@ function DayCard({
 }
 
 /** Revisão editável da proposta — nada vai ao servidor até "Criar treino como rascunho". */
-export function WorkoutProposalEditor({ draft, onChange, withoutGifs = false }: Props) {
+export function WorkoutProposalEditor({ draft, onChange, withoutGifs = false, allowDays = false }: Props) {
   const [picker, setPicker] = useState<Picker | null>(null);
   const [registeringKeys, setRegisteringKeys] = useState<string[]>([]);
   const [registerError, setRegisterError] = useState<string | null>(null);
@@ -357,6 +360,14 @@ export function WorkoutProposalEditor({ draft, onChange, withoutGifs = false }: 
           withoutGifs={withoutGifs}
         />
       ))}
+
+      {allowDays ? (
+        <div>
+          <Button variant="secondary" onClick={() => onChange(addDay(draft))}>
+            + Dia de treino
+          </Button>
+        </div>
+      ) : null}
 
       {picker ? (
         <ExercisePickerModal

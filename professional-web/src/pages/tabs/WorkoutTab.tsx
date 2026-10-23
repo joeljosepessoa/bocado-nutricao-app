@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import * as api from '../../api/endpoints';
+import { ApplyTemplateModal } from '../../templates/ApplyTemplateModal';
+import { SaveAsTemplateModal } from '../../templates/SaveAsTemplateModal';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -26,6 +28,9 @@ export function WorkoutTab() {
   const createdByAssistant = (location.state as { assistantCreated?: boolean } | null)?.assistantCreated === true;
   const queryClient = useQueryClient();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [usingTemplate, setUsingTemplate] = useState(false);
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const templateApplied = (location.state as { templateApplied?: string } | null)?.templateApplied;
   const [actionError, setActionError] = useState<string | null>(null);
   const openAssistant = () => navigate(`/clients/${clientId}/workout/assistant`);
 
@@ -115,9 +120,13 @@ export function WorkoutTab() {
             <Button onClick={() => createWorkoutMutation.mutate()} loading={createWorkoutMutation.isPending}>
               Criar treino
             </Button>
+            <Button variant="secondary" onClick={() => setUsingTemplate(true)}>
+              Usar um modelo
+            </Button>
             <Button variant="secondary" onClick={openAssistant}>
               🤖 Assistente de Treino
             </Button>
+            {usingTemplate ? <ApplyTemplateModal kind="workout" clientId={clientId} onClose={() => setUsingTemplate(false)} onApplied={() => setUsingTemplate(false)} /> : null}
           </div>
         }
       />
@@ -128,6 +137,11 @@ export function WorkoutTab() {
 
   return (
     <>
+      {templateApplied && draft ? (
+        <div role="status" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 8, background: 'var(--color-primary-light)' }}>
+          Treino criado como rascunho a partir do modelo "{templateApplied}". Ajuste o que precisar e publique quando quiser — nada foi enviado ao paciente.
+        </div>
+      ) : null}
       {createdByAssistant && draft ? (
         <div role="status" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 8, background: 'var(--color-primary-light)' }}>
           Treino criado como rascunho pelo Assistente. Revise e publique quando quiser — nada foi enviado ao cliente.
@@ -139,6 +153,9 @@ export function WorkoutTab() {
           {shown ? <StatusBadge status={shown.status} /> : null}
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button variant="secondary" onClick={() => setUsingTemplate(true)}>
+            Usar um modelo
+          </Button>
           <Button variant="secondary" onClick={openAssistant}>
             🤖 Assistente de Treino
           </Button>
@@ -151,11 +168,16 @@ export function WorkoutTab() {
               Editar treino
             </Button>
           )}
+          <Button variant="ghost" onClick={() => setSavingTemplate(true)}>
+            Salvar como modelo
+          </Button>
           <Button variant="danger" onClick={() => setConfirmDelete(true)}>
             Excluir treino
           </Button>
         </div>
       </div>
+      {savingTemplate ? <SaveAsTemplateModal kind="workout" clientId={clientId!} onClose={() => setSavingTemplate(false)} /> : null}
+      {usingTemplate ? <ApplyTemplateModal kind="workout" clientId={clientId} onClose={() => setUsingTemplate(false)} onApplied={() => setUsingTemplate(false)} /> : null}
 
       {draft && published ? (
         <div role="status" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 8, background: 'var(--color-primary-light)' }}>

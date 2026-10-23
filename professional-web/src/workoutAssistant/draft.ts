@@ -5,6 +5,7 @@ import type {
   LoadUnit,
   OrganizedWorkoutProposal,
   ProposalSet,
+  WorkoutTemplateContent,
 } from '../types/api';
 
 export type RepsMode = 'exact' | 'range' | 'none';
@@ -135,6 +136,61 @@ export function proposalToDraft(proposal: OrganizedWorkoutProposal): WorkoutDraf
       })),
     })),
   };
+}
+
+export const EXERCISE_LEFT_CATALOG = 'Este exercício saiu do catálogo: escolha outro.';
+
+/** Modelo salvo → rascunho do editor. `exercises` traz os exercícios do catálogo usados no modelo (com o GIF atual). */
+export function templateToDraft(content: WorkoutTemplateContent, exercises: CatalogExerciseRef[]): WorkoutDraft {
+  const catalog = new Map(exercises.map((exercise) => [exercise.id, exercise]));
+  return {
+    notices: [],
+    days: content.days.map((day) => ({
+      key: nextKey('day'),
+      name: day.name,
+      notes: day.notes ?? '',
+      notices: [],
+      exercises: day.exercises.map((item) => {
+        const exercise = catalog.get(item.exerciseId) ?? null;
+        return {
+          key: nextKey('ex'),
+          rawName: null,
+          exercise,
+          match: exercise ? 'manual' : 'not_found',
+          candidates: [],
+          muscleGroupHint: null,
+          notes: item.notes ?? '',
+          // Campo vazio pode vir ausente do JSON salvo: vira null antes de decidir o modo das repetições.
+          sets: item.sets.map((set) =>
+            toDraftSet({
+              reps: set.reps ?? null,
+              repsMin: set.repsMin ?? null,
+              repsMax: set.repsMax ?? null,
+              loadValue: set.loadValue ?? null,
+              loadUnit: set.loadUnit ?? null,
+              durationSeconds: set.durationSeconds ?? null,
+              distanceMeters: set.distanceMeters ?? null,
+              restSeconds: set.restSeconds ?? null,
+              tempo: set.tempo ?? null,
+              notes: set.notes ?? null,
+            }),
+          ),
+          notices: exercise ? [] : [EXERCISE_LEFT_CATALOG],
+        };
+      }),
+    })),
+  };
+}
+
+/** Novo dia em branco: "Treino B", "Treino C"… */
+export function addDay(draft: WorkoutDraft): WorkoutDraft {
+  const letter = String.fromCharCode(65 + (draft.days.length % 26));
+  return { ...draft, days: [...draft.days, { key: nextKey('day'), name: `Treino ${letter}`, notes: '', notices: [], exercises: [] }] };
+}
+
+/** Modelo novo: um dia em branco. */
+export function emptyWorkoutDraft(): WorkoutDraft {
+  return { notices: [], days: [{ key: nextKey('day'), name: 'Treino A', notes: '', notices: [], exercises: [] }] };
 }
 
 export function manualExercise(exercise: CatalogExerciseRef): DraftExercise {

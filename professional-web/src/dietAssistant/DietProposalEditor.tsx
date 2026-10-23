@@ -8,7 +8,10 @@ import {
   choiceWarnings,
   emptyChoice,
   emptyGroup,
+  addDay,
+  cameFromText,
   emptyMeal,
+  removeDay,
   emptySupplement,
   foodDisplayName,
   foodHints,
@@ -70,7 +73,8 @@ function Warnings({ live, notices, onDismiss }: { live: string[]; notices: strin
  * Revisão da proposta da IA na MESMA árvore da dieta (dia → refeição → bloco
  * → opção → alimento). Nada é gravado aqui — só edita o rascunho em memória.
  */
-export function DietProposalEditor({ draft, onChange }: { draft: DietDraft; onChange: Change }) {
+/** `allowDays`: modelos montados do zero podem ganhar e perder dias (o Assistente só revisa os dias que leu). */
+export function DietProposalEditor({ draft, onChange, allowDays = false }: { draft: DietDraft; onChange: Change; allowDays?: boolean }) {
   const [selectedDay, setSelectedDay] = useState(0);
   const [picker, setPicker] = useState<{ choiceKey: string; foodKey: string | null; search: string } | null>(null);
   const dayIndex = Math.min(selectedDay, draft.days.length - 1);
@@ -152,10 +156,34 @@ export function DietProposalEditor({ draft, onChange }: { draft: DietDraft; onCh
             />
           ))}
 
-          <div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <Button variant="secondary" onClick={() => onChange(updateDay(draft, day.key, (x) => ({ ...x, meals: [...x.meals, emptyMeal()] })))}>
               + Refeição
             </Button>
+            {allowDays ? (
+              <>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    onChange(addDay(draft));
+                    setSelectedDay(draft.days.length);
+                  }}
+                >
+                  + Dia (ex.: dia de descanso)
+                </Button>
+                {draft.days.length > 1 ? (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      onChange(removeDay(draft, day.key));
+                      setSelectedDay(Math.max(0, dayIndex - 1));
+                    }}
+                  >
+                    Remover este dia
+                  </Button>
+                ) : null}
+              </>
+            ) : null}
           </div>
         </section>
       ) : null}
@@ -368,15 +396,13 @@ function FoodReview({ draft, choiceKey, food, onChange, onPick }: { draft: DietD
 
   return (
     <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div className={styles.muted}>
-        {food.sourceText ? (
-          <>
-            Texto original: <q>{food.sourceText}</q>
-          </>
-        ) : (
-          'Adicionado na revisão'
-        )}
-      </div>
+      {food.sourceText ? (
+        <div className={styles.muted}>
+          Texto original: <q>{food.sourceText}</q>
+        </div>
+      ) : cameFromText(draft) ? (
+        <div className={styles.muted}>Adicionado na revisão</div>
+      ) : null}
       <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           aria-label={`Nome de ${food.rawFood ?? food.name ?? 'alimento'}`}

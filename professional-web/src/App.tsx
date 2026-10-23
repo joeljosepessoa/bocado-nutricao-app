@@ -23,6 +23,11 @@ import { ReportsTab } from './pages/tabs/ReportsTab';
 import { MessagesTab } from './pages/tabs/MessagesTab';
 import { TrackingTab } from './pages/tabs/TrackingTab';
 import { AgendaPage } from './pages/AgendaPage';
+import { EvaluationsPage } from './pages/EvaluationsPage';
+import { ReportsPage } from './pages/ReportsPage';
+import { AiPage } from './pages/AiPage';
+import { TemplatesPage } from './templates/TemplatesPage';
+import { DietTemplateEditorPage, WorkoutTemplateEditorPage } from './templates/TemplateEditorPages';
 import { AnamnesisPage } from './pages/AnamnesisPage';
 import { PlanPage } from './pages/PlanPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -55,7 +60,15 @@ function App() {
               <Route path="/" element={<DashboardPage />} />
               <Route path="/clients" element={<ClientsListPage />} />
               <Route path="/anamnese" element={<AnamnesisPage />} />
+              <Route path="/avaliacao" element={<EvaluationsPage />} />
               <Route path="/agenda" element={<AgendaPage />} />
+              <Route path="/relatorios" element={<ReportsPage />} />
+              <Route path="/ia" element={<AiPage />} />
+              <Route path="/modelos" element={<TemplatesPage />} />
+              <Route path="/modelos/dietas/novo" element={<DietTemplateEditorPage />} />
+              <Route path="/modelos/dietas/:templateId" element={<DietTemplateEditorPage />} />
+              <Route path="/modelos/treinos/novo" element={<WorkoutTemplateEditorPage />} />
+              <Route path="/modelos/treinos/:templateId" element={<WorkoutTemplateEditorPage />} />
               <Route path="/plano" element={<PlanPage />} />
               <Route path="/configuracoes" element={<SettingsPage />} />
               <Route path="/clients/:clientId" element={<ClientProfilePage />}>

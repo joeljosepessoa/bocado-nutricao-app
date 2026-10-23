@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import * as api from '../../api/endpoints';
+import { ApplyTemplateModal } from '../../templates/ApplyTemplateModal';
+import { SaveAsTemplateModal } from '../../templates/SaveAsTemplateModal';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -31,6 +33,9 @@ export function DietTab() {
   const createdByAssistant = (location.state as { assistantCreated?: boolean } | null)?.assistantCreated === true;
   const queryClient = useQueryClient();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [usingTemplate, setUsingTemplate] = useState(false);
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const templateApplied = (location.state as { templateApplied?: string } | null)?.templateApplied;
   const [actionError, setActionError] = useState<string | null>(null);
   const openAssistant = () => navigate(`/clients/${clientId}/diet/assistant`);
 
@@ -112,9 +117,13 @@ export function DietTab() {
             <Button onClick={() => createDietMutation.mutate()} loading={createDietMutation.isPending}>
               Criar dieta
             </Button>
+            <Button variant="secondary" onClick={() => setUsingTemplate(true)}>
+              Usar um modelo
+            </Button>
             <Button variant="secondary" onClick={openAssistant}>
               🤖 Organizar dieta com IA
             </Button>
+            {usingTemplate ? <ApplyTemplateModal kind="diet" clientId={clientId} onClose={() => setUsingTemplate(false)} onApplied={() => setUsingTemplate(false)} /> : null}
           </div>
         }
       />
@@ -125,6 +134,11 @@ export function DietTab() {
 
   return (
     <>
+      {templateApplied && draft ? (
+        <div role="status" style={banner}>
+          Dieta criada como rascunho a partir do modelo "{templateApplied}". Ajuste o que precisar e publique quando quiser — nada foi enviado ao paciente.
+        </div>
+      ) : null}
       {createdByAssistant && draft ? (
         <div role="status" style={banner}>
           Dieta criada como rascunho pelo Assistente. Revise e publique quando quiser — nada foi enviado ao paciente.
@@ -156,11 +170,19 @@ export function DietTab() {
               Editar
             </Button>
           )}
+          <Button variant="secondary" onClick={() => setUsingTemplate(true)}>
+            Usar um modelo
+          </Button>
+          <Button variant="ghost" onClick={() => setSavingTemplate(true)}>
+            Salvar como modelo
+          </Button>
           <Button variant="danger" onClick={() => setConfirmDelete(true)}>
             Excluir
           </Button>
         </div>
       </div>
+      {savingTemplate ? <SaveAsTemplateModal kind="diet" clientId={clientId!} onClose={() => setSavingTemplate(false)} /> : null}
+      {usingTemplate ? <ApplyTemplateModal kind="diet" clientId={clientId} onClose={() => setUsingTemplate(false)} onApplied={() => setUsingTemplate(false)} /> : null}
 
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>

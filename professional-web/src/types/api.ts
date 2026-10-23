@@ -509,6 +509,44 @@ export interface CreateDietFromProposalInput {
   patientGuidelines?: string | null;
 }
 
+// --- Modelos (biblioteca) -------------------------------------------------
+
+export type TemplateKind = 'diet' | 'workout';
+
+/** Conteúdo de um modelo de dieta: a mesma proposta que cria o rascunho do paciente (só por dia). */
+export type DietTemplateContent = Omit<CreateDietFromProposalInput, 'replaceDraft' | 'meals' | 'days'> & {
+  days: NonNullable<CreateDietFromProposalInput['days']>;
+};
+export type WorkoutTemplateContent = CreateWorkoutFromProposalInput;
+
+export interface TemplateSummary {
+  id: string;
+  kind: TemplateKind;
+  name: string;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  counts: { days: number; meals?: number; exercises?: number };
+}
+
+export interface DietTemplateDetail extends TemplateSummary {
+  content: DietTemplateContent;
+  /** Nome atual dos alimentos do catálogo usados no modelo (os que saíram do catálogo não vêm). */
+  foods: CatalogFoodRef[];
+}
+
+export interface WorkoutTemplateDetail extends TemplateSummary {
+  content: WorkoutTemplateContent;
+  exercises: CatalogExerciseRef[];
+}
+
+export interface SaveTemplateInput<C> {
+  name: string;
+  description?: string | null;
+  content: C;
+}
+
 // --- Treinos --------------------------------------------------------------
 
 export type WorkoutVersionStatus = 'draft' | 'published' | 'superseded';
@@ -642,6 +680,13 @@ export interface ReportSummary {
   createdAt: string;
 }
 
+/** Tela "Relatórios" do menu: relatório com o nome do paciente e a data da avaliação. */
+export interface ReportOverviewItem extends ReportSummary {
+  clientId: string;
+  clientName: string;
+  evaluatedAt: string;
+}
+
 export interface SignedUrl {
   url: string;
   expiresAt: string;
@@ -726,6 +771,14 @@ export type SaveAnamnesisInput = Partial<AnamnesisContent> & {
   phone?: string | null;
   completed?: boolean;
 };
+
+/** Tela "Avaliação" do menu: só contagem e data da última (sem medidas). */
+export interface EvaluationSummaryRow {
+  clientId: string;
+  total: number;
+  lastEvaluationId: string;
+  lastEvaluatedAt: string;
+}
 
 export interface AnamnesisStatus {
   clientId: string;

@@ -2,6 +2,7 @@ import type {
   CatalogFoodRef,
   CreateDietFromProposalInput,
   DietDayKind,
+  DietTemplateContent,
   FoodMatchStatus,
   MealGroupKind,
   NutritionUnit,
@@ -198,6 +199,100 @@ export function proposalToDraft(proposal: OrganizedDietProposal): DietDraft {
       })),
     })),
   };
+}
+
+export const FOOD_LEFT_CATALOG = 'Este alimento saiu do catálogo: o nome continua, mas sem cálculo. Escolha outro do catálogo se quiser calcular.';
+
+function savedFood(item: ProposalChoiceFoodInput, catalog: Map<string, CatalogFoodRef>): DraftFood {
+  const food = item.foodId ? (catalog.get(item.foodId) ?? null) : null;
+  const free = item.isFreeQuantity === true;
+  return {
+    key: nextKey('food'),
+    sourceText: null,
+    rawFood: null,
+    name: item.customFoodName ?? food?.name ?? '',
+    food,
+    match: 'manual',
+    candidates: [],
+    quantity: free ? null : (item.quantity ?? null),
+    quantityMax: free ? null : (item.quantityMax ?? null),
+    freeQuantity: free,
+    unit: free ? null : (item.unit ?? null),
+    notes: item.notes ?? '',
+    notices: item.foodId && !food ? [FOOD_LEFT_CATALOG] : [],
+  };
+}
+
+/** Modelo salvo → rascunho do editor. `foods` traz o nome atual dos alimentos do catálogo usados no modelo. */
+export function templateToDraft(content: DietTemplateContent, foods: CatalogFoodRef[]): DietDraft {
+  const catalog = new Map(foods.map((food) => [food.id, food]));
+  return {
+    notices: [],
+    guidelines: content.patientGuidelines ?? '',
+    supplements: (content.supplements ?? []).map((s) => ({
+      key: nextKey('supplement'),
+      name: s.name,
+      quantity: s.quantity ?? null,
+      quantityMax: s.quantityMax ?? null,
+      unitText: s.unitText ?? '',
+      timing: s.timing ?? '',
+      notes: s.notes ?? '',
+      notices: [],
+    })),
+    days: content.days.map((day) => ({
+      key: nextKey('day'),
+      label: day.label ?? '',
+      kind: day.kind ?? 'other',
+      usageNotes: day.usageNotes ?? '',
+      notices: [],
+      meals: day.meals.map((meal) => ({
+        key: nextKey('meal'),
+        name: meal.name,
+        time: meal.time ?? '',
+        notes: meal.notes ?? '',
+        notices: [],
+        groups: meal.groups.map((group) => ({
+          key: nextKey('group'),
+          kind: group.kind,
+          label: group.label ?? '',
+          choices: group.choices.map((choice) => ({ key: nextKey('choice'), label: choice.label ?? '', foods: choice.foods.map((f) => savedFood(f, catalog)) })),
+        })),
+      })),
+    })),
+  };
+}
+
+/** Modelo novo: um dia com uma refeição em branco. */
+export function emptyDietDraft(): DietDraft {
+  return {
+    notices: [],
+    guidelines: '',
+    supplements: [],
+    days: [{ key: nextKey('day'), label: '', kind: 'other', usageNotes: '', notices: [], meals: [{ ...emptyMeal(), name: 'Café da manhã' }] }],
+  };
+}
+
+/** Novo dia ("Dia 2", "Dia 3"…) com uma refeição em branco. */
+export function addDay(draft: DietDraft): DietDraft {
+  const label = `Dia ${draft.days.length + 1}`;
+  // O 1º dia sem nome ganha "Dia 1" para as abas fazerem sentido.
+  const days = draft.days.map((day, i) => (day.label.trim() ? day : { ...day, label: `Dia ${i + 1}` }));
+  return { ...draft, days: [...days, { key: nextKey('day'), label, kind: 'other', usageNotes: '', notices: [], meals: [emptyMeal()] }] };
+}
+
+export function removeDay(draft: DietDraft, dayKey: string): DietDraft {
+  return draft.days.length > 1 ? { ...draft, days: draft.days.filter((day) => day.key !== dayKey) } : draft;
+}
+
+/** Rascunho revisado → conteúdo do modelo (mesma proposta do paciente, sem `replaceDraft`). */
+export function draftToTemplateContent(draft: DietDraft, objective: string): DietTemplateContent {
+  const { days, supplements, patientGuidelines } = draftToPayload(draft);
+  return { ...(objective.trim() ? { objective: objective.trim() } : {}), days: days ?? [], supplements, patientGuidelines };
+}
+
+/** Rascunho lido de um texto (Assistente)? Num modelo não há texto original, então nada de "Adicionado na revisão". */
+export function cameFromText(draft: DietDraft): boolean {
+  return draft.days.some((day) => day.meals.some((meal) => meal.groups.some((g) => g.choices.some((c) => c.foods.some((f) => f.sourceText !== null)))));
 }
 
 export function manualFood(food: CatalogFoodRef): DraftFood {

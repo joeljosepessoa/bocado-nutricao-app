@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import * as api from '../api/endpoints';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -103,7 +103,9 @@ export function DietAssistantPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [mode, setMode] = useState<Mode>('keep');
+  // ?modo=criar (vindo da tela Inteligência Artificial) já abre em "Deixar a IA montar".
+  const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState<Mode>(searchParams.get('modo') === 'criar' ? 'create' : 'keep');
   const [text, setText] = useState('');
   const [goal, setGoal] = useState('');
   const [targetKcal, setTargetKcal] = useState('');
