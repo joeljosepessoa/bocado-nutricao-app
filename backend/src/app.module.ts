@@ -19,6 +19,7 @@ import { FoodsModule } from './foods/foods.module';
 import { DietsModule } from './diets/diets.module';
 import { ExercisesModule } from './exercises/exercises.module';
 import { WorkoutsModule } from './workouts/workouts.module';
+import { TemplatesModule } from './templates/templates.module';
 import { ClientAppModule } from './client-app/client-app.module';
 import { ClientTrackingModule } from './client-tracking/client-tracking.module';
 import { AnamnesisModule } from './anamnesis/anamnesis.module';
@@ -51,6 +52,7 @@ import { ClientBillingModule } from './client-billing/client-billing.module';
     DietsModule,
     ExercisesModule,
     WorkoutsModule,
+    TemplatesModule,
     ClientAppModule,
     ClientTrackingModule,
     AnamnesisModule,

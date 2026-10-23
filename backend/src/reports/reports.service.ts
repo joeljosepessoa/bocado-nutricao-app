@@ -107,6 +107,41 @@ export class ReportsService {
     return { items: items.map((r) => ReportSummaryDto.fromEntity(r)), total, page: safePage, pageSize: safePageSize };
   }
 
+  /** Tela "Relatórios" do menu: relatórios de todos os pacientes do profissional, do mais novo para o mais antigo. */
+  async listAll(professionalId: string, page = 1, pageSize = 50) {
+    const safePage = page > 0 ? page : 1;
+    const safePageSize = pageSize > 0 && pageSize <= 100 ? pageSize : 50;
+    const where = { professionalId, client: { professionalId } };
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.report.findMany({
+        where,
+        select: {
+          ...REPORT_LIST_SELECT,
+          clientId: true,
+          client: { select: { user: { select: { fullName: true } } } },
+          evaluation: { select: { evaluatedAt: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (safePage - 1) * safePageSize,
+        take: safePageSize,
+      }),
+      this.prisma.report.count({ where }),
+    ]);
+
+    return {
+      items: items.map(({ client, evaluation, clientId, ...report }) => ({
+        ...ReportSummaryDto.fromEntity(report),
+        clientId,
+        clientName: client.user.fullName,
+        evaluatedAt: evaluation.evaluatedAt,
+      })),
+      total,
+      page: safePage,
+      pageSize: safePageSize,
+    };
+  }
+
   async findOne(professionalId: string, clientId: string, reportId: string): Promise<ReportSummaryDto> {
     const report = await this.assertOwnedReport(professionalId, clientId, reportId);
     return ReportSummaryDto.fromEntity(report);

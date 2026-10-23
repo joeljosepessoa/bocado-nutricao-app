@@ -148,6 +148,13 @@ export class FoodsService {
     });
   }
 
+  /** Nome dos alimentos visíveis entre os ids pedidos — os que sumiram do catálogo ficam de fora. */
+  async visibleRefsByIds(professionalId: string, ids: string[]): Promise<Array<{ id: string; name: string }>> {
+    const unique = [...new Set(ids)];
+    if (unique.length === 0) return [];
+    return this.prisma.food.findMany({ where: { id: { in: unique }, ...this.visibilityFilter(professionalId) }, select: { id: true, name: true } });
+  }
+
   /** Busca um alimento garantindo visibilidade (404 se privado de outro profissional). */
   async findVisible(professionalId: string, foodId: string): Promise<Food & { unitConversions: { unit: string; gramsEquivalent: number }[] }> {
     const food = await this.prisma.food.findFirst({

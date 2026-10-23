@@ -50,6 +50,18 @@ export const PHOTO_UPLOAD_LIMITS = {
   headerPairs: 8, // cada parte legítima traz 2 cabeçalhos (Content-Disposition e Content-Type)
 } as const;
 
+/** Tela "Avaliação" do menu: situação das avaliações de todos os pacientes (sem medidas). */
+@Controller('evaluations')
+@Roles(Role.professional)
+export class EvaluationsOverviewController {
+  constructor(private readonly evaluationsService: PhysicalEvaluationsService) {}
+
+  @Get('summary')
+  summary(@CurrentUser() user: AuthenticatedUser) {
+    return this.evaluationsService.summaryByClient(user.id);
+  }
+}
+
 @Controller('clients/:clientId/evaluations')
 @Roles(Role.professional)
 export class PhysicalEvaluationsController {

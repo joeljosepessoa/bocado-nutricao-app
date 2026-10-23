@@ -12,6 +12,22 @@ function meta(req: Request): RequestMeta {
   return { ipAddress: req.ip };
 }
 
+/** Tela "Relatórios" do menu: todos os relatórios do profissional, com o nome do paciente. */
+@Controller('reports')
+@Roles(Role.professional)
+export class ReportsOverviewController {
+  constructor(private readonly reportsService: ReportsService) {}
+
+  @Get()
+  list(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('page') page: string | undefined,
+    @Query('pageSize') pageSize: string | undefined,
+  ) {
+    return this.reportsService.listAll(user.id, page ? Number(page) : undefined, pageSize ? Number(pageSize) : undefined);
+  }
+}
+
 @Controller('clients/:clientId/reports')
 @Roles(Role.professional)
 export class ReportsController {

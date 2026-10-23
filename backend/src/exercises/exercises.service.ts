@@ -89,6 +89,17 @@ export class ExercisesService {
     return Promise.all(ordered.map((exercise) => this.mediaStorage.toDisplay(exercise)));
   }
 
+  /** Referências (com a mídia para exibir) dos exercícios visíveis entre os ids pedidos — os que sumiram do catálogo ficam de fora. */
+  async visibleRefsByIds(professionalId: string, ids: string[]): Promise<CatalogExerciseRef[]> {
+    const unique = [...new Set(ids)];
+    if (unique.length === 0) return [];
+    const refs = await this.prisma.exercise.findMany({
+      where: { id: { in: unique }, ...this.visibilityFilter(professionalId) },
+      select: { id: true, name: true, muscleGroup: true, equipment: true, imageUrl: true, media: PRIMARY_EXERCISE_MEDIA_QUERY },
+    });
+    return Promise.all(refs.map((ref) => this.mediaStorage.toDisplay(ref)));
+  }
+
   /** Catálogo visível ao profissional (mesmo filtro de `list`), só os campos usados no matching por nome. */
   async listVisibleCatalogRefs(professionalId: string): Promise<CatalogExerciseRef[]> {
     const refs = await this.prisma.exercise.findMany({

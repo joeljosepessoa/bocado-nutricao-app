@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { StorageModule } from '../storage/storage.module';
 import { PhysicalEvaluationsModule } from '../physical-evaluations/physical-evaluations.module';
 import { NotificationsModule } from '../notifications/notifications.module';
-import { EvaluationReportsController, ReportsController } from './reports.controller';
+import { EvaluationReportsController, ReportsController, ReportsOverviewController } from './reports.controller';
 import { ReportsService } from './reports.service';
 import { ReportAuditLogService } from './report-audit-log.service';
 import { PdfService } from './pdf.service';
@@ -10,7 +10,7 @@ import { PdfQueueService } from './pdf-queue.service';
 
 @Module({
   imports: [StorageModule, PhysicalEvaluationsModule, NotificationsModule],
-  controllers: [ReportsController, EvaluationReportsController],
+  controllers: [ReportsOverviewController, ReportsController, EvaluationReportsController],
   providers: [ReportsService, ReportAuditLogService, PdfService, PdfQueueService],
   exports: [ReportsService],
 })

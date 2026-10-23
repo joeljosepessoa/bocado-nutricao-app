@@ -228,6 +228,30 @@ export class PhysicalEvaluationsService {
     return this.findOne(professionalId, clientId, evaluation.id, meta, false);
   }
 
+  /**
+   * Tela "Avaliação" do menu: por paciente, quantas avaliações tem e quando foi a última.
+   * Só data e contagem — nenhuma medida sai daqui (essas continuam na ficha, com registro de acesso).
+   */
+  async summaryByClient(professionalId: string): Promise<Array<{ clientId: string; total: number; lastEvaluationId: string; lastEvaluatedAt: string }>> {
+    const where = { client: { professionalId } };
+    const [latest, counts] = await this.prisma.$transaction([
+      this.prisma.physicalEvaluation.findMany({
+        where,
+        select: { id: true, clientId: true, evaluatedAt: true },
+        orderBy: [{ evaluatedAt: 'desc' }, { createdAt: 'desc' }],
+        distinct: ['clientId'],
+      }),
+      this.prisma.physicalEvaluation.groupBy({ by: ['clientId'], where, _count: { _all: true }, orderBy: { clientId: 'asc' } }),
+    ]);
+    const totals = new Map(counts.map((row) => [row.clientId, typeof row._count === 'object' ? (row._count._all ?? 0) : 0]));
+    return latest.map((row) => ({
+      clientId: row.clientId,
+      total: totals.get(row.clientId) ?? 1,
+      lastEvaluationId: row.id,
+      lastEvaluatedAt: row.evaluatedAt.toISOString(),
+    }));
+  }
+
   async list(professionalId: string, clientId: string, page = 1, pageSize = 20, meta: RequestMeta = {}) {
     await this.assertOwnedClient(professionalId, clientId);
     const safePage = page > 0 ? page : 1;

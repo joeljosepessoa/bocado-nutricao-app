@@ -124,6 +124,7 @@ model Professional {
   clientSubscriptions     ClientSubscription[]
   clientInvoices          ClientInvoice[]
   clientBillingAuditLogs  ClientBillingAuditLog[]
+  templates               Template[]
 
   @@map("professionals")
 }
@@ -1550,6 +1551,32 @@ model AiInteractionLog {
   @@index([professionalId, createdAt])
   @@index([clientId])
   @@map("ai_interaction_logs")
+}
+
+enum TemplateKind {
+  diet
+  workout
+}
+
+// Modelos da biblioteca do profissional (dieta ou treino sem paciente).
+// content = a mesma proposta revisada que cria o rascunho do paciente
+// (CreateDietFromProposalDto / CreateWorkoutFromProposalDto), validada ao salvar.
+// Excluir manda para a lixeira (deletedAt); restaurar volta.
+model Template {
+  id             String       @id @default(uuid())
+  professionalId String       @map("professional_id")
+  kind           TemplateKind
+  name           String
+  description    String?      @db.Text
+  content        Json
+  deletedAt      DateTime?    @map("deleted_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at")
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+
+  @@index([professionalId, kind, deletedAt])
+  @@map("templates")
 }
 
 // Tabela de AÇÃO (mesmo papel que ScaleAuditLog/DeviceAuditLog) — só
