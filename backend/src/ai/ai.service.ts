@@ -17,6 +17,7 @@ import { OrganizeDietUseCase } from './use-cases/organize-diet/organize-diet.use
 import { CreateDietUseCase } from './use-cases/create-diet/create-diet.use-case';
 import { TemplateDietChatUseCase } from './use-cases/template-chat/template-diet-chat.use-case';
 import { TemplateWorkoutChatUseCase } from './use-cases/template-chat/template-workout-chat.use-case';
+import { PatientDietChatUseCase, PatientWorkoutChatUseCase } from './use-cases/template-chat/patient-chat.use-cases';
 import type { AiUseCase, BuildContextParams } from './use-cases/ai-use-case.interface';
 import { AiGenerationResponseDto } from './dto/ai-generation-response.dto';
 
@@ -94,6 +95,8 @@ export class AiService {
     createDiet: CreateDietUseCase,
     templateDietChat: TemplateDietChatUseCase,
     templateWorkoutChat: TemplateWorkoutChatUseCase,
+    patientDietChat: PatientDietChatUseCase,
+    patientWorkoutChat: PatientWorkoutChatUseCase,
   ) {
     this.useCases = new Map<AiFeatureKey, AiUseCase>([
       [draftNote.feature, draftNote],
@@ -104,6 +107,8 @@ export class AiService {
       [createDiet.feature, createDiet],
       [templateDietChat.feature, templateDietChat],
       [templateWorkoutChat.feature, templateWorkoutChat],
+      [patientDietChat.feature, patientDietChat],
+      [patientWorkoutChat.feature, patientWorkoutChat],
     ]);
     const configuredTimeout = Number(config.get<string>('AI_TIMEOUT_MS'));
     this.defaultTimeoutMs = Number.isFinite(configuredTimeout) && configuredTimeout > 0 ? configuredTimeout : DEFAULT_AI_TIMEOUT_MS;

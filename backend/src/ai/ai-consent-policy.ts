@@ -33,6 +33,9 @@ export const AI_CONSENT_POLICY: Readonly<Record<AiFeatureKey, AiFeatureConsentPo
   // Modelos (biblioteca): sem paciente — só o pedido do profissional, o modelo atual e o catálogo.
   template_diet_chat: { clientConsentRequired: false, processingPolicy: AiProcessingPolicy.professional_material },
   template_workout_chat: { clientConsentRequired: false, processingPolicy: AiProcessingPolicy.professional_material },
+  // Conversa dentro do paciente: idade, sexo, última avaliação e parte da anamnese (sem identificação) → consentimento dele.
+  patient_diet_chat: { clientConsentRequired: true, processingPolicy: AiProcessingPolicy.client_consent },
+  patient_workout_chat: { clientConsentRequired: true, processingPolicy: AiProcessingPolicy.client_consent },
   draft_note: { clientConsentRequired: true, processingPolicy: AiProcessingPolicy.client_consent },
   explain_evaluation: { clientConsentRequired: true, processingPolicy: AiProcessingPolicy.client_consent },
   narrate_trend: { clientConsentRequired: true, processingPolicy: AiProcessingPolicy.client_consent },

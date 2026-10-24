@@ -12,7 +12,7 @@ import { CHAT_DIET_JSON_SCHEMA, parseChatDiet, type ChatDietItem } from './templ
 
 type ContentItem = DietTemplateContentDto['days'][number]['meals'][number]['groups'][number]['choices'][number]['foods'][number];
 
-const SYSTEM_PROMPT = [
+export const SYSTEM_PROMPT = [
   'Você ajuda um nutricionista a montar um MODELO de plano alimentar reutilizável (sem paciente), conversando com ele.',
   'O nutricionista é o responsável: tudo o que você devolver é um rascunho que ele revisa antes de usar.',
   '',
@@ -86,8 +86,8 @@ function keptItems(current: DietTemplateContentDto | null | undefined, foodsById
  */
 @Injectable()
 export class TemplateDietChatUseCase implements AiUseCase {
-  readonly feature = AiFeatureKey.template_diet_chat;
-  readonly promptVersion = 'template_diet_chat@v1';
+  readonly feature: AiFeatureKey = AiFeatureKey.template_diet_chat;
+  readonly promptVersion: string = 'template_diet_chat@v1';
   readonly maxOutputChars = 60000;
   readonly timeoutMs = 180_000;
   readonly requiresStructuredOutput = true;

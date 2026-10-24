@@ -17,6 +17,7 @@ import { OrganizeDietUseCase } from './use-cases/organize-diet/organize-diet.use
 import { CreateDietUseCase } from './use-cases/create-diet/create-diet.use-case';
 import { TemplateDietChatUseCase } from './use-cases/template-chat/template-diet-chat.use-case';
 import { TemplateWorkoutChatUseCase } from './use-cases/template-chat/template-workout-chat.use-case';
+import { PatientDietChatUseCase, PatientWorkoutChatUseCase } from './use-cases/template-chat/patient-chat.use-cases';
 
 @Module({
   imports: [PhysicalEvaluationsModule, ExercisesModule, FoodsModule],
@@ -37,6 +38,8 @@ import { TemplateWorkoutChatUseCase } from './use-cases/template-chat/template-w
     CreateDietUseCase,
     TemplateDietChatUseCase,
     TemplateWorkoutChatUseCase,
+    PatientDietChatUseCase,
+    PatientWorkoutChatUseCase,
   ],
 })
 export class AiModule {}

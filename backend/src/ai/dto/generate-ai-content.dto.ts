@@ -12,10 +12,14 @@ export const DIET_MEALS_PER_DAY = { min: 1, max: 8 } as const;
  * (GenerateClientAiContentDto) tem allowlist própria e não aceita
  * organize_workout nem organize_diet.
  */
-/** Recursos sobre um paciente — os da conversa dos Modelos têm rota própria (/templates/ai) e não entram aqui. */
-export const CLIENT_SCOPED_FEATURES = Object.values(AiFeatureKey).filter(
-  (feature) => feature !== AiFeatureKey.template_diet_chat && feature !== AiFeatureKey.template_workout_chat,
-);
+/** As conversas (Modelos e dentro do paciente) têm rotas próprias, com o próprio formato de pedido — não entram aqui. */
+const CHAT_FEATURES: AiFeatureKey[] = [
+  AiFeatureKey.template_diet_chat,
+  AiFeatureKey.template_workout_chat,
+  AiFeatureKey.patient_diet_chat,
+  AiFeatureKey.patient_workout_chat,
+];
+export const CLIENT_SCOPED_FEATURES = Object.values(AiFeatureKey).filter((feature) => !CHAT_FEATURES.includes(feature));
 
 export class GenerateAiContentDto {
   @IsIn(CLIENT_SCOPED_FEATURES)

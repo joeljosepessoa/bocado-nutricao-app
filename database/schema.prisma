@@ -1501,6 +1501,10 @@ enum AiFeatureKey {
   template_diet_chat
   // Idem para modelo de treino, só com exercícios do catálogo visível ao profissional.
   template_workout_chat
+  // Conversa dentro do paciente: igual à dos Modelos, mais dados mínimos do paciente (idade, sexo,
+  // última avaliação e parte da anamnese, sem identificação) → exige o consentimento de IA do paciente.
+  patient_diet_chat
+  patient_workout_chat
 }
 
 // Por que um recurso de IA pôde processar o pedido: com consentimento

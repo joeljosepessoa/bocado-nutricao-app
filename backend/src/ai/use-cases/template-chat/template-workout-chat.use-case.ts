@@ -10,7 +10,7 @@ import type { AiGenerationResult } from '../../providers/ai-provider.interface';
 import type { AiContextResult, AiUseCase, BuildContextParams, ProcessedAiOutput } from '../ai-use-case.interface';
 import { CHAT_WORKOUT_JSON_SCHEMA, parseChatWorkout, type ChatWorkoutSet } from './template-chat.schema';
 
-const SYSTEM_PROMPT = [
+export const SYSTEM_PROMPT = [
   'Você ajuda um profissional (nutricionista/educador físico) a montar um MODELO de treino reutilizável (sem paciente), conversando com ele.',
   'O profissional é o responsável: tudo o que você devolver é um rascunho que ele revisa antes de usar.',
   '',
@@ -51,8 +51,8 @@ export function exerciseRefs(exercises: CatalogExerciseRef[]): Map<string, Catal
  */
 @Injectable()
 export class TemplateWorkoutChatUseCase implements AiUseCase {
-  readonly feature = AiFeatureKey.template_workout_chat;
-  readonly promptVersion = 'template_workout_chat@v1';
+  readonly feature: AiFeatureKey = AiFeatureKey.template_workout_chat;
+  readonly promptVersion: string = 'template_workout_chat@v1';
   readonly maxOutputChars = 60000;
   readonly timeoutMs = 180_000;
   readonly requiresStructuredOutput = true;

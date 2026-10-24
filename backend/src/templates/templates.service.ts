@@ -130,10 +130,37 @@ export class TemplatesService {
     const client = await this.prisma.client.findFirst({ where: { id: clientId, professionalId }, select: { id: true } });
     if (!client) throw new NotFoundException('Paciente não encontrado.');
     const content = kind === TemplateKind.diet ? await this.dietContentOf(clientId) : await this.workoutContentOf(clientId);
+    if (!content) {
+      throw new BadRequestException(
+        kind === TemplateKind.diet
+          ? 'Este paciente ainda não tem dieta com refeições para salvar como modelo.'
+          : 'Este paciente ainda não tem treino com dias para salvar como modelo.',
+      );
+    }
     return this.create(professionalId, kind, { name, description, content });
   }
 
-  private async dietContentOf(clientId: string): Promise<DietTemplateContentDto> {
+  /**
+   * Ponto de partida da conversa com a IA dentro do paciente: a dieta/treino atual (rascunho, se houver;
+   * senão a publicada) no formato do editor, com o nome atual dos alimentos/exercícios, e se o paciente
+   * já autorizou a IA (sem isso a conversa é bloqueada).
+   */
+  async clientContent(professionalId: string, kind: TemplateKind, clientId: string) {
+    const client = await this.prisma.client.findFirst({ where: { id: clientId, professionalId }, select: { aiDataProcessingConsentAt: true } });
+    if (!client) throw new NotFoundException('Paciente não encontrado.');
+    const patientAiConsent = client.aiDataProcessingConsentAt !== null;
+    if (kind === TemplateKind.diet) {
+      const content = await this.dietContentOf(clientId);
+      const ids = (content?.days ?? []).flatMap((d) => d.meals.flatMap((m) => m.groups.flatMap((g) => g.choices.flatMap((c) => c.foods.map((f) => f.foodId)))));
+      const foods = await this.foods.visibleRefsByIds(professionalId, ids.filter((id): id is string => !!id));
+      return { content, foods, patientAiConsent };
+    }
+    const content = await this.workoutContentOf(clientId);
+    const exercises = await this.exercises.visibleRefsByIds(professionalId, (content?.days ?? []).flatMap((d) => d.exercises.map((e) => e.exerciseId)));
+    return { content, exercises, patientAiConsent };
+  }
+
+  private async dietContentOf(clientId: string): Promise<DietTemplateContentDto | null> {
     const order = { orderBy: { order: 'asc' as const } };
     const version = await this.prisma.dietVersion.findFirst({
       where: { diet: { clientId, status: DietStatus.active }, status: { in: [DietVersionStatus.draft, DietVersionStatus.published] } },
@@ -144,7 +171,7 @@ export class TemplatesService {
         days: { ...order, include: { meals: { ...order, include: { groups: { ...order, include: { choices: { ...order, include: { foods: order } } } } } } } },
       },
     });
-    if (!version || version.days.every((day) => day.meals.length === 0)) throw new BadRequestException('Este paciente ainda não tem dieta com refeições para salvar como modelo.');
+    if (!version || version.days.every((day) => day.meals.length === 0)) return null;
     return {
       ...(version.objective ? { objective: version.objective } : {}),
       days: version.days
@@ -187,14 +214,14 @@ export class TemplatesService {
     } as DietTemplateContentDto;
   }
 
-  private async workoutContentOf(clientId: string): Promise<WorkoutTemplateContentDto> {
+  private async workoutContentOf(clientId: string): Promise<WorkoutTemplateContentDto | null> {
     const order = { orderBy: { order: 'asc' as const } };
     const version = await this.prisma.workoutVersion.findFirst({
       where: { workout: { clientId, status: WorkoutStatus.active }, status: { in: [WorkoutVersionStatus.draft, WorkoutVersionStatus.published] } },
       orderBy: [{ workout: { createdAt: 'desc' } }, { status: 'asc' }, { versionNumber: 'desc' }],
       include: { days: { ...order, include: { exercises: { ...order, include: { sets: order } } } } },
     });
-    if (!version || version.days.length === 0) throw new BadRequestException('Este paciente ainda não tem treino com dias para salvar como modelo.');
+    if (!version || version.days.length === 0) return null;
     return {
       ...(version.objective ? { objective: version.objective } : {}),
       days: version.days.map((day) => ({

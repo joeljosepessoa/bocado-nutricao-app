@@ -122,3 +122,20 @@ export class WorkoutTemplatesController {
     return this.templates.apply(user.id, TemplateKind.workout, id, dto.clientId, false, { ipAddress: req.ip });
   }
 }
+
+/** Dieta/treino atual do paciente no formato do editor — ponto de partida da conversa com a IA dentro do paciente. */
+@Controller('clients/:clientId')
+@Roles(Role.professional)
+export class ClientContentController {
+  constructor(private readonly templates: TemplatesService) {}
+
+  @Get('diet-content')
+  diet(@CurrentUser() user: AuthenticatedUser, @Param('clientId', ParseUUIDPipe) clientId: string) {
+    return this.templates.clientContent(user.id, TemplateKind.diet, clientId);
+  }
+
+  @Get('workout-content')
+  workout(@CurrentUser() user: AuthenticatedUser, @Param('clientId', ParseUUIDPipe) clientId: string) {
+    return this.templates.clientContent(user.id, TemplateKind.workout, clientId);
+  }
+}

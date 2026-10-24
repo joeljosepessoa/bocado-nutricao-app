@@ -95,6 +95,34 @@ export class ProfessionalClientAiController {
     });
   }
 
+  /** Conversa com a IA sobre a dieta do paciente (usa idade, sexo, última avaliação e parte da anamnese). */
+  @Throttle({ default: { limit: AI_GENERATE_THROTTLE_LIMIT, ttl: 60_000 } })
+  @Post('diet-chat')
+  dietChat(@CurrentUser() user: AuthenticatedUser, @Param('clientId') clientId: string, @Body() dto: TemplateDietChatDto, @Req() req: Request) {
+    return this.aiService.generate({
+      professionalId: user.id,
+      clientId,
+      requireProfessionalConsent: true,
+      feature: AiFeatureKey.patient_diet_chat,
+      input: dto,
+      meta: meta(req),
+    });
+  }
+
+  /** Conversa com a IA sobre o treino do paciente. */
+  @Throttle({ default: { limit: AI_GENERATE_THROTTLE_LIMIT, ttl: 60_000 } })
+  @Post('workout-chat')
+  workoutChat(@CurrentUser() user: AuthenticatedUser, @Param('clientId') clientId: string, @Body() dto: TemplateWorkoutChatDto, @Req() req: Request) {
+    return this.aiService.generate({
+      professionalId: user.id,
+      clientId,
+      requireProfessionalConsent: true,
+      feature: AiFeatureKey.patient_workout_chat,
+      input: dto,
+      meta: meta(req),
+    });
+  }
+
   @Get('interactions')
   listInteractions(
     @CurrentUser() user: AuthenticatedUser,
