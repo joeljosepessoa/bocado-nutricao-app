@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ExercisesModule } from '../exercises/exercises.module';
 import { FoodsModule } from '../foods/foods.module';
 import { PhysicalEvaluationsModule } from '../physical-evaluations/physical-evaluations.module';
-import { ClientAiController, ProfessionalAiConsentController, ProfessionalClientAiController } from './ai.controller';
+import { ClientAiController, ProfessionalAiConsentController, ProfessionalClientAiController, TemplateAiController } from './ai.controller';
 import { AiService } from './ai.service';
 import { AiAuditLogService } from './ai-audit-log.service';
 import { AiProviderRegistry } from './providers/ai-provider.registry';
@@ -15,10 +15,12 @@ import { NarrateTrendUseCase } from './use-cases/narrate-trend.use-case';
 import { OrganizeWorkoutUseCase } from './use-cases/organize-workout/organize-workout.use-case';
 import { OrganizeDietUseCase } from './use-cases/organize-diet/organize-diet.use-case';
 import { CreateDietUseCase } from './use-cases/create-diet/create-diet.use-case';
+import { TemplateDietChatUseCase } from './use-cases/template-chat/template-diet-chat.use-case';
+import { TemplateWorkoutChatUseCase } from './use-cases/template-chat/template-workout-chat.use-case';
 
 @Module({
   imports: [PhysicalEvaluationsModule, ExercisesModule, FoodsModule],
-  controllers: [ProfessionalAiConsentController, ClientAiController, ProfessionalClientAiController],
+  controllers: [ProfessionalAiConsentController, ClientAiController, ProfessionalClientAiController, TemplateAiController],
   providers: [
     AiService,
     AiAuditLogService,
@@ -33,6 +35,8 @@ import { CreateDietUseCase } from './use-cases/create-diet/create-diet.use-case'
     OrganizeWorkoutUseCase,
     OrganizeDietUseCase,
     CreateDietUseCase,
+    TemplateDietChatUseCase,
+    TemplateWorkoutChatUseCase,
   ],
 })
 export class AiModule {}

@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Query, Req } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { Role } from '@prisma/client';
+import { AiFeatureKey, Role } from '@prisma/client';
 import { Request } from 'express';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -8,6 +8,7 @@ import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { AiService, RequestMeta } from './ai.service';
 import { GenerateAiContentDto } from './dto/generate-ai-content.dto';
 import { GenerateClientAiContentDto } from './dto/generate-client-ai-content.dto';
+import { TemplateDietChatDto, TemplateWorkoutChatDto } from './dto/template-chat.dto';
 
 // Mesmo padrão de AUTH_THROTTLE_LIMIT (auth-http.util.ts): baixo por padrão
 // em produção, elevado via env nos testes e2e para não travar a própria
@@ -107,5 +108,41 @@ export class ProfessionalClientAiController {
       page ? Number(page) : undefined,
       pageSize ? Number(pageSize) : undefined,
     );
+  }
+}
+
+/**
+ * Conversa com a IA nos Modelos (biblioteca, sem paciente). Só o consentimento de IA do PRÓPRIO
+ * profissional vale aqui: o contexto é o pedido dele, o modelo atual e o catálogo — nenhum dado de paciente.
+ */
+@Controller('templates/ai')
+@Roles(Role.professional)
+export class TemplateAiController {
+  constructor(private readonly aiService: AiService) {}
+
+  @Throttle({ default: { limit: AI_GENERATE_THROTTLE_LIMIT, ttl: 60_000 } })
+  @Post('diet')
+  diet(@CurrentUser() user: AuthenticatedUser, @Body() dto: TemplateDietChatDto, @Req() req: Request) {
+    return this.aiService.generate({
+      professionalId: user.id,
+      clientId: null,
+      requireProfessionalConsent: true,
+      feature: AiFeatureKey.template_diet_chat,
+      input: dto,
+      meta: meta(req),
+    });
+  }
+
+  @Throttle({ default: { limit: AI_GENERATE_THROTTLE_LIMIT, ttl: 60_000 } })
+  @Post('workout')
+  workout(@CurrentUser() user: AuthenticatedUser, @Body() dto: TemplateWorkoutChatDto, @Req() req: Request) {
+    return this.aiService.generate({
+      professionalId: user.id,
+      clientId: null,
+      requireProfessionalConsent: true,
+      feature: AiFeatureKey.template_workout_chat,
+      input: dto,
+      meta: meta(req),
+    });
   }
 }

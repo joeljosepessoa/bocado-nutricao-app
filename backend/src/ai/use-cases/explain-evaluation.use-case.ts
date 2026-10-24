@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AiFeatureKey } from '@prisma/client';
 import { PhysicalEvaluationsService } from '../../physical-evaluations/physical-evaluations.service';
-import type { AiContextResult, AiUseCase, BuildContextParams } from './ai-use-case.interface';
+import { type AiContextResult, type AiUseCase, type BuildContextParams, requireClientId } from './ai-use-case.interface';
 
 const SYSTEM_PROMPT =
   'Você explica, em linguagem simples, os números de uma avaliação física de um cliente que já foi liberada ' +
@@ -29,7 +29,7 @@ export class ExplainEvaluationUseCase implements AiUseCase {
 
   async buildContext({ clientId, input }: BuildContextParams): Promise<AiContextResult> {
     const { evaluationId } = input as ExplainEvaluationInput;
-    const summary = await this.evaluations.getReleasedSummaryForClient(clientId, evaluationId);
+    const summary = await this.evaluations.getReleasedSummaryForClient(requireClientId(clientId), evaluationId);
     if (!summary) {
       throw new NotFoundException('Avaliação não encontrada ou ainda não liberada ao cliente.');
     }

@@ -15,6 +15,8 @@ import { NarrateTrendUseCase } from './use-cases/narrate-trend.use-case';
 import { OrganizeWorkoutUseCase } from './use-cases/organize-workout/organize-workout.use-case';
 import { OrganizeDietUseCase } from './use-cases/organize-diet/organize-diet.use-case';
 import { CreateDietUseCase } from './use-cases/create-diet/create-diet.use-case';
+import { TemplateDietChatUseCase } from './use-cases/template-chat/template-diet-chat.use-case';
+import { TemplateWorkoutChatUseCase } from './use-cases/template-chat/template-workout-chat.use-case';
 import type { AiUseCase, BuildContextParams } from './use-cases/ai-use-case.interface';
 import { AiGenerationResponseDto } from './dto/ai-generation-response.dto';
 
@@ -57,7 +59,8 @@ function safeErrorMessage(error: unknown): string {
 
 export interface GenerateParams {
   professionalId: string;
-  clientId: string;
+  /** null = recurso sem paciente (Modelos): só vale para recurso que não exige consentimento do cliente. */
+  clientId: string | null;
   /** false só no fluxo iniciado pelo próprio cliente sobre o próprio dado. */
   requireProfessionalConsent: boolean;
   feature: AiFeatureKey;
@@ -89,6 +92,8 @@ export class AiService {
     organizeWorkout: OrganizeWorkoutUseCase,
     organizeDiet: OrganizeDietUseCase,
     createDiet: CreateDietUseCase,
+    templateDietChat: TemplateDietChatUseCase,
+    templateWorkoutChat: TemplateWorkoutChatUseCase,
   ) {
     this.useCases = new Map<AiFeatureKey, AiUseCase>([
       [draftNote.feature, draftNote],
@@ -97,6 +102,8 @@ export class AiService {
       [organizeWorkout.feature, organizeWorkout],
       [organizeDiet.feature, organizeDiet],
       [createDiet.feature, createDiet],
+      [templateDietChat.feature, templateDietChat],
+      [templateWorkoutChat.feature, templateWorkoutChat],
     ]);
     const configuredTimeout = Number(config.get<string>('AI_TIMEOUT_MS'));
     this.defaultTimeoutMs = Number.isFinite(configuredTimeout) && configuredTimeout > 0 ? configuredTimeout : DEFAULT_AI_TIMEOUT_MS;
@@ -126,17 +133,19 @@ export class AiService {
 
   private async checkConsent(
     professionalId: string,
-    clientId: string,
+    clientId: string | null,
     requireProfessionalConsent: boolean,
     clientConsentRequired: boolean,
   ): Promise<{ ok: true } | { ok: false; reason: string }> {
-    const client = await this.prisma.client.findUniqueOrThrow({
-      where: { id: clientId },
-      select: { aiDataProcessingConsentAt: true },
-    });
-    if (clientConsentRequired && !client.aiDataProcessingConsentAt) {
-      // Só o próprio cliente concede (app → Privacidade e dados); o profissional nunca consente por ele.
-      return { ok: false, reason: CLIENT_AI_CONSENT_MISSING_MESSAGE };
+    if (clientId !== null) {
+      const client = await this.prisma.client.findUniqueOrThrow({
+        where: { id: clientId },
+        select: { aiDataProcessingConsentAt: true },
+      });
+      if (clientConsentRequired && !client.aiDataProcessingConsentAt) {
+        // Só o próprio cliente concede (app → Privacidade e dados); o profissional nunca consente por ele.
+        return { ok: false, reason: CLIENT_AI_CONSENT_MISSING_MESSAGE };
+      }
     }
 
     if (requireProfessionalConsent) {
@@ -159,12 +168,16 @@ export class AiService {
       throw new BadRequestException(`Funcionalidade de IA "${params.feature}" não existe.`);
     }
 
-    if (params.requireProfessionalConsent) {
+    // Política por recurso (ai-consent-policy.ts): única fonte da exigência de consentimento do cliente.
+    const policy = AI_CONSENT_POLICY[params.feature];
+    if (params.clientId === null && policy.clientConsentRequired) {
+      throw new BadRequestException('Este recurso de IA precisa de um paciente.');
+    }
+
+    if (params.requireProfessionalConsent && params.clientId !== null) {
       await this.assertOwnedClient(params.professionalId, params.clientId);
     }
 
-    // Política por recurso (ai-consent-policy.ts): única fonte da exigência de consentimento do cliente.
-    const policy = AI_CONSENT_POLICY[params.feature];
     const consent = await this.checkConsent(
       params.professionalId,
       params.clientId,
@@ -174,7 +187,7 @@ export class AiService {
     if (!consent.ok) {
       await this.auditLog.record({
         professionalId: params.professionalId,
-        clientId: params.clientId,
+        clientId: params.clientId ?? undefined,
         feature: params.feature,
         action: AiAuditAction.generation_blocked,
         ipAddress: meta.ipAddress,
@@ -184,7 +197,7 @@ export class AiService {
 
     await this.auditLog.record({
       professionalId: params.professionalId,
-      clientId: params.clientId,
+      clientId: params.clientId ?? undefined,
       feature: params.feature,
       action: AiAuditAction.generation_requested,
       ipAddress: meta.ipAddress,
@@ -281,7 +294,7 @@ export class AiService {
 
     await this.auditLog.record({
       professionalId: params.professionalId,
-      clientId: params.clientId,
+      clientId: params.clientId ?? undefined,
       feature: params.feature,
       action: status === AiInteractionStatus.succeeded ? AiAuditAction.generation_succeeded : AiAuditAction.generation_failed,
       ipAddress: meta.ipAddress,

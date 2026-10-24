@@ -6,7 +6,7 @@ import { FoodsService } from '../../../foods/foods.service';
 import { AiOutputValidationError } from '../../ai-errors';
 import type { GenerateAiContentDto } from '../../dto/generate-ai-content.dto';
 import type { AiGenerationResult } from '../../providers/ai-provider.interface';
-import type { AiContextResult, AiUseCase, BuildContextParams, ProcessedAiOutput } from '../ai-use-case.interface';
+import { type AiContextResult, type AiUseCase, type BuildContextParams, type ProcessedAiOutput, requireClientId } from '../ai-use-case.interface';
 import type { OrganizedDietProposal, ProposalDay, ProposalDietItem } from '../organize-diet/organize-diet.use-case';
 import { CREATED_DIET_JSON_SCHEMA, parseCreatedDiet, type AiCreatedItem } from './created-diet.schema';
 
@@ -166,7 +166,7 @@ export class CreateDietUseCase implements AiUseCase {
     if (foods.length === 0) {
       throw new BadRequestException('O catálogo ainda não tem alimentos com valores completos para a IA montar a dieta.');
     }
-    const patient = await this.patientContext(professionalId, clientId);
+    const patient = await this.patientContext(professionalId, requireClientId(clientId));
     const catalogo = [...catalogRefs(foods)].map(([ref, food]) => ({
       ref,
       nome: food.name.trim(),

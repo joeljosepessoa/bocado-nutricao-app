@@ -11,8 +11,15 @@ export interface AiContextResult {
 
 export interface BuildContextParams {
   professionalId: string;
-  clientId: string;
+  /** null = recurso sem paciente (ex.: Modelos da biblioteca). */
+  clientId: string | null;
   input: unknown;
+}
+
+/** Recursos que só existem sobre um paciente: falha cedo (e de forma clara) se chamados sem ele. */
+export function requireClientId(clientId: string | null): string {
+  if (!clientId) throw new Error('Este recurso de IA precisa de um paciente.');
+  return clientId;
 }
 
 export interface ProcessedAiOutput {

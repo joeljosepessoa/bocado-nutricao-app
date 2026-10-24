@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AiFeatureKey } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import type { AiContextResult, AiUseCase, BuildContextParams } from './ai-use-case.interface';
+import { type AiContextResult, type AiUseCase, type BuildContextParams, requireClientId } from './ai-use-case.interface';
 import type { GenerateAiContentDto } from '../dto/generate-ai-content.dto';
 
 const SYSTEM_PROMPT =
@@ -25,7 +25,7 @@ export class DraftNoteUseCase implements AiUseCase {
   async buildContext({ clientId, input }: BuildContextParams): Promise<AiContextResult> {
     const dto = input as GenerateAiContentDto;
     const client = await this.prisma.client.findUniqueOrThrow({
-      where: { id: clientId },
+      where: { id: requireClientId(clientId) },
       select: { user: { select: { fullName: true } } },
     });
     const clientFirstName = client.user.fullName.split(' ')[0];

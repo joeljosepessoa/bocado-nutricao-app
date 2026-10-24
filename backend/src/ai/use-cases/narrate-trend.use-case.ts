@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { AiFeatureKey } from '@prisma/client';
 import { PhysicalEvaluationsService } from '../../physical-evaluations/physical-evaluations.service';
 import { computeDeterministicTrend, daysBetween } from './compute-deterministic-trend';
-import type { AiContextResult, AiUseCase, BuildContextParams } from './ai-use-case.interface';
+import { type AiContextResult, type AiUseCase, type BuildContextParams, requireClientId } from './ai-use-case.interface';
 
 const SYSTEM_PROMPT =
   'Você recebe uma tendência JÁ CALCULADA (não recalcule, não invente valores) entre as duas avaliações ' +
@@ -24,7 +24,7 @@ export class NarrateTrendUseCase implements AiUseCase {
   constructor(private readonly evaluations: PhysicalEvaluationsService) {}
 
   async buildContext({ clientId }: BuildContextParams): Promise<AiContextResult> {
-    const { items } = await this.evaluations.listReleasedForClient(clientId, 1, 2);
+    const { items } = await this.evaluations.listReleasedForClient(requireClientId(clientId), 1, 2);
     if (items.length < 2) {
       throw new BadRequestException('Ainda não há avaliações liberadas suficientes para calcular uma tendência.');
     }

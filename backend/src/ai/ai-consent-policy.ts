@@ -30,6 +30,9 @@ export const AI_CONSENT_POLICY: Readonly<Record<AiFeatureKey, AiFeatureConsentPo
   organize_diet: { clientConsentRequired: false, processingPolicy: AiProcessingPolicy.professional_material },
   // Envia dados mínimos do cliente (idade, sexo, última avaliação) → só com o consentimento dele.
   create_diet: { clientConsentRequired: true, processingPolicy: AiProcessingPolicy.client_consent },
+  // Modelos (biblioteca): sem paciente — só o pedido do profissional, o modelo atual e o catálogo.
+  template_diet_chat: { clientConsentRequired: false, processingPolicy: AiProcessingPolicy.professional_material },
+  template_workout_chat: { clientConsentRequired: false, processingPolicy: AiProcessingPolicy.professional_material },
   draft_note: { clientConsentRequired: true, processingPolicy: AiProcessingPolicy.client_consent },
   explain_evaluation: { clientConsentRequired: true, processingPolicy: AiProcessingPolicy.client_consent },
   narrate_trend: { clientConsentRequired: true, processingPolicy: AiProcessingPolicy.client_consent },

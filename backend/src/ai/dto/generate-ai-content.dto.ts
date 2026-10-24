@@ -1,4 +1,4 @@
-import { IsEnum, IsIn, IsInt, IsString, IsUUID, Matches, Max, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
+import { IsIn, IsInt, IsString, IsUUID, Matches, Max, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
 import { AiFeatureKey } from '@prisma/client';
 
 export const MAX_WORKOUT_TEXT_LENGTH = 12000;
@@ -12,8 +12,13 @@ export const DIET_MEALS_PER_DAY = { min: 1, max: 8 } as const;
  * (GenerateClientAiContentDto) tem allowlist própria e não aceita
  * organize_workout nem organize_diet.
  */
+/** Recursos sobre um paciente — os da conversa dos Modelos têm rota própria (/templates/ai) e não entram aqui. */
+export const CLIENT_SCOPED_FEATURES = Object.values(AiFeatureKey).filter(
+  (feature) => feature !== AiFeatureKey.template_diet_chat && feature !== AiFeatureKey.template_workout_chat,
+);
+
 export class GenerateAiContentDto {
-  @IsEnum(AiFeatureKey)
+  @IsIn(CLIENT_SCOPED_FEATURES)
   feature!: AiFeatureKey;
 
   // Só exigido/aceito para draft_note.
