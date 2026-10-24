@@ -152,11 +152,11 @@ describe('Relatórios (menu)', () => {
 });
 
 describe('Inteligência Artificial (menu)', () => {
-  it('ferramentas ficam bloqueadas até escolher o paciente; "Montar dieta com a IA" abre o assistente no modo criar', async () => {
+  it('ferramentas ficam bloqueadas até escolher o paciente; montar a dieta e o treino conversando abrem a conversa do paciente', async () => {
     const user = userEvent.setup();
     renderAt('/ia', <AiPage />);
 
-    const create = screen.getByRole('button', { name: /Montar dieta com a IA/ });
+    const create = screen.getByRole('button', { name: /Montar a dieta conversando com a IA/ });
     expect(create).toBeDisabled();
 
     const select = screen.getByLabelText('Paciente');
@@ -164,8 +164,8 @@ describe('Inteligência Artificial (menu)', () => {
     expect(within(select).queryByRole('option', { name: 'Paciente Arquivado' })).not.toBeInTheDocument();
     await user.selectOptions(select, 'c1');
 
-    await user.click(screen.getByRole('button', { name: /Montar dieta com a IA/ }));
-    expect(screen.getByTestId('where')).toHaveTextContent('/clients/c1/diet/assistant?modo=criar');
+    await user.click(screen.getByRole('button', { name: /Montar a dieta conversando com a IA/ }));
+    expect(screen.getByTestId('where')).toHaveTextContent('/clients/c1/diet/ia');
   });
 
   it('paciente sem avaliação: "Explicar a avaliação" fica bloqueado com o motivo; treino continua disponível', async () => {

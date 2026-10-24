@@ -38,6 +38,7 @@ export function DietTab() {
   const templateApplied = (location.state as { templateApplied?: string } | null)?.templateApplied;
   const [actionError, setActionError] = useState<string | null>(null);
   const openAssistant = () => navigate(`/clients/${clientId}/diet/assistant`);
+  const openAiChat = () => navigate(`/clients/${clientId}/diet/ia`);
 
   const { data: dietList, isLoading: loadingList } = useQuery({
     queryKey: ['diets', clientId],
@@ -120,8 +121,11 @@ export function DietTab() {
             <Button variant="secondary" onClick={() => setUsingTemplate(true)}>
               Usar um modelo
             </Button>
+            <Button variant="secondary" onClick={openAiChat}>
+              🤖 Montar com a IA
+            </Button>
             <Button variant="secondary" onClick={openAssistant}>
-              🤖 Organizar dieta com IA
+              Organizar dieta escrita
             </Button>
             {usingTemplate ? <ApplyTemplateModal kind="diet" clientId={clientId} onClose={() => setUsingTemplate(false)} onApplied={() => setUsingTemplate(false)} /> : null}
           </div>
@@ -187,15 +191,18 @@ export function DietTab() {
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ minWidth: 220, flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: 14.5 }}>🤖 Organizar com IA</div>
+            <div style={{ fontWeight: 700, fontSize: 14.5 }}>🤖 Inteligência Artificial</div>
             <div style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', marginTop: 2 }}>
-              Use a IA para organizar uma dieta já elaborada. A IA não altera quantidades, alimentos ou prescrição — o resultado vira rascunho para você
-              revisar.
+              <strong>Montar com a IA</strong>: converse com a IA, que já conhece a anamnese e a avaliação do paciente. <strong>Organizar dieta escrita</strong>:
+              cole uma dieta pronta e a IA só organiza, sem mudar nada. Os dois viram rascunho para você revisar.
             </div>
           </div>
-          <Button variant="secondary" onClick={openAssistant}>
-            Assistente de Dieta
-          </Button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Button onClick={openAiChat}>Montar com a IA</Button>
+            <Button variant="secondary" onClick={openAssistant}>
+              Organizar dieta escrita
+            </Button>
+          </div>
         </div>
       </Card>
 

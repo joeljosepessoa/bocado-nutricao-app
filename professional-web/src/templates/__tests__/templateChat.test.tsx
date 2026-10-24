@@ -69,7 +69,7 @@ describe('Conversa com a IA no modelo de dieta', () => {
 
     expect(api.templateDietChat).toHaveBeenCalledWith([{ role: 'professional', text: 'Monte uma dieta de 1800 kcal' }], null);
     expect(await screen.findByText('Montei 2 refeições de 1.800 kcal.')).toBeInTheDocument();
-    expect(screen.getByText('✓ Modelo atualizado no editor')).toBeInTheDocument();
+    expect(screen.getByText('✓ Atualizado no editor')).toBeInTheDocument();
     expect(screen.getByText(/1\.780 kcal · P 120 g · C 180 g · G 60 g/)).toBeInTheDocument();
     expect(screen.getByText(/Não achei tofu no catálogo/)).toBeInTheDocument();
     expect(screen.getAllByDisplayValue('Desjejum IA').length).toBeGreaterThan(0);

@@ -18,11 +18,18 @@ interface Tool {
 
 const TOOLS: Tool[] = [
   {
-    key: 'create-diet',
+    key: 'chat-diet',
     icon: 'sparkles',
-    title: 'Montar dieta com a IA',
-    description: 'Você descreve o objetivo, as calorias e quantas refeições; a IA monta a dieta com os alimentos do catálogo.',
-    path: (clientId) => `/clients/${clientId}/diet/assistant?modo=criar`,
+    title: 'Montar a dieta conversando com a IA',
+    description: 'A IA já conhece a anamnese e a última avaliação do paciente. Você pede, ela monta com os alimentos do catálogo, e você ajusta conversando.',
+    path: (clientId) => `/clients/${clientId}/diet/ia`,
+  },
+  {
+    key: 'chat-workout',
+    icon: 'dumbbell',
+    title: 'Montar o treino conversando com a IA',
+    description: 'A IA usa a anamnese e a avaliação do paciente para montar o treino com os exercícios do catálogo; você ajusta conversando.',
+    path: (clientId) => `/clients/${clientId}/workout/ia`,
   },
   {
     key: 'organize-diet',
@@ -34,7 +41,7 @@ const TOOLS: Tool[] = [
   {
     key: 'organize-workout',
     icon: 'dumbbell',
-    title: 'Organizar um treino',
+    title: 'Organizar um treino escrito',
     description: 'Cole o treino escrito; a IA separa os dias, exercícios, séries e repetições para você conferir.',
     path: (clientId) => `/clients/${clientId}/workout/assistant`,
   },

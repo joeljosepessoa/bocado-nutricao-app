@@ -48,6 +48,8 @@ export function TemplateAiChat({
   blockedReason,
   canUndo,
   onUndo,
+  suggestions,
+  intro,
 }: {
   kind: TemplateKind;
   /** Onde a conversa fica guardada enquanto o painel está aberto (id do modelo, ou "novo-…"). */
@@ -56,6 +58,10 @@ export function TemplateAiChat({
   blockedReason: () => string | null;
   canUndo: boolean;
   onUndo: () => void;
+  /** Sugestões para começar (padrão: as dos Modelos). */
+  suggestions?: string[];
+  /** Texto de abertura (padrão: o dos Modelos). */
+  intro?: string;
 }) {
   const [bubbles, setBubbles] = useState<Bubble[]>(() => readChat(memoryKey));
   const [input, setInput] = useState('');
@@ -143,10 +149,10 @@ export function TemplateAiChat({
         {bubbles.length === 0 ? (
           <div className={styles.empty}>
             <span>
-              Peça para a IA {kind === 'diet' ? 'montar ou ajustar a dieta' : 'montar ou ajustar o treino'}. O resultado aparece no editor do modelo para você
-              conferir.
+              {intro ??
+                `Peça para a IA ${kind === 'diet' ? 'montar ou ajustar a dieta' : 'montar ou ajustar o treino'}. O resultado aparece no editor do modelo para você conferir.`}
             </span>
-            {SUGGESTIONS[kind].map((suggestion) => (
+            {(suggestions ?? SUGGESTIONS[kind]).map((suggestion) => (
               <button key={suggestion} type="button" className={styles.suggestion} onClick={() => submit(suggestion)} disabled={sending}>
                 {suggestion}
               </button>
@@ -156,7 +162,7 @@ export function TemplateAiChat({
           bubbles.map((bubble, i) => (
             <div key={i} className={[styles.bubble, bubble.role === 'professional' ? styles.mine : bubble.failed ? styles.failed : styles.theirs].join(' ')}>
               {bubble.text}
-              {bubble.role === 'assistant' && bubble.changed ? <div className={styles.meta}>✓ Modelo atualizado no editor</div> : null}
+              {bubble.role === 'assistant' && bubble.changed ? <div className={styles.meta}>✓ Atualizado no editor</div> : null}
               {bubble.summary ? <div className={styles.meta}>{bubble.summary}</div> : null}
               {(bubble.warnings ?? []).map((warning) => (
                 <div key={warning} className={styles.warning}>
@@ -199,7 +205,7 @@ export function TemplateAiChat({
           onKeyDown={onKeyDown}
         />
         <div className={styles.composerRow}>
-          <span className={styles.hint}>Enter envia · Shift+Enter quebra a linha · não escreva dados de paciente</span>
+          <span className={styles.hint}>Enter envia · Shift+Enter quebra a linha · não escreva nome nem documentos de paciente</span>
           <Button size="small" onClick={() => submit()} loading={sending} disabled={!input.trim()}>
             Enviar
           </Button>

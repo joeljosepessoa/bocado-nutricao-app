@@ -1,5 +1,7 @@
 import { apiClient } from './client';
 import type {
+  CatalogExerciseRef,
+  CatalogFoodRef,
   DietChatResult,
   TemplateChatMessage,
   WorkoutChatResult,
@@ -830,6 +832,28 @@ export async function templateDietChat(messages: TemplateChatMessage[], current:
 /** Conversa com a IA no modelo de treino. */
 export async function templateWorkoutChat(messages: TemplateChatMessage[], current: WorkoutTemplateContent | null): Promise<WorkoutChatResult> {
   const res = await apiClient.post<{ structuredData: WorkoutChatResult }>('/templates/ai/workout', { messages, ...(current ? { current } : {}) });
+  return res.data.structuredData;
+}
+
+/** Dieta atual do paciente no formato do editor (rascunho, se houver; senão a publicada) e se ele autorizou a IA. */
+export async function getClientDietContent(clientId: string): Promise<{ content: DietTemplateContent | null; foods: CatalogFoodRef[]; patientAiConsent: boolean }> {
+  const res = await apiClient.get(`/clients/${clientId}/diet-content`);
+  return res.data;
+}
+
+export async function getClientWorkoutContent(clientId: string): Promise<{ content: WorkoutTemplateContent | null; exercises: CatalogExerciseRef[]; patientAiConsent: boolean }> {
+  const res = await apiClient.get(`/clients/${clientId}/workout-content`);
+  return res.data;
+}
+
+/** Conversa com a IA sobre a dieta do paciente (usa idade, sexo, avaliação e anamnese; exige a autorização dele). */
+export async function patientDietChat(clientId: string, messages: TemplateChatMessage[], current: DietTemplateContent | null): Promise<DietChatResult> {
+  const res = await apiClient.post<{ structuredData: DietChatResult }>(`/clients/${clientId}/ai/diet-chat`, { messages, ...(current ? { current } : {}) });
+  return res.data.structuredData;
+}
+
+export async function patientWorkoutChat(clientId: string, messages: TemplateChatMessage[], current: WorkoutTemplateContent | null): Promise<WorkoutChatResult> {
+  const res = await apiClient.post<{ structuredData: WorkoutChatResult }>(`/clients/${clientId}/ai/workout-chat`, { messages, ...(current ? { current } : {}) });
   return res.data.structuredData;
 }
 

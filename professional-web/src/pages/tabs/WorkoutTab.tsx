@@ -33,6 +33,7 @@ export function WorkoutTab() {
   const templateApplied = (location.state as { templateApplied?: string } | null)?.templateApplied;
   const [actionError, setActionError] = useState<string | null>(null);
   const openAssistant = () => navigate(`/clients/${clientId}/workout/assistant`);
+  const openAiChat = () => navigate(`/clients/${clientId}/workout/ia`);
 
   const { data: workoutList, isLoading: loadingList } = useQuery({
     queryKey: ['workouts', clientId],
@@ -123,8 +124,11 @@ export function WorkoutTab() {
             <Button variant="secondary" onClick={() => setUsingTemplate(true)}>
               Usar um modelo
             </Button>
+            <Button variant="secondary" onClick={openAiChat}>
+              🤖 Montar com a IA
+            </Button>
             <Button variant="secondary" onClick={openAssistant}>
-              🤖 Assistente de Treino
+              Organizar treino escrito
             </Button>
             {usingTemplate ? <ApplyTemplateModal kind="workout" clientId={clientId} onClose={() => setUsingTemplate(false)} onApplied={() => setUsingTemplate(false)} /> : null}
           </div>
@@ -156,8 +160,11 @@ export function WorkoutTab() {
           <Button variant="secondary" onClick={() => setUsingTemplate(true)}>
             Usar um modelo
           </Button>
+          <Button variant="secondary" onClick={openAiChat}>
+            🤖 Montar com a IA
+          </Button>
           <Button variant="secondary" onClick={openAssistant}>
-            🤖 Assistente de Treino
+            Organizar treino escrito
           </Button>
           {draft ? (
             <Button onClick={() => publishMutation.mutate()} loading={publishMutation.isPending}>

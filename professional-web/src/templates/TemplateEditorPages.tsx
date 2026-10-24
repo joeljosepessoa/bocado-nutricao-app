@@ -22,10 +22,11 @@ import {
   templateToDraft as workoutTemplateToDraft,
   type WorkoutDraft,
 } from '../workoutAssistant/draft';
-import type { DietChatResult, TemplateKind, TemplateSummary } from '../types/api';
+import type { TemplateKind, TemplateSummary } from '../types/api';
 import { ApplyTemplateModal } from './ApplyTemplateModal';
 import { TemplateAiChat } from './TemplateAiChat';
 import { forgetChat, moveChat, newTemplateChatKey } from './chatMemory';
+import { blockedBy, dietHasFoods, nutritionSummary, workoutHasExercises } from './chatHelpers';
 import chatStyles from './TemplateAiChat.module.css';
 
 const inputStyle = {
@@ -236,27 +237,6 @@ function TemplateShell({
     </div>
   );
 }
-
-const kcalText = (n: number) => Math.round(n).toLocaleString('pt-BR');
-
-/** "1.780 kcal · P 120 g · C 180 g · G 60 g" por dia (faixa quando há escolhas), calculado pelo sistema. */
-function nutritionSummary(nutrition: DietChatResult['nutrition']): string | null {
-  if (nutrition.length === 0) return null;
-  return nutrition
-    .map((day) => {
-      const kcal =
-        kcalText(day.min.kcal) === kcalText(day.max.kcal) ? `${kcalText(day.min.kcal)} kcal` : `${kcalText(day.min.kcal)}–${kcalText(day.max.kcal)} kcal`;
-      const macros = `P ${Math.round(day.max.proteinG)} g · C ${Math.round(day.max.carbG)} g · G ${Math.round(day.max.fatG)} g`;
-      const label = nutrition.length > 1 ? `${day.label ?? 'Dia'}: ` : '';
-      return `${label}${kcal} · ${macros}${day.partial ? ' (alguns itens sem cálculo)' : ''}`;
-    })
-    .join('\n');
-}
-
-const dietHasFoods = (draft: DietDraft) => draft.days.some((d) => d.meals.some((m) => m.groups.some((g) => g.choices.some((c) => c.foods.length > 0))));
-const workoutHasExercises = (draft: WorkoutDraft) => draft.days.some((d) => d.exercises.length > 0);
-const blockedBy = (problems: string[]) =>
-  problems.length > 0 ? `Antes de pedir à IA, corrija no editor: ${problems.slice(0, 3).join(' ')}${problems.length > 3 ? ' …' : ''}` : null;
 
 /** Salvar (criar ou atualizar) e, se pedido, abrir a escolha do paciente. */
 function useTemplateSave(kind: TemplateKind, templateId: string | undefined) {

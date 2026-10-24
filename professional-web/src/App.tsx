@@ -27,6 +27,7 @@ import { EvaluationsPage } from './pages/EvaluationsPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { AiPage } from './pages/AiPage';
 import { TemplatesPage } from './templates/TemplatesPage';
+import { PatientDietAiPage, PatientWorkoutAiPage } from './patientAi/PatientAiPages';
 import { DietTemplateEditorPage, WorkoutTemplateEditorPage } from './templates/TemplateEditorPages';
 import { AnamnesisPage } from './pages/AnamnesisPage';
 import { PlanPage } from './pages/PlanPage';
@@ -81,8 +82,10 @@ function App() {
                 <Route path="tracking" element={<TrackingTab />} />
                 <Route path="diet" element={<DietTab />} />
                 <Route path="diet/assistant" element={<DietAssistantPage />} />
+                <Route path="diet/ia" element={<PatientDietAiPage />} />
                 <Route path="workout" element={<WorkoutTab />} />
                 <Route path="workout/assistant" element={<WorkoutAssistantPage />} />
+                <Route path="workout/ia" element={<PatientWorkoutAiPage />} />
                 <Route path="reports" element={<ReportsTab />} />
                 <Route path="messages" element={<MessagesTab />} />
               </Route>
