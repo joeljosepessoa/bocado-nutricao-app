@@ -1,5 +1,8 @@
 import { apiClient } from './client';
 import type {
+  DietChatResult,
+  TemplateChatMessage,
+  WorkoutChatResult,
   DietTemplateContent,
   DietTemplateDetail,
   SaveTemplateInput,
@@ -816,6 +819,18 @@ export async function deleteTemplate(kind: TemplateKind, id: string): Promise<vo
 export async function restoreTemplate(kind: TemplateKind, id: string): Promise<TemplateSummary> {
   const res = await apiClient.post<TemplateSummary>(`${TEMPLATE_PATH[kind]}/${id}/restore`);
   return res.data;
+}
+
+/** Conversa com a IA no modelo de dieta: devolve a resposta e, se mudou, o modelo inteiro (nada é gravado). */
+export async function templateDietChat(messages: TemplateChatMessage[], current: DietTemplateContent | null): Promise<DietChatResult> {
+  const res = await apiClient.post<{ structuredData: DietChatResult }>('/templates/ai/diet', { messages, ...(current ? { current } : {}) });
+  return res.data.structuredData;
+}
+
+/** Conversa com a IA no modelo de treino. */
+export async function templateWorkoutChat(messages: TemplateChatMessage[], current: WorkoutTemplateContent | null): Promise<WorkoutChatResult> {
+  const res = await apiClient.post<{ structuredData: WorkoutChatResult }>('/templates/ai/workout', { messages, ...(current ? { current } : {}) });
+  return res.data.structuredData;
 }
 
 /** "Salvar como modelo": copia a dieta/treino atual do paciente (rascunho, se houver; senão a publicada). */

@@ -541,6 +541,31 @@ export interface WorkoutTemplateDetail extends TemplateSummary {
   exercises: CatalogExerciseRef[];
 }
 
+/** Uma fala da conversa com a IA nos Modelos (o painel guarda e reenvia o histórico). */
+export interface TemplateChatMessage {
+  role: 'professional' | 'assistant';
+  text: string;
+}
+
+export interface DietChatResult {
+  reply: string;
+  /** false = a IA só respondeu/perguntou; o modelo continua como estava. */
+  changed: boolean;
+  warnings: string[];
+  content: DietTemplateContent | null;
+  foods: CatalogFoodRef[];
+  /** Calculado pelo sistema, por dia (faixa quando há blocos "escolher 1"; partial = algum item sem cálculo). */
+  nutrition: Array<{ label: string | null; min: Nutrients; max: Nutrients; partial: boolean }>;
+}
+
+export interface WorkoutChatResult {
+  reply: string;
+  changed: boolean;
+  warnings: string[];
+  content: WorkoutTemplateContent | null;
+  exercises: CatalogExerciseRef[];
+}
+
 export interface SaveTemplateInput<C> {
   name: string;
   description?: string | null;
