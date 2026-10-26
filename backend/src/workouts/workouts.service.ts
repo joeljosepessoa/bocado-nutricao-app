@@ -1134,7 +1134,43 @@ export class WorkoutsService {
     if (!version) {
       return null;
     }
-    return WorkoutClientSummaryDto.fromPublishedVersion(await this.withDisplayMedia(sortVersionDetail(version)));
+    const summary = WorkoutClientSummaryDto.fromPublishedVersion(await this.withDisplayMedia(sortVersionDetail(version)));
+    if (!summary) return null;
+
+    // Última vez que o aluno fez cada exercício (pelo exercício do catálogo, então vale de uma versão do treino para a outra).
+    const exerciseIdByWorkoutExercise = new Map(version.days.flatMap((day) => day.exercises.map((ex) => [ex.id, ex.exerciseId] as const)));
+    const exerciseIds = [...new Set(exerciseIdByWorkoutExercise.values())];
+    if (exerciseIds.length > 0) {
+      const done = await this.prisma.workoutExecutionSet.findMany({
+        where: { executionLog: { clientId }, workoutExercise: { exerciseId: { in: exerciseIds } } },
+        select: {
+          executionLogId: true,
+          setOrder: true,
+          repsPerformed: true,
+          loadValue: true,
+          loadUnit: true,
+          executionLog: { select: { performedAt: true } },
+          workoutExercise: { select: { exerciseId: true } },
+        },
+        orderBy: [{ executionLog: { performedAt: 'desc' } }, { setOrder: 'asc' }],
+        take: 3000,
+      });
+      const last = new Map<string, { logId: string; performedAt: Date; sets: Array<{ setOrder: number; repsPerformed: number | null; loadValue: number | null; loadUnit: string | null }> }>();
+      for (const row of done) {
+        const exerciseId = row.workoutExercise.exerciseId;
+        const entry = last.get(exerciseId) ?? { logId: row.executionLogId, performedAt: row.executionLog.performedAt, sets: [] };
+        if (entry.logId !== row.executionLogId) continue; // só o treino mais recente com esse exercício
+        entry.sets.push({ setOrder: row.setOrder, repsPerformed: row.repsPerformed, loadValue: row.loadValue, loadUnit: row.loadUnit });
+        last.set(exerciseId, entry);
+      }
+      for (const day of summary.days) {
+        for (const exercise of day.exercises) {
+          const found = last.get(exerciseIdByWorkoutExercise.get(exercise.workoutExerciseId) ?? '');
+          exercise.lastPerformance = found ? { performedAt: found.performedAt, sets: found.sets.sort((a, b) => a.setOrder - b.setOrder) } : null;
+        }
+      }
+    }
+    return summary;
   }
 
   /**

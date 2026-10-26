@@ -212,6 +212,59 @@ describe('Aplicativo do cliente (e2e)', () => {
     expect(list.body.total).toBe(1);
   });
 
+  // 6a. Treino montado pelo Assistente/modelo (séries numeradas a partir de 0): a 1ª série é aceita e a carga volta na próxima vez
+  it('registra a 1ª série (ordem 0) e devolve a última carga de cada exercício, mesmo depois de uma versão nova do treino', async () => {
+    const professional = await registerProfessional(app);
+    const proAuth = { Authorization: `Bearer ${professional.accessToken}` };
+    const { client, temporaryPassword } = await createClient(app, professional.accessToken);
+    const exercise = await createExercise(app, professional.accessToken, { name: 'Mesa flexora' });
+    const created = await request(app.getHttpServer())
+      .post(`/clients/${client.id}/workouts/from-proposal`)
+      .set(proAuth)
+      .send({ days: [{ name: 'Treino A', exercises: [{ exerciseId: exercise.id, sets: [{ reps: 15 }, { reps: 12 }, { reps: 10 }] }] }] })
+      .expect(201);
+    const publish = (versionId: string) =>
+      request(app.getHttpServer()).post(`/clients/${client.id}/workouts/${created.body.id}/versions/${versionId}/publish`).set(proAuth).expect(200);
+    await publish(created.body.currentVersion.id);
+
+    const session = await login(app, client.user.email, temporaryPassword);
+    const auth = { Authorization: `Bearer ${session.accessToken}` };
+    const first = await request(app.getHttpServer()).get('/client/workout').set(auth).expect(200);
+    const day = first.body.workout.days[0];
+    const ex = day.exercises[0];
+    expect(ex.sets.map((s: { order: number }) => s.order)).toEqual([0, 1, 2]);
+    expect(ex.lastPerformance).toBeNull();
+
+    await request(app.getHttpServer())
+      .post('/client/workout/execution-logs')
+      .set(auth)
+      .send({
+        workoutDayId: day.workoutDayId,
+        performedAt: '2026-10-17T22:00:00.000Z',
+        sets: [
+          { workoutExerciseId: ex.workoutExerciseId, setOrder: 0, repsPerformed: 15, loadValue: 30, loadUnit: 'kg' },
+          { workoutExerciseId: ex.workoutExerciseId, setOrder: 1, repsPerformed: 12, loadValue: 35, loadUnit: 'kg' },
+        ],
+      })
+      .expect(201);
+
+    const again = await request(app.getHttpServer()).get('/client/workout').set(auth).expect(200);
+    expect(again.body.workout.days[0].exercises[0].lastPerformance).toEqual({
+      performedAt: '2026-10-17T22:00:00.000Z',
+      sets: [
+        { setOrder: 0, repsPerformed: 15, loadValue: 30, loadUnit: 'kg' },
+        { setOrder: 1, repsPerformed: 12, loadValue: 35, loadUnit: 'kg' },
+      ],
+    });
+
+    // O profissional publica uma versão nova (ids novos): a última carga continua vindo, pelo exercício.
+    const v2 = await request(app.getHttpServer()).post(`/clients/${client.id}/workouts/${created.body.id}/versions`).set(proAuth).expect(201);
+    await publish(v2.body.id);
+    const afterNewVersion = await request(app.getHttpServer()).get('/client/workout').set(auth).expect(200);
+    expect(afterNewVersion.body.workout.versionId).toBe(v2.body.id);
+    expect(afterNewVersion.body.workout.days[0].exercises[0].lastPerformance.sets[1].loadValue).toBe(35);
+  });
+
   // 6b. O aluno recebe a prescrição inteira: faixa de repetições, técnica, observações e o "como fazer"
   it('GET /client/workout leva faixa de repetições, observações e instruções do exercício', async () => {
     const professional = await registerProfessional(app);

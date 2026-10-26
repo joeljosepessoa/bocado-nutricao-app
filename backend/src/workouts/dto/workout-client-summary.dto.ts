@@ -24,6 +24,12 @@ export class WorkoutClientSetDto {
   notes!: string | null;
 }
 
+/** O que o aluno fez neste exercício da última vez (qualquer versão do treino), para o app já preencher a carga. */
+export class WorkoutClientLastPerformanceDto {
+  performedAt!: Date;
+  sets!: Array<{ setOrder: number; repsPerformed: number | null; loadValue: number | null; loadUnit: string | null }>;
+}
+
 export class WorkoutClientExerciseDto {
   workoutExerciseId!: string;
   exerciseName!: string;
@@ -37,6 +43,8 @@ export class WorkoutClientExerciseDto {
   imageUrl!: string | null;
   order!: number;
   sets!: WorkoutClientSetDto[];
+  /** Última execução deste exercício pelo próprio aluno; null se ainda não fez. */
+  lastPerformance!: WorkoutClientLastPerformanceDto | null;
 }
 
 export class WorkoutClientDayDto {
@@ -112,6 +120,7 @@ export class WorkoutClientSummaryDto {
         exDto.videoUrl = ex.exercise.videoUrl;
         exDto.imageUrl = ex.exercise.imageUrl;
         exDto.order = ex.order;
+        exDto.lastPerformance = null;
         exDto.sets = ex.sets.map((s) => {
           const setDto = new WorkoutClientSetDto();
           setDto.order = s.order;

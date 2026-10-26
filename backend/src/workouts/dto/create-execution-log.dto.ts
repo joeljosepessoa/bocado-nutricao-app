@@ -19,8 +19,9 @@ export class CreateExecutionSetDto {
   @IsUUID()
   workoutExerciseId!: string;
 
+  // A ordem das séries no sistema começa em 0 (1ª série = 0). Exigir 1 aqui recusava todo treino com a 1ª série marcada.
   @IsInt()
-  @Min(1)
+  @Min(0)
   setOrder!: number;
 
   @IsOptional() @IsInt() @Min(0) repsPerformed?: number;
