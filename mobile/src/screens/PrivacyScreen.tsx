@@ -5,17 +5,66 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { TextField } from '../components/TextField';
+import { LegalDocumentModal } from '../components/LegalDocumentModal';
 import * as api from '../api/endpoints';
+import type { LegalDocument, LegalDocumentsResponse, LegalStatus } from '../types/api';
+import { acceptedAtLabel } from '../legal/legalGate';
+import { consentStatusLabel, isConsentGranted, setAiConsent } from '../privacy/aiConsent';
 import { spacing, typography } from '../theme/tokens';
 import { useStyles, type ThemeColors } from '../theme/theme';
 
-import { AI_FEATURES, consentStatusLabel, isConsentGranted, setAiConsent } from '../privacy/aiConsent';
+/** Termos de Uso e Política de Privacidade: versões aceitas, data do aceite e o texto completo. */
+function LegalDocumentsSection() {
+  const styles = useStyles(makeStyles);
+  const [status, setStatus] = useState<LegalStatus | null>(null);
+  const [docs, setDocs] = useState<LegalDocumentsResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [reading, setReading] = useState<LegalDocument | null>(null);
+
+  useEffect(() => {
+    Promise.all([api.getLegalStatus(), api.getLegalDocuments()])
+      .then(([legalStatus, legalDocs]) => {
+        setStatus(legalStatus);
+        setDocs(legalDocs);
+      })
+      .catch(() => setError('Não foi possível carregar seus documentos agora.'));
+  }, []);
+
+  const open = (kind: LegalDocument['kind']) => setReading(docs?.documents.find((d) => d.kind === kind) ?? null);
+  const termsVersion = status?.accepted?.termsVersion ?? status?.currentTermsVersion;
+  const privacyVersion = status?.accepted?.privacyVersion ?? status?.currentPrivacyVersion;
+
+  return (
+    <Card>
+      <Text style={styles.title}>Seus documentos</Text>
+      {status ? (
+        <>
+          <Text style={styles.body}>
+            Termos de Uso {termsVersion} e Política de Privacidade {privacyVersion}.
+          </Text>
+          {status.accepted ? <Text style={styles.caption}>{acceptedAtLabel(status.accepted.acceptedAt)}</Text> : null}
+        </>
+      ) : !error ? (
+        <Text style={styles.body}>Carregando…</Text>
+      ) : null}
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {docs ? (
+        <View style={styles.row}>
+          <Button title="Termos de Uso" variant="secondary" compact onPress={() => open('terms')} style={styles.rowButton} />
+          <Button title="Política de Privacidade" variant="secondary" compact onPress={() => open('privacy')} style={styles.rowButton} />
+        </View>
+      ) : null}
+      <LegalDocumentModal document={reading} onClose={() => setReading(null)} />
+    </Card>
+  );
+}
 
 /**
- * Consulta, concessão e revogação do consentimento de IA da própria cliente.
- * Abrir a tela só CONSULTA; conceder exige marcar a caixa e salvar.
+ * Autorização opcional das análises automáticas (resumos e explicações em texto simples dos dados
+ * liberados). Mesma API e mesma regra de antes: abrir a tela só CONSULTA; ativar exige marcar a
+ * caixa e salvar; dá para desativar a qualquer momento.
  */
-function AiConsentSection() {
+function OptionalAnalysesSection() {
   const styles = useStyles(makeStyles);
   const [consentedAt, setConsentedAt] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -51,26 +100,18 @@ function AiConsentSection() {
 
   return (
     <Card>
-      <Text style={styles.title}>Uso de inteligência artificial</Text>
+      <Text style={styles.title}>Análises automáticas (opcional)</Text>
       <Text style={styles.body}>
-        Alguns recursos do Bocado de Nutrição usam inteligência artificial (IA). Veja o que cada um usa e se depende da
-        sua autorização:
-      </Text>
-      {AI_FEATURES.map((feature) => (
-        <View key={feature.name} style={styles.feature}>
-          <Text style={styles.featureName}>• {feature.name}</Text>
-          <Text style={styles.body}>{feature.data}</Text>
-          <Text style={styles.caption}>
-            {feature.requiresConsent ? 'Depende da sua autorização.' : 'Não depende desta autorização.'}
-          </Text>
-        </View>
-      ))}
-      <Text style={styles.caption}>
-        Texto informativo sobre o funcionamento técnico do aplicativo. A política de privacidade definitiva ainda será
-        revisada.
+        Permite que o app prepare resumos e explicações em texto simples dos seus resultados já liberados pelo seu
+        profissional, e que ele use ferramentas de apoio ao organizar o seu acompanhamento. Você pode desativar quando
+        quiser.
       </Text>
 
-      {!loaded ? <Text style={styles.body}>Carregando sua preferência…</Text> : <Text style={styles.featureName}>{consentStatusLabel(consentedAt)}</Text>}
+      {!loaded ? (
+        <Text style={styles.body}>Carregando sua preferência…</Text>
+      ) : (
+        <Text style={styles.status}>{consentStatusLabel(consentedAt)}</Text>
+      )}
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       {loaded && !granted ? (
@@ -82,10 +123,7 @@ function AiConsentSection() {
             style={styles.checkboxRow}
           >
             <Text style={styles.checkbox}>{checked ? '☑' : '☐'}</Text>
-            <Text style={[styles.body, styles.checkboxLabel]}>
-              Autorizo o processamento dos meus dados por inteligência artificial para os recursos que dependem desta
-              autorização.
-            </Text>
+            <Text style={[styles.body, styles.checkboxLabel]}>Autorizo as análises automáticas dos meus dados para esses recursos.</Text>
           </Pressable>
           <Button title="Salvar preferência" onPress={() => save(true)} loading={saving} disabled={!checked} />
         </>
@@ -94,14 +132,14 @@ function AiConsentSection() {
       {loaded && granted ? (
         <>
           <Text style={styles.body}>
-            Você pode revogar quando quiser. A revogação bloqueia novos usos desses recursos; o que já foi gerado e
-            seus demais dados não são apagados.
+            Ao desativar, esses recursos deixam de ser usados a partir de agora; o que já foi gerado e seus demais dados
+            não são apagados.
           </Text>
           {!confirmRevoke ? (
-            <Button title="Revogar autorização" variant="secondary" onPress={() => setConfirmRevoke(true)} />
+            <Button title="Desativar" variant="secondary" onPress={() => setConfirmRevoke(true)} />
           ) : (
             <>
-              <Button title="Confirmar revogação" variant="danger" onPress={() => save(false)} loading={saving} />
+              <Button title="Confirmar desativação" variant="danger" onPress={() => save(false)} loading={saving} />
               <Button title="Cancelar" variant="secondary" onPress={() => setConfirmRevoke(false)} />
             </>
           )}
@@ -151,16 +189,17 @@ export function PrivacyScreen() {
 
   return (
     <ScreenContainer>
-      <AiConsentSection />
+      <LegalDocumentsSection />
+      <OptionalAnalysesSection />
 
       <Card>
-        <Text style={styles.title}>Exportar meus dados</Text>
+        <Text style={styles.title}>Baixar meus dados</Text>
         <Text style={styles.body}>
           Baixe uma cópia de tudo que registramos sobre você: perfil, avaliações liberadas, dieta e treino atuais,
-          relatórios, mensagens, consultas, dispositivos e preferências.
+          relatórios, mensagens, consultas, dispositivos, preferências e o histórico de aceite dos termos.
         </Text>
         {exportError ? <Text style={styles.error}>{exportError}</Text> : null}
-        <Button title="Exportar meus dados" variant="secondary" onPress={handleExport} loading={exporting} />
+        <Button title="Baixar meus dados" variant="secondary" onPress={handleExport} loading={exporting} />
       </Card>
 
       <Card>
@@ -201,9 +240,10 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   body: { ...typography.body, color: colors.textSecondary },
   error: { ...typography.caption, color: colors.danger },
   caption: { ...typography.caption, color: colors.textSecondary },
-  feature: { gap: spacing.xs },
-  featureName: { ...typography.body, color: colors.textPrimary, fontWeight: '600' },
+  status: { ...typography.body, color: colors.textPrimary, fontWeight: '600' },
   checkboxRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   checkbox: { fontSize: 22, color: colors.primary, lineHeight: 24 },
   checkboxLabel: { flex: 1 },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  rowButton: { flexGrow: 1 },
 });

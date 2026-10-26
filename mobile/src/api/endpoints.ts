@@ -13,6 +13,9 @@ import type {
   DeviceMetricSample,
   DeviceSourceType,
   DietClientSummary,
+  LegalDocumentsResponse,
+  LegalStatus,
+  LegalVersions,
   EvolutionEntry,
   IngestMetricsResult,
   Message,
@@ -49,8 +52,23 @@ export async function changePassword(currentPassword: string, newPassword: strin
   await apiClient.post('/auth/change-password', { currentPassword, newPassword });
 }
 
-export async function acceptPrivacyTerms(): Promise<void> {
-  await apiClient.post('/client/accept-privacy-terms');
+/** Termos de Uso e Política de Privacidade vigentes (rota pública: usada antes do login). */
+export async function getLegalDocuments(): Promise<LegalDocumentsResponse> {
+  const res = await apiClient.get<LegalDocumentsResponse>('/legal/documents');
+  return res.data;
+}
+
+export async function getLegalStatus(): Promise<LegalStatus> {
+  const res = await apiClient.get<LegalStatus>('/client/legal/status');
+  return res.data;
+}
+
+export async function acceptLegal(
+  versions: LegalVersions,
+  meta: { source: 'mobile_app' | 'mobile_app_first_open'; appVersion?: string; platform?: string },
+): Promise<LegalStatus> {
+  const res = await apiClient.post<LegalStatus>('/client/legal/accept', { acceptTerms: true, acceptPrivacy: true, ...versions, ...meta });
+  return res.data;
 }
 
 export async function getMe(): Promise<ClientSelf> {

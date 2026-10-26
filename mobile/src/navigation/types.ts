@@ -33,7 +33,8 @@ export type RootStackParamList = {
   Splash: undefined;
   Login: undefined;
   ChangePassword: undefined;
-  PrivacyConsent: undefined;
+  Welcome: undefined;
+  TermsAcceptance: undefined;
   Main: NavigatorScreenParams<MainTabParamList>;
   // A lista inteira (não só o item) viaja com a navegação: o gráfico de
   // evolução e a comparação "inicial vs. atual" precisam de todo o

@@ -1,4 +1,4 @@
-import { AI_FEATURES, consentStatusLabel, isConsentGranted, setAiConsent, type AiConsentApi } from '../aiConsent';
+import { consentStatusLabel, isConsentGranted, setAiConsent, type AiConsentApi } from '../aiConsent';
 
 function fakeApi(initial: string | null) {
   let state = initial;
@@ -41,8 +41,4 @@ describe('consentimento de IA no app', () => {
     expect(api.calls).toEqual(['revoke', 'get']);
   });
 
-  it('descrição dos recursos espelha a política do servidor: só a organização de treino dispensa o consentimento', () => {
-    expect(AI_FEATURES.filter((f) => !f.requiresConsent).map((f) => f.name)).toEqual(['Organização de treino pelo seu profissional']);
-    expect(AI_FEATURES.filter((f) => f.requiresConsent)).toHaveLength(2);
-  });
 });

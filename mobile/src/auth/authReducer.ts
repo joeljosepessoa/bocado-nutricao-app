@@ -1,10 +1,11 @@
 import type { SessionUser } from '../types/api';
+import { termsRequired } from '../legal/legalGate';
 
 export type AuthStatus =
   | 'loading'
   | 'unauthenticated'
   | 'mustChangePassword'
-  | 'mustAcceptPrivacy'
+  | 'mustAcceptTerms'
   | 'authenticated';
 
 export interface AuthState {
@@ -19,7 +20,9 @@ export type AuthEvent =
   | { type: 'SESSION_RESTORED'; user: SessionUser; accessToken: string }
   | { type: 'LOGIN_SUCCESS'; user: SessionUser; accessToken: string }
   | { type: 'PASSWORD_CHANGED' }
-  | { type: 'PRIVACY_ACCEPTED' }
+  | { type: 'TERMS_ACCEPTED' }
+  /** O servidor recusou com TERMS_REQUIRED (ex.: os termos mudaram com o app aberto). */
+  | { type: 'TERMS_REQUIRED' }
   | { type: 'PROFILE_UPDATED'; user: SessionUser }
   | { type: 'SESSION_EXPIRED' }
   | { type: 'LOGOUT' };
@@ -31,16 +34,18 @@ export const initialAuthState: AuthState = {
 };
 
 /**
- * A senha temporária é resolvida antes do aceite de privacidade: o primeiro
+ * A senha temporária é resolvida antes do aceite dos Termos/Política: o primeiro
  * acesso do cliente não deveria depender de uma senha compartilhada
  * informalmente pelo profissional para consentir com o tratamento de dados.
+ * (Na primeira abertura do app o aceite já acontece antes do login e é enviado
+ * sozinho ao entrar — então normalmente esta etapa nem aparece.)
  */
 function deriveStatus(user: SessionUser): AuthStatus {
   if (user.mustChangePassword) {
     return 'mustChangePassword';
   }
-  if (!user.privacyAcceptedAt) {
-    return 'mustAcceptPrivacy';
+  if (termsRequired(user)) {
+    return 'mustAcceptTerms';
   }
   return 'authenticated';
 }
@@ -69,16 +74,28 @@ export function authReducer(state: AuthState, event: AuthEvent): AuthState {
       return { ...state, user, status: deriveStatus(user) };
     }
 
-    case 'PRIVACY_ACCEPTED': {
+    case 'TERMS_ACCEPTED': {
       if (!state.user) {
         return state;
       }
-      const user: SessionUser = { ...state.user, privacyAcceptedAt: new Date().toISOString() };
+      const user: SessionUser = {
+        ...state.user,
+        termsAcceptanceRequired: false,
+        privacyAcceptedAt: state.user.privacyAcceptedAt ?? new Date().toISOString(),
+      };
+      return { ...state, user, status: deriveStatus(user) };
+    }
+
+    case 'TERMS_REQUIRED': {
+      if (!state.user || state.status !== 'authenticated') {
+        return state;
+      }
+      const user: SessionUser = { ...state.user, termsAcceptanceRequired: true };
       return { ...state, user, status: deriveStatus(user) };
     }
 
     case 'PROFILE_UPDATED': {
-      if (state.status !== 'authenticated' && state.status !== 'mustAcceptPrivacy') {
+      if (state.status !== 'authenticated' && state.status !== 'mustAcceptTerms') {
         return state;
       }
       return { ...state, user: event.user, status: deriveStatus(event.user) };

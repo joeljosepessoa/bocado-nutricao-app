@@ -1,35 +1,11 @@
 /**
- * Consentimento de IA da própria cliente — lógica única usada pela tela
- * Privacidade e dados e pelo "Concordar e continuar" da Evolução. Função pura
- * (sem react-native) para ser testável em Jest/node.
+ * Autorização opcional das "análises automáticas" (consentimento de IA da própria cliente) —
+ * lógica única usada pela tela Privacidade e dados e pelo "Ativar e continuar" da Evolução.
+ * Função pura (sem react-native) para ser testável em Jest/node.
  *
- * Espelha a política por recurso do backend (backend/src/ai/ai-consent-policy.ts):
- * quem decide de verdade é o servidor; aqui é só a descrição transparente.
+ * Quem decide por recurso é o servidor (backend/src/ai/ai-consent-policy.ts). Para o paciente o
+ * texto fala em "análises automáticas"; a transparência fica na Política de Privacidade.
  */
-
-export interface AiFeatureDescription {
-  name: string;
-  data: string;
-  requiresConsent: boolean;
-}
-
-export const AI_FEATURES: readonly AiFeatureDescription[] = [
-  {
-    name: 'Explicação da avaliação física e resumo da sua evolução (neste aplicativo)',
-    data: 'Usa dados das suas avaliações liberadas, como peso e composição corporal.',
-    requiresConsent: true,
-  },
-  {
-    name: 'Rascunho de anotações pelo seu profissional',
-    data: 'Usa seu primeiro nome e as instruções escritas pelo profissional.',
-    requiresConsent: true,
-  },
-  {
-    name: 'Organização de treino pelo seu profissional',
-    data: 'Usa apenas o texto de treino escrito pelo profissional — nada do seu cadastro, avaliações ou dieta.',
-    requiresConsent: false,
-  },
-];
 
 export interface AiConsentApi {
   getAiConsent(): Promise<{ aiDataProcessingConsentAt: string | null }>;

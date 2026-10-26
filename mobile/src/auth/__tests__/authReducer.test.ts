@@ -30,10 +30,10 @@ describe('authReducer', () => {
     expect(state.status).toBe('mustChangePassword');
   });
 
-  it('login sem troca de senha pendente mas sem aceite de privacidade vai para mustAcceptPrivacy', () => {
+  it('login sem troca de senha pendente mas sem aceite de privacidade vai para mustAcceptTerms', () => {
     const user = makeUser({ mustChangePassword: false, privacyAcceptedAt: null });
     const state = authReducer(initialAuthState, { type: 'LOGIN_SUCCESS', user, accessToken: 'tok' });
-    expect(state.status).toBe('mustAcceptPrivacy');
+    expect(state.status).toBe('mustAcceptTerms');
   });
 
   it('primeiro acesso completo (senha temporária + privacidade pendente): troca de senha vem antes', () => {
@@ -49,22 +49,22 @@ describe('authReducer', () => {
     expect(state.accessToken).toBe('tok');
   });
 
-  it('PASSWORD_CHANGED avança de mustChangePassword para mustAcceptPrivacy quando privacidade ainda não foi aceita', () => {
+  it('PASSWORD_CHANGED avança de mustChangePassword para mustAcceptTerms quando privacidade ainda não foi aceita', () => {
     const user = makeUser({ mustChangePassword: true, privacyAcceptedAt: null });
     let state: AuthState = authReducer(initialAuthState, { type: 'LOGIN_SUCCESS', user, accessToken: 'tok' });
     expect(state.status).toBe('mustChangePassword');
 
     state = authReducer(state, { type: 'PASSWORD_CHANGED' });
-    expect(state.status).toBe('mustAcceptPrivacy');
+    expect(state.status).toBe('mustAcceptTerms');
     expect(state.user?.mustChangePassword).toBe(false);
   });
 
-  it('PRIVACY_ACCEPTED avança de mustAcceptPrivacy para authenticated', () => {
+  it('TERMS_ACCEPTED avança de mustAcceptTerms para authenticated', () => {
     const user = makeUser({ mustChangePassword: false, privacyAcceptedAt: null });
     let state: AuthState = authReducer(initialAuthState, { type: 'LOGIN_SUCCESS', user, accessToken: 'tok' });
-    expect(state.status).toBe('mustAcceptPrivacy');
+    expect(state.status).toBe('mustAcceptTerms');
 
-    state = authReducer(state, { type: 'PRIVACY_ACCEPTED' });
+    state = authReducer(state, { type: 'TERMS_ACCEPTED' });
     expect(state.status).toBe('authenticated');
     expect(state.user?.privacyAcceptedAt).not.toBeNull();
   });
@@ -75,9 +75,9 @@ describe('authReducer', () => {
     expect(state.status).toBe('mustChangePassword');
 
     state = authReducer(state, { type: 'PASSWORD_CHANGED' });
-    expect(state.status).toBe('mustAcceptPrivacy');
+    expect(state.status).toBe('mustAcceptTerms');
 
-    state = authReducer(state, { type: 'PRIVACY_ACCEPTED' });
+    state = authReducer(state, { type: 'TERMS_ACCEPTED' });
     expect(state.status).toBe('authenticated');
   });
 
@@ -104,5 +104,39 @@ describe('authReducer', () => {
   it('PROFILE_UPDATED é ignorado enquanto não autenticado', () => {
     const state = authReducer(initialAuthState, { type: 'PROFILE_UPDATED', user: makeUser() });
     expect(state).toEqual(initialAuthState);
+  });
+
+  describe('Termos de Uso / Política 1.0', () => {
+    it('servidor novo manda termsAcceptanceRequired: quem aceitou só a tela antiga precisa aceitar de novo', () => {
+      const user = makeUser({ privacyAcceptedAt: '2026-01-01T00:00:00.000Z', termsAcceptanceRequired: true });
+      const state = authReducer(initialAuthState, { type: 'SESSION_RESTORED', user, accessToken: 'tok' });
+      expect(state.status).toBe('mustAcceptTerms');
+    });
+
+    it('aceite registrado: entra direto, mesmo sem o campo antigo', () => {
+      const user = makeUser({ privacyAcceptedAt: null, termsAcceptanceRequired: false });
+      expect(authReducer(initialAuthState, { type: 'LOGIN_SUCCESS', user, accessToken: 'tok' }).status).toBe('authenticated');
+    });
+
+    it('TERMS_ACCEPTED libera e preenche o campo antigo', () => {
+      const user = makeUser({ privacyAcceptedAt: null, termsAcceptanceRequired: true });
+      let state = authReducer(initialAuthState, { type: 'LOGIN_SUCCESS', user, accessToken: 'tok' });
+      state = authReducer(state, { type: 'TERMS_ACCEPTED' });
+      expect(state.status).toBe('authenticated');
+      expect(state.user?.termsAcceptanceRequired).toBe(false);
+      expect(state.user?.privacyAcceptedAt).not.toBeNull();
+    });
+
+    it('TERMS_REQUIRED (403 do servidor) volta para a tela de aceite; ignorado fora do app', () => {
+      let state = authReducer(initialAuthState, { type: 'LOGIN_SUCCESS', user: makeUser({ termsAcceptanceRequired: false }), accessToken: 'tok' });
+      state = authReducer(state, { type: 'TERMS_REQUIRED' });
+      expect(state.status).toBe('mustAcceptTerms');
+      expect(authReducer(initialAuthState, { type: 'TERMS_REQUIRED' })).toEqual(initialAuthState);
+    });
+
+    it('profissional nunca cai na tela de aceite', () => {
+      const user = makeUser({ role: 'professional', privacyAcceptedAt: null });
+      expect(authReducer(initialAuthState, { type: 'LOGIN_SUCCESS', user, accessToken: 'tok' }).status).toBe('authenticated');
+    });
   });
 });

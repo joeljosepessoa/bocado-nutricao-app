@@ -19,8 +19,9 @@ interface Props {
 /**
  * Versão do cliente do mesmo componente do professional-web (Fase 12) —
  * só as 2 funções aprovadas para o app do cliente (explicar/narrar sobre
- * o próprio dado já liberado). Nunca salva nada; só exibe, sempre
- * rotulado como conteúdo de IA.
+ * o próprio dado já liberado). Nunca salva nada; só exibe, sempre com o
+ * aviso de que é um resumo informativo (o texto não fala em "IA" para o
+ * paciente — a transparência fica na Política de Privacidade).
  */
 export function AiAssistPanel({ title, helperText, generate }: Props) {
   const styles = useStyles(makeStyles);
@@ -74,10 +75,10 @@ export function AiAssistPanel({ title, helperText, generate }: Props) {
       {status === 'needsConsent' ? (
         <>
           <Text style={styles.helper}>
-            Para usar este recurso, você precisa concordar com o uso de IA sobre os seus próprios dados já liberados
-            pelo seu profissional. Você pode revogar depois em Privacidade e dados.
+            Para usar este recurso, ative as análises automáticas dos seus dados já liberados pelo seu profissional. É
+            opcional e você pode desativar depois em Privacidade e dados.
           </Text>
-          <Button title="Concordar e continuar" onPress={handleAcceptConsent} loading={consenting} />
+          <Button title="Ativar e continuar" onPress={handleAcceptConsent} loading={consenting} />
         </>
       ) : null}
 
@@ -85,7 +86,7 @@ export function AiAssistPanel({ title, helperText, generate }: Props) {
 
       {status === 'ready' ? (
         <>
-          <Text style={styles.badge}>Conteúdo gerado por IA — não é orientação médica</Text>
+          <Text style={styles.badge}>Resumo informativo — não substitui a orientação do seu profissional</Text>
           <Text style={styles.body}>{text}</Text>
           <Button title="Gerar novamente" variant="secondary" onPress={handleGenerate} />
         </>
@@ -101,9 +102,8 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   error: { ...typography.caption, color: colors.danger },
   badge: {
     ...typography.caption,
-    color: colors.accent,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    fontSize: 10,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+    fontSize: 12,
   },
 });

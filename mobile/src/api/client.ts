@@ -21,6 +21,7 @@ export const API_BASE_URL = resolveBaseUrl();
 let accessToken: string | null = null;
 let refreshHandler: (() => Promise<string | null>) | null = null;
 let onSessionExpired: (() => void) | null = null;
+let onTermsRequired: (() => void) | null = null;
 let refreshInFlight: Promise<string | null> | null = null;
 
 export function setAccessToken(token: string | null): void {
@@ -41,9 +42,12 @@ export function getAccessToken(): string | null {
 export function configureAuthHandlers(handlers: {
   refresh: () => Promise<string | null>;
   onSessionExpired: () => void;
+  /** O servidor recusou com 403 TERMS_REQUIRED: o app volta para a tela de aceite. */
+  onTermsRequired?: () => void;
 }): void {
   refreshHandler = handlers.refresh;
   onSessionExpired = handlers.onSessionExpired;
+  onTermsRequired = handlers.onTermsRequired ?? null;
 }
 
 export const apiClient = axios.create({ baseURL: API_BASE_URL });
@@ -80,6 +84,10 @@ apiClient.interceptors.response.use(
         return apiClient(original);
       }
       onSessionExpired?.();
+    }
+
+    if (status === 403 && error.response?.data?.code === 'TERMS_REQUIRED') {
+      onTermsRequired?.();
     }
 
     return Promise.reject(error);

@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 import { SplashScreen } from '../screens/SplashScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { ChangePasswordScreen } from '../screens/ChangePasswordScreen';
-import { PrivacyConsentScreen } from '../screens/PrivacyConsentScreen';
+import { AccountTermsScreen, FirstOpenTermsScreen } from '../screens/TermsAcceptanceScreen';
 import { ReportDetailScreen } from '../screens/ReportDetailScreen';
 import { ConnectDeviceScreen } from '../screens/ConnectDeviceScreen';
 import { MainTabs } from './MainTabs';
@@ -15,7 +15,7 @@ import { flushExecutionLogQueue } from '../offline/sync';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
-  const { status } = useAuth();
+  const { status, deviceTermsAccepted } = useAuth();
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -23,10 +23,19 @@ export function RootNavigator() {
     }
   }, [status]);
 
-  if (status === 'loading') {
+  if (status === 'loading' || (status === 'unauthenticated' && deviceTermsAccepted === null)) {
     return (
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Splash" component={SplashScreen} />
+      </Stack.Navigator>
+    );
+  }
+
+  // Primeira abertura do app neste aparelho: boas-vindas + aceite dos termos antes do login.
+  if (status === 'unauthenticated' && !deviceTermsAccepted) {
+    return (
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Welcome" component={FirstOpenTermsScreen} />
       </Stack.Navigator>
     );
   }
@@ -47,10 +56,11 @@ export function RootNavigator() {
     );
   }
 
-  if (status === 'mustAcceptPrivacy') {
+  // Logado, mas o servidor pede o aceite (quem já usava o app e atualizou, ou documento novo).
+  if (status === 'mustAcceptTerms') {
     return (
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="PrivacyConsent" component={PrivacyConsentScreen} />
+        <Stack.Screen name="TermsAcceptance" component={AccountTermsScreen} />
       </Stack.Navigator>
     );
   }

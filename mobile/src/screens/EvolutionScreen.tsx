@@ -168,7 +168,7 @@ export function EvolutionScreen() {
           />
           <AiAssistPanel
             title="Narrar tendência"
-            helperText="Descreve a tendência entre suas duas avaliações liberadas mais recentes — o cálculo é sempre feito pelo sistema, a IA só descreve o resultado."
+            helperText="Descreve a tendência entre suas duas avaliações liberadas mais recentes, com base nos números calculados pelo sistema."
             generate={() => api.narrateTrend()}
           />
         </>

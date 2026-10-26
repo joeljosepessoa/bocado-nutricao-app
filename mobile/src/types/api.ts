@@ -7,6 +7,8 @@ export interface SessionUser {
   role: Role;
   mustChangePassword: boolean;
   privacyAcceptedAt: string | null;
+  /** Precisa aceitar os Termos de Uso/Política de Privacidade vigentes (ausente em servidor antigo). */
+  termsAcceptanceRequired?: boolean;
 }
 
 export interface AuthTokenPair {
@@ -514,4 +516,33 @@ export interface WorkoutExecutionRecord {
   performedAt: string;
   notes: string | null;
   sets: WorkoutExecutionSetRecord[];
+}
+
+export type LegalDocumentKind = 'terms' | 'privacy';
+
+export interface LegalDocument {
+  kind: LegalDocumentKind;
+  version: string;
+  title: string;
+  updatedAt: string;
+  intro: string;
+  sections: { title: string; paragraphs: string[] }[];
+}
+
+export interface LegalDocumentsResponse {
+  termsVersion: string;
+  privacyVersion: string;
+  documents: LegalDocument[];
+}
+
+export interface LegalStatus {
+  acceptanceRequired: boolean;
+  currentTermsVersion: string;
+  currentPrivacyVersion: string;
+  accepted: { termsVersion: string; privacyVersion: string; acceptedAt: string } | null;
+}
+
+export interface LegalVersions {
+  termsVersion: string;
+  privacyVersion: string;
 }
