@@ -1,6 +1,5 @@
 import { apiClient } from './client';
 import type {
-  AiGenerationResult,
   Appointment,
   AuthTokenPair,
   AvailabilitySlot,
@@ -197,19 +196,6 @@ export async function acceptAiConsent(): Promise<void> {
 
 export async function revokeAiConsent(): Promise<void> {
   await apiClient.delete('/client/ai/consent');
-}
-
-export async function explainEvaluation(evaluationId: string): Promise<AiGenerationResult> {
-  const res = await apiClient.post<AiGenerationResult>('/client/ai/generate', {
-    feature: 'explain_evaluation',
-    evaluationId,
-  });
-  return res.data;
-}
-
-export async function narrateTrend(): Promise<AiGenerationResult> {
-  const res = await apiClient.post<AiGenerationResult>('/client/ai/generate', { feature: 'narrate_trend' });
-  return res.data;
 }
 
 // ---------------------------------------------------------------------------

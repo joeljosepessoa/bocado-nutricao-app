@@ -60,8 +60,8 @@ function LegalDocumentsSection() {
 }
 
 /**
- * Autorização opcional das análises automáticas (resumos e explicações em texto simples dos dados
- * liberados). Mesma API e mesma regra de antes: abrir a tela só CONSULTA; ativar exige marcar a
+ * Autorização opcional das análises automáticas (ferramentas de apoio que o profissional usa com os
+ * dados do paciente). Mesma API e mesma regra de antes: abrir a tela só CONSULTA; ativar exige marcar a
  * caixa e salvar; dá para desativar a qualquer momento.
  */
 function OptionalAnalysesSection() {
@@ -102,9 +102,8 @@ function OptionalAnalysesSection() {
     <Card>
       <Text style={styles.title}>Análises automáticas (opcional)</Text>
       <Text style={styles.body}>
-        Permite que o app prepare resumos e explicações em texto simples dos seus resultados já liberados pelo seu
-        profissional, e que ele use ferramentas de apoio ao organizar o seu acompanhamento. Você pode desativar quando
-        quiser.
+        Permite que o seu profissional use ferramentas de apoio com os seus dados ao organizar o seu acompanhamento.
+        Você pode desativar quando quiser.
       </Text>
 
       {!loaded ? (

@@ -5,7 +5,6 @@ import { ClipboardList, WifiOff } from 'lucide-react-native';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { EmptyState, ErrorState, FadeIn, LoadingState, PageTitle } from '../components/ui';
 import { EvaluationReport } from '../components/EvaluationReport';
-import { AiAssistPanel } from '../components/AiAssistPanel';
 import * as api from '../api/endpoints';
 import type { EvolutionEntry } from '../types/api';
 import type { MainTabParamList } from '../navigation/types';
@@ -15,8 +14,7 @@ import { useStyles, type ThemeColors } from '../theme/theme';
 
 /**
  * Avaliação: as avaliações liberadas pelo nutricionista (a mais recente por
- * padrão, ou a escolhida no Histórico), com o relatório visual e a
- * explicação em linguagem simples.
+ * padrão, ou a escolhida no Histórico), com o relatório visual.
  */
 export function AssessmentScreen() {
   const styles = useStyles(makeStyles);
@@ -109,13 +107,6 @@ export function AssessmentScreen() {
       <FadeIn key={current.id}>
         <EvaluationReport entries={entries} evaluationId={current.id} />
       </FadeIn>
-
-      <AiAssistPanel
-        key={`ai-${current.id}`}
-        title="Explicar em linguagem simples"
-        helperText="Descreve, em texto simples, os números liberados pelo seu nutricionista nesta avaliação — sem diagnosticar nem interpretar além do que os dados mostram."
-        generate={() => api.explainEvaluation(current.id)}
-      />
     </ScreenContainer>
   );
 }
