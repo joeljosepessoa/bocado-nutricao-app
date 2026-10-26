@@ -8,6 +8,7 @@ import { NotificationPreferencesService } from './notification-preferences.servi
 import { RegisterDeviceTokenDto } from './dto/register-device-token.dto';
 import { RevokeDeviceTokenDto } from './dto/revoke-device-token.dto';
 import { UpdateNotificationPreferenceDto } from './dto/update-notification-preference.dto';
+import { SkipLegalConsent } from '../legal/skip-legal-consent.decorator';
 
 // Profissional e cliente usam os mesmos endpoints (cada um só enxerga/altera
 // o próprio dono) — mesmo padrão de amplitude de role já usado quando uma
@@ -20,11 +21,13 @@ export class NotificationsController {
     private readonly preferences: NotificationPreferencesService,
   ) {}
 
+  @SkipLegalConsent()
   @Post('device-tokens')
   registerDeviceToken(@CurrentUser() user: AuthenticatedUser, @Body() dto: RegisterDeviceTokenDto) {
     return this.deviceTokens.register(user, dto);
   }
 
+  @SkipLegalConsent()
   @HttpCode(HttpStatus.NO_CONTENT)
   @Post('device-tokens/revoke')
   async revokeDeviceToken(@CurrentUser() user: AuthenticatedUser, @Body() dto: RevokeDeviceTokenDto): Promise<void> {

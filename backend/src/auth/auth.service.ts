@@ -10,6 +10,7 @@ import { EmailService } from './email/email.service';
 import { RegisterProfessionalDto } from './dto/register-professional.dto';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { LegalService } from '../legal/legal.service';
 
 export interface AuthTokenPair {
   accessToken: string;
@@ -21,6 +22,8 @@ export interface AuthTokenPair {
     role: Role;
     mustChangePassword: boolean;
     privacyAcceptedAt: Date | null;
+    /** Paciente ainda não aceitou os Termos de Uso/Política de Privacidade vigentes. */
+    termsAcceptanceRequired: boolean;
   };
 }
 
@@ -36,6 +39,7 @@ export class AuthService {
     private readonly emailService: EmailService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    private readonly legal: LegalService,
   ) {}
 
   private signAccessToken(userId: string, role: Role): string {
@@ -83,6 +87,7 @@ export class AuthService {
         role: user.role,
         mustChangePassword: user.mustChangePassword,
         privacyAcceptedAt: user.privacyAcceptedAt,
+        termsAcceptanceRequired: await this.legal.acceptanceRequired(user.id, user.role),
       },
     };
   }
@@ -117,6 +122,7 @@ export class AuthService {
         role: user.role,
         mustChangePassword: user.mustChangePassword,
         privacyAcceptedAt: user.privacyAcceptedAt,
+        termsAcceptanceRequired: await this.legal.acceptanceRequired(user.id, user.role),
       },
     };
   }
@@ -135,6 +141,7 @@ export class AuthService {
         role: user.role,
         mustChangePassword: user.mustChangePassword,
         privacyAcceptedAt: user.privacyAcceptedAt,
+        termsAcceptanceRequired: await this.legal.acceptanceRequired(user.id, user.role),
       },
     };
   }

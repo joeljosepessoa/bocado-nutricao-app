@@ -68,10 +68,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
       this.errorTracking.captureException(exception, { method: request.method, url: request.url });
     }
 
+    // Código de erro estável (ex.: TERMS_REQUIRED) que o app usa para decidir o que mostrar.
+    const code = typeof message === 'object' && message !== null ? (message as { code?: unknown }).code : undefined;
+
     response.status(status).json({
       statusCode: status,
       error: HttpStatus[status] ?? 'Error',
       message: typeof message === 'string' ? message : (message as { message?: unknown }).message ?? message,
+      ...(typeof code === 'string' ? { code } : {}),
     });
   }
 }

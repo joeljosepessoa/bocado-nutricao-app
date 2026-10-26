@@ -15,6 +15,7 @@ import { ClientSubscriptionsService } from '../client-billing/client-subscriptio
 import { ClientTrackingService } from '../client-tracking/client-tracking.service';
 import { AnamnesisService } from '../anamnesis/anamnesis.service';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
+import { LegalService } from '../legal/legal.service';
 
 const EXPORT_PAGE_SIZE = 10_000;
 
@@ -53,6 +54,8 @@ export interface ClientDataExport {
   ownRecords: unknown;
   /** A anamnese preenchida pelo profissional sobre o paciente (null se não existe). */
   anamnesis: unknown;
+  /** Histórico de aceite dos Termos de Uso / Política de Privacidade (versão, data e origem). */
+  legalConsents: unknown[];
 }
 
 @Injectable()
@@ -72,6 +75,7 @@ export class LgpdService {
     private readonly clientSubscriptions: ClientSubscriptionsService,
     private readonly clientTracking: ClientTrackingService,
     private readonly anamnesis: AnamnesisService,
+    private readonly legal: LegalService,
   ) {}
 
   async exportClientData(clientId: string): Promise<ClientDataExport> {
@@ -96,7 +100,7 @@ export class LgpdService {
       orderBy: { createdAt: 'asc' },
     });
 
-    const [aiConsent, aiInteractions, ownRecords, anamnesis] = await Promise.all([
+    const [aiConsent, aiInteractions, ownRecords, anamnesis, legalConsents] = await Promise.all([
       this.prisma.client.findUniqueOrThrow({ where: { id: clientId }, select: { aiDataProcessingConsentAt: true } }),
       this.prisma.aiInteractionLog.findMany({
         where: { clientId },
@@ -105,6 +109,7 @@ export class LgpdService {
       }),
       this.clientTracking.exportOwnRecords(clientId),
       this.anamnesis.exportForClient(clientId),
+      this.legal.history(clientId),
     ]);
 
     const request = await this.prisma.dataExportRequest.create({ data: { clientId } });
@@ -125,6 +130,7 @@ export class LgpdService {
       aiInteractions,
       ownRecords,
       anamnesis,
+      legalConsents,
     };
   }
 

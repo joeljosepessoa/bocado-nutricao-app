@@ -34,6 +34,8 @@ import { AppointmentsModule } from './appointments/appointments.module';
 import { BillingModule } from './billing/billing.module';
 import { RequiresActiveSubscriptionGuard } from './billing/requires-active-subscription.guard';
 import { ClientBillingModule } from './client-billing/client-billing.module';
+import { LegalModule } from './legal/legal.module';
+import { LegalConsentGuard } from './legal/legal-consent.guard';
 
 @Module({
   imports: [
@@ -42,6 +44,7 @@ import { ClientBillingModule } from './client-billing/client-billing.module';
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     ErrorTrackingModule,
     PrismaModule,
+    LegalModule,
     AuthModule,
     UsersModule,
     ProfessionalsModule,
@@ -72,6 +75,7 @@ import { ClientBillingModule } from './client-billing/client-billing.module';
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useExisting: LegalConsentGuard },
     { provide: APP_GUARD, useClass: RequiresActiveSubscriptionGuard },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
   ],

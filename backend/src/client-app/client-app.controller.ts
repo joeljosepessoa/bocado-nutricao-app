@@ -10,6 +10,7 @@ import { CreateExecutionLogDto } from '../workouts/dto/create-execution-log.dto'
 import { CreateMessageDto } from '../messages/dto/create-message.dto';
 import { CreateAppointmentDto } from '../appointments/dto/create-appointment.dto';
 import { DeleteAccountDto } from '../lgpd/dto/delete-account.dto';
+import { SkipLegalConsent } from '../legal/skip-legal-consent.decorator';
 
 @Controller('client')
 @Roles(Role.client)
@@ -94,6 +95,8 @@ export class ClientAppController {
     return this.clientAppService.getReportDownloadUrl(user.id, reportId);
   }
 
+  // Rota antiga (apps até 1.2.x): continua funcionando, mas não vale como aceite dos Termos/Política 1.0.
+  @SkipLegalConsent()
   @HttpCode(HttpStatus.NO_CONTENT)
   @Post('accept-privacy-terms')
   async acceptPrivacyTerms(@CurrentUser() user: AuthenticatedUser): Promise<void> {
@@ -131,11 +134,13 @@ export class ClientAppController {
     return this.clientAppService.cancelAppointment(user.id, id, { ipAddress: req.ip });
   }
 
+  @SkipLegalConsent()
   @Post('data-export')
   exportData(@CurrentUser() user: AuthenticatedUser) {
     return this.clientAppService.exportData(user.id);
   }
 
+  @SkipLegalConsent()
   @HttpCode(HttpStatus.NO_CONTENT)
   @Post('account-deletion')
   async deleteAccount(@CurrentUser() user: AuthenticatedUser, @Body() dto: DeleteAccountDto): Promise<void> {

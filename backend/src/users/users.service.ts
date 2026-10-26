@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { LegalService } from '../legal/legal.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly legal: LegalService,
+  ) {}
 
   async me(userId: string) {
     const user = await this.prisma.user.findUniqueOrThrow({
@@ -17,7 +21,7 @@ export class UsersService {
         privacyAcceptedAt: true,
       },
     });
-    return user;
+    return { ...user, termsAcceptanceRequired: await this.legal.acceptanceRequired(user.id, user.role) };
   }
 
   async acceptPrivacyTerms(userId: string): Promise<void> {

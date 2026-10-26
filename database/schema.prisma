@@ -38,8 +38,40 @@ model User {
   refreshTokens       RefreshToken[]
   passwordResetTokens PasswordResetToken[]
   adminAuditLogs      AdminAuditLog[]
+  legalConsents       LegalConsent[]
 
   @@map("users")
+}
+
+enum LegalConsentStatus {
+  // Aceite dos Termos de Uso + Política de Privacidade na versão registrada.
+  accepted
+  // Aceite feito antes do versionamento (tela antiga "Privacidade dos seus dados").
+  // Fica guardado como histórico, mas NÃO vale como aceite das versões atuais.
+  legacy
+}
+
+// Histórico de aceite dos documentos legais. Nunca é editado nem apagado:
+// cada aceite é uma linha nova; vale a mais recente com as versões atuais.
+model LegalConsent {
+  id             String             @id @default(uuid())
+  userId         String             @map("user_id")
+  termsVersion   String             @map("terms_version")
+  privacyVersion String             @map("privacy_version")
+  status         LegalConsentStatus
+  acceptedAt     DateTime           @map("accepted_at")
+  // De onde veio o aceite: "mobile_app", "legacy_privacy_screen"...
+  source         String
+  appVersion     String?            @map("app_version")
+  platform       String?
+  ipAddress      String?            @map("ip_address")
+  userAgent      String?            @map("user_agent")
+  createdAt      DateTime           @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, acceptedAt])
+  @@map("legal_consents")
 }
 
 model RefreshToken {

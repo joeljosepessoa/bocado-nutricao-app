@@ -12,6 +12,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AUTH_THROTTLE_LIMIT, extractMeta } from './auth-http.util';
+import { SkipLegalConsent } from '../legal/skip-legal-consent.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -46,6 +47,7 @@ export class AuthController {
     await this.authService.logout(dto.refreshToken);
   }
 
+  @SkipLegalConsent()
   @HttpCode(HttpStatus.NO_CONTENT)
   @Post('change-password')
   async changePassword(@CurrentUser() user: AuthenticatedUser, @Body() dto: ChangePasswordDto): Promise<void> {
