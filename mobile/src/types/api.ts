@@ -164,6 +164,12 @@ export interface WorkoutClientSet {
   notes?: string | null;
 }
 
+/** O que o aluno fez neste exercício da última vez (vem do servidor; vale entre versões do treino). */
+export interface WorkoutClientLastPerformance {
+  performedAt: string;
+  sets: Array<{ setOrder: number; repsPerformed: number | null; loadValue: number | null; loadUnit: string | null }>;
+}
+
 export interface WorkoutClientExercise {
   workoutExerciseId: string;
   exerciseName: string;
@@ -177,6 +183,8 @@ export interface WorkoutClientExercise {
   imageUrl: string | null;
   order: number;
   sets: WorkoutClientSet[];
+  /** Última execução deste exercício pelo próprio aluno (servidor novo); ausente/null = ainda não fez. */
+  lastPerformance?: WorkoutClientLastPerformance | null;
 }
 
 export interface WorkoutClientDay {

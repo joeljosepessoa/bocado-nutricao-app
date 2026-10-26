@@ -11,6 +11,8 @@ import {
   prescriptionText,
   restLabel,
   repsText,
+  localLastFromPayload,
+  pickLastPerformance,
 } from '../executionModel';
 
 const set = (order: number, extra: Record<string, unknown> = {}) => ({
@@ -171,5 +173,82 @@ describe('layout de Meus Treinos: botões de dia, resumo "4x 6–8" e carga úni
     expect(commonLoad(exercise.sets)).toBe('');
     expect(commonLoad(exercise.sets.map((s) => ({ ...s, load: '30' })))).toBe('30');
     expect(commonLoad(buildExecution(day).find((e) => e.name === 'Remada')!.sets)).toBe('');
+  });
+});
+
+describe('carga da última vez', () => {
+  // Mesa flexora: 4 séries prescritas sem carga; na última vez o aluno fez 3 séries com 30, 35 e 35 kg.
+  const flexora = (lastPerformance: WorkoutClientDay['exercises'][number]['lastPerformance']): WorkoutClientDay => ({
+    workoutDayId: 'day-a',
+    name: 'Treino A',
+    order: 0,
+    exercises: [
+      {
+        workoutExerciseId: 'we-1',
+        exerciseName: 'Mesa flexora',
+        muscleGroup: 'Posterior',
+        equipment: null,
+        videoUrl: null,
+        imageUrl: null,
+        order: 0,
+        sets: [0, 1, 2, 3].map((order) => set(order, { loadValue: null, loadUnit: null })),
+        lastPerformance,
+      },
+    ],
+  });
+  const server = {
+    performedAt: '2026-10-17T22:00:00.000Z',
+    sets: [
+      { setOrder: 0, repsPerformed: 15, loadValue: 30, loadUnit: 'kg' },
+      { setOrder: 1, repsPerformed: 12, loadValue: 35, loadUnit: 'kg' },
+      { setOrder: 2, repsPerformed: 10, loadValue: 35, loadUnit: 'kg' },
+    ],
+  };
+
+  it('preenche série a série com a carga da última vez; série a mais repete a última carga', () => {
+    const [exercise] = buildExecution(flexora(server));
+    expect(exercise.sets.map((s) => s.load)).toEqual(['30', '35', '35', '35']);
+    expect(exercise.lastTime).toBe('Última vez (17/10): 30 · 35 kg');
+  });
+
+  it('sem histórico continua com a carga prescrita (ou vazio)', () => {
+    const [exercise] = buildExecution(flexora(null));
+    expect(exercise.sets.map((s) => s.load)).toEqual(['', '', '', '']);
+    expect(exercise.lastTime).toBeNull();
+    const [prescribed] = buildExecution(day);
+    expect(prescribed.sets[0].load).toBe('20');
+  });
+
+  it('treino guardado no aparelho (ainda não enviado) e mais novo que o do servidor vale primeiro', () => {
+    const local = { 'we-1': { performedAt: '2026-10-24T22:00:00.000Z', sets: [{ setOrder: 0, repsPerformed: 15, loadValue: 37.5, loadUnit: 'kg' }] } };
+    const [exercise] = buildExecution(flexora(server), local);
+    expect(exercise.sets.map((s) => s.load)).toEqual(['37,5', '37,5', '37,5', '37,5']);
+    // Mais velho que o do servidor: fica o do servidor.
+    const old = { 'we-1': { ...local['we-1'], performedAt: '2026-10-10T22:00:00.000Z' } };
+    expect(buildExecution(flexora(server), old)[0].sets[0].load).toBe('30');
+  });
+
+  it('o que acabou de ser feito vira a "última vez" de cada exercício', () => {
+    const payload = buildExecutionPayload(
+      'day-a',
+      buildExecution(flexora(null)).map((e) => ({ ...e, sets: e.sets.map((s, i) => ({ ...s, done: i < 2, load: i === 0 ? '30' : '32,5' })) })),
+      '',
+      new Date('2026-10-24T22:00:00.000Z'),
+    )!;
+    expect(payload.sets.map((s) => s.setOrder)).toEqual([0, 1]);
+    expect(localLastFromPayload(payload)).toEqual({
+      'we-1': {
+        performedAt: '2026-10-24T22:00:00.000Z',
+        sets: [
+          { setOrder: 0, repsPerformed: 12, loadValue: 30, loadUnit: 'kg' },
+          { setOrder: 1, repsPerformed: 12, loadValue: 32.5, loadUnit: 'kg' },
+        ],
+      },
+    });
+  });
+
+  it('pickLastPerformance escolhe a mais recente', () => {
+    expect(pickLastPerformance(null, undefined)).toBeNull();
+    expect(pickLastPerformance(server, undefined)).toBe(server);
   });
 });

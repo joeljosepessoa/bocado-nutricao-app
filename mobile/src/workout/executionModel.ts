@@ -1,4 +1,4 @@
-import type { CreateExecutionLogInput, ExecutionSetInput, WorkoutClientDay, WorkoutClientSet } from '../types/api';
+import type { CreateExecutionLogInput, ExecutionSetInput, WorkoutClientDay, WorkoutClientLastPerformance, WorkoutClientSet } from '../types/api';
 import { formatNumber } from '../diet/dietView';
 
 /**
@@ -42,6 +42,46 @@ export interface ExecutionExercise {
   instructions: string | null;
   imageUrl: string | null;
   sets: ExecutionSet[];
+  /** "Última vez (17/10): 30 · 35 kg" — de onde veio a carga já preenchida; null se ainda não fez. */
+  lastTime: string | null;
+}
+
+/** Última execução guardada no próprio aparelho (treino salvo ou ainda na fila sem internet), por exercício do treino. */
+export type LocalLastPerformance = Record<string, WorkoutClientLastPerformance>;
+
+/** A mais recente entre a do servidor e a guardada no aparelho (o aparelho pode ter um treino ainda não enviado). */
+export function pickLastPerformance(
+  server: WorkoutClientLastPerformance | null | undefined,
+  local: WorkoutClientLastPerformance | undefined,
+): WorkoutClientLastPerformance | null {
+  if (!server) return local ?? null;
+  if (!local) return server;
+  return new Date(local.performedAt).getTime() > new Date(server.performedAt).getTime() ? local : server;
+}
+
+const UNIT_TEXT: Record<string, string> = { kg: 'kg', lb: 'lb', band_level: '(nível)', bodyweight: '', other: '' };
+
+/** "Última vez (17/10): 30 · 35 kg"; null quando a última vez não teve carga. */
+export function lastTimeText(last: WorkoutClientLastPerformance | null): string | null {
+  if (!last) return null;
+  const loads = last.sets.filter((s) => s.loadValue != null);
+  if (loads.length === 0) return null;
+  const values = [...new Set(loads.map((s) => formatNumber(s.loadValue!, 2)))];
+  const unit = UNIT_TEXT[loads[0].loadUnit ?? 'kg'] ?? '';
+  const date = new Date(last.performedAt);
+  const day = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
+  return `Última vez (${day}): ${values.join(' · ')}${unit ? ` ${unit}` : ''}`;
+}
+
+/** Guarda no aparelho o que acabou de ser feito, por exercício do treino (para a próxima vez já vir preenchido). */
+export function localLastFromPayload(payload: CreateExecutionLogInput): LocalLastPerformance {
+  const result: LocalLastPerformance = {};
+  for (const set of payload.sets) {
+    const entry = (result[set.workoutExerciseId] ??= { performedAt: payload.performedAt ?? new Date().toISOString(), sets: [] });
+    entry.sets.push({ setOrder: set.setOrder, repsPerformed: set.repsPerformed ?? null, loadValue: set.loadValue ?? null, loadUnit: set.loadUnit ?? null });
+  }
+  for (const entry of Object.values(result)) entry.sets.sort((a, b) => a.setOrder - b.setOrder);
+  return result;
 }
 
 const clean = (text: string | null | undefined): string | null => (text && text.trim() ? text.trim() : null);
@@ -54,10 +94,15 @@ export function repsText(set: Pick<WorkoutClientSet, 'reps' | 'repsMin' | 'repsM
 }
 
 /** Estado inicial: prescrição do dia, já com repetições e carga sugeridas. */
-export function buildExecution(day: WorkoutClientDay): ExecutionExercise[] {
+export function buildExecution(day: WorkoutClientDay, local: LocalLastPerformance = {}): ExecutionExercise[] {
   return [...day.exercises]
     .sort((a, b) => a.order - b.order)
-    .map((exercise) => ({
+    .map((exercise) => {
+      // A carga da última vez vem preenchida (série a série; se a prescrição tiver mais séries, repete a última carga).
+      const last = pickLastPerformance(exercise.lastPerformance, local[exercise.workoutExerciseId]);
+      const lastLoads = (last?.sets ?? []).filter((s) => s.loadValue != null);
+      const lastLoadAt = (index: number) => (lastLoads.length > 0 ? (lastLoads[index] ?? lastLoads[lastLoads.length - 1]).loadValue : null);
+      return {
       workoutExerciseId: exercise.workoutExerciseId,
       name: exercise.exerciseName,
       muscleGroup: exercise.muscleGroup,
@@ -65,6 +110,7 @@ export function buildExecution(day: WorkoutClientDay): ExecutionExercise[] {
       notes: clean(exercise.notes),
       instructions: clean(exercise.instructions),
       imageUrl: exercise.imageUrl,
+      lastTime: lastTimeText(last),
       sets: [...exercise.sets]
         .sort((a, b) => a.order - b.order)
         .map((set, index) => ({
@@ -74,13 +120,14 @@ export function buildExecution(day: WorkoutClientDay): ExecutionExercise[] {
           number: index + 1,
           done: false,
           reps: set.reps != null ? String(set.reps) : '',
-          load: set.loadValue != null ? formatNumber(set.loadValue, 2) : '',
+          load: lastLoadAt(index) != null ? formatNumber(lastLoadAt(index)!, 2) : set.loadValue != null ? formatNumber(set.loadValue, 2) : '',
           loadUnit: set.loadUnit,
           restSeconds: set.restSeconds ?? DEFAULT_REST_SECONDS,
           repsTarget: repsText(set),
           notes: clean(set.notes),
         })),
-    }));
+      };
+    });
 }
 
 /** "22,5" ou "22.5" → 22.5; vazio ou inválido → undefined (não é enviado). */

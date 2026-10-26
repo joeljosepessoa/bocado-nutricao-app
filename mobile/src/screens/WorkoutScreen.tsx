@@ -15,6 +15,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useRestTimer } from '../hooks/useRestTimer';
 import * as api from '../api/endpoints';
 import { enqueueExecutionLogOffline } from '../offline/sync';
+import { readLocalLastPerformance, rememberLastPerformance } from '../workout/lastPerformanceStore';
 import type { WorkoutClientDay, WorkoutClientSummary } from '../types/api';
 import { nextWorkoutDay } from '../dashboard/dashboardModel';
 import {
@@ -30,6 +31,7 @@ import {
   restLabel,
   type ExecutionExercise,
   type ExecutionSet,
+  type LocalLastPerformance,
 } from '../workout/executionModel';
 import { radius, spacing, typography } from '../theme/tokens';
 import { useStyles, useTheme, type ThemeColors } from '../theme/theme';
@@ -42,6 +44,16 @@ const UNIT_LABEL: Record<string, string> = { kg: 'kg', lb: 'lb', bodyweight: '',
 interface LoadedWorkout {
   workout: WorkoutClientSummary | null;
   lastDayId: string | null;
+  /** Última carga guardada no aparelho (inclui treino ainda não enviado). */
+  localLast: LocalLastPerformance;
+}
+
+/** Erro que o servidor respondeu (recusou os dados), diferente de falta de internet: não adianta guardar e reenviar. */
+function serverRejection(err: unknown): string | null {
+  const response = (err as { response?: { status?: number; data?: { message?: unknown } } })?.response;
+  if (!response?.status || response.status < 400 || response.status >= 500 || response.status === 401) return null;
+  const message = response.data?.message;
+  return Array.isArray(message) ? message.join(' ') : typeof message === 'string' ? message : 'O servidor não aceitou o registro.';
 }
 
 /** O que o aluno marcou/digitou num dia, guardado enquanto ele alterna entre os dias. */
@@ -51,7 +63,7 @@ interface Session {
   started: boolean;
 }
 
-const freshSession = (day: WorkoutClientDay): Session => ({ exercises: buildExecution(day), notes: '', started: false });
+const freshSession = (day: WorkoutClientDay, localLast: LocalLastPerformance): Session => ({ exercises: buildExecution(day, localLast), notes: '', started: false });
 
 /**
  * Meus Treinos: o treino publicado numa tela só. No topo, os dias em botões, o
@@ -84,8 +96,12 @@ export function WorkoutScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [workout, executions] = await Promise.all([api.getCurrentWorkout(), api.listWorkoutExecutions(1, 1).catch(() => null)]);
-      setData({ workout, lastDayId: executions?.items[0]?.workoutDayId ?? null });
+      const [workout, executions, localLast] = await Promise.all([
+        api.getCurrentWorkout(),
+        api.listWorkoutExecutions(1, 1).catch(() => null),
+        readLocalLastPerformance(),
+      ]);
+      setData({ workout, lastDayId: executions?.items[0]?.workoutDayId ?? null, localLast });
       setFailed(false);
     } catch {
       setFailed(true);
@@ -128,7 +144,8 @@ export function WorkoutScreen() {
   const day = days.find((d) => d.workoutDayId === selectedDayId) ?? days.find((d) => d.workoutDayId === next?.workoutDayId) ?? days[0] ?? null;
   // Versão nova do treino = ids novos: o que foi marcado na versão antiga não é reaproveitado.
   const sessionKey = workout && day ? `${workout.versionId}:${day.workoutDayId}` : '';
-  const initial = useMemo(() => (day ? freshSession(day) : null), [day]);
+  const localLast = data?.localLast;
+  const initial = useMemo(() => (day ? freshSession(day, localLast ?? {}) : null), [day, localLast]);
 
   const refresh = async () => {
     setRefreshing(true);
@@ -204,19 +221,28 @@ export function WorkoutScreen() {
     }
     const finishedKey = sessionKey;
     const finishedDayId = day!.workoutDayId;
-    const saved = () => {
-      // Treino salvo: o dia volta ao estado inicial e passa a ser o último treino feito.
+    const saved = async () => {
+      // Treino salvo: o dia volta ao estado inicial (já com as cargas de hoje) e passa a ser o último treino feito.
+      const remembered = await rememberLastPerformance(payload);
       setSessions((prev) => Object.fromEntries(Object.entries(prev).filter(([key]) => key !== finishedKey)));
-      setData((current) => (current ? { ...current, lastDayId: finishedDayId } : current));
+      setData((current) => (current ? { ...current, lastDayId: finishedDayId, localLast: remembered } : current));
     };
     setSubmitting(true);
     try {
       await api.logWorkoutExecution(payload);
-      saved();
+      await saved();
       Alert.alert('Treino salvo!', `${payload.sets.length} ${payload.sets.length === 1 ? 'série registrada' : 'séries registradas'}. Bom trabalho!`);
-    } catch {
+    } catch (err) {
+      const rejected = serverRejection(err);
+      if (rejected) {
+        // Não é falta de internet: o que foi marcado continua na tela para tentar de novo.
+        Alert.alert('Não foi possível salvar o treino', `${rejected}
+
+O que você marcou continua na tela. Se acontecer de novo, avise seu profissional.`);
+        return;
+      }
       await enqueueExecutionLogOffline(payload);
-      saved();
+      await saved();
       Alert.alert('Salvo no aparelho', 'Sem conexão agora — o treino será enviado automaticamente quando a internet voltar.');
     } finally {
       setSubmitting(false);
@@ -397,6 +423,7 @@ export function WorkoutScreen() {
                       ))}
                     </View>
 
+                    {exercise.lastTime ? <Text style={styles.lastTime}>{exercise.lastTime}</Text> : null}
                     <View style={styles.loadBox}>
                       <Weight size={18} color={colors.textMuted} />
                       <TextInput
@@ -570,6 +597,7 @@ const makeStyles = (colors: ThemeColors) =>
       paddingHorizontal: spacing.sm + 4,
       backgroundColor: colors.surfaceMuted,
     },
+    lastTime: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.xs },
     loadInput: { flex: 1, paddingVertical: spacing.sm + 2, ...typography.body, color: colors.textPrimary },
     link: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 2 },
     detailsText: { ...typography.caption, color: colors.textSecondary },
