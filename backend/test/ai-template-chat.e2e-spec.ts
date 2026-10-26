@@ -152,7 +152,13 @@ describe('IA — conversa nos Modelos (template_diet_chat / template_workout_cha
 
   it('treino do zero: só exercícios do catálogo; repetições exatas+faixa juntas são corrigidas com aviso', async () => {
     const { professional, auth } = await setup();
-    const squat = await createExercise(app, professional.accessToken, { name: `Agachamento chat ${Date.now()}` });
+    const marca = `Zqchat${Date.now().toString(36)}`;
+    const squat = await createExercise(app, professional.accessToken, { name: `Agachamento ${marca}` });
+    // Só exercício com GIF aprovado vai para a IA (todo exercício sugerido tem demonstração).
+    await prisma.exerciseMedia.create({
+      data: { exerciseId: squat.id, storageKey: `exercises/TESTE/${squat.id}.gif`, contentType: 'image/gif', sizeBytes: 1, curationStatus: 'approved', isPrimary: true },
+    });
+    const noGif = await createExercise(app, professional.accessToken, { name: `Agachamento sem gif ${Date.now()}` });
     const set = { reps: null, repsMin: 8, repsMax: 12, loadValue: null, loadUnit: null, restSeconds: 60, durationSeconds: null, tempo: null, notes: null };
     reply({
       reply: 'Treino A pronto.',
@@ -160,7 +166,7 @@ describe('IA — conversa nos Modelos (template_diet_chat / template_workout_cha
       days: [{ name: 'Treino A', notes: null, exercises: [{ ref: exRef(squat.id), notes: null, sets: [set, { ...set, reps: 10 }] }, { ref: 'Einventado', notes: null, sets: [set] }] }],
       warnings: [],
     });
-    const res = await http().post('/templates/ai/workout').set(auth).send(ask('Treino de pernas para iniciante')).expect(201);
+    const res = await http().post('/templates/ai/workout').set(auth).send(ask(`Treino de pernas para iniciante com agachamento ${marca}`)).expect(201);
     const data = res.body.structuredData;
     expect(data.content.days[0].exercises).toHaveLength(1);
     expect(data.content.days[0].exercises[0]).toMatchObject({ exerciseId: squat.id, sets: [{ repsMin: 8, repsMax: 12, reps: null }, { repsMin: 8, repsMax: 12, reps: null }] });
@@ -171,6 +177,7 @@ describe('IA — conversa nos Modelos (template_diet_chat / template_workout_cha
     // O que foi salvo como modelo a partir disso passa na validação dos Modelos.
     await http().post('/templates/workouts').set(auth).send({ name: 'Pernas', content: data.content }).expect(201);
     expect(sentContext().catalogo.some((e: { ref: string }) => e.ref === exRef(squat.id))).toBe(true);
+    expect(sentContext().catalogo.some((e: { ref: string }) => e.ref === exRef(noGif.id))).toBe(false);
   });
 
   it('regras de entrada: última fala tem de ser do profissional; rota do paciente não aceita esses recursos; paciente não usa', async () => {

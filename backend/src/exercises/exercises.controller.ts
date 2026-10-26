@@ -22,6 +22,25 @@ export class ExercisesController {
     return this.exercisesService.list(user.id, search, type);
   }
 
+  /** Tela "Exercícios": busca, filtros por grupo/equipamento com contagem e paginação. */
+  @Get('library')
+  library(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('search') search?: string,
+    @Query('group') group?: string,
+    @Query('equipment') equipment?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.exercisesService.library(user.id, {
+      search,
+      group,
+      equipment,
+      page: page ? Number(page) : undefined,
+      pageSize: pageSize ? Number(pageSize) : undefined,
+    });
+  }
+
   @Get(':id')
   findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.exercisesService.findVisibleForDisplay(user.id, id);

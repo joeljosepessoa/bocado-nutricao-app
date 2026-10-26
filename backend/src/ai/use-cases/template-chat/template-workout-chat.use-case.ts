@@ -9,6 +9,7 @@ import type { TemplateWorkoutChatDto } from '../../dto/template-chat.dto';
 import type { AiGenerationResult } from '../../providers/ai-provider.interface';
 import type { AiContextResult, AiUseCase, BuildContextParams, ProcessedAiOutput } from '../ai-use-case.interface';
 import { CHAT_WORKOUT_JSON_SCHEMA, parseChatWorkout, type ChatWorkoutSet } from './template-chat.schema';
+import { selectCatalogForRequest, type AiCatalogItem } from './ai-exercise-selection';
 
 export const SYSTEM_PROMPT = [
   'Você ajuda um profissional (nutricionista/educador físico) a montar um MODELO de treino reutilizável (sem paciente), conversando com ele.',
@@ -35,8 +36,8 @@ export const SYSTEM_PROMPT = [
 ].join('\n');
 
 /** Referência curta e estável: começo do id ("E1a2b3c4d"); colisão usa o id inteiro. */
-export function exerciseRefs(exercises: CatalogExerciseRef[]): Map<string, CatalogExerciseRef> {
-  const refs = new Map<string, CatalogExerciseRef>();
+export function exerciseRefs<T extends { id: string }>(exercises: T[]): Map<string, T> {
+  const refs = new Map<string, T>();
   for (const exercise of exercises) {
     const short = `E${exercise.id.replace(/-/g, '').slice(0, 8)}`;
     refs.set(refs.has(short) ? `E${exercise.id.replace(/-/g, '')}` : short, exercise);
@@ -60,12 +61,24 @@ export class TemplateWorkoutChatUseCase implements AiUseCase {
 
   constructor(private readonly exercisesService: ExercisesService) {}
 
-  /** Catálogo visível + os exercícios do modelo atual (garante que todo exercício já usado tenha ref). */
+  /**
+   * Catálogo INTEIRO visível (com as referências estáveis de cada exercício) + os do modelo atual. É o que
+   * resolve as referências da resposta; para a IA vai só a parte escolhida em selectCatalogForRequest.
+   */
   private async catalog(professionalId: string, current: WorkoutTemplateContentDto | null | undefined) {
-    const visible = await this.exercisesService.listVisibleCatalogRefs(professionalId);
+    const visible: AiCatalogItem[] = await this.exercisesService.listCatalogForAi(professionalId);
     const ids = new Set(visible.map((e) => e.id));
     const missing = (current?.days ?? []).flatMap((d) => d.exercises.map((e) => e.exerciseId)).filter((id) => !ids.has(id));
-    const extra = missing.length > 0 ? await this.exercisesService.visibleRefsByIds(professionalId, missing) : [];
+    const extra: AiCatalogItem[] =
+      missing.length > 0
+        ? (await this.exercisesService.visibleRefsByIds(professionalId, missing)).map((e) => ({
+            id: e.id,
+            name: e.name,
+            muscleGroups: e.muscleGroup ? [e.muscleGroup] : [],
+            equipment: e.equipment,
+            hasGif: !!e.imageUrl,
+          }))
+        : [];
     return exerciseRefs([...visible, ...extra].sort((a, b) => a.id.localeCompare(b.id)));
   }
 
@@ -95,7 +108,11 @@ export class TemplateWorkoutChatUseCase implements AiUseCase {
         pedido: last.text,
         conversa: dto.messages.slice(0, -1).map((m) => ({ quem: m.role === 'professional' ? 'profissional' : 'assistente', texto: m.text })),
         modeloAtual,
-        catalogo: [...refs].map(([ref, e]) => ({ ref, nome: e.name, grupoMuscular: e.muscleGroup, equipamento: e.equipment })),
+        catalogo: selectCatalogForRequest(
+          [...refs.values()],
+          dto.messages.map((m) => m.text).join('\n'),
+          new Set((dto.current?.days ?? []).flatMap((d) => d.exercises.map((e) => e.exerciseId))),
+        ).map((e) => ({ ref: refById.get(e.id)!, nome: e.name, grupos: e.muscleGroups, equipamento: e.equipment })),
       },
     };
   }
@@ -150,7 +167,7 @@ export class TemplateWorkoutChatUseCase implements AiUseCase {
       changed: parsed.changed,
       warnings,
       content,
-      exercises: [...refs.values()].filter((e) => ids.has(e.id)),
+      exercises: await this.exercisesService.visibleRefsByIds(professionalId, [...ids]),
     };
     return { text: JSON.stringify(structured), structuredData: structured as unknown as Record<string, unknown> };
   }

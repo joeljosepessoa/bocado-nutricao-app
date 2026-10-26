@@ -87,6 +87,9 @@ model Professional {
   // o uso da ferramenta de IA pelo profissional, nunca o processamento do
   // dado de um cliente específico (isso é Client.aiDataProcessingConsentAt).
   aiFeaturesConsentAt  DateTime? @map("ai_features_consent_at")
+  // Pode editar os exercícios OFICIAIS da biblioteca (nome, grupos, equipamento). Ligado só para quem
+  // cuida do catálogo; os demais profissionais continuam editando só os próprios exercícios.
+  canEditCatalog       Boolean   @default(false) @map("can_edit_catalog")
 
   user                    User                     @relation(fields: [id], references: [id])
   clients                 Client[]
@@ -125,6 +128,7 @@ model Professional {
   clientInvoices          ClientInvoice[]
   clientBillingAuditLogs  ClientBillingAuditLog[]
   templates               Template[]
+  exercisePresets         ExercisePreset[]
 
   @@map("professionals")
 }
@@ -979,7 +983,11 @@ model Exercise {
   name                    String
   description             String?       @db.Text
   muscleGroup             String?       @map("muscle_group")
+  // Todos os grupos do exercício (a biblioteca filtra por eles); muscleGroup continua sendo o principal.
+  muscleGroups            String[]      @default([]) @map("muscle_groups")
   equipment               String?
+  // Onde o exercício está na biblioteca de origem (ex.: "ACADEMIA / KETTLEBELL / COSTAS").
+  section                 String?
   instructions            String?       @db.Text
   type                    ExerciseType
   scope                   ExerciseScope @default(global)
@@ -1000,6 +1008,7 @@ model Exercise {
   workoutExercises WorkoutExercise[]
   media            ExerciseMedia[]
   aliases          ExerciseAlias[]
+  presets          ExercisePreset[]
 
   @@index([name])
   @@index([scope, ownerProfessionalId])
@@ -1015,7 +1024,8 @@ model ExerciseMedia {
   storageKey      String                      @map("storage_key")
   contentType     String                      @map("content_type")
   sizeBytes       Int                         @map("size_bytes")
-  sha256          String
+  // Conferência do arquivo; null nos GIFs importados direto da lista do bucket (sem baixar o arquivo).
+  sha256          String?
   // Curadoria (o movimento mostrado foi conferido por uma pessoa?). O filename
   // nunca decide nada — é só `sourceFileName`, informativo.
   curationStatus  ExerciseMediaCurationStatus @default(pending) @map("curation_status")
@@ -1059,6 +1069,26 @@ enum ExerciseMediaView {
   front
   back
   unspecified
+}
+
+// Preset: "exercício + séries" guardado pelo profissional (botão "+ Preset" da biblioteca) para inserir
+// rápido em treinos e modelos. reps exatas OU faixa repsMin–repsMax (mesma regra das séries do treino).
+model ExercisePreset {
+  id             String   @id @default(uuid())
+  professionalId String   @map("professional_id")
+  exerciseId     String   @map("exercise_id")
+  sets           Int
+  reps           Int?
+  repsMin        Int?     @map("reps_min")
+  repsMax        Int?     @map("reps_max")
+  restSeconds    Int?     @map("rest_seconds")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  exercise     Exercise     @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+
+  @@index([professionalId])
+  @@map("exercise_presets")
 }
 
 // Sinônimos do EXERCÍCIO (não do arquivo), usados para casar o nome escrito

@@ -7,10 +7,13 @@ import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { normalizeExerciseName, type CatalogExerciseRef } from './exercise-name-matching';
 import { ExerciseMediaStorage, PRIMARY_EXERCISE_MEDIA_QUERY, type ExerciseWithMedia } from './exercise-media-storage.service';
 
-const LOCKED_IDENTITY_FIELDS = ['name', 'muscleGroup', 'equipment', 'type'] as const;
+const LOCKED_IDENTITY_FIELDS = ['name', 'muscleGroup', 'muscleGroups', 'equipment', 'type'] as const;
 // Teto de sanidade: acima disso o matching só deixa de achar (vira "não encontrado"), nunca associa errado.
-const CATALOG_MATCHING_LIMIT = 5000;
+// A biblioteca tem ~5 mil exercícios oficiais (mais os particulares de cada profissional).
+const CATALOG_MATCHING_LIMIT = 20000;
 const LIST_LIMIT = 100;
+/** Filtro "Sem grupos definidos" da biblioteca. */
+export const NO_GROUP = '__sem_grupo__';
 
 @Injectable()
 export class ExercisesService {
@@ -38,7 +41,9 @@ export class ExercisesService {
       data: {
         name: dto.name,
         description: dto.description,
-        muscleGroup: dto.muscleGroup,
+        // Lista de grupos manda; o grupo principal é o primeiro dela.
+        muscleGroups: dto.muscleGroups ?? (dto.muscleGroup ? [dto.muscleGroup] : []),
+        muscleGroup: dto.muscleGroups !== undefined ? (dto.muscleGroups[0] ?? null) : dto.muscleGroup,
         equipment: dto.equipment,
         instructions: dto.instructions,
         type: dto.type,
@@ -89,6 +94,88 @@ export class ExercisesService {
     return Promise.all(ordered.map((exercise) => this.mediaStorage.toDisplay(exercise)));
   }
 
+  /** Quem cuida do catálogo oficial pode editar os exercícios da biblioteca (não só os próprios). */
+  async canEditCatalog(professionalId: string): Promise<boolean> {
+    const professional = await this.prisma.professional.findUnique({ where: { id: professionalId }, select: { canEditCatalog: true } });
+    return professional?.canEditCatalog === true;
+  }
+
+  /**
+   * Tela "Exercícios": busca por nome (sem acento/caixa; todas as palavras), filtro por grupo muscular e
+   * equipamento, contagens para os filtros (de acordo com os outros filtros) e paginação. O GIF de cada
+   * item da página vem com link temporário (abre ao clicar).
+   */
+  async library(professionalId: string, query: { search?: string; group?: string; equipment?: string; page?: number; pageSize?: number }) {
+    const rows = await this.prisma.exercise.findMany({
+      where: this.visibilityFilter(professionalId),
+      select: {
+        id: true,
+        name: true,
+        muscleGroup: true,
+        muscleGroups: true,
+        equipment: true,
+        section: true,
+        scope: true,
+        ownerProfessionalId: true,
+        createdByProfessionalId: true,
+      },
+      take: CATALOG_MATCHING_LIMIT,
+    });
+    type Row = (typeof rows)[number];
+    const words = normalizeExerciseName(query.search ?? '').split(' ').filter(Boolean);
+    const groupsOf = (row: Row) => (row.muscleGroups.length > 0 ? row.muscleGroups : row.muscleGroup ? [row.muscleGroup] : []);
+    const bySearch =
+      words.length > 0
+        ? rows.filter((row) => {
+            const name = normalizeExerciseName(row.name);
+            return words.every((word) => name.includes(word));
+          })
+        : rows;
+    const matchesGroup = (row: Row) => !query.group || (query.group === NO_GROUP ? groupsOf(row).length === 0 : groupsOf(row).includes(query.group));
+    const matchesEquipment = (row: Row) => !query.equipment || (row.equipment ?? '') === query.equipment;
+    const count = (list: Row[], keysOf: (row: Row) => string[]) => {
+      const counts = new Map<string, number>();
+      for (const row of list) for (const key of keysOf(row)) counts.set(key, (counts.get(key) ?? 0) + 1);
+      return [...counts].map(([name, total]) => ({ name, count: total })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'pt-BR'));
+    };
+    const forGroups = bySearch.filter(matchesEquipment);
+    const groups = count(forGroups, groupsOf);
+    const withoutGroup = forGroups.filter((row) => groupsOf(row).length === 0).length;
+    const equipments = count(bySearch.filter(matchesGroup), (row) => (row.equipment ? [row.equipment] : []));
+
+    const filtered = bySearch.filter((row) => matchesGroup(row) && matchesEquipment(row)).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+    const pageSize = Math.min(Math.max(query.pageSize ?? 30, 1), 100);
+    const page = Math.max(query.page ?? 1, 1);
+    const slice = filtered.slice((page - 1) * pageSize, page * pageSize);
+    const catalogEditor = await this.canEditCatalog(professionalId);
+    const withMedia = await this.prisma.exercise.findMany({
+      where: { id: { in: slice.map((row) => row.id) } },
+      select: { id: true, imageUrl: true, media: PRIMARY_EXERCISE_MEDIA_QUERY },
+    });
+    const gifs = new Map((await Promise.all(withMedia.map((e) => this.mediaStorage.toDisplay(e)))).map((e) => [e.id, e.imageUrl]));
+
+    return {
+      items: slice.map((row) => ({
+        id: row.id,
+        name: row.name,
+        muscleGroups: groupsOf(row),
+        equipment: row.equipment,
+        section: row.section,
+        scope: row.scope,
+        gifUrl: gifs.get(row.id) ?? null,
+        canEdit:
+          (row.scope === ExerciseScope.private && row.ownerProfessionalId === professionalId) ||
+          (row.scope === ExerciseScope.global && (row.createdByProfessionalId === professionalId || catalogEditor)),
+      })),
+      total: filtered.length,
+      page,
+      pageSize,
+      groups,
+      withoutGroup,
+      equipments,
+    };
+  }
+
   /** Referências (com a mídia para exibir) dos exercícios visíveis entre os ids pedidos — os que sumiram do catálogo ficam de fora. */
   async visibleRefsByIds(professionalId: string, ids: string[]): Promise<CatalogExerciseRef[]> {
     const unique = [...new Set(ids)];
@@ -98,6 +185,30 @@ export class ExercisesService {
       select: { id: true, name: true, muscleGroup: true, equipment: true, imageUrl: true, media: PRIMARY_EXERCISE_MEDIA_QUERY },
     });
     return Promise.all(refs.map((ref) => this.mediaStorage.toDisplay(ref)));
+  }
+
+  /** Catálogo para a IA: todos os exercícios visíveis, com os grupos e se têm GIF aprovado (sem gerar links). */
+  async listCatalogForAi(professionalId: string): Promise<Array<{ id: string; name: string; muscleGroups: string[]; equipment: string | null; hasGif: boolean }>> {
+    const rows = await this.prisma.exercise.findMany({
+      where: this.visibilityFilter(professionalId),
+      select: {
+        id: true,
+        name: true,
+        muscleGroup: true,
+        muscleGroups: true,
+        equipment: true,
+        media: { where: { curationStatus: 'approved', contentType: { startsWith: 'image/' } }, select: { id: true }, take: 1 },
+      },
+      orderBy: { id: 'asc' },
+      take: CATALOG_MATCHING_LIMIT,
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      muscleGroups: row.muscleGroups.length > 0 ? row.muscleGroups : row.muscleGroup ? [row.muscleGroup] : [],
+      equipment: row.equipment,
+      hasGif: row.media.length > 0,
+    }));
   }
 
   /** Catálogo visível ao profissional (mesmo filtro de `list`), só os campos usados no matching por nome. */
@@ -157,7 +268,7 @@ export class ExercisesService {
     const isOwner = exercise.scope === ExerciseScope.private && exercise.ownerProfessionalId === user.id;
     const isAuthorizedForGlobal =
       exercise.scope === ExerciseScope.global &&
-      (exercise.createdByProfessionalId === user.id || user.role === Role.admin);
+      (exercise.createdByProfessionalId === user.id || user.role === Role.admin || (await this.canEditCatalog(user.id)));
     if (!isOwner && !isAuthorizedForGlobal) {
       throw new ForbiddenException('Você não tem permissão para editar este exercício.');
     }
@@ -183,7 +294,9 @@ export class ExercisesService {
       data: {
         name: dto.name,
         description: dto.description,
-        muscleGroup: dto.muscleGroup,
+        // Lista de grupos manda; o grupo principal é o primeiro dela.
+        ...(dto.muscleGroups !== undefined ? { muscleGroups: dto.muscleGroups } : {}),
+        muscleGroup: dto.muscleGroups !== undefined ? (dto.muscleGroups[0] ?? null) : dto.muscleGroup,
         equipment: dto.equipment,
         instructions: dto.instructions,
         type: dto.type,

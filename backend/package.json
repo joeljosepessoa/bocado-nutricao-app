@@ -27,7 +27,9 @@
     "reference-data:import-exercise-media": "ts-node src/reference-data/import-exercise-media.ts",
     "reference-data:apply-exercise-media-curation": "ts-node src/reference-data/apply-exercise-media-curation.ts",
     "admin:bootstrap": "ts-node src/admin-bootstrap/bootstrap-admin.ts",
-    "email:test": "ts-node src/auth/email/send-test-email.ts"
+    "email:test": "ts-node src/auth/email/send-test-email.ts",
+    "reference-data:import-exercise-catalog": "ts-node src/reference-data/import-exercise-catalog.ts",
+    "reference-data:build-exercise-catalog": "ts-node src/reference-data/build-exercise-catalog-from-r2.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",

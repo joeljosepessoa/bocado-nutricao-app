@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUrl } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 import { ExerciseScope, ExerciseType } from '@prisma/client';
 
 export class CreateExerciseDto {
@@ -8,6 +8,8 @@ export class CreateExerciseDto {
 
   @IsOptional() @IsString() description?: string;
   @IsOptional() @IsString() muscleGroup?: string;
+  /** Todos os grupos (o 1º vira o principal). */
+  @IsOptional() @IsArray() @ArrayMaxSize(10) @IsString({ each: true }) @MaxLength(60, { each: true }) muscleGroups?: string[];
   @IsOptional() @IsString() equipment?: string;
   @IsOptional() @IsString() instructions?: string;
 
