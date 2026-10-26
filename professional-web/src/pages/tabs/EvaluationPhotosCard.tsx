@@ -5,6 +5,7 @@ import type { BodyPhoto } from '../../types/api';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { PhotoCropModal } from '../../components/PhotoCropModal';
 import { ACCEPTED_PHOTO_TYPES, photoFileError } from '../../utils/evaluationPhotoFile';
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3000';
@@ -24,6 +25,7 @@ export type PendingPhotos = Partial<Record<BodyPhoto['angle'], File>>;
  */
 export function PendingPhotosCard({ files, onChange }: { files: PendingPhotos; onChange: (files: PendingPhotos) => void }) {
   const [error, setError] = useState<string | null>(null);
+  const [adjusting, setAdjusting] = useState<BodyPhoto['angle'] | null>(null);
   // Prévia local das fotos escolhidas — nada sai do computador antes de salvar.
   const previews = useMemo(
     () => Object.fromEntries(Object.entries(files).map(([angle, file]) => [angle, URL.createObjectURL(file as File)])) as Partial<Record<BodyPhoto['angle'], string>>,
@@ -61,9 +63,22 @@ export function PendingPhotosCard({ files, onChange }: { files: PendingPhotos; o
             onFile={(file) => choose(angle, file)}
             chooseText={files[angle] ? 'Trocar foto' : 'Escolher foto'}
             onRemove={files[angle] ? () => remove(angle) : undefined}
+            onAdjust={files[angle] ? () => setAdjusting(angle) : undefined}
           />
         ))}
       </div>
+      {adjusting && files[adjusting] ? (
+        <PhotoCropModal
+          title={`Ajustar — ${ANGLES.find((a) => a.angle === adjusting)?.label.toLowerCase() ?? 'foto'}`}
+          source={files[adjusting] as File}
+          fileName={(files[adjusting] as File).name}
+          onCancel={() => setAdjusting(null)}
+          onApply={(file) => {
+            onChange({ ...files, [adjusting]: file });
+            setAdjusting(null);
+          }}
+        />
+      ) : null}
       {error ? (
         <div role="alert" style={{ fontSize: 12, color: 'var(--color-danger)' }}>
           {error}
@@ -82,6 +97,7 @@ function SlotFrame({
   onFile,
   chooseText,
   onRemove,
+  onAdjust,
   busy = false,
   link,
 }: {
@@ -92,6 +108,8 @@ function SlotFrame({
   onFile: (file: File | undefined) => void;
   chooseText: string;
   onRemove?: () => void;
+  /** Recortar/girar a foto que está na moldura. */
+  onAdjust?: () => void;
   busy?: boolean;
   link?: string;
 }) {
@@ -139,6 +157,11 @@ function SlotFrame({
         <Button size="small" variant={onRemove ? 'secondary' : 'primary'} loading={busy} onClick={() => input.current?.click()}>
           {chooseText}
         </Button>
+        {onAdjust ? (
+          <Button size="small" variant="ghost" disabled={busy} onClick={onAdjust}>
+            Ajustar
+          </Button>
+        ) : null}
         {onRemove ? (
           <Button size="small" variant="ghost" disabled={busy} onClick={onRemove}>
             Remover
@@ -189,6 +212,7 @@ function PhotoSlot({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [adjusting, setAdjusting] = useState(false);
 
   // O endereço da foto é temporário: pedido de novo a cada abertura da tela.
   const { data: signed, isError: urlFailed } = useQuery({
@@ -239,8 +263,21 @@ function PhotoSlot({
         onFile={(file) => void handleFile(file)}
         chooseText={photo ? 'Trocar foto' : 'Enviar foto'}
         onRemove={photo ? () => setConfirmRemove(true) : undefined}
+        onAdjust={imageUrl ? () => setAdjusting(true) : undefined}
         busy={busy}
       />
+      {adjusting && imageUrl ? (
+        <PhotoCropModal
+          title={`Ajustar — ${label.toLowerCase()}`}
+          source={imageUrl}
+          fileName={`${angle}.jpg`}
+          onCancel={() => setAdjusting(false)}
+          onApply={async (file) => {
+            setAdjusting(false);
+            await handleFile(file);
+          }}
+        />
+      ) : null}
       {error ? (
         <div role="alert" style={{ fontSize: 12, color: 'var(--color-danger)' }}>
           {error}
