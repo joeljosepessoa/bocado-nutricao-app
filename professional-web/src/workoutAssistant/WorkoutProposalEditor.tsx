@@ -9,6 +9,7 @@ import {
   dayWarnings,
   exerciseWarnings,
   addDay,
+  exerciseFromPreset,
   manualExercise,
   moveExercise,
   removeDay,
@@ -23,6 +24,7 @@ import {
   type WorkoutDraft,
 } from './draft';
 import { ExercisePickerModal } from './ExercisePickerModal';
+import { PresetPickerModal } from './PresetPickerModal';
 import { applyRegistered, distinctNames, pendingExercises, pendingWithoutSuggestions, registerPending, type PendingExercise } from './registerExercises';
 import { SetsEditor } from './SetsEditor';
 
@@ -35,7 +37,10 @@ interface Props {
   allowDays?: boolean;
 }
 
-type Picker = { mode: 'replace'; dayKey: string; exerciseKey: string; search: string; muscleGroup: string | null } | { mode: 'add'; dayKey: string };
+type Picker =
+  | { mode: 'replace'; dayKey: string; exerciseKey: string; search: string; muscleGroup: string | null }
+  | { mode: 'add'; dayKey: string }
+  | { mode: 'preset'; dayKey: string };
 
 const textareaStyle: React.CSSProperties = {
   width: '100%',
@@ -274,6 +279,9 @@ function DayCard({
         <div>
           <Button size="small" variant="secondary" onClick={() => onPicker({ mode: 'add', dayKey: day.key })}>
             + Adicionar exercício do catálogo
+          </Button>{' '}
+          <Button size="small" variant="ghost" onClick={() => onPicker({ mode: 'preset', dayKey: day.key })}>
+            + Do meu preset
           </Button>
         </div>
       </div>
@@ -369,7 +377,15 @@ export function WorkoutProposalEditor({ draft, onChange, withoutGifs = false, al
         </div>
       ) : null}
 
-      {picker ? (
+      {picker?.mode === 'preset' ? (
+        <PresetPickerModal
+          onClose={() => setPicker(null)}
+          onChoose={(preset) => {
+            onChange(updateDay(draft, picker.dayKey, (d) => ({ ...d, exercises: [...d.exercises, exerciseFromPreset(preset)] })));
+            setPicker(null);
+          }}
+        />
+      ) : picker ? (
         <ExercisePickerModal
           title={picker.mode === 'replace' ? 'Selecionar exercício do catálogo' : 'Adicionar exercício do catálogo'}
           confirmLabel={picker.mode === 'replace' ? 'Usar este exercício' : 'Adicionar'}

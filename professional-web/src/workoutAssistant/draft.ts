@@ -182,6 +182,36 @@ export function templateToDraft(content: WorkoutTemplateContent, exercises: Cata
   };
 }
 
+/** Preset da biblioteca → exercício pronto no rascunho (séries, repetições e descanso do preset). */
+export function exerciseFromPreset(preset: {
+  sets: number;
+  reps: number | null;
+  repsMin: number | null;
+  repsMax: number | null;
+  restSeconds: number | null;
+  exercise: { id: string; name: string; muscleGroups: string[]; equipment: string | null; imageUrl: string | null };
+}): DraftExercise {
+  const base = manualExercise({
+    id: preset.exercise.id,
+    name: preset.exercise.name,
+    muscleGroup: preset.exercise.muscleGroups[0] ?? null,
+    equipment: preset.exercise.equipment,
+    imageUrl: preset.exercise.imageUrl,
+  });
+  const range = preset.repsMin != null && preset.repsMax != null;
+  return {
+    ...base,
+    sets: Array.from({ length: Math.max(1, preset.sets) }, () => ({
+      ...emptySet(),
+      repsMode: range ? ('range' as const) : preset.reps != null ? ('exact' as const) : ('none' as const),
+      reps: range ? null : preset.reps,
+      repsMin: range ? preset.repsMin : null,
+      repsMax: range ? preset.repsMax : null,
+      restSeconds: preset.restSeconds,
+    })),
+  };
+}
+
 /** Novo dia em branco: "Treino B", "Treino C"… */
 export function addDay(draft: WorkoutDraft): WorkoutDraft {
   const letter = String.fromCharCode(65 + (draft.days.length % 26));

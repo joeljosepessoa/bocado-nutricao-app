@@ -647,6 +647,8 @@ export interface CreateExerciseInput {
   type: ExerciseType;
   scope: 'global' | 'private';
   muscleGroup?: string;
+  /** Todos os grupos (o 1º vira o principal). */
+  muscleGroups?: string[];
   equipment?: string;
   instructions?: string;
 }
@@ -656,11 +658,50 @@ export interface Exercise {
   name: string;
   type: string;
   muscleGroup: string | null;
+  muscleGroups?: string[];
   equipment: string | null;
   instructions?: string | null;
   videoUrl: string | null;
   imageUrl: string | null;
   scope: 'global' | 'private';
+}
+
+/** Tela "Exercícios": um item da biblioteca. */
+export interface ExerciseLibraryItem {
+  id: string;
+  name: string;
+  /** Todos os grupos; vazio = "Sem grupos definidos". */
+  muscleGroups: string[];
+  equipment: string | null;
+  section: string | null;
+  scope: 'global' | 'private';
+  /** Caminho do GIF na API (baixado só ao abrir); null = sem GIF. */
+  gifUrl: string | null;
+  canEdit: boolean;
+}
+
+export interface ExerciseLibraryPage {
+  items: ExerciseLibraryItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  /** Contagem por grupo (respeitando a busca e o equipamento escolhido). */
+  groups: Array<{ name: string; count: number }>;
+  withoutGroup: number;
+  /** Contagem por equipamento (respeitando a busca e o grupo escolhido). */
+  equipments: Array<{ name: string; count: number }>;
+}
+
+/** "+ Preset": exercício + séries guardado pelo profissional. */
+export interface ExercisePreset {
+  id: string;
+  sets: number;
+  reps: number | null;
+  repsMin: number | null;
+  repsMax: number | null;
+  restSeconds: number | null;
+  createdAt: string;
+  exercise: { id: string; name: string; muscleGroups: string[]; equipment: string | null; imageUrl: string | null };
 }
 
 export interface ExecutionLog {

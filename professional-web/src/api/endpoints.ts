@@ -1,5 +1,7 @@
 import { apiClient } from './client';
 import type {
+  ExerciseLibraryPage,
+  ExercisePreset,
   CatalogExerciseRef,
   CatalogFoodRef,
   DietChatResult,
@@ -475,6 +477,41 @@ export async function deleteDietSupplement(ref: DraftRef, supplementId: string) 
 export async function listExercises(search?: string): Promise<Exercise[]> {
   const res = await apiClient.get<Exercise[]>('/exercises', { params: { search } });
   return res.data;
+}
+
+/** Tela "Exercícios": busca, filtros (grupo, equipamento) e paginação feitos no servidor. */
+export async function listExerciseLibrary(params: { search?: string; group?: string; equipment?: string; page?: number; pageSize?: number }): Promise<ExerciseLibraryPage> {
+  const res = await apiClient.get<ExerciseLibraryPage>('/exercises/library', {
+    params: Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== '')),
+  });
+  return res.data;
+}
+
+/** Editar exercício (nome, grupos, equipamento). Oficial só para quem cuida do catálogo. */
+export async function updateExercise(id: string, input: { name?: string; muscleGroups?: string[]; equipment?: string }): Promise<Exercise> {
+  const res = await apiClient.patch<Exercise>(`/exercises/${id}`, input);
+  return res.data;
+}
+
+export async function listExercisePresets(): Promise<ExercisePreset[]> {
+  const res = await apiClient.get<ExercisePreset[]>('/exercise-presets');
+  return res.data;
+}
+
+export async function createExercisePreset(input: {
+  exerciseId: string;
+  sets: number;
+  reps?: number | null;
+  repsMin?: number | null;
+  repsMax?: number | null;
+  restSeconds?: number | null;
+}): Promise<ExercisePreset> {
+  const res = await apiClient.post<ExercisePreset>('/exercise-presets', input);
+  return res.data;
+}
+
+export async function deleteExercisePreset(id: string): Promise<void> {
+  await apiClient.delete(`/exercise-presets/${id}`);
 }
 
 export async function createExercise(input: CreateExerciseInput): Promise<Exercise> {
