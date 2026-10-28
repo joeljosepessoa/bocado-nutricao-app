@@ -692,6 +692,28 @@ export interface ExerciseLibraryPage {
   equipments: Array<{ name: string; count: number }>;
 }
 
+/** Série feita pelo paciente (histórico de treino). */
+export interface WorkoutHistorySet {
+  setOrder: number;
+  reps: number | null;
+  loadValue: number | null;
+  loadUnit: string | null;
+  durationSeconds: number | null;
+  distanceMeters: number | null;
+  perceivedEffort: number | null;
+}
+
+/** Uma sessão de treino registrada (no app pelo paciente ou pelo profissional). */
+export interface WorkoutHistorySession {
+  id: string;
+  performedAt: string;
+  dayName: string;
+  versionNumber: number;
+  loggedBy: 'client' | 'professional';
+  notes: string | null;
+  exercises: Array<{ exerciseId: string; name: string; sets: WorkoutHistorySet[] }>;
+}
+
 /** Exercício da biblioteca com GIF, sugerido para um exercício particular sem GIF. */
 export interface GifCandidate {
   id: string;

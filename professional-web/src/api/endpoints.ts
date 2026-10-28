@@ -3,6 +3,7 @@ import type {
   ExerciseLibraryPage,
   ExercisePreset,
   WithoutGifItem,
+  WorkoutHistorySession,
   CatalogExerciseRef,
   CatalogFoodRef,
   DietChatResult,
@@ -705,6 +706,12 @@ export async function archiveWorkout(clientId: string, workoutId: string): Promi
 /** Proposta já revisada → treino NOVO em rascunho. Nunca publica. */
 export async function createWorkoutFromProposal(clientId: string, input: CreateWorkoutFromProposalInput): Promise<Workout> {
   const res = await apiClient.post<Workout>(`/clients/${clientId}/workouts/from-proposal`, input);
+  return res.data;
+}
+
+/** Histórico de treino do paciente: sessões (mais recentes primeiro) com as séries feitas. */
+export async function getWorkoutHistory(clientId: string, limit = 120): Promise<{ sessions: WorkoutHistorySession[]; total: number }> {
+  const res = await apiClient.get(`/clients/${clientId}/workouts/history`, { params: { limit } });
   return res.data;
 }
 

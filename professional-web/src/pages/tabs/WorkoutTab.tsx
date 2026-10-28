@@ -10,10 +10,10 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { StatusBadge } from '../../components/StatusBadge';
 import { EmptyState } from '../../components/EmptyState';
 import { ExerciseGif } from '../../components/ExerciseGif';
-import { formatDate } from '../../lib/format';
 import { summarizeSets } from '../../lib/workoutFormat';
 import type { WorkoutVersion } from '../../types/api';
 import { WorkoutVersionEditor } from '../../workoutEditor/WorkoutVersionEditor';
+import { WorkoutHistoryCard } from '../../workoutHistory/WorkoutHistoryCard';
 
 function errorMessage(err: unknown, fallback: string): string {
   const message = (err as { response?: { data?: { message?: unknown } } })?.response?.data?.message;
@@ -60,12 +60,6 @@ export function WorkoutTab() {
   const draft: WorkoutVersion | null = draftSummary ? (draftIsCurrent ? current : (separateDraft ?? null)) : null;
   const published = current?.status === 'published' ? current : null;
 
-  const { data: logs } = useQuery({
-    queryKey: ['execution-logs', clientId, workoutId],
-    queryFn: () => api.listExecutionLogs(clientId!, workoutId!),
-    enabled: !!workoutId,
-  });
-
   const refresh = () => {
     setActionError(null);
     return Promise.all([
@@ -101,7 +95,6 @@ export function WorkoutTab() {
       await api.archiveWorkout(clientId!, workoutId!);
       queryClient.removeQueries({ queryKey: ['workout', clientId, workoutId] });
       queryClient.removeQueries({ queryKey: ['workout-version', clientId, workoutId] });
-      queryClient.removeQueries({ queryKey: ['execution-logs', clientId, workoutId] });
       await queryClient.invalidateQueries({ queryKey: ['workouts', clientId] });
     } catch (err) {
       setActionError(errorMessage(err, 'Não foi possível excluir o treino.'));
@@ -207,19 +200,7 @@ export function WorkoutTab() {
         <EmptyState title="Sem versão em edição" />
       )}
 
-      <Card title="Histórico de execução">
-        {!logs || logs.items.length === 0 ? (
-          <EmptyState title="Nenhuma execução registrada ainda" />
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {logs.items.map((log) => (
-              <div key={log.id} style={{ fontSize: 13, borderTop: '1px solid var(--color-border)', paddingTop: 6 }}>
-                {formatDate(log.performedAt)} {log.loggedByProfessionalId ? '· registrado pelo profissional' : '· registrado pelo cliente'}
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+      <WorkoutHistoryCard clientId={clientId!} />
 
       {confirmDelete ? (
         <ConfirmDialog
