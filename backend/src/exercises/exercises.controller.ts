@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -6,6 +6,7 @@ import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { ExercisesService } from './exercises.service';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
+import { LinkLibraryGifDto } from './dto/link-library-gif.dto';
 
 @Controller('exercises')
 @Roles(Role.professional)
@@ -39,6 +40,26 @@ export class ExercisesController {
       page: page ? Number(page) : undefined,
       pageSize: pageSize ? Number(pageSize) : undefined,
     });
+  }
+
+  /** Tela "Sem GIF": exercícios particulares sem GIF, quanto são usados e sugestões da biblioteca. */
+  @Get('without-gif')
+  withoutGif(@CurrentUser() user: AuthenticatedUser) {
+    return this.exercisesService.withoutGif(user.id);
+  }
+
+  /** Liga ao exercício particular o GIF de um exercício da biblioteca (nome e treinos não mudam). */
+  @Post(':id/gif')
+  @HttpCode(200)
+  linkLibraryGif(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Body() dto: LinkLibraryGifDto) {
+    return this.exercisesService.linkLibraryGif(user.id, id, dto.fromExerciseId);
+  }
+
+  /** Desfaz a ligação acima. */
+  @Delete(':id/gif')
+  @HttpCode(204)
+  async unlinkLibraryGif(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    await this.exercisesService.unlinkLibraryGif(user.id, id);
   }
 
   @Get(':id')

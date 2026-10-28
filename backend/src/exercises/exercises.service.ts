@@ -1,11 +1,15 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { Exercise, ExerciseScope, Role, WorkoutVersionStatus } from '@prisma/client';
+import { Exercise, ExerciseMediaCurationStatus, ExerciseScope, Prisma, Role, WorkoutVersionStatus } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { normalizeExerciseName, type CatalogExerciseRef } from './exercise-name-matching';
 import { ExerciseMediaStorage, PRIMARY_EXERCISE_MEDIA_QUERY, type ExerciseWithMedia } from './exercise-media-storage.service';
+import { buildGifIndex, suggestGifCandidates } from './exercise-gif-suggestions';
+
+/** Marca, em ExerciseMedia.sourceFileName, o GIF ligado da biblioteca (o que "Desfazer" pode tirar). */
+export const LIBRARY_GIF_MARK = 'biblioteca:';
 
 const LOCKED_IDENTITY_FIELDS = ['name', 'muscleGroup', 'muscleGroups', 'equipment', 'type'] as const;
 // Teto de sanidade: acima disso o matching só deixa de achar (vira "não encontrado"), nunca associa errado.
@@ -258,6 +262,126 @@ export class ExercisesService {
     if (!exercise) {
       throw new NotFoundException('Exercício não encontrado.');
     }
+    return exercise;
+  }
+
+  /**
+   * Tela "Sem GIF": os exercícios particulares do profissional que ainda não têm GIF, com quantas vezes
+   * aparecem nos treinos dele e sugestões da biblioteca (com o GIF para conferir antes de ligar).
+   */
+  async withoutGif(professionalId: string) {
+    const own = await this.prisma.exercise.findMany({
+      where: {
+        scope: ExerciseScope.private,
+        ownerProfessionalId: professionalId,
+        media: { none: { curationStatus: ExerciseMediaCurationStatus.approved, contentType: { startsWith: 'image/' } } },
+      },
+      select: { id: true, name: true },
+    });
+    if (own.length === 0) return { items: [] };
+
+    const usage = await this.prisma.workoutExercise.findMany({
+      where: { exerciseId: { in: own.map((e) => e.id) }, workoutDay: { workoutVersion: { workout: { professionalId } } } },
+      select: { exerciseId: true, workoutDay: { select: { workoutVersion: { select: { workout: { select: { clientId: true } } } } } } },
+    });
+    const uses = new Map<string, { count: number; clients: Set<string> }>();
+    for (const row of usage) {
+      const entry = uses.get(row.exerciseId) ?? { count: 0, clients: new Set<string>() };
+      entry.count += 1;
+      entry.clients.add(row.workoutDay.workoutVersion.workout.clientId);
+      uses.set(row.exerciseId, entry);
+    }
+
+    const library = buildGifIndex(await this.libraryWithGif());
+    const items = await Promise.all(
+      own.map(async (exercise) => ({
+        id: exercise.id,
+        name: exercise.name,
+        uses: uses.get(exercise.id)?.count ?? 0,
+        clients: uses.get(exercise.id)?.clients.size ?? 0,
+        suggestions: await Promise.all(
+          suggestGifCandidates(exercise.name, library).map(async (c) => ({ id: c.id, name: c.name, section: c.section, gifUrl: await this.mediaStorage.presignedGetUrl(c.storageKey) })),
+        ),
+      })),
+    );
+    items.sort((a, b) => b.uses - a.uses || a.name.localeCompare(b.name, 'pt-BR'));
+    return { items };
+  }
+
+  /** Exercícios oficiais com GIF aprovado (o GIF principal de cada um). */
+  private async libraryWithGif(where: Prisma.ExerciseWhereInput = {}) {
+    const rows = await this.prisma.exercise.findMany({
+      where: { ...where, scope: ExerciseScope.global, approvedAt: { not: null }, media: { some: { curationStatus: ExerciseMediaCurationStatus.approved, contentType: { startsWith: 'image/' } } } },
+      select: {
+        id: true,
+        name: true,
+        section: true,
+        muscleGroup: true,
+        muscleGroups: true,
+        equipment: true,
+        media: {
+          where: { curationStatus: ExerciseMediaCurationStatus.approved, contentType: { startsWith: 'image/' } },
+          orderBy: PRIMARY_EXERCISE_MEDIA_QUERY.orderBy,
+          take: 1,
+          select: { storageKey: true, contentType: true, sizeBytes: true, sha256: true, sourceFileName: true },
+        },
+      },
+      take: CATALOG_MATCHING_LIMIT,
+    });
+    return rows.map(({ media, ...rest }) => ({ ...rest, ...media[0] }));
+  }
+
+  /**
+   * Liga ao exercício particular o GIF de um exercício da biblioteca. O exercício continua o mesmo (nome,
+   * treinos publicados, cargas registradas); só passa a mostrar o GIF. Grupos e equipamento vazios são
+   * preenchidos com os do exercício da biblioteca.
+   */
+  async linkLibraryGif(professionalId: string, exerciseId: string, fromExerciseId: string) {
+    const exercise = await this.ownPrivateExercise(professionalId, exerciseId);
+    const [source] = await this.libraryWithGif({ id: fromExerciseId });
+    if (!source) throw new NotFoundException('Exercício da biblioteca com GIF não encontrado.');
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.exerciseMedia.updateMany({ where: { exerciseId }, data: { isPrimary: false } });
+      await tx.exerciseMedia.deleteMany({ where: { exerciseId, sourceFileName: { startsWith: LIBRARY_GIF_MARK } } });
+      await tx.exerciseMedia.create({
+        data: {
+          exerciseId,
+          storageKey: source.storageKey,
+          contentType: source.contentType,
+          sizeBytes: source.sizeBytes,
+          sha256: source.sha256,
+          curationStatus: ExerciseMediaCurationStatus.approved,
+          isPrimary: true,
+          sourceFileName: `${LIBRARY_GIF_MARK}${source.id}`,
+          reviewedAt: new Date(),
+        },
+      });
+      const groups = source.muscleGroups.length > 0 ? source.muscleGroups : source.muscleGroup ? [source.muscleGroup] : [];
+      const fillGroups = exercise.muscleGroups.length === 0 && !exercise.muscleGroup && groups.length > 0;
+      if (fillGroups || (!exercise.equipment && source.equipment)) {
+        await tx.exercise.update({
+          where: { id: exerciseId },
+          data: {
+            ...(fillGroups ? { muscleGroups: groups, muscleGroup: groups[0] } : {}),
+            ...(!exercise.equipment && source.equipment ? { equipment: source.equipment } : {}),
+          },
+        });
+      }
+    });
+    return { id: exerciseId, gifUrl: await this.mediaStorage.presignedGetUrl(source.storageKey), fromExercise: { id: source.id, name: source.name } };
+  }
+
+  /** Desfaz `linkLibraryGif`: tira só o GIF que veio da biblioteca. */
+  async unlinkLibraryGif(professionalId: string, exerciseId: string) {
+    await this.ownPrivateExercise(professionalId, exerciseId);
+    const removed = await this.prisma.exerciseMedia.deleteMany({ where: { exerciseId, sourceFileName: { startsWith: LIBRARY_GIF_MARK } } });
+    if (removed.count === 0) throw new NotFoundException('Este exercício não tem GIF ligado da biblioteca.');
+  }
+
+  private async ownPrivateExercise(professionalId: string, exerciseId: string) {
+    const exercise = await this.prisma.exercise.findFirst({ where: { id: exerciseId, scope: ExerciseScope.private, ownerProfessionalId: professionalId } });
+    if (!exercise) throw new NotFoundException('Exercício particular não encontrado.');
     return exercise;
   }
 
