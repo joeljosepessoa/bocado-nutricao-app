@@ -4,6 +4,7 @@ import * as api from '../api/endpoints';
 import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import { TextField } from '../components/TextField';
+import { FoodFormModal } from '../foods/FoodFormModal';
 import type { CatalogFoodRef } from '../types/api';
 
 /** Escolha manual no catálogo de alimentos visíveis — o profissional decide a correspondência. */
@@ -17,16 +18,35 @@ export function FoodPickerModal({
   onClose: () => void;
 }) {
   const [search, setSearch] = useState(initialSearch);
+  const [creating, setCreating] = useState(false);
   const { data: foods, isLoading } = useQuery({ queryKey: ['foods', search], queryFn: () => api.listFoods(search || undefined) });
+
+  if (creating) {
+    return (
+      <FoodFormModal
+        initialName={search.trim()}
+        onClose={() => setCreating(false)}
+        onSaved={(food) => {
+          onSelect({ id: food.id, name: food.name });
+          onClose();
+        }}
+      />
+    );
+  }
 
   return (
     <Modal
       title="Escolher alimento do catálogo"
       onClose={onClose}
       actions={
-        <Button variant="ghost" onClick={onClose}>
-          Cancelar
-        </Button>
+        <>
+          <Button variant="secondary" onClick={() => setCreating(true)} style={{ marginRight: 'auto' }}>
+            Cadastrar novo alimento
+          </Button>
+          <Button variant="ghost" onClick={onClose}>
+            Cancelar
+          </Button>
+        </>
       }
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -35,7 +55,7 @@ export function FoodPickerModal({
           {isLoading ? <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Buscando…</span> : null}
           {!isLoading && (foods ?? []).length === 0 ? (
             <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-              Nenhum alimento encontrado. Cadastre-o no catálogo de alimentos antes de usar na dieta.
+              Nenhum alimento encontrado. Use “Cadastrar novo alimento” para criar e já escolher.
             </span>
           ) : null}
           {(foods ?? []).map((food) => (

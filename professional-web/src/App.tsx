@@ -28,6 +28,7 @@ import { ReportsPage } from './pages/ReportsPage';
 import { AiPage } from './pages/AiPage';
 import { TemplatesPage } from './templates/TemplatesPage';
 import { ExerciseLibraryPage } from './exercises/ExerciseLibraryPage';
+import { FoodLibraryPage } from './foods/FoodLibraryPage';
 import { PatientDietAiPage, PatientWorkoutAiPage } from './patientAi/PatientAiPages';
 import { DietTemplateEditorPage, WorkoutTemplateEditorPage } from './templates/TemplateEditorPages';
 import { AnamnesisPage } from './pages/AnamnesisPage';
@@ -67,6 +68,7 @@ function App() {
               <Route path="/relatorios" element={<ReportsPage />} />
               <Route path="/ia" element={<AiPage />} />
               <Route path="/modelos" element={<TemplatesPage />} />
+              <Route path="/alimentos" element={<FoodLibraryPage />} />
               <Route path="/exercicios" element={<ExerciseLibraryPage />} />
               <Route path="/modelos/dietas/novo" element={<DietTemplateEditorPage />} />
               <Route path="/modelos/dietas/:templateId" element={<DietTemplateEditorPage />} />

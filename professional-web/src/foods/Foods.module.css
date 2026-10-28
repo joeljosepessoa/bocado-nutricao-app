@@ -1,0 +1,224 @@
+/* Tela "Alimentos": tabela compacta de valores por 100 g + ficha do alimento. */
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.table th,
+.table td {
+  padding: 10px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th:first-child,
+.table td:first-child {
+  text-align: left;
+  white-space: normal;
+  min-width: 240px;
+}
+
+.table thead th {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  position: sticky;
+  top: 0;
+}
+
+.table tbody tr {
+  cursor: pointer;
+}
+
+.table tbody tr:hover,
+.table tbody tr:focus-visible {
+  background: var(--color-primary-light);
+  outline: none;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.foodName {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.foodMeta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.dim {
+  color: var(--color-text-secondary);
+}
+
+.metaLine {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.origin {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.origin_mine {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  border-color: transparent;
+}
+
+.origin_taco {
+  background: var(--color-success-light);
+  color: var(--color-success);
+  border-color: transparent;
+}
+
+.pending {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+}
+
+.calculator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-weight: 600;
+}
+
+.qty,
+.measure {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font: inherit;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.qty {
+  width: 90px;
+}
+
+.macros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+.macro {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+
+.macroValue {
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.macroValue small {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.macroLabel {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.measureTag {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+
+.sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.section {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.nutrients {
+  width: 100%;
+  min-width: 0; /* a regra global de DataTable põe 480px em toda tabela */
+  border-collapse: collapse;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.nutrients caption {
+  text-align: left;
+  font-weight: 700;
+  font-size: 13px;
+  padding-bottom: 4px;
+}
+
+.nutrients th,
+.nutrients td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.nutrients thead th {
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-text-secondary);
+  font-size: 11.5px;
+}
+
+.nutrients th:first-child {
+  text-align: left;
+  font-weight: 500;
+  white-space: normal;
+}
+
+.loadMore {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}

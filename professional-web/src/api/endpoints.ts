@@ -50,6 +50,9 @@ import type {
   ExecutionLog,
   Exercise,
   Food,
+  FoodDetails,
+  FoodInput,
+  FoodLibraryPage,
   MealGroupKind,
   Message,
   NutritionUnit,
@@ -266,6 +269,34 @@ export async function deleteEvaluationPhoto(clientId: string, evaluationId: stri
 export async function listFoods(search?: string): Promise<Food[]> {
   const res = await apiClient.get<Food[]>('/foods', { params: { search } });
   return res.data;
+}
+
+/** Tela "Alimentos": TACO + seus alimentos, com busca, grupo, origem e paginação. */
+export async function listFoodLibrary(params: { search?: string; group?: string; origin?: string; page?: number; pageSize?: number }): Promise<FoodLibraryPage> {
+  const res = await apiClient.get<FoodLibraryPage>('/foods/library', {
+    params: Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== '')),
+  });
+  return res.data;
+}
+
+export async function getFoodDetails(id: string): Promise<FoodDetails> {
+  const res = await apiClient.get<FoodDetails>(`/foods/${id}/details`);
+  return res.data;
+}
+
+/** Alimento próprio: sempre particular (só você vê). */
+export async function createFood(input: FoodInput): Promise<Food> {
+  const res = await apiClient.post<Food>('/foods', { ...input, scope: 'private' });
+  return res.data;
+}
+
+export async function updateFood(id: string, input: Partial<FoodInput>): Promise<Food> {
+  const res = await apiClient.patch<Food>(`/foods/${id}`, input);
+  return res.data;
+}
+
+export async function deleteFood(id: string): Promise<void> {
+  await apiClient.delete(`/foods/${id}`);
 }
 
 // --- Dietas -------------------------------------------------------------

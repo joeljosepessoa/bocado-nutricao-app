@@ -23,6 +23,7 @@ const PROFESSIONAL_NAV_ITEMS: NavItem[] = [
   { to: '/relatorios', label: 'Relatórios', icon: 'barChart' },
   { to: '/ia', label: 'Inteligência Artificial', icon: 'sparkles' },
   { to: '/modelos', label: 'Modelos', icon: 'clipboardCheck' },
+  { to: '/alimentos', label: 'Alimentos', icon: 'apple' },
   { to: '/exercicios', label: 'Exercícios', icon: 'dumbbell' },
   { to: '/plano', label: 'Plano', icon: 'card' },
   { to: '/configuracoes', label: 'Configurações', icon: 'settings' },

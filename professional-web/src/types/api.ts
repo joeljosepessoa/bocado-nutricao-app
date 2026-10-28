@@ -388,6 +388,71 @@ export interface Food {
   fiberGPer100: number | null;
 }
 
+// --- Tela Alimentos -------------------------------------------------------
+
+/** taco = Tabela TACO (só leitura); mine = cadastrado por você; shared = de outro profissional, aprovado. */
+export type FoodOrigin = 'taco' | 'mine' | 'shared';
+
+export interface FoodLibraryItem {
+  id: string;
+  name: string;
+  origin: FoodOrigin;
+  tacoNumber: number | null;
+  foodGroup: string | null;
+  preparation: string | null;
+  baseUnit: 'g' | 'ml';
+  kcalPer100: number | null;
+  proteinGPer100: number | null;
+  carbGPer100: number | null;
+  fatGPer100: number | null;
+  fiberGPer100: number | null;
+  sodiumMgPer100: number | null;
+  householdMeasures: number;
+  pending: boolean;
+  canEdit: boolean;
+}
+
+export interface FoodLibraryPage {
+  items: FoodLibraryItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  groups: Array<{ name: string; count: number }>;
+  withoutGroup: number;
+  origins: { all: number; taco: number; mine: number; shared: number };
+}
+
+export type NutrientStatus = 'valor' | 'traco' | 'nao_aplicavel' | 'em_reavaliacao' | 'nao_analisado' | 'invalido';
+
+export interface NutrientRow {
+  key: string;
+  label: string;
+  unit: string;
+  value: number | null;
+  status: NutrientStatus;
+}
+
+export interface FoodDetails extends Omit<FoodLibraryItem, 'householdMeasures'> {
+  sourceEdition: string | null;
+  unitConversions: Array<{ unit: NutritionUnit; gramsEquivalent: number }>;
+  sections: Array<{ title: string; rows: NutrientRow[] }>;
+  usage: { patients: number; dietItems: number; templates: number };
+  canDelete: boolean;
+}
+
+export interface FoodInput {
+  name: string;
+  baseUnit: 'g' | 'ml';
+  kcalPer100: number;
+  proteinGPer100: number;
+  carbGPer100: number;
+  fatGPer100: number;
+  fiberGPer100?: number;
+  sodiumMgPer100?: number;
+  foodGroup?: string;
+  unitConversions: Array<{ unit: NutritionUnit; gramsEquivalent: number }>;
+}
+
 // --- Assistente de Dieta ---------------------------------------------------
 
 export type FoodMatchStatus = 'matched' | 'ambiguous' | 'not_found';
