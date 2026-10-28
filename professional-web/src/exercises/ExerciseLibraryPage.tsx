@@ -11,6 +11,7 @@ import { apiErrorMessage } from '../dietEditor/draftEdit';
 import type { ExerciseLibraryItem, ExercisePreset } from '../types/api';
 import styles from './ExerciseLibrary.module.css';
 import { SETS_SUGGESTIONS, setsText, type SetsSuggestion } from './presetText';
+import { pendingCount, WithoutGifTab, type LinkedGifs } from './WithoutGifTab';
 
 const PAGE_SIZE = 30;
 const MAIN_GROUPS = 8;
@@ -271,7 +272,8 @@ function PresetsList({ presets, loading, onDelete }: { presets: ExercisePreset[]
 /** Tela "Exercícios": a biblioteca inteira (≈5 mil), com busca, filtros e paginação no servidor. */
 export function ExerciseLibraryPage() {
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<'library' | 'presets'>('library');
+  const [tab, setTabState] = useState<'library' | 'presets' | 'without-gif'>('library');
+  const [linkedGifs, setLinkedGifs] = useState<LinkedGifs>({});
   const [search, setSearch] = useState('');
   const [group, setGroup] = useState('');
   const [equipment, setEquipment] = useState('');
@@ -290,6 +292,16 @@ export function ExerciseLibraryPage() {
     getNextPageParam: (last) => (last.page * last.pageSize < last.total ? last.page + 1 : undefined),
   });
   const presets = useQuery({ queryKey: ['exercise-presets'], queryFn: api.listExercisePresets });
+  const withoutGif = useQuery({ queryKey: ['exercises-without-gif'], queryFn: api.listExercisesWithoutGif });
+  const withoutGifCount = pendingCount(withoutGif.data ?? [], linkedGifs);
+  const setTab = (next: typeof tab) => {
+    // Saindo da aba "Sem GIF": recarrega a lista (os resolvidos saem dela).
+    if (tab === 'without-gif' && next !== 'without-gif' && Object.keys(linkedGifs).length > 0) {
+      setLinkedGifs({});
+      void queryClient.invalidateQueries({ queryKey: ['exercises-without-gif'] });
+    }
+    setTabState(next);
+  };
   const first = library.data?.pages[0];
   const items = useMemo(() => library.data?.pages.flatMap((p) => p.items) ?? [], [library.data]);
   const total = first?.total ?? 0;
@@ -334,6 +346,17 @@ export function ExerciseLibraryPage() {
         <button type="button" role="tab" aria-selected={tab === 'presets'} className={[styles.tab, tab === 'presets' ? styles.tabActive : ''].join(' ')} onClick={() => setTab('presets')}>
           Meus presets ({presets.data?.length ?? 0})
         </button>
+        {withoutGifCount > 0 || tab === 'without-gif' ? (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'without-gif'}
+            className={[styles.tab, tab === 'without-gif' ? styles.tabActive : ''].join(' ')}
+            onClick={() => setTab('without-gif')}
+          >
+            Sem GIF ({withoutGifCount})
+          </button>
+        ) : null}
       </div>
 
       {notice ? (
@@ -342,7 +365,9 @@ export function ExerciseLibraryPage() {
         </div>
       ) : null}
 
-      {tab === 'presets' ? (
+      {tab === 'without-gif' ? (
+        <WithoutGifTab items={withoutGif.data ?? []} loading={withoutGif.isLoading} linked={linkedGifs} setLinked={setLinkedGifs} />
+      ) : tab === 'presets' ? (
         <PresetsList presets={presets.data ?? []} loading={presets.isLoading} onDelete={(p) => removePreset.mutate(p)} />
       ) : (
         <>

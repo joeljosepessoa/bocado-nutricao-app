@@ -692,6 +692,24 @@ export interface ExerciseLibraryPage {
   equipments: Array<{ name: string; count: number }>;
 }
 
+/** Exercício da biblioteca com GIF, sugerido para um exercício particular sem GIF. */
+export interface GifCandidate {
+  id: string;
+  name: string;
+  section: string | null;
+  gifUrl: string | null;
+}
+
+/** Aba "Sem GIF": exercício criado pelo profissional que ainda não tem GIF. */
+export interface WithoutGifItem {
+  id: string;
+  name: string;
+  /** Quantas vezes aparece nos treinos (todas as versões) e em quantos pacientes. */
+  uses: number;
+  clients: number;
+  suggestions: GifCandidate[];
+}
+
 /** "+ Preset": exercício + séries guardado pelo profissional. */
 export interface ExercisePreset {
   id: string;

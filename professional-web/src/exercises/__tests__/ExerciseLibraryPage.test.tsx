@@ -16,6 +16,9 @@ vi.mock('../../api/endpoints', () => ({
   deleteExercisePreset: vi.fn(),
   updateExercise: vi.fn(),
   createExercise: vi.fn(),
+  listExercisesWithoutGif: vi.fn(),
+  linkLibraryGif: vi.fn(),
+  unlinkLibraryGif: vi.fn(),
   fetchExerciseMedia: vi.fn().mockResolvedValue(new Blob(['GIF89a'], { type: 'image/gif' })),
 }));
 
@@ -61,6 +64,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(api.listExerciseLibrary).mockResolvedValue(page());
   vi.mocked(api.listExercisePresets).mockResolvedValue([]);
+  vi.mocked(api.listExercisesWithoutGif).mockResolvedValue([]);
 });
 
 describe('Tela Exercícios', () => {
@@ -128,6 +132,53 @@ describe('Tela Exercícios', () => {
     await user.click(await screen.findByRole('button', { name: 'Ver GIF de Remada Curvada com Kettlebell' }));
     await screen.findByRole('dialog');
     await waitFor(() => expect(api.fetchExerciseMedia).toHaveBeenCalledWith('/exercise-media/abc'));
+  });
+});
+
+describe('Sem GIF', () => {
+  const withoutGif = [
+    {
+      id: 'p1',
+      name: 'Cadeira abdutora (3 s de contração no pico)',
+      uses: 2,
+      clients: 1,
+      suggestions: [
+        { id: 'g1', name: 'Cadeira Abdutora', section: 'ACADEMIA', gifUrl: '/exercise-media/g1' },
+        { id: 'g2', name: 'Glúteo e Abdutores na Máquina', section: 'ACADEMIA', gifUrl: '/exercise-media/g2' },
+      ],
+    },
+    { id: 'p2', name: 'Natação', uses: 0, clients: 0, suggestions: [] },
+  ];
+
+  it('a aba só aparece quando há exercício sem GIF', async () => {
+    renderPage();
+    await screen.findByText('4.972 exercícios');
+    expect(screen.queryByRole('tab', { name: /Sem GIF/ })).not.toBeInTheDocument();
+  });
+
+  it('mostra uso e sugestão; escolher outro GIF liga ao exercício e dá para desfazer', async () => {
+    vi.mocked(api.listExercisesWithoutGif).mockResolvedValue(withoutGif);
+    vi.mocked(api.linkLibraryGif).mockResolvedValue();
+    vi.mocked(api.unlinkLibraryGif).mockResolvedValue();
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole('tab', { name: 'Sem GIF (2)' }));
+    expect(screen.getByText('Em 2 treinos · 1 paciente')).toBeInTheDocument();
+    expect(screen.getByText('Sugestão: Cadeira Abdutora')).toBeInTheDocument();
+    expect(screen.getByText('Não está em nenhum treino')).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole('button', { name: 'Escolher GIF' })[0]);
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByRole('radio', { name: 'Cadeira Abdutora' })).toHaveAttribute('aria-checked', 'true');
+    await waitFor(() => expect(api.fetchExerciseMedia).toHaveBeenCalledWith('/exercise-media/g1'));
+    await user.click(within(dialog).getByRole('radio', { name: 'Glúteo e Abdutores na Máquina' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Usar este GIF' }));
+    expect(api.linkLibraryGif).toHaveBeenCalledWith('p1', 'g2');
+    expect(await screen.findByText('GIF de: Glúteo e Abdutores na Máquina')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Desfazer' }));
+    expect(api.unlinkLibraryGif).toHaveBeenCalledWith('p1');
+    expect(await screen.findByText('Sugestão: Cadeira Abdutora')).toBeInTheDocument();
   });
 });
 

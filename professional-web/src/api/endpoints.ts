@@ -2,6 +2,7 @@ import { apiClient } from './client';
 import type {
   ExerciseLibraryPage,
   ExercisePreset,
+  WithoutGifItem,
   CatalogExerciseRef,
   CatalogFoodRef,
   DietChatResult,
@@ -491,6 +492,21 @@ export async function listExerciseLibrary(params: { search?: string; group?: str
 export async function updateExercise(id: string, input: { name?: string; muscleGroups?: string[]; equipment?: string }): Promise<Exercise> {
   const res = await apiClient.patch<Exercise>(`/exercises/${id}`, input);
   return res.data;
+}
+
+/** Aba "Sem GIF": exercícios particulares sem GIF, com sugestões da biblioteca. */
+export async function listExercisesWithoutGif(): Promise<WithoutGifItem[]> {
+  const res = await apiClient.get<{ items: WithoutGifItem[] }>('/exercises/without-gif');
+  return res.data.items;
+}
+
+/** O exercício particular passa a mostrar o GIF do exercício da biblioteca (nome e treinos não mudam). */
+export async function linkLibraryGif(exerciseId: string, fromExerciseId: string): Promise<void> {
+  await apiClient.post(`/exercises/${exerciseId}/gif`, { fromExerciseId });
+}
+
+export async function unlinkLibraryGif(exerciseId: string): Promise<void> {
+  await apiClient.delete(`/exercises/${exerciseId}/gif`);
 }
 
 export async function listExercisePresets(): Promise<ExercisePreset[]> {
