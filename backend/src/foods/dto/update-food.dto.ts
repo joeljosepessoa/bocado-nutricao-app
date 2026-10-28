@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { ArrayMaxSize, IsArray, IsIn, IsNumber, IsOptional, IsString, Min, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsIn, IsNumber, IsOptional, IsString, MaxLength, Min, ValidateNested } from 'class-validator';
 import { NutritionUnit } from '@prisma/client';
 import { FoodUnitConversionDto } from './food-unit-conversion.dto';
 
@@ -12,6 +12,8 @@ export class UpdateFoodDto {
   @IsOptional() @IsNumber() @Min(0) carbGPer100?: number;
   @IsOptional() @IsNumber() @Min(0) fatGPer100?: number;
   @IsOptional() @IsNumber() @Min(0) fiberGPer100?: number;
+  @IsOptional() @IsNumber() @Min(0) sodiumMgPer100?: number;
+  @IsOptional() @IsString() @MaxLength(80) foodGroup?: string;
 
   @IsOptional()
   @IsArray()

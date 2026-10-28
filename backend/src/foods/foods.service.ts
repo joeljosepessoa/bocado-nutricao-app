@@ -7,6 +7,16 @@ import { normalizeFoodName } from './food-name-matching';
 import { CreateFoodDto } from './dto/create-food.dto';
 import { UpdateFoodDto } from './dto/update-food.dto';
 import { CreateSubstitutionDto } from './dto/create-substitution.dto';
+import {
+  FOOD_LIBRARY_NO_GROUP,
+  FOOD_LIBRARY_TACO_SOURCE,
+  FoodOrigin,
+  FoodOriginFilter,
+  nameMatches,
+  searchRank,
+  searchWords,
+} from './food-library';
+import { ownNutrientSections, tacoNutrientSections } from './food-nutrients';
 
 const FOOD_INCLUDE = { unitConversions: true } as const;
 
@@ -46,6 +56,8 @@ export class FoodsService {
         carbGPer100: dto.carbGPer100,
         fatGPer100: dto.fatGPer100,
         fiberGPer100: dto.fiberGPer100,
+        sodiumMgPer100: dto.sodiumMgPer100,
+        foodGroup: dto.foodGroup?.trim() || null,
         createdByProfessionalId: professionalId,
         unitConversions: dto.unitConversions
           ? { createMany: { data: dto.unitConversions } }
@@ -170,6 +182,10 @@ export class FoodsService {
   async update(user: AuthenticatedUser, foodId: string, dto: UpdateFoodDto) {
     const food = await this.findVisible(user.id, foodId);
 
+    // TACO é referência oficial: fica como veio da tabela (só o admin mexe).
+    if (food.source === FOOD_LIBRARY_TACO_SOURCE && user.role !== Role.admin) {
+      throw new ForbiddenException('Alimento da TACO não pode ser editado. Duplique como seu alimento para ajustar.');
+    }
     const isOwner = food.scope === FoodScope.private && food.ownerProfessionalId === user.id;
     const isAuthorizedForGlobal =
       food.scope === FoodScope.global && (food.createdByProfessionalId === user.id || user.role === Role.admin);
@@ -204,6 +220,8 @@ export class FoodsService {
           carbGPer100: dto.carbGPer100,
           fatGPer100: dto.fatGPer100,
           fiberGPer100: dto.fiberGPer100,
+          sodiumMgPer100: dto.sodiumMgPer100,
+          foodGroup: dto.foodGroup === undefined ? undefined : dto.foodGroup.trim() || null,
         },
       });
 
@@ -216,6 +234,179 @@ export class FoodsService {
 
       return tx.food.findUniqueOrThrow({ where: { id: foodId }, include: FOOD_INCLUDE });
     });
+  }
+
+  private originOf(professionalId: string, food: { source: string; scope: FoodScope; ownerProfessionalId: string | null; createdByProfessionalId: string }): FoodOrigin {
+    if (food.source === FOOD_LIBRARY_TACO_SOURCE) return 'taco';
+    const mine =
+      (food.scope === FoodScope.private && food.ownerProfessionalId === professionalId) ||
+      (food.scope === FoodScope.global && food.createdByProfessionalId === professionalId);
+    return mine ? 'mine' : 'shared';
+  }
+
+  /**
+   * Tela "Alimentos": TACO + alimentos do profissional, com busca (sem acento, palavra por palavra, e pelos
+   * apelidos aprovados), filtro por grupo e por origem, contagens e paginação.
+   */
+  async library(
+    professionalId: string,
+    query: { search?: string; group?: string; origin?: FoodOriginFilter; page?: number; pageSize?: number },
+  ) {
+    const rows = await this.prisma.food.findMany({
+      where: this.visibilityFilter(professionalId),
+      select: {
+        id: true,
+        name: true,
+        scope: true,
+        ownerProfessionalId: true,
+        createdByProfessionalId: true,
+        source: true,
+        sourceNumber: true,
+        foodGroup: true,
+        preparation: true,
+        baseUnit: true,
+        kcalPer100: true,
+        proteinGPer100: true,
+        carbGPer100: true,
+        fatGPer100: true,
+        fiberGPer100: true,
+        sodiumMgPer100: true,
+        approvedAt: true,
+        _count: { select: { unitConversions: true } },
+      },
+    });
+    type Row = (typeof rows)[number] & { origin: FoodOrigin; normalized: string };
+    const all: Row[] = rows.map((row) => ({ ...row, origin: this.originOf(professionalId, row), normalized: normalizeFoodName(row.name) }));
+
+    const words = searchWords(query.search);
+    const aliasIds = words.length > 0 ? new Set(await this.foodIdsByAlias(query.search!.trim())) : new Set<string>();
+    const bySearch = words.length > 0 ? all.filter((row) => nameMatches(row.normalized, words) || aliasIds.has(row.id)) : all;
+
+    const origin = query.origin && query.origin !== 'all' ? query.origin : null;
+    const origins = {
+      all: bySearch.length,
+      taco: bySearch.filter((row) => row.origin === 'taco').length,
+      mine: bySearch.filter((row) => row.origin === 'mine').length,
+      shared: bySearch.filter((row) => row.origin === 'shared').length,
+    };
+    const byOrigin = origin ? bySearch.filter((row) => row.origin === origin) : bySearch;
+
+    const groupCounts = new Map<string, number>();
+    for (const row of byOrigin) if (row.foodGroup) groupCounts.set(row.foodGroup, (groupCounts.get(row.foodGroup) ?? 0) + 1);
+    const groups = [...groupCounts].map(([name, count]) => ({ name, count })).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+    const withoutGroup = byOrigin.filter((row) => !row.foodGroup).length;
+
+    const filtered = byOrigin
+      .filter((row) => !query.group || (query.group === FOOD_LIBRARY_NO_GROUP ? !row.foodGroup : row.foodGroup === query.group))
+      .sort((a, b) =>
+        words.length > 0
+          ? searchRank(a.normalized, words) - searchRank(b.normalized, words) || a.name.trim().localeCompare(b.name.trim(), 'pt-BR')
+          : a.name.trim().localeCompare(b.name.trim(), 'pt-BR'),
+      );
+    const pageSize = Math.min(Math.max(query.pageSize ?? 40, 1), 100);
+    const page = Math.max(query.page ?? 1, 1);
+
+    return {
+      items: filtered.slice((page - 1) * pageSize, page * pageSize).map((row) => ({
+        id: row.id,
+        name: row.name,
+        origin: row.origin,
+        tacoNumber: row.origin === 'taco' ? row.sourceNumber : null,
+        foodGroup: row.foodGroup,
+        preparation: row.preparation,
+        baseUnit: row.baseUnit,
+        kcalPer100: row.kcalPer100,
+        proteinGPer100: row.proteinGPer100,
+        carbGPer100: row.carbGPer100,
+        fatGPer100: row.fatGPer100,
+        fiberGPer100: row.fiberGPer100,
+        sodiumMgPer100: row.sodiumMgPer100,
+        householdMeasures: row._count.unitConversions,
+        /** Global criado pelo profissional e ainda não aprovado pela moderação. */
+        pending: row.scope === FoodScope.global && row.approvedAt === null,
+        canEdit: row.origin === 'mine',
+      })),
+      total: filtered.length,
+      page,
+      pageSize,
+      groups,
+      withoutGroup,
+      origins,
+    };
+  }
+
+  /** Onde o alimento aparece: dietas e modelos deste profissional (e se pode ser excluído). */
+  private async usage(professionalId: string, foodId: string) {
+    const mealFoods = await this.prisma.mealFood.findMany({
+      where: { foodId, meal: { dietVersion: { diet: { professionalId } } } },
+      select: { meal: { select: { dietVersion: { select: { diet: { select: { clientId: true } } } } } } },
+    });
+    const [templates] = await this.prisma.$queryRaw<Array<{ count: bigint }>>`
+      SELECT count(*)::bigint AS count FROM templates
+      WHERE professional_id = ${professionalId} AND deleted_at IS NULL AND kind = 'diet' AND content::text LIKE ${'%' + foodId + '%'}`;
+    return {
+      patients: new Set(mealFoods.map((m) => m.meal.dietVersion.diet.clientId)).size,
+      dietItems: mealFoods.length,
+      templates: Number(templates?.count ?? 0),
+    };
+  }
+
+  /** Ficha completa do alimento: macros, medidas caseiras, todos os nutrientes da TACO e onde é usado. */
+  async details(professionalId: string, foodId: string) {
+    const food = await this.findVisible(professionalId, foodId);
+    const origin = this.originOf(professionalId, food);
+    const usage = await this.usage(professionalId, foodId);
+    return {
+      id: food.id,
+      name: food.name,
+      origin,
+      tacoNumber: origin === 'taco' ? food.sourceNumber : null,
+      sourceEdition: origin === 'taco' ? food.sourceEdition : null,
+      foodGroup: food.foodGroup,
+      preparation: food.preparation,
+      baseUnit: food.baseUnit,
+      kcalPer100: food.kcalPer100,
+      proteinGPer100: food.proteinGPer100,
+      carbGPer100: food.carbGPer100,
+      fatGPer100: food.fatGPer100,
+      fiberGPer100: food.fiberGPer100,
+      sodiumMgPer100: food.sodiumMgPer100,
+      pending: food.scope === FoodScope.global && food.approvedAt === null,
+      unitConversions: food.unitConversions.map((c) => ({ unit: c.unit, gramsEquivalent: c.gramsEquivalent })),
+      sections: origin === 'taco' && food.sourceData ? tacoNutrientSections(food.sourceData) : ownNutrientSections(food),
+      usage,
+      canEdit: origin === 'mine',
+      canDelete: origin === 'mine' && usage.dietItems === 0 && usage.templates === 0,
+    };
+  }
+
+  /**
+   * Exclui alimento cadastrado pelo próprio profissional que ainda não foi usado em lugar nenhum
+   * (dieta de qualquer profissional, modelo, substituição ou lista do Bocado). TACO nunca.
+   */
+  async remove(professionalId: string, foodId: string) {
+    const food = await this.findVisible(professionalId, foodId);
+    if (this.originOf(professionalId, food) !== 'mine') {
+      throw new ForbiddenException('Só dá para excluir alimento cadastrado por você.');
+    }
+    const [mealFoods, substitutions, aliases, mappings, [templates]] = await Promise.all([
+      this.prisma.mealFood.count({ where: { foodId } }),
+      this.prisma.foodSubstitution.count({ where: { OR: [{ originalFoodId: foodId }, { substituteFoodId: foodId }] } }),
+      this.prisma.foodAlias.count({ where: { foodId } }),
+      this.prisma.foodListMapping.count({ where: { foodId } }),
+      this.prisma.$queryRaw<Array<{ count: bigint }>>`
+        SELECT count(*)::bigint AS count FROM templates WHERE deleted_at IS NULL AND content::text LIKE ${'%' + foodId + '%'}`,
+    ]);
+    if (mealFoods > 0 || Number(templates?.count ?? 0) > 0) {
+      throw new ConflictException('Este alimento já está em dieta ou modelo — não dá para excluir. Você pode continuar usando ou editar o nome.');
+    }
+    if (substitutions + aliases + mappings > 0) {
+      throw new ConflictException('Este alimento está ligado a substituições ou à lista do Bocado — não dá para excluir.');
+    }
+    await this.prisma.$transaction([
+      this.prisma.foodUnitConversion.deleteMany({ where: { foodId } }),
+      this.prisma.food.delete({ where: { id: foodId } }),
+    ]);
   }
 
   async createSubstitution(professionalId: string, foodId: string, dto: CreateSubstitutionDto) {

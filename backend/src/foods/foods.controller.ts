@@ -23,6 +23,31 @@ export class FoodsController {
     return this.foodsService.list(user.id, search);
   }
 
+  /** Tela "Alimentos": TACO + alimentos do profissional, com busca, grupo, origem e paginação. */
+  @Get('library')
+  library(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('search') search?: string,
+    @Query('group') group?: string,
+    @Query('origin') origin?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.foodsService.library(user.id, {
+      search,
+      group,
+      origin: origin === 'taco' || origin === 'mine' || origin === 'shared' ? origin : 'all',
+      page: page ? Number(page) : undefined,
+      pageSize: pageSize ? Number(pageSize) : undefined,
+    });
+  }
+
+  /** Ficha completa: nutrientes da TACO, medidas caseiras e onde o alimento é usado. */
+  @Get(':id/details')
+  details(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    return this.foodsService.details(user.id, id);
+  }
+
   @Get(':id')
   findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.foodsService.findVisible(user.id, id);
@@ -31,6 +56,13 @@ export class FoodsController {
   @Patch(':id')
   update(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Body() dto: UpdateFoodDto) {
     return this.foodsService.update(user, id, dto);
+  }
+
+  /** Exclui alimento próprio que ainda não foi usado em dieta nem modelo. */
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string): Promise<void> {
+    await this.foodsService.remove(user.id, id);
   }
 
   @Post(':id/substitutions')

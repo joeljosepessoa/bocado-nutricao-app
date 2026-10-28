@@ -8,6 +8,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -32,6 +33,10 @@ export class CreateFoodDto {
   @IsNumber() @Min(0) fatGPer100!: number;
 
   @IsOptional() @IsNumber() @Min(0) fiberGPer100?: number;
+  @IsOptional() @IsNumber() @Min(0) sodiumMgPer100?: number;
+
+  /** Grupo da TACO ("Frutas e derivados"…) — opcional, ajuda a achar o alimento na tela Alimentos. */
+  @IsOptional() @IsString() @MaxLength(80) foodGroup?: string;
 
   @IsOptional()
   @IsArray()
