@@ -52,6 +52,12 @@ export class WorkoutsController {
     return this.workoutsService.list(user.id, clientId, page ? Number(page) : undefined, pageSize ? Number(pageSize) : undefined);
   }
 
+  /** Histórico de treino do paciente (todas as fichas e versões): sessões com as séries feitas. */
+  @Get('history')
+  history(@CurrentUser() user: AuthenticatedUser, @Param('clientId') clientId: string, @Query('limit') limit?: string) {
+    return this.workoutsService.history(user.id, clientId, limit ? Number(limit) : undefined);
+  }
+
   @Get(':workoutId')
   findOne(@CurrentUser() user: AuthenticatedUser, @Param('clientId') clientId: string, @Param('workoutId') workoutId: string, @Req() req: Request) {
     return this.workoutsService.findOne(user.id, clientId, workoutId, meta(req));

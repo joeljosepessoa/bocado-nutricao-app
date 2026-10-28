@@ -1111,6 +1111,59 @@ export class WorkoutsService {
     return { items, total, page: safePage, pageSize: safePageSize };
   }
 
+  /**
+   * Histórico do paciente para o painel: as sessões mais recentes (de qualquer ficha/versão), cada uma com o
+   * dia feito e, por exercício, as séries registradas (repetições, carga, tempo...). Mais recente primeiro.
+   */
+  async history(professionalId: string, clientId: string, limit = 60) {
+    await this.assertOwnedClient(professionalId, clientId);
+    const take = Math.min(Math.max(Number.isFinite(limit) ? limit : 60, 1), 200);
+    const [logs, total] = await this.prisma.$transaction([
+      this.prisma.workoutExecutionLog.findMany({
+        where: { clientId, workoutVersion: { workout: { professionalId } } },
+        orderBy: { performedAt: 'desc' },
+        take,
+        include: {
+          workoutDay: { select: { name: true } },
+          workoutVersion: { select: { versionNumber: true } },
+          sets: {
+            orderBy: { setOrder: 'asc' },
+            include: { workoutExercise: { select: { order: true, exerciseId: true, exercise: { select: { name: true } } } } },
+          },
+        },
+      }),
+      this.prisma.workoutExecutionLog.count({ where: { clientId, workoutVersion: { workout: { professionalId } } } }),
+    ]);
+
+    const sessions = logs.map((log) => {
+      const byExercise = new Map<string, { exerciseId: string; name: string; order: number; sets: Array<Record<string, unknown>> }>();
+      for (const set of log.sets) {
+        const we = set.workoutExercise;
+        const entry = byExercise.get(set.workoutExerciseId) ?? { exerciseId: we.exerciseId, name: we.exercise.name, order: we.order, sets: [] };
+        entry.sets.push({
+          setOrder: set.setOrder,
+          reps: set.repsPerformed,
+          loadValue: set.loadValue,
+          loadUnit: set.loadUnit,
+          durationSeconds: set.durationSeconds,
+          distanceMeters: set.distanceMeters,
+          perceivedEffort: set.perceivedEffort,
+        });
+        byExercise.set(set.workoutExerciseId, entry);
+      }
+      return {
+        id: log.id,
+        performedAt: log.performedAt,
+        dayName: log.workoutDay.name,
+        versionNumber: log.workoutVersion.versionNumber,
+        loggedBy: log.loggedByProfessionalId ? 'professional' : 'client',
+        notes: log.notes,
+        exercises: [...byExercise.values()].sort((x, y) => x.order - y.order).map(({ order: _order, ...rest }) => rest),
+      };
+    });
+    return { sessions, total };
+  }
+
   async findExecutionLog(professionalId: string, clientId: string, workoutId: string, logId: string) {
     await this.assertOwnedWorkout(professionalId, clientId, workoutId);
     const log = await this.prisma.workoutExecutionLog.findFirst({
