@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import * as api from '../../api/endpoints';
 import type { BioimpedanceNumberKey, BmrReference, BodyFatMethod, ClientDetail, Measurements, Skinfolds } from '../../types/api';
+import { requiredSites, SKINFOLD_PROTOCOL_OPTIONS, skinfoldWarningText } from '../../utils/skinfoldProtocols';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { TextField } from '../../components/TextField';
@@ -67,8 +68,6 @@ const selectLabelStyle = { display: 'flex', flexDirection: 'column', gap: 4, fon
 const selectCaptionStyle = { color: 'var(--color-text-secondary)', fontWeight: 600 } as const;
 const groupTitleStyle = { fontSize: 13, fontWeight: 700, color: 'var(--color-text-secondary)' } as const;
 
-/** As 7 dobras do protocolo Jackson & Pollock — sem qualquer uma delas o % de gordura não é calculado. */
-const JP7_SITES: Array<keyof Skinfolds> = ['chestMm', 'axillaryMidMm', 'tricepsMm', 'subscapularMm', 'abdominalMm', 'suprailiacMm', 'thighMm'];
 
 type NumField = Record<string, string>;
 
@@ -371,22 +370,17 @@ export function EvaluationFormPage() {
     },
   });
 
-  // O % de gordura só sai com as 7 dobras do protocolo, a idade e o sexo — avisa
+  // O % de gordura só sai com as dobras do protocolo (e o sexo/idade que a equação usa) — avisa
   // antes de salvar, em vez de a avaliação aparecer depois sem o resultado.
   const filled = (value: string | undefined) => (value ?? '').trim() !== '';
   const anySkinfold = Object.values(skinfolds).some(filled);
-  const missingSites = JP7_SITES.filter((site) => !filled(skinfolds[site])).map(
-    (site) => SKINFOLD_FIELDS.find((f) => f.key === site)!.label.replace(' (mm)', ''),
-  );
-  const missingBasics = [!filled(age) ? 'a idade' : null, !biologicalSex ? 'o sexo' : null].filter(Boolean);
+  const siteLabel = (site: keyof Skinfolds) => SKINFOLD_FIELDS.find((f) => f.key === site)!.label.replace(' (mm)', '');
+  const filledSites = new Set(SKINFOLD_FIELDS.map((f) => f.key).filter((key) => filled(skinfolds[key])));
+  const usedSites = new Set(requiredSites(protocolCode, biologicalSex) ?? []);
   const skinfoldWarning =
     bodyFatMethod !== 'skinfolds' || !anySkinfold
-    ? null
-    : missingSites.length > 0
-      ? `Sem estas dobras o % de gordura não é calculado: ${missingSites.join(', ')}.`
-      : missingBasics.length > 0
-        ? `Para calcular o % de gordura falta informar ${missingBasics.join(' e ')} em "Dados básicos".`
-        : null;
+      ? null
+      : skinfoldWarningText(protocolCode, biologicalSex, filled(age) ? Number(age) : null, filledSites, siteLabel);
 
   return (
     <>
@@ -491,10 +485,20 @@ export function EvaluationFormPage() {
       <Card title="Dobras cutâneas (mm)">
         <label style={{ ...selectLabelStyle, maxWidth: 320 }}>
           <span style={selectCaptionStyle}>Fórmula e protocolo</span>
-          <select value={protocolCode} onChange={(e) => setProtocolCode(e.target.value)} style={selectStyle}>
-            <option value="jackson_pollock_7">Pollock — 7 dobras</option>
+          <select value={protocolCode} onChange={(e) => setProtocolCode(e.target.value)} style={selectStyle} aria-label="Fórmula e protocolo">
+            {SKINFOLD_PROTOCOL_OPTIONS.map((p) => (
+              <option key={p.code} value={p.code}>
+                {p.label}
+              </option>
+            ))}
           </select>
         </label>
+        {usedSites.size > 0 ? (
+          <div style={{ fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
+            Dobras usadas neste protocolo{biologicalSex ? ` (${biologicalSex === 'male' ? 'homem' : 'mulher'})` : ''}:{' '}
+            {SKINFOLD_FIELDS.filter((f) => usedSites.has(f.key)).map((f) => f.label.replace(' (mm)', '')).join(', ')}. As outras ficam só registradas.
+          </div>
+        ) : null}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
           {SKINFOLD_FIELDS.map((f) => (
             <TextField
