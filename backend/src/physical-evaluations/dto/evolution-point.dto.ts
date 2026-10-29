@@ -1,4 +1,5 @@
-import { BioimpedanceOrigin, BodyFatSource } from '@prisma/client';
+import { BioimpedanceOrigin, BodyFatSource, EvaluationBiologicalSex } from '@prisma/client';
+import { findSkinfoldProtocol, protocolSites } from '../skinfold-protocols';
 
 export interface SkinfoldsMmFields {
   chestMm: number | null;
@@ -26,16 +27,21 @@ const SKINFOLD_FIELD_BY_SITE: Record<string, keyof SkinfoldsMmFields> = {
 
 /**
  * Soma bruta das dobras exigidas pelo protocolo *daquela* avaliação — nunca
- * recalculada com o protocolo atual. Sem protocolo definido, ou com
- * qualquer dobra exigida faltando, devolve null em vez de somar um
- * subconjunto arbitrário (mesma filosofia de "nunca estimar com dado
- * parcial" usada em CalculationService.computeJacksonPollock7Percent).
+ * recalculada com o protocolo atual. Nos protocolos com dobras diferentes por
+ * sexo (Jackson & Pollock 3, Guedes) vale o sexo da avaliação. Sem protocolo,
+ * sem o sexo que ele exige ou com qualquer dobra faltando, devolve null em vez
+ * de somar um subconjunto arbitrário ("nunca estimar com dado parcial").
  */
 export function computeSkinfoldSumMm(
-  requiredSites: string[] | null | undefined,
+  protocol: { code: string; requiredSkinfoldSites: string[] } | null | undefined,
+  sex: EvaluationBiologicalSex | null | undefined,
   skinfolds: SkinfoldsMmFields | null | undefined,
 ): number | null {
-  if (!requiredSites?.length || !skinfolds) {
+  if (!protocol || !skinfolds) {
+    return null;
+  }
+  const requiredSites: string[] | null = findSkinfoldProtocol(protocol.code) ? protocolSites(protocol.code, sex) : protocol.requiredSkinfoldSites;
+  if (!requiredSites?.length) {
     return null;
   }
   let sum = 0;
@@ -116,6 +122,7 @@ export class EvolutionPointDto {
     evaluatedAt: Date;
     releasedToClientAt: Date | null;
     ageAtEvaluation: number | null;
+    biologicalSexForCalculation?: EvaluationBiologicalSex | null;
     bloodPressureSystolic: number | null;
     bloodPressureDiastolic: number | null;
     weightKg: number | null;
@@ -149,7 +156,7 @@ export class EvolutionPointDto {
     dto.leanMassKg = evaluation.calculatedMetrics?.leanMassKg ?? null;
 
     dto.measurements = evaluation.measurements;
-    dto.skinfoldSumMm = computeSkinfoldSumMm(evaluation.protocol?.requiredSkinfoldSites, evaluation.skinfolds);
+    dto.skinfoldSumMm = computeSkinfoldSumMm(evaluation.protocol, evaluation.biologicalSexForCalculation, evaluation.skinfolds);
     // Só os locais de dobra (o registro do banco traz também os identificadores).
     dto.skinfolds = evaluation.skinfolds
       ? (Object.fromEntries(Object.values(SKINFOLD_FIELD_BY_SITE).map((field) => [field, evaluation.skinfolds![field] ?? null])) as unknown as SkinfoldsMmFields)

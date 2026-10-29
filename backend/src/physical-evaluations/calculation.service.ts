@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EvaluationBiologicalSex } from '@prisma/client';
+import { skinfoldBodyFatPercent, type SkinfoldValues } from './skinfold-protocols';
 
 export interface BmiResult {
   bmi: number;
@@ -35,46 +36,21 @@ export class CalculationService {
   }
 
   /**
-   * Jackson & Pollock, 7 dobras — densidade corporal (1978 homens / 1980
-   * mulheres) convertida para %gordura pela equação de Siri (1961).
-   * Devolve null se qualquer uma das 7 dobras exigidas, o sexo para cálculo
-   * ou a idade estiverem ausentes — nunca estima com dado parcial.
+   * % de gordura por dobras cutâneas no protocolo da avaliação (ver skinfold-protocols.ts): null se
+   * faltar qualquer dobra exigida, o sexo/idade que a equação usa, ou se o protocolo não for de dobras.
    */
-  computeJacksonPollock7Percent(
-    skinfoldsMm: {
-      chestMm?: number | null;
-      axillaryMidMm?: number | null;
-      tricepsMm?: number | null;
-      subscapularMm?: number | null;
-      abdominalMm?: number | null;
-      suprailiacMm?: number | null;
-      thighMm?: number | null;
-    },
+  computeSkinfoldPercent(
+    protocolCode: string | null | undefined,
+    skinfoldsMm: SkinfoldValues | null | undefined,
     sex: EvaluationBiologicalSex | null | undefined,
     age: number | null | undefined,
   ): number | null {
-    const sites = [
-      skinfoldsMm.chestMm,
-      skinfoldsMm.axillaryMidMm,
-      skinfoldsMm.tricepsMm,
-      skinfoldsMm.subscapularMm,
-      skinfoldsMm.abdominalMm,
-      skinfoldsMm.suprailiacMm,
-      skinfoldsMm.thighMm,
-    ];
-    if (!sex || age == null || sites.some((site) => site == null)) {
-      return null;
-    }
-    const definedSites = sites as number[];
+    return skinfoldBodyFatPercent(protocolCode, skinfoldsMm, sex, age);
+  }
 
-    const sum7 = definedSites.reduce((total, site) => total + site, 0);
-
-    const density =
-      sex === EvaluationBiologicalSex.male
-        ? 1.112 - 0.00043499 * sum7 + 0.00000055 * sum7 ** 2 - 0.00028826 * age
-        : 1.097 - 0.00046971 * sum7 + 0.00000056 * sum7 ** 2 - 0.00012828 * age;
-
-    const bodyFatPercent = 495 / density - 450;
-    return round(bodyFatPercent, 1);
+  /** Jackson & Pollock, 7 dobras + Siri (mantido para quem já chamava por este nome). */
+  computeJacksonPollock7Percent(skinfoldsMm: SkinfoldValues, sex: EvaluationBiologicalSex | null | undefined, age: number | null | undefined): number | null {
+    if (age == null) return null;
+    return skinfoldBodyFatPercent('jackson_pollock_7', skinfoldsMm, sex, age);
   }
 }

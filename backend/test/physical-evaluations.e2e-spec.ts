@@ -169,6 +169,33 @@ describe('Avaliação física (e2e)', () => {
     expect(evaluation.calculatedMetrics.fatMassKg).toBeCloseTo(9.84, 1);
   });
 
+  it('outros protocolos: Guedes (mulher, sem idade), Faulkner (sem sexo) e troca de protocolo na edição', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+    const guedes = await createEvaluation(app, professional.accessToken, client.id, {
+      biologicalSexForCalculation: 'female',
+      protocolCode: 'guedes_3',
+      skinfolds: { thighMm: 25, suprailiacMm: 15, subscapularMm: 20 },
+    });
+    expect(guedes.calculatedMetrics).toMatchObject({ bodyFatPercentSource: 'skinfolds', bodyFatPercent: 25.5, protocolVersionUsed: 'guedes_3@v1' });
+
+    const faulkner = await createEvaluation(app, professional.accessToken, client.id, {
+      protocolCode: 'faulkner_4',
+      skinfolds: { tricepsMm: 10, subscapularMm: 12, suprailiacMm: 13, abdominalMm: 15 },
+    });
+    expect(faulkner.calculatedMetrics).toMatchObject({ bodyFatPercent: 13.4, protocolVersionUsed: 'faulkner_4@v1' });
+
+    // Mesmas dobras, outro protocolo: a conta muda junto.
+    const edited = await request(app.getHttpServer())
+      .patch(`/clients/${client.id}/evaluations/${faulkner.id}`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .send({ protocolCode: 'guedes_3', biologicalSexForCalculation: 'male' })
+      .expect(200);
+    // Guedes homem: tríceps + supra-ilíaca + abdominal = 38 mm.
+    expect(edited.body.calculatedMetrics).toMatchObject({ bodyFatPercentSource: 'skinfolds', protocolVersionUsed: 'guedes_3@v1' });
+    expect(edited.body.calculatedMetrics.bodyFatPercent).toBeCloseTo(14.6, 1);
+  });
+
   it('não calcula %gordura por dobras se faltar qualquer uma das 7 dobras exigidas', async () => {
     const professional = await registerProfessional(app);
     const { client } = await createClient(app, professional.accessToken);

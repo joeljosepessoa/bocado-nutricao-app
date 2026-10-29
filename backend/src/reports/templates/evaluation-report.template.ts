@@ -573,13 +573,14 @@ function evolutionMeasuresPage(data: ProfessionalEvaluationReportData): string {
       ${pressure}
       ${skinfolds}
     </div>
-    ${sourcesNote()}
+    ${sourcesNote(data.protocolReference)}
   </div>`;
 }
 
 /** De onde vêm as faixas de referência e as contas usadas no relatório. */
-function sourcesNote(): string {
-  return `<div class="sources-note">Fontes: peso de referência e IMC — Organização Mundial da Saúde; % de gordura por dobras — Jackson &amp; Pollock (7 dobras) com a equação de Siri;
+function sourcesNote(protocolReference?: string | null): string {
+  const skinfoldSource = escapeHtml(protocolReference ?? 'Jackson & Pollock (7 dobras) com a equação de Siri');
+  return `<div class="sources-note">Fontes: peso de referência e IMC — Organização Mundial da Saúde; % de gordura por dobras — ${skinfoldSource};
     massa residual — Würch; músculo esquelético e gordura visceral — tabelas Omron Healthcare; metabolismo basal — fórmula escolhida na avaliação (Harris-Benedict ou Mifflin-St. Jeor) nos pesos de referência;
     relação cintura/quadril — Bray &amp; Gray (1988), por sexo e idade; pressão arterial — Diretriz Brasileira de Hipertensão Arterial.</div>`;
 }

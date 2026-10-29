@@ -42,6 +42,21 @@ async function main() {
       version: 1,
     },
   });
+
+  // Mesmos protocolos que a migration 20261029150000_more_skinfold_protocols cadastra.
+  const MORE_PROTOCOLS = [
+    { code: 'jackson_pollock_3', name: 'Jackson & Pollock — 3 dobras', sites: ['chest', 'abdominal', 'thigh', 'triceps', 'suprailiac'], sexSpecific: true },
+    { code: 'guedes_3', name: 'Guedes — 3 dobras', sites: ['triceps', 'suprailiac', 'abdominal', 'thigh', 'subscapular'], sexSpecific: true },
+    { code: 'durnin_womersley_4', name: 'Durnin & Womersley — 4 dobras', sites: ['biceps', 'triceps', 'subscapular', 'suprailiac'], sexSpecific: true },
+    { code: 'faulkner_4', name: 'Faulkner — 4 dobras', sites: ['triceps', 'subscapular', 'suprailiac', 'abdominal'], sexSpecific: false },
+  ];
+  for (const p of MORE_PROTOCOLS) {
+    await prisma.protocol.upsert({
+      where: { code: p.code },
+      update: {},
+      create: { code: p.code, name: p.name, description: p.name, requiredSkinfoldSites: p.sites, sexSpecific: p.sexSpecific, version: 1 },
+    });
+  }
 }
 
 main()

@@ -110,6 +110,8 @@ export interface EvaluationReportTechnicalExtras {
   bodyFatPercentSource: string | null;
   skinfolds: SkinfoldsMmFields | null;
   protocolLabel: string | null;
+  /** Fonte da equação de dobras usada ("Guedes (3 dobras) com a equação de Siri"); null = padrão Jackson & Pollock 7. */
+  protocolReference?: string | null;
   bioimpedanceOrigin: string | null;
   bloodPressureSystolic: number | null;
   bloodPressureDiastolic: number | null;

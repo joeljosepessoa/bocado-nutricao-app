@@ -1,3 +1,4 @@
+import { findSkinfoldProtocol } from '../physical-evaluations/skinfold-protocols';
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { NotificationEventType, Prisma, ReportAudience, ReportAuditAction, ReportStatus } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
@@ -310,11 +311,14 @@ export class ReportsService {
           skinfolds: point.skinfolds,
         }));
 
+        const skinfoldProtocol = findSkinfoldProtocol(fullEvaluation.protocol?.code);
         const skinfoldSiteCount = fullEvaluation.protocol?.requiredSkinfoldSites?.length ?? 0;
         const protocolLabel = fullEvaluation.protocol
-          ? skinfoldSiteCount > 0
-            ? `Dobras Cutâneas - ${skinfoldSiteCount} dobras`
-            : `${fullEvaluation.protocol.name} (v${fullEvaluation.protocol.version})`
+          ? skinfoldProtocol && skinfoldProtocol.code !== 'jackson_pollock_7'
+            ? `Dobras Cutâneas - ${skinfoldProtocol.name}`
+            : skinfoldSiteCount > 0
+              ? `Dobras Cutâneas - ${skinfoldSiteCount} dobras`
+              : `${fullEvaluation.protocol.name} (v${fullEvaluation.protocol.version})`
           : null;
 
         const core: EvaluationReportCore = {
@@ -338,6 +342,7 @@ export class ReportsService {
           bodyFatPercentSource: fullEvaluation.calculatedMetrics?.bodyFatPercentSource ?? null,
           skinfolds: fullEvaluation.skinfolds,
           protocolLabel,
+          protocolReference: skinfoldProtocol?.reference ?? null,
           bioimpedanceOrigin: fullEvaluation.bioimpedance?.origin ?? null,
           bloodPressureSystolic: fullEvaluation.bloodPressureSystolic,
           bloodPressureDiastolic: fullEvaluation.bloodPressureDiastolic,

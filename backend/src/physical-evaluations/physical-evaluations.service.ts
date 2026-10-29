@@ -91,6 +91,7 @@ const EVOLUTION_SERIES_SELECT = {
   evaluatedAt: true,
   releasedToClientAt: true,
   ageAtEvaluation: true,
+  biologicalSexForCalculation: true,
   bloodPressureSystolic: true,
   bloodPressureDiastolic: true,
   weightKg: true,
@@ -405,8 +406,8 @@ export class PhysicalEvaluationsService {
     const percentDelta = (a: number | null | undefined, b: number | null | undefined) =>
       a == null || b == null || a === 0 ? null : Math.round(((b - a) / a) * 1000) / 10;
 
-    const fromSkinfoldSumMm = computeSkinfoldSumMm(from.protocol?.requiredSkinfoldSites, from.skinfolds);
-    const toSkinfoldSumMm = computeSkinfoldSumMm(to.protocol?.requiredSkinfoldSites, to.skinfolds);
+    const fromSkinfoldSumMm = computeSkinfoldSumMm(from.protocol, from.biologicalSexForCalculation, from.skinfolds);
+    const toSkinfoldSumMm = computeSkinfoldSumMm(to.protocol, to.biologicalSexForCalculation, to.skinfolds);
 
     // Fase 8: campos originais da Fase 4 preservados nome-a-nome (formato
     // já coberto por teste e2e existente); tudo abaixo do comentário é
@@ -736,8 +737,9 @@ export class PhysicalEvaluationsService {
     const bioimpedanceFirst =
       evaluation.bodyFatMethod === BodyFatSource.bioimpedance && evaluation.bioimpedance?.bodyFatPercent != null;
 
-    if (!bioimpedanceFirst && evaluation.skinfolds && evaluation.protocol?.code === 'jackson_pollock_7') {
-      const percent = this.calculation.computeJacksonPollock7Percent(
+    if (!bioimpedanceFirst && evaluation.skinfolds && evaluation.protocol) {
+      const percent = this.calculation.computeSkinfoldPercent(
+        evaluation.protocol.code,
         evaluation.skinfolds,
         evaluation.biologicalSexForCalculation,
         evaluation.ageAtEvaluation,
