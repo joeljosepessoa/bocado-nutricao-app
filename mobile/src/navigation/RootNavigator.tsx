@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 import { SplashScreen } from '../screens/SplashScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { ChangePasswordScreen } from '../screens/ChangePasswordScreen';
-import { AccountTermsScreen, FirstOpenTermsScreen } from '../screens/TermsAcceptanceScreen';
+import { AccountTermsScreen, AiConsentScreen, FirstOpenTermsScreen } from '../screens/TermsAcceptanceScreen';
 import { ReportDetailScreen } from '../screens/ReportDetailScreen';
 import { ConnectDeviceScreen } from '../screens/ConnectDeviceScreen';
 import { MainTabs } from './MainTabs';
@@ -61,6 +61,15 @@ export function RootNavigator() {
     return (
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="TermsAcceptance" component={AccountTermsScreen} />
+      </Stack.Navigator>
+    );
+  }
+
+  // Termos em dia, mas falta a autorização das análises automáticas (obrigatória).
+  if (status === 'mustAuthorizeAi') {
+    return (
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="AiConsent" component={AiConsentScreen} />
       </Stack.Navigator>
     );
   }

@@ -6,6 +6,7 @@ export type AuthStatus =
   | 'unauthenticated'
   | 'mustChangePassword'
   | 'mustAcceptTerms'
+  | 'mustAuthorizeAi'
   | 'authenticated';
 
 export interface AuthState {
@@ -23,6 +24,10 @@ export type AuthEvent =
   | { type: 'TERMS_ACCEPTED' }
   /** O servidor recusou com TERMS_REQUIRED (ex.: os termos mudaram com o app aberto). */
   | { type: 'TERMS_REQUIRED' }
+  /** Autorizou as análises automáticas. */
+  | { type: 'AI_AUTHORIZED' }
+  /** Desativou as análises automáticas em Privacidade e dados: o app volta a pedir. */
+  | { type: 'AI_REQUIRED' }
   | { type: 'PROFILE_UPDATED'; user: SessionUser }
   | { type: 'SESSION_EXPIRED' }
   | { type: 'LOGOUT' };
@@ -46,6 +51,9 @@ function deriveStatus(user: SessionUser): AuthStatus {
   }
   if (termsRequired(user)) {
     return 'mustAcceptTerms';
+  }
+  if (user.role === 'client' && user.aiConsentRequired) {
+    return 'mustAuthorizeAi';
   }
   return 'authenticated';
 }
@@ -94,11 +102,29 @@ export function authReducer(state: AuthState, event: AuthEvent): AuthState {
       return { ...state, user, status: deriveStatus(user) };
     }
 
-    case 'PROFILE_UPDATED': {
-      if (state.status !== 'authenticated' && state.status !== 'mustAcceptTerms') {
+    case 'AI_AUTHORIZED': {
+      if (!state.user) {
         return state;
       }
-      return { ...state, user: event.user, status: deriveStatus(event.user) };
+      const user: SessionUser = { ...state.user, aiConsentRequired: false };
+      return { ...state, user, status: deriveStatus(user) };
+    }
+
+    case 'AI_REQUIRED': {
+      if (!state.user || state.status !== 'authenticated') {
+        return state;
+      }
+      const user: SessionUser = { ...state.user, aiConsentRequired: true };
+      return { ...state, user, status: deriveStatus(user) };
+    }
+
+    case 'PROFILE_UPDATED': {
+      if (state.status !== 'authenticated' && state.status !== 'mustAcceptTerms' && state.status !== 'mustAuthorizeAi') {
+        return state;
+      }
+      // O perfil vindo do servidor não traz a autorização das análises: mantém a que já sabíamos.
+      const user: SessionUser = { ...event.user, aiConsentRequired: event.user.aiConsentRequired ?? state.user?.aiConsentRequired };
+      return { ...state, user, status: deriveStatus(user) };
     }
 
     default:

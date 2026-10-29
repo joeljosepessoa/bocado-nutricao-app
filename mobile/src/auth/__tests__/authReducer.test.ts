@@ -139,4 +139,35 @@ describe('authReducer', () => {
       expect(authReducer(initialAuthState, { type: 'LOGIN_SUCCESS', user, accessToken: 'tok' }).status).toBe('authenticated');
     });
   });
+  describe('autorização das análises automáticas (obrigatória)', () => {
+    it('termos em dia sem autorização: pede a autorização; autorizar libera', () => {
+      const user = makeUser({ termsAcceptanceRequired: false, aiConsentRequired: true });
+      const state = authReducer(initialAuthState, { type: 'LOGIN_SUCCESS', user, accessToken: 'tok' });
+      expect(state.status).toBe('mustAuthorizeAi');
+      expect(authReducer(state, { type: 'AI_AUTHORIZED' }).status).toBe('authenticated');
+    });
+
+    it('termos vêm antes da autorização', () => {
+      const user = makeUser({ termsAcceptanceRequired: true, aiConsentRequired: true });
+      const state = authReducer(initialAuthState, { type: 'LOGIN_SUCCESS', user, accessToken: 'tok' });
+      expect(state.status).toBe('mustAcceptTerms');
+      const afterAi = authReducer(state, { type: 'AI_AUTHORIZED' });
+      expect(afterAi.status).toBe('mustAcceptTerms');
+      expect(authReducer(afterAi, { type: 'TERMS_ACCEPTED' }).status).toBe('authenticated');
+    });
+
+    it('desativar em Privacidade e dados volta a pedir; atualizar o perfil não destrava', () => {
+      const user = makeUser({ termsAcceptanceRequired: false, aiConsentRequired: false });
+      const state = authReducer(initialAuthState, { type: 'LOGIN_SUCCESS', user, accessToken: 'tok' });
+      const revoked = authReducer(state, { type: 'AI_REQUIRED' });
+      expect(revoked.status).toBe('mustAuthorizeAi');
+      const profile = authReducer(revoked, { type: 'PROFILE_UPDATED', user: makeUser({ termsAcceptanceRequired: false }) });
+      expect(profile.status).toBe('mustAuthorizeAi');
+    });
+
+    it('profissional nunca cai nessa tela', () => {
+      const user = makeUser({ role: 'professional', aiConsentRequired: true });
+      expect(authReducer(initialAuthState, { type: 'LOGIN_SUCCESS', user, accessToken: 'tok' }).status).toBe('authenticated');
+    });
+  });
 });

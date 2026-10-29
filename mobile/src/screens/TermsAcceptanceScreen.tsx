@@ -40,6 +40,7 @@ function TermsAcceptance({ mode }: { mode: Mode }) {
   const [loading, setLoading] = useState(true);
   const [acceptTermsChecked, setAcceptTermsChecked] = useState(false);
   const [acceptPrivacyChecked, setAcceptPrivacyChecked] = useState(false);
+  const [acceptAiChecked, setAcceptAiChecked] = useState(false);
   const [reading, setReading] = useState<LegalDocument | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +62,7 @@ function TermsAcceptance({ mode }: { mode: Mode }) {
   }, [load]);
 
   const versions = docs ? { termsVersion: docs.termsVersion, privacyVersion: docs.privacyVersion } : null;
-  const ready = canContinue(acceptTermsChecked, acceptPrivacyChecked, versions);
+  const ready = canContinue(acceptTermsChecked, acceptPrivacyChecked, acceptAiChecked, versions);
   const open = (kind: LegalDocument['kind']) => setReading(docs?.documents.find((d) => d.kind === kind) ?? null);
 
   async function handleContinue() {
@@ -132,6 +133,9 @@ function TermsAcceptance({ mode }: { mode: Mode }) {
           </Text>{' '}
           e do tratamento dos meus dados pessoais.
         </CheckRow>
+        <CheckRow checked={acceptAiChecked} onToggle={() => setAcceptAiChecked((v) => !v)}>
+          {AI_CONSENT_TEXT}
+        </CheckRow>
       </View>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -140,6 +144,59 @@ function TermsAcceptance({ mode }: { mode: Mode }) {
       {mode === 'account' ? <Button title="Sair" variant="secondary" onPress={() => logout()} /> : null}
 
       <LegalDocumentModal document={reading} onClose={() => setReading(null)} />
+    </ScreenContainer>
+  );
+}
+
+/** Texto da autorização das análises automáticas (o mesmo em Privacidade e dados). */
+export const AI_CONSENT_TEXT =
+  'Autorizo o uso dos meus dados em análises automáticas, ferramentas de apoio que o meu profissional usa para organizar o meu acompanhamento.';
+
+/**
+ * Quem já usa o app (termos aceitos) e ainda não autorizou as análises automáticas: a autorização é
+ * obrigatória para continuar. Dá para desativar depois em Privacidade e dados (o app volta a pedir).
+ */
+export function AiConsentScreen() {
+  const styles = useStyles(makeStyles);
+  const { colors } = useTheme();
+  const { authorizeAi, logout } = useAuth();
+  const [checked, setChecked] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleContinue() {
+    if (!checked) return;
+    setError(null);
+    setSaving(true);
+    try {
+      await authorizeAi();
+    } catch {
+      setError('Não foi possível registrar agora. Verifique sua internet e tente novamente.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <ScreenContainer safeTop>
+      <View style={styles.header}>
+        <IconBox icon={Leaf} color={colors.primaryDark} background={colors.primaryLight} size={48} />
+        <Text style={styles.title}>Mais uma autorização</Text>
+      </View>
+      <Text style={styles.body}>
+        Para continuar usando o aplicativo, precisamos da sua autorização para o uso dos seus dados em análises automáticas.
+      </Text>
+      <Text style={styles.body}>
+        Elas ajudam o seu profissional a montar e ajustar a sua dieta e o seu treino. Seu nome, CPF e contatos não são usados nessas análises.
+      </Text>
+      <View style={styles.checks}>
+        <CheckRow checked={checked} onToggle={() => setChecked((v) => !v)}>
+          {AI_CONSENT_TEXT}
+        </CheckRow>
+      </View>
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+      <Button title="Continuar" onPress={handleContinue} loading={saving} disabled={!checked} />
+      <Button title="Sair" variant="secondary" onPress={() => logout()} />
     </ScreenContainer>
   );
 }

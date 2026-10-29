@@ -1,6 +1,7 @@
 import {
   acceptedAtLabel,
   afterSessionAction,
+  aiConsentMissing,
   canContinue,
   isOutdatedVersionError,
   isTermsRequiredError,
@@ -26,12 +27,20 @@ const PENDING: PendingAcceptance = { termsVersion: '1.0', privacyVersion: '1.0',
 const V = { termsVersion: '1.0', privacyVersion: '1.0' };
 
 describe('aceite dos Termos de Uso / Política de Privacidade', () => {
-  it('"Continuar" só libera com as duas caixas marcadas e os documentos carregados', () => {
-    expect(canContinue(false, false, V)).toBe(false);
-    expect(canContinue(true, false, V)).toBe(false);
-    expect(canContinue(false, true, V)).toBe(false);
-    expect(canContinue(true, true, null)).toBe(false);
-    expect(canContinue(true, true, V)).toBe(true);
+  it('"Continuar" só libera com as três caixas marcadas e os documentos carregados', () => {
+    expect(canContinue(false, false, false, V)).toBe(false);
+    expect(canContinue(true, false, true, V)).toBe(false);
+    expect(canContinue(false, true, true, V)).toBe(false);
+    expect(canContinue(true, true, false, V)).toBe(false);
+    expect(canContinue(true, true, true, null)).toBe(false);
+    expect(canContinue(true, true, true, V)).toBe(true);
+  });
+
+  it('autorização das análises automáticas: obrigatória só para paciente, e sem resposta do servidor não trava', () => {
+    expect(aiConsentMissing('client', { aiDataProcessingConsentAt: null })).toBe(true);
+    expect(aiConsentMissing('client', { aiDataProcessingConsentAt: '2026-10-29T12:00:00Z' })).toBe(false);
+    expect(aiConsentMissing('client', null)).toBe(false);
+    expect(aiConsentMissing('professional', { aiDataProcessingConsentAt: null })).toBe(false);
   });
 
   it('servidor novo decide pelo termsAcceptanceRequired (aceite antigo não vale como 1.0)', () => {

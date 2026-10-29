@@ -60,12 +60,13 @@ function LegalDocumentsSection() {
 }
 
 /**
- * Autorização opcional das análises automáticas (ferramentas de apoio que o profissional usa com os
- * dados do paciente). Mesma API e mesma regra de antes: abrir a tela só CONSULTA; ativar exige marcar a
- * caixa e salvar; dá para desativar a qualquer momento.
+ * Autorização das análises automáticas (ferramentas de apoio que o profissional usa com os dados do
+ * paciente). É obrigatória para usar o app, mas dá para desativar a qualquer momento (LGPD) — aí o app
+ * volta a pedir a autorização antes de continuar.
  */
-function OptionalAnalysesSection() {
+function AnalysesSection() {
   const styles = useStyles(makeStyles);
+  const { requireAi } = useAuth();
   const [consentedAt, setConsentedAt] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [checked, setChecked] = useState(false);
@@ -89,6 +90,7 @@ function OptionalAnalysesSection() {
       setConsentedAt(state.aiDataProcessingConsentAt);
       setChecked(false);
       setConfirmRevoke(false);
+      if (!state.aiDataProcessingConsentAt) requireAi();
     } catch {
       setError('Não foi possível salvar sua preferência agora. Tente novamente.');
     } finally {
@@ -100,10 +102,10 @@ function OptionalAnalysesSection() {
 
   return (
     <Card>
-      <Text style={styles.title}>Análises automáticas (opcional)</Text>
+      <Text style={styles.title}>Análises automáticas</Text>
       <Text style={styles.body}>
         Permite que o seu profissional use ferramentas de apoio com os seus dados ao organizar o seu acompanhamento.
-        Você pode desativar quando quiser.
+        Essa autorização é necessária para usar o aplicativo.
       </Text>
 
       {!loaded ? (
@@ -132,7 +134,7 @@ function OptionalAnalysesSection() {
         <>
           <Text style={styles.body}>
             Ao desativar, esses recursos deixam de ser usados a partir de agora; o que já foi gerado e seus demais dados
-            não são apagados.
+            não são apagados. Como a autorização é necessária para usar o aplicativo, ele vai pedir de novo antes de continuar.
           </Text>
           {!confirmRevoke ? (
             <Button title="Desativar" variant="secondary" onPress={() => setConfirmRevoke(true)} />
@@ -189,7 +191,7 @@ export function PrivacyScreen() {
   return (
     <ScreenContainer>
       <LegalDocumentsSection />
-      <OptionalAnalysesSection />
+      <AnalysesSection />
 
       <Card>
         <Text style={styles.title}>Baixar meus dados</Text>

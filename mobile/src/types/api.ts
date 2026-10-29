@@ -9,6 +9,8 @@ export interface SessionUser {
   privacyAcceptedAt: string | null;
   /** Precisa aceitar os Termos de Uso/Política de Privacidade vigentes (ausente em servidor antigo). */
   termsAcceptanceRequired?: boolean;
+  /** Paciente ainda não autorizou as análises automáticas (calculado no app depois do login). */
+  aiConsentRequired?: boolean;
 }
 
 export interface AuthTokenPair {

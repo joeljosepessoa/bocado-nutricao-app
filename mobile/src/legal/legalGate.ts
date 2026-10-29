@@ -9,6 +9,8 @@ import type { LegalVersions, SessionUser } from '../types/api';
 export interface PendingAcceptance extends LegalVersions {
   /** Quando a pessoa tocou em "Continuar" (ISO). */
   checkedAt: string;
+  /** Marcou também a autorização das análises automáticas (obrigatória desde o app 1.4.0). */
+  aiConsent?: boolean;
 }
 
 /**
@@ -21,9 +23,17 @@ export function termsRequired(user: Pick<SessionUser, 'role' | 'privacyAcceptedA
   return !user.privacyAcceptedAt;
 }
 
-/** "Continuar" só libera com as duas caixas marcadas e os documentos carregados. */
-export function canContinue(acceptTerms: boolean, acceptPrivacy: boolean, versions: LegalVersions | null): boolean {
-  return acceptTerms && acceptPrivacy && !!versions?.termsVersion && !!versions?.privacyVersion;
+/** "Continuar" só libera com as três caixas marcadas e os documentos carregados. */
+export function canContinue(acceptTerms: boolean, acceptPrivacy: boolean, acceptAi: boolean, versions: LegalVersions | null): boolean {
+  return acceptTerms && acceptPrivacy && acceptAi && !!versions?.termsVersion && !!versions?.privacyVersion;
+}
+
+/**
+ * A autorização das análises automáticas é obrigatória para usar o app (decisão do profissional
+ * responsável, 29/10/2026). Só paciente; sem resposta do servidor (offline) não trava.
+ */
+export function aiConsentMissing(role: SessionUser['role'], consent: { aiDataProcessingConsentAt: string | null } | null): boolean {
+  return role === 'client' && consent !== null && !consent.aiDataProcessingConsentAt;
 }
 
 /**
