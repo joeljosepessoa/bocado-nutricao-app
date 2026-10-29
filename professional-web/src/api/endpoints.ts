@@ -40,6 +40,7 @@ import type {
   CreateDietWithAiInput,
   CreateEvaluationInput,
   DashboardSummary,
+  ProfessionalAlerts,
   Diet,
   DietDayKind,
   DietVersionSummary,
@@ -128,6 +129,12 @@ export async function resetPassword(token: string, newPassword: string): Promise
 
 export async function getDashboard(): Promise<DashboardSummary> {
   const res = await apiClient.get<DashboardSummary>('/professionals/me/dashboard');
+  return res.data;
+}
+
+/** "Avisos para você": quem está sem registrar, aniversários, mensagens sem ler e dieta/treino antigos. */
+export async function getProfessionalAlerts(params: { inactiveDays: number; planDays: number }): Promise<ProfessionalAlerts> {
+  const res = await apiClient.get<ProfessionalAlerts>('/professionals/me/alerts', { params });
   return res.data;
 }
 

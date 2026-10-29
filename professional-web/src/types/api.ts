@@ -388,6 +388,20 @@ export interface Food {
   fiberGPer100: number | null;
 }
 
+// --- Avisos para você (Dashboard) ------------------------------------------
+
+export type AlertActivityKind = 'workout' | 'weight' | 'water' | 'photo' | 'scale' | 'message';
+
+export interface ProfessionalAlerts {
+  generatedAt: string;
+  settings: { inactiveDays: number; planDays: number };
+  inactive: Array<{ clientId: string; name: string; lastRecordAt: string; lastRecordKind: AlertActivityKind; days: number; lastSeenAt: string | null }>;
+  neverRecorded: Array<{ clientId: string; name: string; since: string; days: number; everOpenedApp: boolean }>;
+  birthdays: Array<{ clientId: string; name: string; date: string; inDays: number; age: number }>;
+  unreadMessages: Array<{ clientId: string; name: string; count: number; oldestAt: string; hours: number }>;
+  stalePlans: Array<{ clientId: string; name: string; kind: 'diet' | 'workout'; publishedAt: string; days: number }>;
+}
+
 // --- Tela Alimentos -------------------------------------------------------
 
 /** taco = Tabela TACO (só leitura); mine = cadastrado por você; shared = de outro profissional, aprovado. */

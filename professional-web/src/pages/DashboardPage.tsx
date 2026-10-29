@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { AlertsCard } from '../alerts/AlertsCard';
 import { Link } from 'react-router-dom';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import * as api from '../api/endpoints';
@@ -316,6 +317,8 @@ export function DashboardPage() {
           hint={`${data.evaluations.last30Days} avaliação(ões) em 30 dias`}
         />
       </div>
+
+      <AlertsCard />
 
       <div className={styles.middle}>
         <EvolutionCard clients={activeClients.data?.items ?? []} preferredClientId={preferredClientId} />
