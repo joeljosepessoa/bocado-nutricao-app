@@ -14,6 +14,7 @@ import { NotificationPreferencesService } from '../notifications/notification-pr
 import { ClientSubscriptionsService } from '../client-billing/client-subscriptions.service';
 import { ClientTrackingService } from '../client-tracking/client-tracking.service';
 import { AnamnesisService } from '../anamnesis/anamnesis.service';
+import { CustomFormsService } from '../custom-forms/custom-forms.service';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { LegalService } from '../legal/legal.service';
 
@@ -54,6 +55,8 @@ export interface ClientDataExport {
   ownRecords: unknown;
   /** A anamnese preenchida pelo profissional sobre o paciente (null se não existe). */
   anamnesis: unknown;
+  /** Formulários próprios que o profissional preencheu sobre o paciente (nome, data, perguntas e respostas). */
+  customForms: unknown[];
   /** Histórico de aceite dos Termos de Uso / Política de Privacidade (versão, data e origem). */
   legalConsents: unknown[];
 }
@@ -75,6 +78,7 @@ export class LgpdService {
     private readonly clientSubscriptions: ClientSubscriptionsService,
     private readonly clientTracking: ClientTrackingService,
     private readonly anamnesis: AnamnesisService,
+    private readonly customForms: CustomFormsService,
     private readonly legal: LegalService,
   ) {}
 
@@ -100,7 +104,7 @@ export class LgpdService {
       orderBy: { createdAt: 'asc' },
     });
 
-    const [aiConsent, aiInteractions, ownRecords, anamnesis, legalConsents] = await Promise.all([
+    const [aiConsent, aiInteractions, ownRecords, anamnesis, legalConsents, customForms] = await Promise.all([
       this.prisma.client.findUniqueOrThrow({ where: { id: clientId }, select: { aiDataProcessingConsentAt: true } }),
       this.prisma.aiInteractionLog.findMany({
         where: { clientId },
@@ -110,6 +114,7 @@ export class LgpdService {
       this.clientTracking.exportOwnRecords(clientId),
       this.anamnesis.exportForClient(clientId),
       this.legal.history(clientId),
+      this.customForms.exportForClient(clientId),
     ]);
 
     const request = await this.prisma.dataExportRequest.create({ data: { clientId } });
@@ -130,6 +135,7 @@ export class LgpdService {
       aiInteractions,
       ownRecords,
       anamnesis,
+      customForms,
       legalConsents,
     };
   }
@@ -192,5 +198,7 @@ export class LgpdService {
     await this.clientTracking.deleteOwnRecords(clientId);
     // Anamnese: CPF, RG, endereço e histórico de saúde — apagada junto com a conta.
     await this.anamnesis.deleteForClient(clientId);
+    // Formulários próprios preenchidos sobre o paciente: dados de saúde, apagados junto.
+    await this.customForms.deleteForClient(clientId);
   }
 }

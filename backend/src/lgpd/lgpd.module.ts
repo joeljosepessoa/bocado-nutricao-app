@@ -11,6 +11,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { ClientBillingModule } from '../client-billing/client-billing.module';
 import { ClientTrackingModule } from '../client-tracking/client-tracking.module';
 import { AnamnesisModule } from '../anamnesis/anamnesis.module';
+import { CustomFormsModule } from '../custom-forms/custom-forms.module';
 import { LgpdService } from './lgpd.service';
 
 @Module({
@@ -27,6 +28,7 @@ import { LgpdService } from './lgpd.service';
     ClientBillingModule,
     ClientTrackingModule,
     AnamnesisModule,
+    CustomFormsModule,
   ],
   providers: [LgpdService],
   exports: [LgpdService],

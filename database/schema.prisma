@@ -161,6 +161,8 @@ model Professional {
   clientBillingAuditLogs  ClientBillingAuditLog[]
   templates               Template[]
   exercisePresets         ExercisePreset[]
+  customForms             CustomForm[]
+  customFormResponses     CustomFormResponse[]
 
   @@map("professionals")
 }
@@ -238,6 +240,7 @@ model Client {
   progressPhotos          ClientProgressPhoto[]
   anamnesis               Anamnesis?
   anamnesisAuditLogs      AnamnesisAuditLog[]
+  customFormResponses     CustomFormResponse[]
 
   @@index([professionalId, status])
   @@map("clients")
@@ -1648,6 +1651,50 @@ model Template {
 
   @@index([professionalId, kind, deletedAt])
   @@map("templates")
+}
+
+// Formulários próprios do profissional (perguntas em JSON — ver
+// backend/src/custom-forms/custom-form-rules.ts). Preenchidos pelo próprio
+// profissional no painel; o paciente não vê nem responde. "Excluir" é lixeira
+// (deletedAt): as respostas já dadas continuam ligadas ao formulário.
+model CustomForm {
+  id             String    @id @default(uuid())
+  professionalId String    @map("professional_id")
+  name           String
+  description    String?   @db.Text
+  questions      Json
+  deletedAt      DateTime? @map("deleted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  professional Professional         @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  responses    CustomFormResponse[]
+
+  @@index([professionalId, deletedAt])
+  @@map("custom_forms")
+}
+
+// Um formulário preenchido para um paciente. Guarda o nome e as perguntas do
+// momento do preenchimento: mudar o formulário depois não altera respostas antigas.
+model CustomFormResponse {
+  id             String   @id @default(uuid())
+  formId         String   @map("form_id")
+  clientId       String   @map("client_id")
+  professionalId String   @map("professional_id")
+  formName       String   @map("form_name")
+  questions      Json
+  answers        Json
+  filledAt       DateTime @default(now()) @map("filled_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
+
+  form         CustomForm   @relation(fields: [formId], references: [id], onDelete: Restrict)
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+
+  @@index([clientId, filledAt])
+  @@index([formId])
+  @@map("custom_form_responses")
 }
 
 // Tabela de AÇÃO (mesmo papel que ScaleAuditLog/DeviceAuditLog) — só
