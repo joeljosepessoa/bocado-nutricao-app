@@ -105,7 +105,7 @@ describe('Montar a dieta do paciente com a IA', () => {
     vi.mocked(api.getClientDietContent).mockResolvedValue({ content: null, foods: [], patientAiConsent: false });
     renderAt('/clients/c1/diet/ia');
     expect(await screen.findByText(/Paciente Teste ainda não autorizou a IA/)).toBeInTheDocument();
-    expect(screen.getByText('Privacidade e dados')).toBeInTheDocument();
+    expect(screen.getByText('atualizar o app')).toBeInTheDocument();
   });
 });
 

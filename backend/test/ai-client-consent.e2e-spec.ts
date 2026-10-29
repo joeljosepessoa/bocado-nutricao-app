@@ -9,7 +9,7 @@ import { createClient, createDiet, registerProfessional } from './helpers';
 
 const prisma = new PrismaClient();
 const CONSENT_MESSAGE =
-  'O cliente ainda não autorizou o processamento de dados por IA. Peça ao cliente que acesse Privacidade e dados no aplicativo e autorize o uso de inteligência artificial.';
+  'O cliente ainda não autorizou o processamento de dados por IA. Peça para ele atualizar o aplicativo: a versão nova pede essa autorização ao abrir (ou em Privacidade e dados).';
 
 // Provedor roteirizado no lugar do mock local (mesmo id) — consentimento, política e logs reais.
 const fakeProvider = {

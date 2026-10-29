@@ -7,7 +7,7 @@ import { AiAssistPanel } from '../AiAssistPanel';
 vi.mock('../../api/endpoints', () => ({ acceptProfessionalAiConsent: vi.fn() }));
 
 const CLIENT_CONSENT_MESSAGE =
-  'O cliente ainda não autorizou o processamento de dados por IA. Peça ao cliente que acesse Privacidade e dados no aplicativo e autorize o uso de inteligência artificial.';
+  'O cliente ainda não autorizou o processamento de dados por IA. Peça para ele atualizar o aplicativo: a versão nova pede essa autorização ao abrir (ou em Privacidade e dados).';
 
 describe('AiAssistPanel — consentimento', () => {
   beforeEach(() => vi.clearAllMocks());

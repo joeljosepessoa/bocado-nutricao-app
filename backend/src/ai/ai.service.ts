@@ -28,8 +28,8 @@ export interface RequestMeta {
 const MAX_OUTPUT_CHARS = 4000;
 
 export const CLIENT_AI_CONSENT_MISSING_MESSAGE =
-  'O cliente ainda não autorizou o processamento de dados por IA. Peça ao cliente que acesse Privacidade e dados no ' +
-  'aplicativo e autorize o uso de inteligência artificial.';
+  'O cliente ainda não autorizou o processamento de dados por IA. Peça para ele atualizar o aplicativo: a versão nova ' +
+  'pede essa autorização ao abrir (ou em Privacidade e dados).';
 // Padrão quando AI_TIMEOUT_MS não é definido (o mesmo da Fase 12). Use cases
 // mais pesados declaram o próprio timeoutMs (ex.: organize_workout).
 export const DEFAULT_AI_TIMEOUT_MS = 10_000;

@@ -76,8 +76,8 @@ function PatientAiShell({
 
       {!consent ? (
         <div role="alert" style={{ fontSize: 13, padding: '10px 14px', borderRadius: 12, background: 'var(--color-warning-light, #fef3c7)', color: 'var(--color-text)' }}>
-          <strong>{client.user.fullName} ainda não autorizou a IA.</strong> Sem a autorização dele, a IA não pode usar os dados do paciente. Peça para ele abrir o
-          app em <strong>Privacidade e dados</strong> e autorizar o uso de inteligência artificial.
+          <strong>{client.user.fullName} ainda não autorizou a IA.</strong> Sem a autorização dele, a IA não pode usar os dados do paciente. Peça para ele
+          <strong> atualizar o app</strong>: a versão nova pede essa autorização assim que ele abrir (também dá para autorizar em Privacidade e dados).
         </div>
       ) : null}
 
