@@ -18,11 +18,13 @@ export function OverviewTab() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState(client.user.fullName);
+  const [email, setEmail] = useState(client.user.email);
   const [phone, setPhone] = useState(client.phone ?? '');
   const [notes, setNotes] = useState(client.notes ?? '');
   const [targetWeight, setTargetWeight] = useState(client.targetWeightKg != null ? String(client.targetWeightKg).replace('.', ',') : '');
   const [waterGoal, setWaterGoal] = useState(client.waterGoalMl != null ? String(client.waterGoalMl) : '');
   const [goalError, setGoalError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [resetResult, setResetResult] = useState<string | null>(null);
 
@@ -31,16 +33,31 @@ export function OverviewTab() {
     queryClient.invalidateQueries({ queryKey: ['clients'] });
   };
 
+  const newEmail = email.trim();
+  const emailChanged = newEmail !== client.user.email;
+
   const updateMutation = useMutation({
     mutationFn: (goals: { targetWeightKg: number | null; waterGoalMl: number | null }) =>
-      api.updateClient(clientId!, { fullName, phone, notes, ...goals }),
+      // E-mail só vai quando mudou: é o login do paciente no app.
+      api.updateClient(clientId!, { fullName, phone, notes, ...goals, ...(emailChanged ? { email: newEmail } : {}) }),
     onSuccess: () => {
       invalidate();
       setEditing(false);
     },
+    onError: () =>
+      setSaveError(
+        emailChanged
+          ? 'Não foi possível salvar. Confira o e-mail: ele pode estar escrito errado ou já ser usado por outra conta.'
+          : 'Não foi possível salvar. Tente de novo.',
+      ),
   });
 
   function handleSave() {
+    setSaveError(null);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+      setSaveError('Informe um e-mail válido (ex.: nome@gmail.com).');
+      return;
+    }
     const goals = parseGoals(targetWeight, waterGoal);
     if ('error' in goals) {
       setGoalError(goals.error);
@@ -48,6 +65,12 @@ export function OverviewTab() {
     }
     setGoalError(null);
     updateMutation.mutate(goals);
+  }
+
+  function startEditing() {
+    setEmail(client.user.email);
+    setSaveError(null);
+    setEditing(true);
   }
 
   const archiveMutation = useMutation({
@@ -66,6 +89,13 @@ export function OverviewTab() {
         {editing ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 420 }}>
             <TextField label="Nome completo" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+            <TextField label="E-mail" type="email" autoComplete="off" value={email} onChange={(e) => setEmail(e.target.value)} />
+            {emailChanged ? (
+              <div role="note" style={{ fontSize: 13, padding: '8px 12px', borderRadius: 8, background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' }}>
+                O e-mail é o login do paciente no app. Depois de salvar, ele passa a entrar com <strong>{newEmail || '…'}</strong> — a senha
+                continua a mesma. Avise o paciente.
+              </div>
+            ) : null}
             <TextField label="Telefone" value={phone} onChange={(e) => setPhone(e.target.value)} />
             <TextField
               label="Meta de peso (kg)"
@@ -82,6 +112,11 @@ export function OverviewTab() {
               onChange={(e) => setWaterGoal(e.target.value)}
             />
             {goalError ? <div style={{ fontSize: 13, color: 'var(--color-danger)' }}>{goalError}</div> : null}
+            {saveError ? (
+              <div role="alert" style={{ fontSize: 13, color: 'var(--color-danger)' }}>
+                {saveError}
+              </div>
+            ) : null}
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13 }}>
               <span style={{ color: 'var(--color-text-secondary)', fontWeight: 600 }}>Notas</span>
               <textarea
@@ -114,7 +149,7 @@ export function OverviewTab() {
         {client.notes && !editing ? (
           <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Notas: {client.notes}</div>
         ) : null}
-        {!editing ? <Button onClick={() => setEditing(true)}>Editar dados</Button> : null}
+        {!editing ? <Button onClick={startEditing}>Editar dados</Button> : null}
       </Card>
 
       {clientId ? <AnamnesisSummaryCard clientId={clientId} /> : null}
