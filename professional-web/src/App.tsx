@@ -29,6 +29,9 @@ import { AiPage } from './pages/AiPage';
 import { TemplatesPage } from './templates/TemplatesPage';
 import { ExerciseLibraryPage } from './exercises/ExerciseLibraryPage';
 import { FoodLibraryPage } from './foods/FoodLibraryPage';
+import { FormsPage } from './customForms/FormsPage';
+import { FormEditorPage } from './customForms/FormEditorPage';
+import { FormFillPage } from './customForms/FormFillPage';
 import { PatientDietAiPage, PatientWorkoutAiPage } from './patientAi/PatientAiPages';
 import { DietTemplateEditorPage, WorkoutTemplateEditorPage } from './templates/TemplateEditorPages';
 import { AnamnesisPage } from './pages/AnamnesisPage';
@@ -69,6 +72,9 @@ function App() {
               <Route path="/ia" element={<AiPage />} />
               <Route path="/modelos" element={<TemplatesPage />} />
               <Route path="/alimentos" element={<FoodLibraryPage />} />
+              <Route path="/formularios" element={<FormsPage />} />
+              <Route path="/formularios/novo" element={<FormEditorPage />} />
+              <Route path="/formularios/:formId" element={<FormEditorPage />} />
               <Route path="/exercicios" element={<ExerciseLibraryPage />} />
               <Route path="/modelos/dietas/novo" element={<DietTemplateEditorPage />} />
               <Route path="/modelos/dietas/:templateId" element={<DietTemplateEditorPage />} />
@@ -92,6 +98,8 @@ function App() {
                 <Route path="workout/ia" element={<PatientWorkoutAiPage />} />
                 <Route path="reports" element={<ReportsTab />} />
                 <Route path="messages" element={<MessagesTab />} />
+                <Route path="forms/new" element={<FormFillPage />} />
+                <Route path="forms/:responseId" element={<FormFillPage />} />
               </Route>
             </Route>
             <Route

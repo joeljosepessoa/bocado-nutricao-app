@@ -11,6 +11,7 @@ import { Modal } from '../../components/Modal';
 import { formatDate } from '../../lib/format';
 import { parseGoals } from '../../lib/clientGoals';
 import { AnamnesisSummaryCard } from '../../anamnesis/AnamnesisSummaryCard';
+import { ClientFormsCard } from '../../customForms/ClientFormsCard';
 
 export function OverviewTab() {
   const { client } = useOutletContext<{ client: ClientDetail }>();
@@ -153,6 +154,7 @@ export function OverviewTab() {
       </Card>
 
       {clientId ? <AnamnesisSummaryCard clientId={clientId} /> : null}
+      {clientId ? <ClientFormsCard clientId={clientId} /> : null}
 
       <Card title="Acesso">
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

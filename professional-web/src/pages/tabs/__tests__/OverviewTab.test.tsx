@@ -12,6 +12,7 @@ vi.mock('../../../api/endpoints', () => ({
   resetClientPassword: vi.fn(),
 }));
 vi.mock('../../../anamnesis/AnamnesisSummaryCard', () => ({ AnamnesisSummaryCard: () => null }));
+vi.mock('../../../customForms/ClientFormsCard', () => ({ ClientFormsCard: () => null }));
 
 const client: ClientDetail = {
   id: 'c1',

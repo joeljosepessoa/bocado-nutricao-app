@@ -50,8 +50,14 @@ import type {
   EvolutionPoint,
   ExecutionLog,
   Exercise,
+  CustomForm,
+  CustomFormSummary,
   Food,
   FoodDetails,
+  FormAnswers,
+  FormQuestion,
+  FormResponse,
+  FormResponseSummary,
   FoodInput,
   FoodLibraryPage,
   MealGroupKind,
@@ -148,6 +154,66 @@ export async function listClients(params: {
 } = {}): Promise<PaginatedResult<ClientListItem>> {
   const res = await apiClient.get<PaginatedResult<ClientListItem>>('/clients', { params });
   return res.data;
+}
+
+// --- Formulários próprios ------------------------------------------------
+
+export async function listForms(trash = false): Promise<CustomFormSummary[]> {
+  const res = await apiClient.get<CustomFormSummary[]>('/forms', { params: trash ? { trash: 'true' } : undefined });
+  return res.data;
+}
+
+export async function getForm(id: string): Promise<CustomForm> {
+  const res = await apiClient.get<CustomForm>(`/forms/${id}`);
+  return res.data;
+}
+
+export async function createForm(input: { name: string; description?: string; questions: FormQuestion[] }): Promise<CustomForm> {
+  const res = await apiClient.post<CustomForm>('/forms', input);
+  return res.data;
+}
+
+export async function updateForm(id: string, input: { name?: string; description?: string; questions?: FormQuestion[] }): Promise<CustomForm> {
+  const res = await apiClient.patch<CustomForm>(`/forms/${id}`, input);
+  return res.data;
+}
+
+export async function duplicateForm(id: string): Promise<CustomForm> {
+  const res = await apiClient.post<CustomForm>(`/forms/${id}/duplicate`);
+  return res.data;
+}
+
+export async function deleteForm(id: string): Promise<void> {
+  await apiClient.delete(`/forms/${id}`);
+}
+
+export async function restoreForm(id: string): Promise<CustomForm> {
+  const res = await apiClient.post<CustomForm>(`/forms/${id}/restore`);
+  return res.data;
+}
+
+export async function listFormResponses(clientId: string): Promise<FormResponseSummary[]> {
+  const res = await apiClient.get<FormResponseSummary[]>(`/clients/${clientId}/form-responses`);
+  return res.data;
+}
+
+export async function getFormResponse(clientId: string, id: string): Promise<FormResponse> {
+  const res = await apiClient.get<FormResponse>(`/clients/${clientId}/form-responses/${id}`);
+  return res.data;
+}
+
+export async function createFormResponse(clientId: string, input: { formId: string; answers: FormAnswers; filledAt?: string }): Promise<FormResponse> {
+  const res = await apiClient.post<FormResponse>(`/clients/${clientId}/form-responses`, input);
+  return res.data;
+}
+
+export async function updateFormResponse(clientId: string, id: string, input: { answers?: FormAnswers; filledAt?: string }): Promise<FormResponse> {
+  const res = await apiClient.patch<FormResponse>(`/clients/${clientId}/form-responses/${id}`, input);
+  return res.data;
+}
+
+export async function deleteFormResponse(clientId: string, id: string): Promise<void> {
+  await apiClient.delete(`/clients/${clientId}/form-responses/${id}`);
 }
 
 // --- Anamnese -----------------------------------------------------------

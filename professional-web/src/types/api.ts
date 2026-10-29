@@ -388,6 +388,61 @@ export interface Food {
   fiberGPer100: number | null;
 }
 
+// --- Formulários próprios ----------------------------------------------------
+
+export type FormQuestionType = 'short_text' | 'long_text' | 'number' | 'scale' | 'yes_no' | 'single_choice' | 'multiple_choice';
+
+export interface FormQuestion {
+  id: string;
+  type: FormQuestionType;
+  label: string;
+  help?: string;
+  required: boolean;
+  unit?: string;
+  options?: string[];
+}
+
+export type FormAnswer = string | number | boolean | string[] | null;
+export type FormAnswers = Record<string, FormAnswer>;
+
+export interface CustomForm {
+  id: string;
+  name: string;
+  description: string | null;
+  questions: FormQuestion[];
+  deletedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CustomFormSummary extends Omit<CustomForm, 'questions'> {
+  questionCount: number;
+  responseCount: number;
+}
+
+export interface FormResponseSummary {
+  id: string;
+  formId: string;
+  formName: string;
+  filledAt: string;
+  createdAt: string;
+  updatedAt: string;
+  questionCount: number;
+  answeredCount: number;
+}
+
+export interface FormResponse {
+  id: string;
+  formId: string;
+  clientId: string;
+  formName: string;
+  questions: FormQuestion[];
+  answers: FormAnswers;
+  filledAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // --- Avisos para você (Dashboard) ------------------------------------------
 
 export type AlertActivityKind = 'workout' | 'weight' | 'water' | 'photo' | 'scale' | 'message';

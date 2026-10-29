@@ -19,6 +19,7 @@ const PROFESSIONAL_NAV_ITEMS: NavItem[] = [
   { to: '/clients', label: 'Pacientes', icon: 'users' },
   { to: '/anamnese', label: 'Anamnese', icon: 'clipboard' },
   { to: '/avaliacao', label: 'Avaliação', icon: 'ruler' },
+  { to: '/formularios', label: 'Formulários', icon: 'form' },
   { to: '/agenda', label: 'Agenda', icon: 'calendar' },
   { to: '/relatorios', label: 'Relatórios', icon: 'barChart' },
   { to: '/ia', label: 'Inteligência Artificial', icon: 'sparkles' },
