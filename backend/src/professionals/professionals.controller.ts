@@ -1,16 +1,20 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { ProfessionalsService } from './professionals.service';
+import { AlertsService } from './alerts.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateProfessionalProfileDto } from './dto/update-professional-profile.dto';
 
 @Controller('professionals')
 @Roles(Role.professional)
 export class ProfessionalsController {
-  constructor(private readonly professionalsService: ProfessionalsService) {}
+  constructor(
+    private readonly professionalsService: ProfessionalsService,
+    private readonly alertsService: AlertsService,
+  ) {}
 
   @Get('me')
   me(@CurrentUser() user: AuthenticatedUser) {
@@ -26,6 +30,15 @@ export class ProfessionalsController {
   @Get('me/dashboard')
   getDashboard(@CurrentUser() user: AuthenticatedUser) {
     return this.professionalsService.getDashboard(user.id);
+  }
+
+  /** "Avisos para você": quem está sem registrar, aniversários, mensagens sem ler, dieta/treino antigos. */
+  @Get('me/alerts')
+  getAlerts(@CurrentUser() user: AuthenticatedUser, @Query('inactiveDays') inactiveDays?: string, @Query('planDays') planDays?: string) {
+    return this.alertsService.forProfessional(user.id, {
+      inactiveDays: inactiveDays ? Number(inactiveDays) : undefined,
+      planDays: planDays ? Number(planDays) : undefined,
+    });
   }
 
   @Post('me/clients')
