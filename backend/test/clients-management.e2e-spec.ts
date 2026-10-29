@@ -296,6 +296,22 @@ describe('Gerenciamento de clientes (e2e)', () => {
     expect(res.body.accessToken).toEqual(expect.any(String));
   });
 
+  it('corrigir o e-mail: o paciente passa a entrar com o novo e o antigo deixa de valer', async () => {
+    const professional = await registerProfessional(app);
+    const { client, temporaryPassword } = await createClient(app, professional.accessToken);
+    const newEmail = uniqueEmail('corrigido');
+
+    const res = await request(app.getHttpServer())
+      .patch(`/clients/${client.id}`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .send({ email: newEmail })
+      .expect(200);
+    expect(res.body.user.email).toBe(newEmail);
+
+    await request(app.getHttpServer()).post('/auth/login').send({ email: newEmail, password: temporaryPassword }).expect(200);
+    await request(app.getHttpServer()).post('/auth/login').send({ email: client.user.email, password: temporaryPassword }).expect(401);
+  });
+
   // Extra 3 — anti-enumeração também no PATCH de e-mail duplicado
   it('PATCH para um e-mail já usado por outro usuário retorna mensagem genérica', async () => {
     const professional = await registerProfessional(app);
