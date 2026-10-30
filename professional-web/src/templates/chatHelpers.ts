@@ -1,6 +1,7 @@
 import type { DietDraft } from '../dietAssistant/draft';
 import type { WorkoutDraft } from '../workoutAssistant/draft';
 import type { DietChatResult } from '../types/api';
+import type { DietReportData } from './chatMemory';
 
 const kcalText = (n: number) => Math.round(n).toLocaleString('pt-BR');
 
@@ -24,3 +25,9 @@ export const workoutHasExercises = (draft: WorkoutDraft) => draft.days.some((d) 
 /** Avisos do editor travam o pedido à IA (ela recebe o rascunho como está). */
 export const blockedBy = (problems: string[]) =>
   problems.length > 0 ? `Antes de pedir à IA, corrija no editor: ${problems.slice(0, 3).join(' ')}${problems.length > 3 ? ' …' : ''}` : null;
+
+/** Tabela de conferência para a bolha da IA (só quando a dieta mudou e o servidor mandou a conferência). */
+export function dietReportOf(result: DietChatResult): DietReportData | null {
+  if (!result.changed || !result.report || result.report.length === 0) return null;
+  return { targets: result.targets ?? null, days: result.report, revised: !!result.revised };
+}

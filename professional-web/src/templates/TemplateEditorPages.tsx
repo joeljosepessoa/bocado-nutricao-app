@@ -26,7 +26,7 @@ import type { TemplateKind, TemplateSummary } from '../types/api';
 import { ApplyTemplateModal } from './ApplyTemplateModal';
 import { TemplateAiChat } from './TemplateAiChat';
 import { forgetChat, moveChat, newTemplateChatKey } from './chatMemory';
-import { blockedBy, dietHasFoods, nutritionSummary, workoutHasExercises } from './chatHelpers';
+import { blockedBy, dietHasFoods, nutritionSummary, dietReportOf, workoutHasExercises } from './chatHelpers';
 import chatStyles from './TemplateAiChat.module.css';
 
 const inputStyle = {
@@ -320,6 +320,7 @@ function DietTemplateForm({ templateId, initialMeta, initialDraft }: { templateI
       changed: result.changed,
       warnings: result.warnings,
       summary: result.changed ? nutritionSummary(result.nutrition) : null,
+      dietReport: dietReportOf(result),
     };
   }
 

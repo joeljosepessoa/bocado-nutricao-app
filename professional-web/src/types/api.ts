@@ -729,6 +729,34 @@ export interface DietChatResult {
   foods: CatalogFoodRef[];
   /** Calculado pelo sistema, por dia (faixa quando há blocos "escolher 1"; partial = algum item sem cálculo). */
   nutrition: Array<{ label: string | null; min: Nutrients; max: Nutrients; partial: boolean }>;
+  /** Metas que a IA usou ao criar/refazer (null = só ajuste). Servidor antigo não manda. */
+  targets?: DietChatTargets | null;
+  /** Conferência do sistema por refeição (1ª escolha de cada bloco). */
+  report?: DietChatDayReport[];
+  /** true = o sistema conferiu a soma e a IA corrigiu as quantidades numa 2ª rodada. */
+  revised?: boolean;
+}
+
+export interface DietChatTargets {
+  kcal: number | null;
+  proteinG: number | null;
+  carbG: number | null;
+  fatG: number | null;
+  calculation: string | null;
+}
+
+export interface DietChatMacros {
+  kcal: number;
+  proteinG: number;
+  carbG: number;
+  fatG: number;
+}
+
+export interface DietChatDayReport {
+  label: string | null;
+  meals: Array<DietChatMacros & { name: string; partial: boolean; options: Array<{ label: string; kcal: number; diffPercent: number; foods: string[] }> }>;
+  total: DietChatMacros;
+  partial: boolean;
 }
 
 export interface WorkoutChatResult {

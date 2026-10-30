@@ -3,11 +3,21 @@
  * Assim a conversa continua depois de salvar um modelo novo (a tela troca de endereço) e quando o
  * profissional sai e volta ao mesmo modelo.
  */
+import type { DietChatDayReport, DietChatTargets } from '../types/api';
+
+/** Conferência da dieta que acompanha a resposta da IA (tabela por refeição × meta). */
+export interface DietReportData {
+  targets: DietChatTargets | null;
+  days: DietChatDayReport[];
+  revised: boolean;
+}
+
 export interface ChatBubble {
   role: 'professional' | 'assistant';
   text: string;
   warnings?: string[];
   summary?: string | null;
+  dietReport?: DietReportData | null;
   changed?: boolean;
   failed?: boolean;
 }

@@ -9,7 +9,7 @@ import { EmptyState } from '../components/EmptyState';
 import { DietProposalEditor } from '../dietAssistant/DietProposalEditor';
 import { draftProblems as dietProblems, draftToPayload as dietToPayload, draftToTemplateContent, emptyDietDraft, templateToDraft as dietFromContent, type DietDraft } from '../dietAssistant/draft';
 import { apiErrorMessage } from '../dietEditor/draftEdit';
-import { blockedBy, dietHasFoods, nutritionSummary, workoutHasExercises } from '../templates/chatHelpers';
+import { blockedBy, dietHasFoods, nutritionSummary, dietReportOf, workoutHasExercises } from '../templates/chatHelpers';
 import { TemplateAiChat } from '../templates/TemplateAiChat';
 import chatStyles from '../templates/TemplateAiChat.module.css';
 import type { ClientDetail, TemplateChatMessage } from '../types/api';
@@ -137,7 +137,7 @@ function DietForm({ client, initial, objective, consent }: { client: ClientDetai
       setBeforeAi(before);
       setDraft(dietFromContent(result.content, result.foods));
     }
-    return { reply: result.reply, changed: result.changed, warnings: result.warnings, summary: result.changed ? nutritionSummary(result.nutrition) : null };
+    return { reply: result.reply, changed: result.changed, warnings: result.warnings, summary: result.changed ? nutritionSummary(result.nutrition) : null, dietReport: dietReportOf(result) };
   }
 
   async function create(replaceDraft = false) {

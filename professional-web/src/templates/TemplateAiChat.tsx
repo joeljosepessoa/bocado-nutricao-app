@@ -5,7 +5,8 @@ import { Icon } from '../components/Icon';
 import { apiErrorMessage } from '../dietEditor/draftEdit';
 import type { TemplateChatMessage, TemplateKind } from '../types/api';
 import styles from './TemplateAiChat.module.css';
-import { readChat, writeChat, type ChatBubble } from './chatMemory';
+import { readChat, writeChat, type ChatBubble, type DietReportData } from './chatMemory';
+import { DietChatReport } from './DietChatReport';
 
 /** O que a tela do modelo devolve depois de aplicar a resposta da IA no editor. */
 export interface ChatTurnResult {
@@ -14,6 +15,8 @@ export interface ChatTurnResult {
   warnings: string[];
   /** Ex.: "1.780 kcal · P 120 g · C 180 g · G 60 g" (dieta). */
   summary?: string | null;
+  /** Metas e tabela por refeição conferidas pelo sistema (dieta). */
+  dietReport?: DietReportData | null;
 }
 
 type Bubble = ChatBubble;
@@ -88,7 +91,7 @@ export function TemplateAiChat({
     while (messages.length > 1 && messages[0].role !== 'professional') messages.shift();
     try {
       const result = await send(messages);
-      setBubbles((all) => [...all, { role: 'assistant', text: result.reply, warnings: result.warnings, summary: result.summary, changed: result.changed }]);
+      setBubbles((all) => [...all, { role: 'assistant', text: result.reply, warnings: result.warnings, summary: result.summary, dietReport: result.dietReport ?? null, changed: result.changed }]);
     } catch (err) {
       const message = apiErrorMessage(err, 'A IA não conseguiu responder agora. Tente de novo.');
       if (httpStatus(err) === 403 && /ativou/.test(message)) {
@@ -163,7 +166,7 @@ export function TemplateAiChat({
             <div key={i} className={[styles.bubble, bubble.role === 'professional' ? styles.mine : bubble.failed ? styles.failed : styles.theirs].join(' ')}>
               {bubble.text}
               {bubble.role === 'assistant' && bubble.changed ? <div className={styles.meta}>✓ Atualizado no editor</div> : null}
-              {bubble.summary ? <div className={styles.meta}>{bubble.summary}</div> : null}
+              {bubble.dietReport ? <DietChatReport report={bubble.dietReport} /> : bubble.summary ? <div className={styles.meta}>{bubble.summary}</div> : null}
               {(bubble.warnings ?? []).map((warning) => (
                 <div key={warning} className={styles.warning}>
                   ⚠ {warning}
