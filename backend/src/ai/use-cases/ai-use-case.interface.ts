@@ -51,4 +51,11 @@ export interface AiUseCase {
    * AiOutputValidationError quando ela é inutilizável — nada é devolvido.
    */
   processOutput?(result: AiGenerationResult, params: BuildContextParams): Promise<ProcessedAiOutput>;
+  /**
+   * Conferência depois do processOutput: devolve uma nova entrada para UMA rodada de correção (o AiService
+   * chama a IA de novo com ela) ou null quando o resultado já está bom.
+   */
+  revise?(processed: ProcessedAiOutput, params: BuildContextParams): { input: unknown } | null;
+  /** Junta a 1ª resposta e a corrigida (obrigatório quando há revise). */
+  combine?(first: ProcessedAiOutput, second: ProcessedAiOutput): ProcessedAiOutput;
 }

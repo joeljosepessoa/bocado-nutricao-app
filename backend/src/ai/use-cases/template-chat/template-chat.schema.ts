@@ -52,19 +52,40 @@ export interface ChatDietDay {
   }>;
 }
 
+export interface ChatDietTargets {
+  kcal: number | null;
+  proteinG: number | null;
+  carbG: number | null;
+  fatG: number | null;
+  calculation: string | null;
+}
+
 export interface ChatDietOutput {
   reply: string;
   changed: boolean;
+  /** Metas que a IA usou ao criar/refazer a dieta (null = só um ajuste, sem meta nova). */
+  targets: ChatDietTargets | null;
   days: ChatDietDay[];
   guidelines: string[];
   warnings: string[];
 }
+
+export const CHAT_TARGETS_CALCULATION_MAX = 1200;
 
 const DIET_ITEM_SCHEMA = strictObject({ ref: { type: 'string' }, quantity: nullable({ type: 'number' }), notes: nullable({ type: 'string' }) });
 
 export const CHAT_DIET_JSON_SCHEMA: Record<string, unknown> = strictObject({
   reply: { type: 'string' },
   changed: { type: 'boolean' },
+  metas: nullable(
+    strictObject({
+      kcal: nullable({ type: 'number' }),
+      proteinaG: nullable({ type: 'number' }),
+      carboidratoG: nullable({ type: 'number' }),
+      gorduraG: nullable({ type: 'number' }),
+      calculo: nullable({ type: 'string' }),
+    }),
+  ),
   days: list(
     strictObject({
       label: nullable({ type: 'string' }),
@@ -111,9 +132,28 @@ function invalid(error: unknown): never {
   throw error;
 }
 
+function target(value: unknown, path: string, max: number): number | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > max) fail(path, `deve ser número entre 0 e ${max} ou null`);
+  return value > 0 ? Math.round(value) : null;
+}
+
+function targets(value: unknown): ChatDietTargets | null {
+  if (value === undefined || value === null) return null;
+  const t = asObject(value, 'metas', ['kcal', 'proteinaG', 'carboidratoG', 'gorduraG', 'calculo']);
+  const parsed = {
+    kcal: target(t.kcal, 'metas.kcal', 10000),
+    proteinG: target(t.proteinaG, 'metas.proteinaG', 1000),
+    carbG: target(t.carboidratoG, 'metas.carboidratoG', 2000),
+    fatG: target(t.gorduraG, 'metas.gorduraG', 1000),
+    calculation: optionalString(t.calculo, 'metas.calculo', CHAT_TARGETS_CALCULATION_MAX),
+  };
+  return Object.values(parsed).some((v) => v !== null) ? parsed : null;
+}
+
 export function parseChatDiet(text: string): ChatDietOutput {
   try {
-    const { root, reply, changed } = base(text, ['reply', 'changed', 'days', 'guidelines', 'warnings']);
+    const { root, reply, changed } = base(text, ['reply', 'changed', 'metas', 'days', 'guidelines', 'warnings']);
     const days = asArray(root.days ?? [], 'days', D.maxDays).map((dayValue, d) => {
       const day = asObject(dayValue, `days[${d}]`, ['label', 'kind', 'usageNotes', 'meals']);
       return {
@@ -158,6 +198,7 @@ export function parseChatDiet(text: string): ChatDietOutput {
     return {
       reply,
       changed,
+      targets: targets(root.metas),
       days,
       guidelines: stringList(root.guidelines, 'guidelines', D.maxGuidelines, D.maxGuidelineLength),
       warnings: stringList(root.warnings, 'warnings', D.maxWarnings, D.maxWarningLength),

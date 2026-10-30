@@ -24,7 +24,8 @@ export const PATIENT_DIET_PROMPT = forPatient(
     'P2. Use objetivo, preferências, rotina (refeições por dia, horários) e atividade física para escolher refeições, horários e quantidades.',
     'P3. Doenças, medicamentos, suplementos e hormônios: ajuste com prudência (ex.: menos açúcar no diabetes, menos sódio na hipertensão)',
     '    e diga em "warnings" o que o nutricionista deve conferir. Não diagnostique e não fale de remédio.',
-    'P4. Sem meta de calorias no pedido, estime pelos dados do paciente e diga no "reply" a meta usada e por quê, em uma frase.',
+    'P4. Para as metas (C1), use peso, altura, % de gordura e massa magra da última avaliação, idade, sexo, objetivo e atividade física',
+    '    da anamnese — a não ser que o pedido traga outros números (aí valem os do pedido).',
     'P5. Não repita dados do paciente no "reply" além do necessário para explicar a escolha.',
   ],
 );
@@ -49,7 +50,7 @@ export const PATIENT_WORKOUT_PROMPT = forPatient(
 @Injectable()
 export class PatientDietChatUseCase extends TemplateDietChatUseCase {
   override readonly feature: AiFeatureKey = AiFeatureKey.patient_diet_chat;
-  override readonly promptVersion: string = 'patient_diet_chat@v1';
+  override readonly promptVersion: string = 'patient_diet_chat@v2';
 
   constructor(
     foodsService: FoodsService,

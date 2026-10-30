@@ -256,11 +256,38 @@ export class AiService {
         status = AiInteractionStatus.invalid_output;
         errorMessage = 'O provedor devolveu uma resposta vazia ou inválida.';
       } else if (useCase.processOutput) {
-        const processed = await this.runProcessOutput(useCase, result, {
-          professionalId: params.professionalId,
-          clientId: params.clientId,
-          input: params.input,
-        });
+        const baseParams = { professionalId: params.professionalId, clientId: params.clientId, input: params.input };
+        let processed = await this.runProcessOutput(useCase, result, baseParams);
+
+        // Conferência do sistema (ex.: dieta longe da meta): UMA rodada de correção. Se ela falhar,
+        // fica a 1ª resposta — a correção nunca derruba um resultado que já estava pronto.
+        const revision = useCase.revise?.(processed, baseParams);
+        if (revision && useCase.combine) {
+          try {
+            const revisionParams = { ...baseParams, input: revision.input };
+            const rebuilt = await useCase.buildContext(revisionParams);
+            const second = await callProviderWithResilience(
+              provider,
+              {
+                promptVersion: useCase.promptVersion,
+                systemPrompt: rebuilt.systemPrompt,
+                context: rebuilt.context,
+                maxOutputChars: useCase.maxOutputChars ?? MAX_OUTPUT_CHARS,
+                responseSchema: useCase.responseSchema,
+              },
+              { timeoutMs: useCase.timeoutMs ?? this.defaultTimeoutMs, maxRetries: 0 },
+              credentials,
+            );
+            if (second.tokensUsed && tokensUsed) {
+              tokensUsed = { input: (tokensUsed.input ?? 0) + (second.tokensUsed.input ?? 0), output: (tokensUsed.output ?? 0) + (second.tokensUsed.output ?? 0) };
+            }
+            if (isValidResult(second.text)) {
+              processed = useCase.combine(processed, await this.runProcessOutput(useCase, second, revisionParams));
+            }
+          } catch (error) {
+            this.logger.warn(`ai_revision feature=${params.feature} falhou; mantida a 1ª resposta (${safeErrorMessage(error)})`);
+          }
+        }
         responseText = processed.text;
         structuredData = processed.structuredData;
         model = result.model;
