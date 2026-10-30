@@ -122,6 +122,9 @@ model Professional {
   // Pode editar os exercícios OFICIAIS da biblioteca (nome, grupos, equipamento). Ligado só para quem
   // cuida do catálogo; os demais profissionais continuam editando só os próprios exercícios.
   canEditCatalog       Boolean   @default(false) @map("can_edit_catalog")
+  // Link de cadastro: o paciente se cadastra sozinho em /cadastro/<código>. null = link desligado;
+  // gerar um novo troca o código (o link antigo para de funcionar na hora).
+  signupCode           String?   @unique @map("signup_code")
 
   user                    User                     @relation(fields: [id], references: [id])
   clients                 Client[]
@@ -201,6 +204,8 @@ model Client {
   // progresso que ele envia pelo app (null = não compartilha; LGPD: pode
   // desligar quando quiser).
   progressPhotosSharedAt    DateTime?    @map("progress_photos_shared_at")
+  // Quando o próprio paciente se cadastrou pelo link do profissional (null = cadastrado no painel).
+  selfRegisteredAt          DateTime?    @map("self_registered_at")
   createdAt                 DateTime     @default(now()) @map("created_at")
   updatedAt                 DateTime     @default(now()) @updatedAt @map("updated_at")
 

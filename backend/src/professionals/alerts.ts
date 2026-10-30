@@ -4,6 +4,8 @@
  */
 export const ALERTS_TIME_ZONE = 'America/Sao_Paulo';
 export const BIRTHDAY_WINDOW_DAYS = 7;
+/** Por quantos dias quem se cadastrou pelo link aparece nos avisos. */
+export const NEW_SIGNUP_WINDOW_DAYS = 7;
 export const INACTIVE_DAYS_OPTIONS = [3, 7, 14, 30] as const;
 export const PLAN_DAYS_OPTIONS = [30, 45, 60, 90] as const;
 

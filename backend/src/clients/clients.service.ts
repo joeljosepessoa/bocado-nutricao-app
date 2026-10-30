@@ -8,6 +8,7 @@ const CLIENT_LIST_SELECT = {
   id: true,
   status: true,
   createdAt: true,
+  selfRegisteredAt: true,
   user: { select: { email: true, fullName: true } },
 };
 
@@ -22,6 +23,7 @@ const CLIENT_DETAIL_SELECT = {
   archivedAt: true,
   targetWeightKg: true,
   waterGoalMl: true,
+  selfRegisteredAt: true,
   createdAt: true,
   updatedAt: true,
   user: { select: { email: true, fullName: true } },

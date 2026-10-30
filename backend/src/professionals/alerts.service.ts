@@ -7,6 +7,7 @@ import {
   daysSince,
   INACTIVE_DAYS_OPTIONS,
   latest,
+  NEW_SIGNUP_WINDOW_DAYS,
   nextBirthday,
   pickOption,
   PLAN_DAYS_OPTIONS,
@@ -22,7 +23,8 @@ export type ActivityKind = 'workout' | 'weight' | 'water' | 'photo' | 'scale' | 
  * - nunca registraram nada (cadastrados há mais de X dias);
  * - aniversário nos próximos 7 dias;
  * - mensagem do paciente ainda não lida;
- * - dieta/treino publicados há mais de N dias.
+ * - dieta/treino publicados há mais de N dias;
+ * - quem se cadastrou sozinho pelo link nos últimos 7 dias.
  */
 @Injectable()
 export class AlertsService {
@@ -34,9 +36,9 @@ export class AlertsService {
 
     const clients = await this.prisma.client.findMany({
       where: { professionalId, status: ClientStatus.active },
-      select: { id: true, birthDate: true, createdAt: true, user: { select: { fullName: true } } },
+      select: { id: true, birthDate: true, createdAt: true, selfRegisteredAt: true, user: { select: { fullName: true } } },
     });
-    const empty = { generatedAt: now.toISOString(), settings: { inactiveDays, planDays }, inactive: [], neverRecorded: [], birthdays: [], unreadMessages: [], stalePlans: [] };
+    const empty = { generatedAt: now.toISOString(), settings: { inactiveDays, planDays }, inactive: [], neverRecorded: [], birthdays: [], unreadMessages: [], stalePlans: [], newSignups: [] };
     if (clients.length === 0) return empty;
     const ids = clients.map((c) => c.id);
     const inIds = { clientId: { in: ids } };
@@ -88,6 +90,7 @@ export class AlertsService {
     const inactive: Array<{ clientId: string; name: string; lastRecordAt: string; lastRecordKind: ActivityKind; days: number; lastSeenAt: string | null }> = [];
     const neverRecorded: Array<{ clientId: string; name: string; since: string; days: number; everOpenedApp: boolean }> = [];
     const birthdays: Array<{ clientId: string; name: string; date: string; inDays: number; age: number }> = [];
+    const newSignups: Array<{ clientId: string; name: string; at: string; days: number }> = [];
 
     for (const client of clients) {
       const name = client.user.fullName;
@@ -109,6 +112,9 @@ export class AlertsService {
       } else {
         const days = daysSince(client.createdAt, now);
         if (days >= inactiveDays) neverRecorded.push({ clientId: client.id, name, since: client.createdAt.toISOString(), days, everOpenedApp: seen !== null });
+      }
+      if (client.selfRegisteredAt && daysSince(client.selfRegisteredAt, now) < NEW_SIGNUP_WINDOW_DAYS) {
+        newSignups.push({ clientId: client.id, name, at: client.selfRegisteredAt.toISOString(), days: daysSince(client.selfRegisteredAt, now) });
       }
       if (client.birthDate) {
         const next = nextBirthday(client.birthDate, today);
@@ -146,6 +152,7 @@ export class AlertsService {
       birthdays: birthdays.sort((a, b) => a.inDays - b.inDays || a.name.localeCompare(b.name, 'pt-BR')),
       unreadMessages,
       stalePlans: stalePlans.sort((a, b) => b.days - a.days || a.name.localeCompare(b.name, 'pt-BR')),
+      newSignups: newSignups.sort((a, b) => b.at.localeCompare(a.at)),
     };
   }
 }

@@ -24,6 +24,7 @@ import { ClientAppModule } from './client-app/client-app.module';
 import { ClientTrackingModule } from './client-tracking/client-tracking.module';
 import { AnamnesisModule } from './anamnesis/anamnesis.module';
 import { CustomFormsModule } from './custom-forms/custom-forms.module';
+import { SignupLinkModule } from './signup-link/signup-link.module';
 import { ReportsModule } from './reports/reports.module';
 import { ScaleReadingsModule } from './scale-readings/scale-readings.module';
 import { DevicesModule } from './devices/devices.module';
@@ -61,6 +62,7 @@ import { LegalConsentGuard } from './legal/legal-consent.guard';
     ClientTrackingModule,
     AnamnesisModule,
     CustomFormsModule,
+    SignupLinkModule,
     ReportsModule,
     ScaleReadingsModule,
     DevicesModule,
