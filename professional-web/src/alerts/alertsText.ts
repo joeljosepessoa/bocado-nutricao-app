@@ -42,11 +42,15 @@ export function stalePlanText(item: ProfessionalAlerts['stalePlans'][number]): s
   return `${item.kind === 'diet' ? 'Dieta' : 'Treino'} publicado há ${dias(item.days)}`.replace('Dieta publicado', 'Dieta publicada');
 }
 
+export function newSignupText(item: NonNullable<ProfessionalAlerts['newSignups']>[number]): string {
+  return item.days === 0 ? 'Cadastrou-se pelo link hoje' : item.days === 1 ? 'Cadastrou-se pelo link ontem' : `Cadastrou-se pelo link há ${dias(item.days)}`;
+}
+
 function agoText(iso: string, now: Date): string {
   const days = Math.floor((now.getTime() - new Date(iso).getTime()) / 86_400_000);
   return days <= 0 ? 'hoje' : days === 1 ? 'ontem' : `há ${dias(days)}`;
 }
 
 export function alertsTotal(data: ProfessionalAlerts): number {
-  return data.inactive.length + data.neverRecorded.length + data.birthdays.length + data.unreadMessages.length + data.stalePlans.length;
+  return data.inactive.length + data.neverRecorded.length + data.birthdays.length + data.unreadMessages.length + data.stalePlans.length + (data.newSignups?.length ?? 0);
 }

@@ -27,6 +27,8 @@ export interface ClientListItem {
   id: string;
   status: ClientStatus;
   createdAt: string;
+  /** Quando o próprio paciente se cadastrou pelo link (null = cadastrado no painel). */
+  selfRegisteredAt?: string | null;
   user: { email: string; fullName: string };
 }
 
@@ -455,6 +457,43 @@ export interface ProfessionalAlerts {
   birthdays: Array<{ clientId: string; name: string; date: string; inDays: number; age: number }>;
   unreadMessages: Array<{ clientId: string; name: string; count: number; oldestAt: string; hours: number }>;
   stalePlans: Array<{ clientId: string; name: string; kind: 'diet' | 'workout'; publishedAt: string; days: number }>;
+  /** Quem se cadastrou sozinho pelo link nos últimos 7 dias (servidor antigo não manda). */
+  newSignups?: Array<{ clientId: string; name: string; at: string; days: number }>;
+}
+
+// --- Link de cadastro do paciente ----------------------------------------
+
+export interface PublicSignupInput {
+  fullName: string;
+  email: string;
+  password: string;
+  birthDate?: string;
+  phone?: string;
+  gender?: 'masculino' | 'feminino' | 'outro';
+  acceptTerms: true;
+  acceptPrivacy: true;
+  termsVersion: string;
+  privacyVersion: string;
+}
+
+export interface LegalDocumentSection {
+  title: string;
+  paragraphs: string[];
+}
+
+export interface LegalDocument {
+  kind: 'terms' | 'privacy';
+  version: string;
+  title: string;
+  updatedAt: string;
+  intro: string;
+  sections: LegalDocumentSection[];
+}
+
+export interface LegalDocuments {
+  termsVersion: string;
+  privacyVersion: string;
+  documents: LegalDocument[];
 }
 
 // --- Tela Alimentos -------------------------------------------------------

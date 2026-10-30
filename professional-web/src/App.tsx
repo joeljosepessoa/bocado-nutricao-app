@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
+import { PublicSignupPage } from './signupLink/PublicSignupPage';
 import { ProtectedRoute } from './router/ProtectedRoute';
 import { AppShell } from './layout/AppShell';
 import { LoginPage } from './pages/LoginPage';
@@ -56,6 +57,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/cadastro/:code" element={<PublicSignupPage />} />
             <Route
               element={
                 <ProtectedRoute requireRole="professional">

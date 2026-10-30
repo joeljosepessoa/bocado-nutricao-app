@@ -122,6 +122,9 @@
 .blue {
   background: #2563eb;
 }
+.green {
+  background: var(--color-success);
+}
 
 .list {
   list-style: none;

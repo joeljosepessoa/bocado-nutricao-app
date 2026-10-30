@@ -8,6 +8,7 @@ import { CreateClientModal } from '../components/CreateClientModal';
 import { DataTable } from '../components/DataTable';
 import { Icon } from '../components/Icon';
 import { StatusBadge } from '../components/StatusBadge';
+import { SignupLinkModal } from '../signupLink/SignupLinkModal';
 import { formatDate } from '../lib/format';
 import styles from './ClientsListPage.module.css';
 
@@ -25,6 +26,7 @@ export function ClientsListPage() {
   const search = searchParams.get('q') ?? '';
   const [status, setStatus] = useState<ClientStatus | 'all'>('all');
   const [showCreate, setShowCreate] = useState(false);
+  const [showLink, setShowLink] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['clients', search, status],
@@ -38,9 +40,14 @@ export function ClientsListPage() {
           <h1 className={styles.title}>Pacientes</h1>
           <p className={styles.subtitle}>{data ? `${data.total} paciente(s) encontrados` : 'Carregando…'}</p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
-          <Icon name="userPlus" size={17} /> Novo paciente
-        </Button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button variant="secondary" onClick={() => setShowLink(true)}>
+            <Icon name="link" size={17} /> Link de cadastro
+          </Button>
+          <Button onClick={() => setShowCreate(true)}>
+            <Icon name="userPlus" size={17} /> Novo paciente
+          </Button>
+        </div>
       </div>
 
       <div className={styles.filters}>
@@ -68,7 +75,23 @@ export function ClientsListPage() {
         onRowClick={(row) => navigate(`/clients/${row.id}`)}
         emptyTitle="Nenhum paciente encontrado"
         columns={[
-          { key: 'name', label: 'Nome', render: (row) => row.user.fullName },
+          {
+            key: 'name',
+            label: 'Nome',
+            render: (row) => (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                {row.user.fullName}
+                {row.selfRegisteredAt ? (
+                  <span
+                    title={`Cadastrou-se pelo link em ${formatDate(row.selfRegisteredAt)}`}
+                    style={{ fontSize: 11.5, fontWeight: 600, padding: '2px 8px', borderRadius: 999, color: 'var(--color-success)', background: 'var(--color-success-light)' }}
+                  >
+                    Pelo link
+                  </span>
+                ) : null}
+              </span>
+            ),
+          },
           { key: 'email', label: 'E-mail', render: (row) => row.user.email },
           { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
           { key: 'createdAt', label: 'Cadastrado em', render: (row) => formatDate(row.createdAt) },
@@ -76,6 +99,7 @@ export function ClientsListPage() {
       />
 
       {showCreate ? <CreateClientModal onClose={() => setShowCreate(false)} /> : null}
+      {showLink ? <SignupLinkModal onClose={() => setShowLink(false)} /> : null}
     </>
   );
 }

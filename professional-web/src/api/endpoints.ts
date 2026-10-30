@@ -1,5 +1,7 @@
 import { apiClient } from './client';
 import type {
+  LegalDocuments,
+  PublicSignupInput,
   ExerciseLibraryPage,
   ExercisePreset,
   WithoutGifItem,
@@ -1172,5 +1174,39 @@ export async function getClientProgressPhotos(clientId: string): Promise<Trackin
 
 export async function getClientProgressPhotoUrl(clientId: string, photoId: string): Promise<SignedUrl> {
   const res = await apiClient.get<SignedUrl>(`/clients/${clientId}/tracking/progress-photos/${photoId}/download-url`);
+  return res.data;
+}
+
+// --- Link de cadastro do paciente ----------------------------------------
+
+export async function getSignupLink(): Promise<{ code: string | null }> {
+  const res = await apiClient.get<{ code: string | null }>('/professionals/me/signup-link');
+  return res.data;
+}
+
+/** Liga o link ou gera um código novo (o anterior para de funcionar). */
+export async function renewSignupLink(): Promise<{ code: string }> {
+  const res = await apiClient.post<{ code: string }>('/professionals/me/signup-link');
+  return res.data;
+}
+
+export async function disableSignupLink(): Promise<{ code: null }> {
+  const res = await apiClient.delete<{ code: null }>('/professionals/me/signup-link');
+  return res.data;
+}
+
+/** Página pública: nome do profissional dono do link (404 se o link não vale mais). */
+export async function getPublicSignup(code: string): Promise<{ professionalName: string }> {
+  const res = await apiClient.get<{ professionalName: string }>(`/public/signup/${encodeURIComponent(code)}`);
+  return res.data;
+}
+
+export async function publicSignup(code: string, input: PublicSignupInput): Promise<{ email: string; professionalName: string }> {
+  const res = await apiClient.post<{ email: string; professionalName: string }>(`/public/signup/${encodeURIComponent(code)}`, input);
+  return res.data;
+}
+
+export async function getLegalDocuments(): Promise<LegalDocuments> {
+  const res = await apiClient.get<LegalDocuments>('/legal/documents');
   return res.data;
 }

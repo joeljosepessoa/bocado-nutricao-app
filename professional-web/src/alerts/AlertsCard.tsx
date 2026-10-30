@@ -9,6 +9,7 @@ import {
   INACTIVE_DAYS_OPTIONS,
   inactiveText,
   neverRecordedText,
+  newSignupText,
   PLAN_DAYS_OPTIONS,
   stalePlanText,
   unreadText,
@@ -36,7 +37,7 @@ interface Row {
   detail: string;
 }
 
-function Section({ title, tone, rows, empty }: { title: string; tone: 'red' | 'pink' | 'amber' | 'gray' | 'blue'; rows: Row[]; empty?: ReactNode }) {
+function Section({ title, tone, rows, empty }: { title: string; tone: 'red' | 'pink' | 'amber' | 'gray' | 'blue' | 'green'; rows: Row[]; empty?: ReactNode }) {
   const [all, setAll] = useState(false);
   if (rows.length === 0 && !empty) return null;
   const shown = all ? rows : rows.slice(0, SHOWN);
@@ -136,6 +137,11 @@ export function AlertsCard() {
             title="Mensagens sem ler"
             tone="red"
             rows={data.unreadMessages.map((m) => ({ key: m.clientId, to: `/clients/${m.clientId}/messages`, name: m.name, detail: unreadText(m) }))}
+          />
+          <Section
+            title="Novos pelo link de cadastro"
+            tone="green"
+            rows={(data.newSignups ?? []).map((c) => ({ key: c.clientId, to: `/clients/${c.clientId}`, name: c.name, detail: newSignupText(c) }))}
           />
           <Section
             title="Aniversários na semana"
