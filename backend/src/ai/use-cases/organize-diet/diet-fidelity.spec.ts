@@ -592,6 +592,27 @@ describe('"escolha 1 opção:" com as opções uma por linha, sem "Opção N" es
     }
   });
 
+  it('IA que encurta o nome ("Arroz" em "Arroz cozido — 130 g"): aceito, com o nome escrito por inteiro', () => {
+    const organized = faithfulChooseOneLinesDiet();
+    for (const group of lunch(organized).groups) for (const choice of group.choices) for (const item of choice.items) if (item.sourceText.includes(' — ')) item.food = item.food.split(/[ (]/)[0];
+    const checked = checkDietFidelity(CHOOSE_ONE_LINES_DIET_UNNUMBERED, organized);
+    expect(checked.warnings).toEqual([]);
+    expect(checked.days[0].meals[1].groups.slice(0, 3).map((g) => g.choices.map((c) => c.items[0].rawFood))).toEqual([
+      ['Peito de frango', 'Peixe', 'Carne magra'],
+      ['Arroz cozido', 'Batata-doce cozida', 'Aipim cozido', 'Batata inglesa cozida'],
+      ['Feijão', 'Lentilha cozida'],
+    ]);
+  });
+
+  it('"Nome — quantidade" não vale com dois alimentos no nome, número no nome ou outro alimento depois', () => {
+    const core = (sourceText: string, food: string, quantity: number) => itemCore({ sourceText, food, quantity, unit: 'g', quantityMax: null, freeQuantity: false });
+    expect(core('Arroz cozido — 130 g', 'Arroz', 130)).toBe('arroz cozido 130 g');
+    expect(core('Arroz e feijão — 130 g', 'Arroz', 130)).toBeNull();
+    expect(core('Arroz (100 g) cozido — 130 g', 'Arroz', 130)).toBeNull();
+    expect(core('Arroz cozido — 130 g + feijão', 'Arroz', 130)).toBeNull();
+    expect(core('Macarrão cozido — 120 g (com molho de tomate caseiro 60 g)', 'Macarrão', 60)).toBeNull();
+  });
+
   it('quantidade trocada depois do parêntese é recusada (carne magra 75 g → 65 g)', () => {
     const organized = faithfulChooseOneLinesDiet();
     lunch(organized).groups[0].choices[2].items[0].quantity = 65;

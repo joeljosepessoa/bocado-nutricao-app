@@ -340,12 +340,50 @@ interface LocatedCore {
   core: string;
   /** A quantidade está no meio do nome do alimento ("omelete de 1 ovo"). */
   insideName: boolean;
+  /** Nome escrito por inteiro quando a IA o encurtou ("Arroz cozido — 130 g" com o alimento "Arroz"). */
+  writtenName?: string;
+}
+
+const NAME_SEPARATOR = /^(.*?)\s*(?:—|–|\s-\s|:)\s*(.*)$/;
+
+/**
+ * Formato "Nome do alimento — quantidade" ("Arroz cozido — 130 g", "Aipim
+ * (mandioca) cozido — 130 g"): tudo antes do travessão é o nome de UM alimento,
+ * desde que ali não haja número, "+", ",", "/", "e", "ou" nem "com" fora de
+ * parênteses (nem número dentro deles). Depois do travessão só a quantidade e a
+ * unidade — ou um parêntese que começa outro trecho ("120 g (com molho …)").
+ */
+function locateNameDashQuantity(item: Pick<AiDietItem, 'sourceText' | 'food' | 'quantity' | 'quantityMax' | 'unit'>): LocatedCore | null {
+  if (item.quantity === null) return null;
+  const match = NAME_SEPARATOR.exec(item.sourceText.trim());
+  if (!match || !match[1] || !match[2]) return null;
+  const [, name, rest] = match;
+  const chunks = lineChunks(name);
+  const outside = chunks.filter((chunk) => !chunk.parenthetical);
+  if (outside.length === 0 || chunks.some((chunk) => /\d/.test(chunk.text))) return null;
+  if (outside.some((chunk) => /[+,/]/.test(chunk.text) || /(?:^| )(?:e|ou|com)(?: |$)/.test(chunk.norm))) return null;
+  const nameNorm = normalizeDietText(name);
+  if (!stemsPresent(item.food, nameNorm)) return null;
+
+  const extraUnits = new Set(item.unit ? normalizeDietText(item.unit).split(' ') : []);
+  const { tokens, inParen } = itemTokens(rest);
+  if (inParen[0]) return null;
+  const qEnd = quantityEnd(tokens, 0, item.quantity, item.quantityMax);
+  if (qEnd < 0 || (item.quantityMax === null && isRangeMaximum(tokens, 0))) return null;
+  const after = skipUnits(tokens, qEnd, extraUnits);
+  if (after < tokens.length && !inParen.slice(after).every(Boolean)) return null;
+
+  const plainName = outside.map((chunk) => chunk.text.trim()).filter(Boolean).join(' ');
+  const shortened = stemsOf(plainName).some((s) => !stemsOf(item.food).includes(s));
+  return { core: [nameNorm, ...tokens.slice(0, after)].join(' '), insideName: false, writtenName: shortened ? plainName : undefined };
 }
 
 function locateItemCore(item: Pick<AiDietItem, 'sourceText' | 'food' | 'quantity' | 'quantityMax' | 'unit' | 'freeQuantity'>): LocatedCore | null {
   const { tokens, inParen } = itemTokens(item.sourceText);
   const spans = foodSpans(tokens, item.food);
   if (spans.length === 0) return null;
+  const dashed = locateNameDashQuantity(item);
+  if (dashed) return dashed;
   if (item.quantity === null) {
     const { start, end } = spans[0];
     let last = end;
@@ -680,6 +718,7 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
     }
 
     let core: string | null = null;
+    let writtenName: string | null = null;
     if (item.quantityMax !== null && item.quantity === null) {
       problems.push(`${at}: faixa de quantidade sem o valor mínimo em ${itemLabel(item)}.`);
     } else if (item.quantity !== null && (item.freeQuantity || !quantityWritten(item.quantity, normalizedSource))) {
@@ -689,6 +728,7 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
     } else {
       const located = locateItemCore(item);
       core = located?.core ?? null;
+      writtenName = located?.writtenName ?? null;
       if (located?.insideName) warnings.push(DIET_WARNINGS.quantityInsideName);
       if (core === null && item.quantity !== null) {
         problems.push(`${at}: a quantidade ${item.quantity} não está junto de "${item.food}" em ${itemLabel(item)}.`);
@@ -727,7 +767,7 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
     return {
       checked: {
         sourceText: item.sourceText,
-        rawFood: item.food,
+        rawFood: writtenName ?? item.food,
         quantity: item.freeQuantity ? null : item.quantity,
         quantityMax: item.freeQuantity ? null : item.quantityMax,
         freeQuantity: item.freeQuantity,
