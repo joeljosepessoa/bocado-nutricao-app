@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import * as api from '../../api/endpoints';
-import type { Measurements, Skinfolds } from '../../types/api';
+import type { BioimpedanceNumberKey, Measurements, Skinfolds } from '../../types/api';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
@@ -10,6 +10,8 @@ import { AiAssistPanel } from '../../components/AiAssistPanel';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { formatDate, formatNumber } from '../../lib/format';
 import { EvaluationPhotosCard } from './EvaluationPhotosCard';
+import { ScaleModal } from '../../scale/ScaleModal';
+import { bluetoothAvailable } from '../../scale/scaleSession';
 
 const MEASUREMENT_LABELS: Record<keyof Measurements, string> = {
   chestCm: 'Tórax', waistCm: 'Cintura', abdomenCm: 'Abdômen', hipCm: 'Quadril',
@@ -28,6 +30,21 @@ const SKINFOLD_LABELS: Record<keyof Skinfolds, string> = {
 
 const SEX_LABELS = { male: 'Masculino', female: 'Feminino' } as const;
 
+/** Só o que o aparelho mediu aparece (a balança conectada não manda osso, visceral nem idade corporal). */
+const BIOIMPEDANCE_TILES: Array<[BioimpedanceNumberKey, string, string?]> = [
+  ['weightKg', 'Peso', ' kg'],
+  ['bodyFatPercent', 'Gordura corporal', '%'],
+  ['fatMassKg', 'Massa gorda', ' kg'],
+  ['leanMassKg', 'Massa magra', ' kg'],
+  ['skeletalMuscleMassKg', 'Músculo esquelético', ' kg'],
+  ['muscleMassKg', 'Massa muscular', ' kg'],
+  ['bodyWaterPercent', 'Água corporal', '%'],
+  ['visceralFatLevel', 'Gordura visceral'],
+  ['boneMassKg', 'Massa óssea', ' kg'],
+  ['basalMetabolicRateKcal', 'Metabolismo basal', ' kcal'],
+  ['bodyAgeYears', 'Idade corporal', ' anos'],
+];
+
 const BODY_FAT_SOURCE_LABELS = { skinfolds: 'dobras cutâneas', bioimpedance: 'bioimpedância', manual: 'informado manualmente' } as const;
 
 export function EvaluationDetailPage() {
@@ -39,6 +56,8 @@ export function EvaluationDetailPage() {
   const [reportMessage, setReportMessage] = useState<string | null>(null);
   const [releaseMessage, setReleaseMessage] = useState<string | null>(null);
   const [showReleaseConfirm, setShowReleaseConfirm] = useState(false);
+  const [scaleOpen, setScaleOpen] = useState(false);
+  const [scaleMessage, setScaleMessage] = useState<string | null>(null);
 
   const { data: evaluation, isLoading } = useQuery({
     queryKey: ['evaluation', clientId, evaluationId],
@@ -77,6 +96,11 @@ export function EvaluationDetailPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ fontSize: 17, margin: 0 }}>Avaliação de {formatDate(evaluation.evaluatedAt)}</h2>
         <div style={{ display: 'flex', gap: 8 }}>
+          {bluetoothAvailable() ? (
+            <Button variant="secondary" onClick={() => setScaleOpen(true)}>
+              Conectar balança
+            </Button>
+          ) : null}
           <Button variant="ghost" onClick={() => navigate(`/clients/${clientId}/evaluations/${evaluationId}/edit`)}>
             Editar
           </Button>
@@ -91,6 +115,26 @@ export function EvaluationDetailPage() {
       </div>
 
       {releaseMessage ? <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{releaseMessage}</div> : null}
+      {scaleMessage ? (
+        <div role="status" style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+          {scaleMessage}
+        </div>
+      ) : null}
+
+      {scaleOpen ? (
+        <ScaleModal
+          heightCm={evaluation.heightCm}
+          age={evaluation.ageAtEvaluation}
+          sex={evaluation.biologicalSexForCalculation}
+          onSubmit={async (input) => {
+            await api.submitScaleReading(clientId!, evaluationId!, input);
+            setScaleMessage(input.status === 'confirmed' ? 'Leitura da balança salva na avaliação.' : 'Leitura da balança descartada.');
+            await queryClient.invalidateQueries({ queryKey: ['evaluation', clientId, evaluationId] });
+            queryClient.invalidateQueries({ queryKey: ['evaluations', clientId] });
+          }}
+          onClose={() => setScaleOpen(false)}
+        />
+      ) : null}
 
       {showReleaseConfirm ? (
         <ConfirmDialog
@@ -154,14 +198,9 @@ export function EvaluationDetailPage() {
           title={`Bioimpedância (${evaluation.bioimpedance.origin === 'device_confirmed' ? 'balança conectada' : (evaluation.bioimpedance.equipment ?? 'manual')})`}
         >
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
-            <Tile label="Gordura corporal" value={formatNumber(evaluation.bioimpedance.bodyFatPercent, '%')} />
-            <Tile label="Músculo esquelético" value={formatNumber(evaluation.bioimpedance.skeletalMuscleMassKg, ' kg')} />
-            <Tile label="Massa muscular" value={formatNumber(evaluation.bioimpedance.muscleMassKg, ' kg')} />
-            <Tile label="Água corporal" value={formatNumber(evaluation.bioimpedance.bodyWaterPercent, '%')} />
-            <Tile label="Gordura visceral" value={formatNumber(evaluation.bioimpedance.visceralFatLevel)} />
-            <Tile label="Massa óssea" value={formatNumber(evaluation.bioimpedance.boneMassKg, ' kg')} />
-            <Tile label="Metabolismo basal" value={formatNumber(evaluation.bioimpedance.basalMetabolicRateKcal, ' kcal')} />
-            <Tile label="Idade corporal" value={formatNumber(evaluation.bioimpedance.bodyAgeYears, ' anos')} />
+            {BIOIMPEDANCE_TILES.filter(([key]) => evaluation.bioimpedance![key] != null).map(([key, label, unit]) => (
+              <Tile key={key} label={label} value={formatNumber(evaluation.bioimpedance![key], unit)} />
+            ))}
           </div>
         </Card>
       ) : null}

@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import type {
+  ScaleReadingInput,
   LegalDocuments,
   PublicSignupInput,
   ExerciseLibraryPage,
@@ -337,6 +338,11 @@ export async function getEvaluationPhotoUrl(clientId: string, evaluationId: stri
 
 export async function deleteEvaluationPhoto(clientId: string, evaluationId: string, photoId: string): Promise<void> {
   await apiClient.delete(`/clients/${clientId}/evaluations/${evaluationId}/photos/${photoId}`);
+}
+
+/** Leitura da balança conectada, confirmada ou descartada pelo profissional (grava a bioimpedância da avaliação). */
+export async function submitScaleReading(clientId: string, evaluationId: string, input: ScaleReadingInput): Promise<void> {
+  await apiClient.post(`/clients/${clientId}/evaluations/${evaluationId}/scale-readings`, input);
 }
 
 // --- Alimentos ----------------------------------------------------------

@@ -120,6 +120,17 @@ export interface Bioimpedance {
   boneMassKg: number | null;
 }
 
+export interface ScaleReadingInput {
+  status: 'confirmed' | 'discarded';
+  driverId: string;
+  deviceIdentifier: string;
+  protocolVersion: string;
+  recordedAt: string;
+  idempotencyKey: string;
+  rawPayload: Record<string, unknown>;
+  normalized?: Partial<Record<BioimpedanceNumberKey, number>> & { impedanceData?: Record<string, unknown> };
+}
+
 /** Os valores numéricos da bioimpedância (tudo menos origem, aparelho e data da leitura). */
 export type BioimpedanceNumberKey = Exclude<keyof Bioimpedance, 'origin' | 'equipment' | 'recordedAt'>;
 
