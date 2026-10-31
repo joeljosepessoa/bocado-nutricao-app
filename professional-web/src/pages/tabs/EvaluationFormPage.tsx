@@ -2,13 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import * as api from '../../api/endpoints';
-import type { BioimpedanceNumberKey, BmrReference, BodyFatMethod, ClientDetail, Measurements, Skinfolds } from '../../types/api';
+import type { BioimpedanceNumberKey, BmrReference, BodyFatMethod, ClientDetail, Measurements, ScaleReadingInput, Skinfolds } from '../../types/api';
 import { requiredSites, SKINFOLD_PROTOCOL_OPTIONS, skinfoldWarningText } from '../../utils/skinfoldProtocols';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { TextField } from '../../components/TextField';
 import { AiAssistPanel } from '../../components/AiAssistPanel';
 import { EvaluationPhotosCard, PendingPhotosCard, type PendingPhotos } from './EvaluationPhotosCard';
+import { ScaleModal } from '../../scale/ScaleModal';
+import { bluetoothAvailable } from '../../scale/scaleSession';
 import {
   evaluationDraftKey,
   loadEvaluationDraft,
@@ -53,6 +55,16 @@ const BIOIMPEDANCE_FIELDS: Array<{ key: BioimpedanceNumberKey; label: string; un
 ];
 
 type MassUnit = 'kg' | 'percent';
+
+/** Campos da bioimpedância que a balança conectada preenche. */
+const SCALE_FIELDS: BioimpedanceNumberKey[] = ['bodyFatPercent', 'skeletalMuscleMassKg', 'bodyWaterPercent', 'basalMetabolicRateKcal'];
+
+/** Leitura da balança usada no formulário: vai junto ao salvar, se os campos continuarem como ela preencheu. */
+interface PendingScaleReading {
+  input: ScaleReadingInput;
+  weightKg: string;
+  fields: Partial<Record<BioimpedanceNumberKey, string>>;
+}
 
 const PERCENT_NEEDS_WEIGHT = 'Para informar músculo em % é preciso preencher o peso em "Dados básicos".';
 
@@ -146,6 +158,8 @@ export function EvaluationFormPage() {
   // marcaria como "digitada" uma leitura que veio da balança conectada.
   const [originalBioimpedance, setOriginalBioimpedance] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [scaleOpen, setScaleOpen] = useState(false);
+  const [pendingScale, setPendingScale] = useState<PendingScaleReading | null>(null);
 
   // Isolado por cliente + avaliação — o rascunho de um nunca aparece pro outro.
   const draftKey = useMemo(() => evaluationDraftKey(clientId!, evaluationId), [clientId, evaluationId]);
@@ -337,11 +351,33 @@ export function EvaluationFormPage() {
         skinfolds: toCleanRecord(skinfolds),
         bioimpedance: bioimpedanceSnapshot(bioimpedance, equipment, massUnits) === originalBioimpedance ? undefined : bioimpedancePayload,
       };
-      if (isEdit) return api.updateEvaluation(clientId!, evaluationId!, payload).then((result) => ({ result, photosFailed: 0 }));
+      // Leitura da balança: gravada como "balança conectada" (com as impedâncias) só se
+      // o peso e os campos continuam como ela preencheu — se o profissional corrigiu
+      // algo, vale o que foi digitado.
+      const scaleUntouched =
+        !!pendingScale &&
+        weightKg === pendingScale.weightKg &&
+        massUnits.skeletalMuscleMassKg !== 'percent' &&
+        Object.entries(pendingScale.fields).every(([key, value]) => (bioimpedance[key] ?? '') === value);
+      const sendScale = async (id: string) => {
+        if (!scaleUntouched) return;
+        try {
+          await api.submitScaleReading(clientId!, id, pendingScale!.input);
+        } catch {
+          // Os valores já foram salvos pelo formulário; só a marca de "balança conectada" fica de fora.
+        }
+      };
+
+      if (isEdit) {
+        const result = await api.updateEvaluation(clientId!, evaluationId!, payload);
+        await sendScale(result.id);
+        return { result, photosFailed: 0 };
+      }
 
       // Avaliação nova: as fotos escolhidas sobem depois que ela existe. Foto que
       // falhar não desfaz a avaliação — a tela dela mostra a vista vazia para reenviar.
       const result = await api.createEvaluation(clientId!, payload);
+      await sendScale(result.id);
       let photosFailed = 0;
       for (const [angle, file] of Object.entries(pendingPhotos)) {
         try {
@@ -354,6 +390,7 @@ export function EvaluationFormPage() {
     },
     onSuccess: ({ result, photosFailed }) => {
       removeEvaluationDraft(draftKey);
+      queryClient.invalidateQueries({ queryKey: ['evaluation', clientId, result.id] });
       queryClient.invalidateQueries({ queryKey: ['evaluations', clientId] });
       queryClient.invalidateQueries({ queryKey: ['evolution', clientId] });
       navigate(`/clients/${clientId}/evaluations/${result.id}`, { state: photosFailed ? { photosFailed } : undefined });
@@ -369,6 +406,21 @@ export function EvaluationFormPage() {
       setError(detail ? `Não foi possível salvar: ${detail}` : 'Não foi possível salvar. Confira os valores informados e tente de novo.');
     },
   });
+
+  function fillFromScale(input: ScaleReadingInput, deviceName: string) {
+    const values = input.normalized ?? {};
+    const fields: Partial<Record<BioimpedanceNumberKey, string>> = {};
+    for (const key of SCALE_FIELDS) {
+      const value = values[key];
+      if (value != null) fields[key] = String(value);
+    }
+    const weight = values.weightKg != null ? String(values.weightKg) : weightKg;
+    setWeightKg(weight);
+    setBioimpedance((b) => ({ ...b, ...fields }));
+    setMassUnits((units) => ({ ...units, skeletalMuscleMassKg: 'kg' }));
+    setEquipment(deviceName.slice(0, 60));
+    setPendingScale({ input, weightKg: weight, fields });
+  }
 
   // O % de gordura só sai com as dobras do protocolo (e o sexo/idade que a equação usa) — avisa
   // antes de salvar, em vez de a avaliação aparecer depois sem o resultado.
@@ -518,9 +570,23 @@ export function EvaluationFormPage() {
       </Card>
 
       <Card title="Bioimpedância">
-        <div style={{ maxWidth: 320 }}>
-          <TextField label="Equipamento" placeholder="Ex.: Omron" maxLength={60} value={equipment} onChange={(e) => setEquipment(e.target.value)} />
+        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div style={{ maxWidth: 320, flex: '1 1 220px' }}>
+            <TextField label="Equipamento" placeholder="Ex.: Omron" maxLength={60} value={equipment} onChange={(e) => setEquipment(e.target.value)} />
+          </div>
+          {bluetoothAvailable() ? (
+            <Button variant="secondary" onClick={() => setScaleOpen(true)}>
+              Conectar balança
+            </Button>
+          ) : null}
         </div>
+        {pendingScale ? (
+          <div role="status" style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+            {pendingScale.input.normalized?.bodyFatPercent != null
+              ? 'Peso e bioimpedância preenchidos pela balança — confira e clique em Salvar.'
+              : 'Peso preenchido pela balança (sem bioimpedância) — confira e clique em Salvar.'}
+          </div>
+        ) : null}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
           {BIOIMPEDANCE_FIELDS.map(({ key, label, unitChoice }) => {
             const unit = massUnits[key] ?? 'kg';
@@ -556,6 +622,19 @@ export function EvaluationFormPage() {
           </div>
         ) : null}
       </Card>
+
+      {scaleOpen ? (
+        <ScaleModal
+          heightCm={Number(heightCm) || 0}
+          age={filled(age) ? Math.trunc(Number(age)) : null}
+          sex={biologicalSex || null}
+          confirmLabel="Usar só o peso"
+          recordDiscard={false}
+          autoConfirm
+          onSubmit={fillFromScale}
+          onClose={() => setScaleOpen(false)}
+        />
+      ) : null}
 
       {isEdit ? (
         existing ? <EvaluationPhotosCard clientId={clientId!} evaluationId={evaluationId!} photos={existing.photos ?? []} /> : null

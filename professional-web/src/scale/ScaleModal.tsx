@@ -21,8 +21,20 @@ interface Props {
   heightCm: number;
   age: number | null;
   sex: 'male' | 'female' | null;
-  onSubmit: (input: ScaleReadingInput) => Promise<void>;
+  /** Recebe a leitura confirmada (ou descartada, se `recordDiscard`). */
+  onSubmit: (input: ScaleReadingInput, deviceName: string) => Promise<void> | void;
   onClose: () => void;
+  confirmLabel?: string;
+  /** false = "Descartar" só fecha a janela, sem registrar a leitura descartada. */
+  recordDiscard?: boolean;
+  /** Leitura completa (com bioimpedância) segue direto para `onSubmit`, sem clique. */
+  autoConfirm?: boolean;
+}
+
+interface ResultData {
+  result: ScaleResult;
+  rawHex: string;
+  composition: BodyComposition | null;
 }
 
 const fmt = (n: number, digits = 1) => n.toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits });
@@ -39,7 +51,7 @@ function recordedAt(result: ScaleResult): string {
   return (drift < 24 * 3600 * 1000 ? result.measuredAt : new Date()).toISOString();
 }
 
-export function ScaleModal({ heightCm, age, sex, onSubmit, onClose }: Props) {
+export function ScaleModal({ heightCm, age, sex, onSubmit, onClose, confirmLabel = 'Salvar na avaliação', recordDiscard = true, autoConfirm = false }: Props) {
   const [step, setStep] = useState<Step>({ kind: 'intro' });
   const [ageInput, setAgeInput] = useState(age != null ? String(age) : '');
   const [sexInput, setSexInput] = useState<'male' | 'female' | ''>(sex ?? '');
@@ -72,6 +84,7 @@ export function ScaleModal({ heightCm, age, sex, onSubmit, onClose }: Props) {
       onResult: (result, rawHex) => {
         const composition = result.impedance ? bodyComposition(result.weightKg, profile, result.impedance) : null;
         setStep({ kind: 'result', result, rawHex, composition });
+        if (autoConfirm && composition) void submit('confirmed', { result, rawHex, composition });
       },
       onDisconnected: () => setStep((prev) => (prev.kind === 'result' ? prev : { kind: 'intro' })),
       onError: (message) => setStep({ kind: 'error', message }),
@@ -80,9 +93,15 @@ export function ScaleModal({ heightCm, age, sex, onSubmit, onClose }: Props) {
     void current.connect();
   }
 
-  async function submit(status: 'confirmed' | 'discarded') {
-    if (step.kind !== 'result' || !session.current) return;
-    const { result, rawHex, composition } = step;
+  async function submit(status: 'confirmed' | 'discarded', data?: ResultData) {
+    const current = data ?? (step.kind === 'result' ? step : null);
+    if (!current || !session.current) return;
+    if (status === 'discarded' && !recordDiscard) {
+      session.current.close();
+      onClose();
+      return;
+    }
+    const { result, rawHex, composition } = current;
     setSaving(true);
     setSaveError(null);
     try {
@@ -117,7 +136,7 @@ export function ScaleModal({ heightCm, age, sex, onSubmit, onClose }: Props) {
             : {}),
         };
       }
-      await onSubmit(input);
+      await onSubmit(input, session.current.deviceName || 'Balança');
       session.current.close();
       onClose();
     } catch {
@@ -137,7 +156,7 @@ export function ScaleModal({ heightCm, age, sex, onSubmit, onClose }: Props) {
           Pesar de novo
         </Button>
         <Button onClick={() => void submit('confirmed')} loading={saving}>
-          Salvar na avaliação
+          {confirmLabel}
         </Button>
       </>
     ) : step.kind === 'intro' || step.kind === 'error' ? (
@@ -163,7 +182,7 @@ export function ScaleModal({ heightCm, age, sex, onSubmit, onClose }: Props) {
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
               <div>
                 <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Altura</div>
-                <strong>{fmt(heightCm, 0)} cm</strong>
+                <strong>{heightCm > 0 ? `${fmt(heightCm, 0)} cm` : '—'}</strong>
               </div>
               <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12, color: 'var(--color-text-secondary)', gap: 2 }}>
                 Idade
@@ -178,6 +197,11 @@ export function ScaleModal({ heightCm, age, sex, onSubmit, onClose }: Props) {
                 </select>
               </label>
             </div>
+            {!(heightCm > 0) ? (
+              <div role="alert" style={{ fontSize: 13, color: 'var(--color-danger)' }}>
+                Preencha a altura em "Dados básicos" antes de conectar a balança.
+              </div>
+            ) : null}
             <div style={{ fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
               Suba na balança para acordá-la e clique em Conectar. Na janela do navegador, escolha a balança (ex.: Relaxmedic-2419).
             </div>

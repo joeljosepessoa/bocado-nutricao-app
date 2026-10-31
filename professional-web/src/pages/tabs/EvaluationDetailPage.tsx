@@ -10,8 +10,6 @@ import { AiAssistPanel } from '../../components/AiAssistPanel';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { formatDate, formatNumber } from '../../lib/format';
 import { EvaluationPhotosCard } from './EvaluationPhotosCard';
-import { ScaleModal } from '../../scale/ScaleModal';
-import { bluetoothAvailable } from '../../scale/scaleSession';
 
 const MEASUREMENT_LABELS: Record<keyof Measurements, string> = {
   chestCm: 'Tórax', waistCm: 'Cintura', abdomenCm: 'Abdômen', hipCm: 'Quadril',
@@ -56,8 +54,6 @@ export function EvaluationDetailPage() {
   const [reportMessage, setReportMessage] = useState<string | null>(null);
   const [releaseMessage, setReleaseMessage] = useState<string | null>(null);
   const [showReleaseConfirm, setShowReleaseConfirm] = useState(false);
-  const [scaleOpen, setScaleOpen] = useState(false);
-  const [scaleMessage, setScaleMessage] = useState<string | null>(null);
 
   const { data: evaluation, isLoading } = useQuery({
     queryKey: ['evaluation', clientId, evaluationId],
@@ -96,11 +92,6 @@ export function EvaluationDetailPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ fontSize: 17, margin: 0 }}>Avaliação de {formatDate(evaluation.evaluatedAt)}</h2>
         <div style={{ display: 'flex', gap: 8 }}>
-          {bluetoothAvailable() ? (
-            <Button variant="secondary" onClick={() => setScaleOpen(true)}>
-              Conectar balança
-            </Button>
-          ) : null}
           <Button variant="ghost" onClick={() => navigate(`/clients/${clientId}/evaluations/${evaluationId}/edit`)}>
             Editar
           </Button>
@@ -115,26 +106,6 @@ export function EvaluationDetailPage() {
       </div>
 
       {releaseMessage ? <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{releaseMessage}</div> : null}
-      {scaleMessage ? (
-        <div role="status" style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-          {scaleMessage}
-        </div>
-      ) : null}
-
-      {scaleOpen ? (
-        <ScaleModal
-          heightCm={evaluation.heightCm}
-          age={evaluation.ageAtEvaluation}
-          sex={evaluation.biologicalSexForCalculation}
-          onSubmit={async (input) => {
-            await api.submitScaleReading(clientId!, evaluationId!, input);
-            setScaleMessage(input.status === 'confirmed' ? 'Leitura da balança salva na avaliação.' : 'Leitura da balança descartada.');
-            await queryClient.invalidateQueries({ queryKey: ['evaluation', clientId, evaluationId] });
-            queryClient.invalidateQueries({ queryKey: ['evaluations', clientId] });
-          }}
-          onClose={() => setScaleOpen(false)}
-        />
-      ) : null}
 
       {showReleaseConfirm ? (
         <ConfirmDialog
