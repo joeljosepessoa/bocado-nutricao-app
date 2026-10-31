@@ -60,10 +60,13 @@ export class ScaleSession {
   deviceName = '';
   deviceId = '';
 
-  constructor(
-    private readonly profile: ScaleProfile,
-    private readonly events: ScaleEvents,
-  ) {}
+  private readonly profile: ScaleProfile;
+  private readonly events: ScaleEvents;
+
+  constructor(profile: ScaleProfile, events: ScaleEvents) {
+    this.profile = profile;
+    this.events = events;
+  }
 
   async connect(): Promise<void> {
     const bluetooth = (navigator as BtNavigator).bluetooth;

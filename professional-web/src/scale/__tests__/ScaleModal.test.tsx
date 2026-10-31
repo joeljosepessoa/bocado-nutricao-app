@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ScaleEvents } from '../scaleSession';
 import type { ScaleResult } from '../icomonProtocol';
+import type { ScaleReadingInput } from '../../types/api';
 
 const sessions: Array<{ events: ScaleEvents; profile: unknown; connect: ReturnType<typeof vi.fn>; close: ReturnType<typeof vi.fn> }> = [];
 
@@ -13,10 +14,11 @@ vi.mock('../scaleSession', () => ({
     isConnected = true;
     connect = vi.fn(async () => this.events.onConnected(this.deviceName));
     close = vi.fn();
-    constructor(
-      public profile: unknown,
-      public events: ScaleEvents,
-    ) {
+    profile: unknown;
+    events: ScaleEvents;
+    constructor(profile: unknown, events: ScaleEvents) {
+      this.profile = profile;
+      this.events = events;
       sessions.push(this as never);
     }
   },
@@ -42,7 +44,7 @@ beforeEach(() => {
 
 describe('Balança na avaliação', () => {
   it('conecta com o perfil da avaliação, mostra o peso ao vivo e salva peso + composição + impedâncias', async () => {
-    const onSubmit = vi.fn(async () => {});
+    const onSubmit = vi.fn(async (_input: ScaleReadingInput) => {});
     const onClose = vi.fn();
     render(<ScaleModal heightCm={181} age={40} sex="male" onSubmit={onSubmit} onClose={onClose} />);
 
@@ -61,7 +63,7 @@ describe('Balança na avaliação', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Salvar na avaliação' }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-    const input = onSubmit.mock.calls[0][0] as Record<string, any>;
+    const input = onSubmit.mock.calls[0][0] as unknown as Record<string, any>;
     expect(input).toMatchObject({ status: 'confirmed', driverId: 'icomon-ffb0', deviceIdentifier: 'Relaxmedic-2419', rawPayload: { resultFrameHex: 'aa bb' } });
     expect(input.idempotencyKey).toMatch(/^[0-9a-f]{64}$/);
     expect(input.normalized.weightKg).toBe(104.05);
@@ -83,7 +85,7 @@ describe('Balança na avaliação', () => {
   });
 
   it('sem bioimpedância: avisa, salva só o peso ou descarta', async () => {
-    const onSubmit = vi.fn(async () => {});
+    const onSubmit = vi.fn(async (_input: ScaleReadingInput) => {});
     render(<ScaleModal heightCm={181} age={40} sex="male" onSubmit={onSubmit} onClose={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Conectar' }));
     await screen.findByText(/Balança conectada/);
@@ -93,7 +95,7 @@ describe('Balança na avaliação', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Descartar' }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0]).toMatchObject({ status: 'discarded' });
-    expect((onSubmit.mock.calls[0][0] as { normalized?: unknown }).normalized).toBeUndefined();
+    expect(onSubmit.mock.calls[0][0].normalized).toBeUndefined();
   });
 
   it('"Pesar de novo" com a balança conectada volta a esperar a próxima pesagem', async () => {
