@@ -99,6 +99,11 @@ export class ScaleReadingsService {
             create: { evaluationId, ...bioimpedanceData },
             update: bioimpedanceData,
           });
+          // O peso medido pela balança, confirmado pelo profissional, passa a ser o
+          // peso da avaliação — IMC e massa gorda/magra são calculados com ele.
+          if (fields.weightKg != null) {
+            await tx.physicalEvaluation.update({ where: { id: evaluationId }, data: { weightKg: fields.weightKg } });
+          }
         }
 
         return created;

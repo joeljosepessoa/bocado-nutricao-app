@@ -249,6 +249,32 @@ describe('Leituras de balança — BLE (e2e)', () => {
     expect(detail.body.calculatedMetrics.fatMassKg).toBe(16);
   });
 
+  it('o peso da leitura confirmada vira o peso da avaliação (IMC e massa gorda com ele); descartada não muda nada', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+    const evaluation = await createEvaluation(app, professional.accessToken, client.id, { weightKg: 80 });
+    const url = `/clients/${client.id}/evaluations/${evaluation.id}`;
+    const auth = { Authorization: `Bearer ${professional.accessToken}` };
+
+    await request(app.getHttpServer())
+      .post(`${url}/scale-readings`)
+      .set(auth)
+      .send(confirmPayload({ status: 'discarded', normalized: undefined, idempotencyKey: `descartada-${Date.now()}` }))
+      .expect(201);
+    expect((await request(app.getHttpServer()).get(url).set(auth).expect(200)).body.weightKg).toBe(80);
+
+    await request(app.getHttpServer())
+      .post(`${url}/scale-readings`)
+      .set(auth)
+      .send(confirmPayload({ normalized: { weightKg: 90, bodyFatPercent: 20 } }))
+      .expect(201);
+    const detail = (await request(app.getHttpServer()).get(url).set(auth).expect(200)).body;
+    expect(detail.weightKg).toBe(90);
+    expect(detail.bioimpedance.weightKg).toBe(90);
+    expect(detail.calculatedMetrics.fatMassKg).toBe(18);
+    expect(detail.calculatedMetrics.bmi).toBeCloseTo(90 / (1.78 * 1.78), 1);
+  });
+
   // 10. Auditoria — nunca valores de saúde
   it('auditoria de balança registra ação e ids, nunca peso/%gordura/payload', async () => {
     const professional = await registerProfessional(app);
