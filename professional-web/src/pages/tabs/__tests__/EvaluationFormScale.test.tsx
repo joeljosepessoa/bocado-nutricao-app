@@ -105,6 +105,8 @@ describe('Avaliação — balança no quadro Bioimpedância', () => {
     expect(Number(valueOf('Gordura corporal (%)'))).toBeGreaterThan(0);
     expect(Number(valueOf('Músculo esquelético (kg)'))).toBeGreaterThan(0);
     expect(Number(valueOf('Água corporal (%)'))).toBeGreaterThan(0);
+    expect(Number(valueOf('Massa muscular (kg)'))).toBeGreaterThan(Number(valueOf('Músculo esquelético (kg)')));
+    expect(Number(valueOf('Massa óssea (kg)'))).toBeGreaterThan(0);
     expect(Number(valueOf('Metabolismo basal (kcal)'))).toBeGreaterThan(0);
     expect(screen.getByRole('status').textContent).toMatch(/preenchidos pela balança/);
 

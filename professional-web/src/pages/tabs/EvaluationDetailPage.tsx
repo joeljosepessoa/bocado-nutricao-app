@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import * as api from '../../api/endpoints';
-import type { BioimpedanceNumberKey, Measurements, Skinfolds } from '../../types/api';
+import type { Bioimpedance, BioimpedanceNumberKey, Measurements, Skinfolds } from '../../types/api';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
@@ -44,6 +44,23 @@ const BIOIMPEDANCE_TILES: Array<[BioimpedanceNumberKey, string, string?]> = [
 ];
 
 const BODY_FAT_SOURCE_LABELS = { skinfolds: 'dobras cutâneas', bioimpedance: 'bioimpedância', manual: 'informado manualmente' } as const;
+
+const one = (n: number) => Math.round(n * 10) / 10;
+
+/** Contas a partir do que a bioimpedância gravou (só aparecem quando os dados existem). */
+function derivedBioimpedance(b: Bioimpedance, evaluationWeight: number | null, heightCm: number): Array<[string, string]> {
+  const weight = b.weightKg ?? evaluationWeight;
+  const out: Array<[string, string]> = [];
+  const waterKg = weight != null && b.bodyWaterPercent != null ? (b.bodyWaterPercent / 100) * weight : null;
+  if (waterKg != null) out.push(['Peso da água', `${one(waterKg)} kg`]);
+  if (b.leanMassKg != null && waterKg != null && b.boneMassKg != null && weight) {
+    const protein = b.leanMassKg - waterKg - b.boneMassKg;
+    if (protein > 0) out.push(['Proteína', `${one((protein / weight) * 100)}% (${one(protein)} kg)`]);
+  }
+  if (b.muscleMassKg != null && weight) out.push(['Taxa muscular', `${one((b.muscleMassKg / weight) * 100)}%`]);
+  if (heightCm > 0) out.push(['Peso ideal (IMC 22)', `${one(22 * (heightCm / 100) ** 2)} kg`]);
+  return out;
+}
 
 export function EvaluationDetailPage() {
   const { clientId, evaluationId } = useParams<{ clientId: string; evaluationId: string }>();
@@ -171,6 +188,9 @@ export function EvaluationDetailPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
             {BIOIMPEDANCE_TILES.filter(([key]) => evaluation.bioimpedance![key] != null).map(([key, label, unit]) => (
               <Tile key={key} label={label} value={formatNumber(evaluation.bioimpedance![key], unit)} />
+            ))}
+            {derivedBioimpedance(evaluation.bioimpedance, evaluation.weightKg, evaluation.heightCm).map(([label, value]) => (
+              <Tile key={label} label={label} value={value} />
             ))}
           </div>
         </Card>

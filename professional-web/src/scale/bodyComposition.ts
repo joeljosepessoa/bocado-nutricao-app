@@ -10,9 +10,13 @@ import type { ScaleProfile, SegmentImpedances } from './icomonProtocol';
  * - Músculo esquelético: Janssen I et al., J Appl Physiol 2000;89:465–71.
  * - Água corporal: 73,2% da massa livre de gordura (Wang Z et al., Am J Clin Nutr 1999;69:833–41).
  * - Metabolismo basal: Katch-McArdle (370 + 21,6 × massa livre de gordura).
+ * - Massa óssea: 6,7% da massa livre de gordura; massa muscular = massa livre de
+ *   gordura − osso; proteína = massa livre de gordura − água − osso (mesmas
+ *   relações que o app da balança mostra entre esses números).
+ * - Peso ideal: IMC 22 para a altura.
  *
- * Massa óssea, gordura visceral e idade corporal não têm equação publicada a
- * partir destes dados — ficam de fora em vez de inventadas.
+ * Gordura visceral, subcutânea, idade corporal e a análise por segmento ficam de
+ * fora até a calibração com pesagens comparadas ao app da balança.
  */
 
 export const FAT_FREE_MASS_REFERENCE = 'Sun et al. 2003';
@@ -28,7 +32,17 @@ export interface BodyComposition {
   bodyWaterKg: number;
   bodyWaterPercent: number;
   basalMetabolicRateKcal: number;
+  boneMassKg: number;
+  muscleMassKg: number;
+  muscleRatePercent: number;
+  proteinKg: number;
+  proteinPercent: number;
+  idealWeightKg: number;
 }
+
+const BONE_SHARE_OF_FAT_FREE_MASS = 0.067;
+const WATER_SHARE_OF_FAT_FREE_MASS = 0.732;
+const IDEAL_BMI = 22;
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
@@ -56,7 +70,10 @@ export function bodyComposition(
   const fatFree = Math.min(weightKg, Math.max(0, sun * FAT_FREE_MASS_CALIBRATION));
   const fat = weightKg - fatFree;
   const muscle = 0.401 * index + (male ? 3.825 : 0) - 0.071 * profile.age + 5.102;
-  const water = 0.732 * fatFree;
+  const water = WATER_SHARE_OF_FAT_FREE_MASS * fatFree;
+  const bone = BONE_SHARE_OF_FAT_FREE_MASS * fatFree;
+  const muscleMass = fatFree - bone;
+  const protein = Math.max(0, fatFree - water - bone);
 
   return {
     wholeBodyResistance50kHz: round1(r),
@@ -67,5 +84,11 @@ export function bodyComposition(
     bodyWaterKg: round1(water),
     bodyWaterPercent: round1((water / weightKg) * 100),
     basalMetabolicRateKcal: Math.round(370 + 21.6 * fatFree),
+    boneMassKg: round1(bone),
+    muscleMassKg: round1(muscleMass),
+    muscleRatePercent: round1((muscleMass / weightKg) * 100),
+    proteinKg: round1(protein),
+    proteinPercent: round1((protein / weightKg) * 100),
+    idealWeightKg: round1(IDEAL_BMI * (profile.heightCm / 100) ** 2),
   };
 }

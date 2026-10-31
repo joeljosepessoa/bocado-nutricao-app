@@ -123,6 +123,8 @@ export function ScaleModal({ heightCm, age, sex, onSubmit, onClose, confirmLabel
                 fatMassKg: composition.fatMassKg,
                 leanMassKg: composition.fatFreeMassKg,
                 skeletalMuscleMassKg: composition.skeletalMuscleMassKg,
+                muscleMassKg: composition.muscleMassKg,
+                boneMassKg: composition.boneMassKg,
                 bodyWaterPercent: composition.bodyWaterPercent,
                 basalMetabolicRateKcal: composition.basalMetabolicRateKcal,
                 impedanceData: {
@@ -130,7 +132,8 @@ export function ScaleModal({ heightCm, age, sex, onSubmit, onClose, confirmLabel
                   khz100: result.impedance!.khz100,
                   wholeBodyResistance50kHz: composition.wholeBodyResistance50kHz,
                   profile: profileRef.current,
-                  equations: { fatFreeMass: FAT_FREE_MASS_REFERENCE, skeletalMuscle: 'Janssen et al. 2000', water: '73,2% da massa magra', bmr: 'Katch-McArdle' },
+                  derived: { proteinKg: composition.proteinKg, proteinPercent: composition.proteinPercent, muscleRatePercent: composition.muscleRatePercent, idealWeightKg: composition.idealWeightKg, bodyWaterKg: composition.bodyWaterKg },
+                  equations: { fatFreeMass: FAT_FREE_MASS_REFERENCE, skeletalMuscle: 'Janssen et al. 2000', water: '73,2% da massa magra', bmr: 'Katch-McArdle', bone: '6,7% da massa magra' },
                 },
               }
             : {}),
@@ -244,8 +247,12 @@ function ResultView({ result, composition }: { result: ScaleResult; composition:
       ['Massa gorda', `${fmt(composition.fatMassKg)} kg`],
       ['Massa magra', `${fmt(composition.fatFreeMassKg)} kg`],
       ['Músculo esquelético', `${fmt(composition.skeletalMuscleMassKg)} kg`],
+      ['Massa muscular', `${fmt(composition.muscleMassKg)} kg (${fmt(composition.muscleRatePercent)}%)`],
+      ['Massa óssea', `${fmt(composition.boneMassKg)} kg`],
+      ['Proteína', `${fmt(composition.proteinPercent)}% (${fmt(composition.proteinKg)} kg)`],
       ['Água corporal', `${fmt(composition.bodyWaterPercent)}% (${fmt(composition.bodyWaterKg)} kg)`],
       ['Metabolismo basal', `${composition.basalMetabolicRateKcal.toLocaleString('pt-BR')} kcal`],
+      ['Peso ideal (IMC 22)', `${fmt(composition.idealWeightKg)} kg`],
     );
   }
   return (

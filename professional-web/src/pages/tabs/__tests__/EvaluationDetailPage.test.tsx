@@ -114,3 +114,40 @@ describe('EvaluationDetailPage — confirmação ao liberar avaliação', () => 
     expect(screen.queryByText(/Você deseja liberar esta avaliação para o cliente\?/)).not.toBeInTheDocument();
   });
 });
+
+describe('EvaluationDetailPage — bioimpedância da balança conectada', () => {
+  afterEach(() => cleanup());
+
+  it('mostra só o que foi medido, mais peso da água, proteína, taxa muscular e peso ideal', async () => {
+    vi.mocked(api.getEvaluation).mockResolvedValue(
+      makeEvaluation({
+        heightCm: 181,
+        weightKg: 103.35,
+        bioimpedance: {
+          origin: 'device_confirmed',
+          equipment: null,
+          recordedAt: '2026-10-31T20:43:00Z',
+          weightKg: 103.35,
+          bodyFatPercent: 23.3,
+          fatMassKg: 24.1,
+          leanMassKg: 79.2,
+          skeletalMuscleMassKg: 45.8,
+          muscleMassKg: 73.9,
+          bodyWaterPercent: 56.2,
+          visceralFatLevel: null,
+          basalMetabolicRateKcal: 2081,
+          bodyAgeYears: null,
+          boneMassKg: 5.3,
+        },
+      }),
+    );
+    renderPage();
+    await screen.findByText('Bioimpedância (balança conectada)');
+    expect(screen.queryByText('Gordura visceral')).not.toBeInTheDocument();
+    expect(screen.queryByText('Idade corporal')).not.toBeInTheDocument();
+    expect(screen.getByText('58.1 kg')).toBeInTheDocument();
+    expect(screen.getByText('15.3% (15.8 kg)')).toBeInTheDocument();
+    expect(screen.getByText('71.5%')).toBeInTheDocument();
+    expect(screen.getByText('72.1 kg')).toBeInTheDocument();
+  });
+});

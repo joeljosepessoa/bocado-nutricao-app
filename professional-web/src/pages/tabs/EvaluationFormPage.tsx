@@ -57,7 +57,7 @@ const BIOIMPEDANCE_FIELDS: Array<{ key: BioimpedanceNumberKey; label: string; un
 type MassUnit = 'kg' | 'percent';
 
 /** Campos da bioimpedância que a balança conectada preenche. */
-const SCALE_FIELDS: BioimpedanceNumberKey[] = ['bodyFatPercent', 'skeletalMuscleMassKg', 'bodyWaterPercent', 'basalMetabolicRateKcal'];
+const SCALE_FIELDS: BioimpedanceNumberKey[] = ['bodyFatPercent', 'skeletalMuscleMassKg', 'muscleMassKg', 'boneMassKg', 'bodyWaterPercent', 'basalMetabolicRateKcal'];
 
 /** Leitura da balança usada no formulário: vai junto ao salvar, se os campos continuarem como ela preencheu. */
 interface PendingScaleReading {
@@ -358,6 +358,7 @@ export function EvaluationFormPage() {
         !!pendingScale &&
         weightKg === pendingScale.weightKg &&
         massUnits.skeletalMuscleMassKg !== 'percent' &&
+        massUnits.muscleMassKg !== 'percent' &&
         Object.entries(pendingScale.fields).every(([key, value]) => (bioimpedance[key] ?? '') === value);
       const sendScale = async (id: string) => {
         if (!scaleUntouched) return;
@@ -417,7 +418,7 @@ export function EvaluationFormPage() {
     const weight = values.weightKg != null ? String(values.weightKg) : weightKg;
     setWeightKg(weight);
     setBioimpedance((b) => ({ ...b, ...fields }));
-    setMassUnits((units) => ({ ...units, skeletalMuscleMassKg: 'kg' }));
+    setMassUnits((units) => ({ ...units, skeletalMuscleMassKg: 'kg', muscleMassKg: 'kg' }));
     setEquipment(deviceName.slice(0, 60));
     setPendingScale({ input, weightKg: weight, fields });
   }

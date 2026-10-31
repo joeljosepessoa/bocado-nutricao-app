@@ -60,6 +60,7 @@ describe('Balança na avaliação', () => {
     const table = screen.getByRole('table', { name: 'Resultado da balança' });
     expect(table.textContent).toContain('Gordura corporal');
     expect(table.textContent).toContain('Metabolismo basal');
+    for (const label of ['Massa muscular', 'Massa óssea', 'Proteína', 'Peso ideal (IMC 22)']) expect(table.textContent).toContain(label);
 
     fireEvent.click(screen.getByRole('button', { name: 'Salvar na avaliação' }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
@@ -70,6 +71,9 @@ describe('Balança na avaliação', () => {
     expect(input.normalized.bodyFatPercent).toBeGreaterThan(0);
     expect(input.normalized.impedanceData.khz20).toEqual(impedance.khz20);
     expect(input.normalized.visceralFatLevel).toBeUndefined();
+    expect(input.normalized.muscleMassKg).toBeGreaterThan(0);
+    expect(input.normalized.boneMassKg).toBeGreaterThan(0);
+    expect(input.normalized.impedanceData.derived.proteinKg).toBeGreaterThan(0);
     expect(onClose).toHaveBeenCalled();
   });
 

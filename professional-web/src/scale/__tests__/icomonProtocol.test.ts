@@ -69,6 +69,12 @@ describe('composição corporal pela bioimpedância (equações publicadas)', ()
     expect(c.fatMassKg).toBeCloseTo(103.35 - c.fatFreeMassKg, 0);
     expect(c.skeletalMuscleMassKg).toBeCloseTo(38.6, 1);
     expect(c.bodyWaterKg).toBeCloseTo(0.732 * c.fatFreeMassKg, 0);
+    // Mesmas relações do app da balança: osso 6,7% da massa magra, músculo = magra − osso, proteína = magra − água − osso.
+    expect(c.boneMassKg).toBeCloseTo(5.2, 1);
+    expect(c.muscleMassKg).toBeCloseTo(c.fatFreeMassKg - c.boneMassKg, 0);
+    expect(c.proteinKg).toBeCloseTo(c.fatFreeMassKg - c.bodyWaterKg - c.boneMassKg, 0);
+    expect(c.muscleRatePercent).toBeCloseTo((c.muscleMassKg / 103.35) * 100, 0);
+    expect(c.idealWeightKg).toBe(72.1);
     expect(c.basalMetabolicRateKcal).toBeCloseTo(370 + 21.6 * c.fatFreeMassKg, -1);
   });
 
