@@ -4,6 +4,7 @@ import type { AiDietItem, AiGroup, AiMeal, AiOrganizedDiet } from './organized-d
 import { faithfulUserDiet, it_ as item, USER_EXAMPLE_DIET, wholeLineUserDiet } from '../../../../test/fixtures/user-example-diet';
 import { faithfulOptionsDiet, leanMeat, OPTIONS_EXAMPLE_DIET } from '../../../../test/fixtures/options-example-diet';
 import { hardWrap } from '../../../../test/fixtures/hard-wrap';
+import { CHOOSE_ONE_LINES_DIET, CHOOSE_ONE_LINES_DIET_UNNUMBERED, faithfulChooseOneLinesDiet } from '../../../../test/fixtures/choose-one-lines-diet';
 
 const TEXT = [
   'CAFÉ DA MANHÃ',
@@ -533,6 +534,68 @@ describe('trecho mínimo do item (quantidade colada no alimento)', () => {
     expect(core('1 scoop (30 g) de whey', 'whey', 30, 'g')).toBe('30 g de whey');
     expect(core('3 a 5 g de creatina', 'creatina', 3, 'g', { quantityMax: 5 })).toBe('3 a 5 g de creatina');
     expect(core('salada de folhas à vontade', 'salada de folhas', null, null, { freeQuantity: true })).toBe('salada de folhas a vontade');
+  });
+
+  it('detalhe entre parênteses antes da quantidade e outro trecho entre parênteses depois dela', () => {
+    expect(core('Carne magra (patinho ou coxão mole) — 75 g', 'Carne magra', 75, 'g')).toBe('carne magra patinho ou coxao mole 75 g');
+    const pasta = 'Macarrão cozido — 120 g (com molho de tomate caseiro 60 g)';
+    expect(core(pasta, 'Macarrão cozido', 120, 'g')).toBe('macarrao cozido 120 g');
+    expect(core(pasta, 'molho de tomate caseiro', 60, 'g')).toBe('molho de tomate caseiro 60 g');
+    expect(core(pasta, 'Macarrão cozido', 60, 'g')).toBeNull();
+  });
+
+  it('parêntese com número ou alimento fora dele entre o alimento e a quantidade continua recusado', () => {
+    expect(core('arroz (100 g) feijão 50 g', 'arroz', 50, 'g')).toBeNull();
+    expect(core('arroz (cozido) feijão 50 g', 'arroz', 50, 'g')).toBeNull();
+    expect(core('2 ovos (cozidos) 3 claras', 'ovos', 3)).toBeNull();
+  });
+});
+
+describe('"escolha 1 opção:" com as opções uma por linha, sem "Opção N" escrito', () => {
+  const lunch = (organized: AiOrganizedDiet) => organized.days[0].meals[1];
+
+  it('é aceita inteira e sem aviso — numerada ("1.") ou não, como chega ao colar', () => {
+    for (const text of [CHOOSE_ONE_LINES_DIET, CHOOSE_ONE_LINES_DIET_UNNUMBERED]) {
+      const checked = checkDietFidelity(text, faithfulChooseOneLinesDiet());
+      expect(checked.warnings).toEqual([]);
+      expect(checked.days[0].meals.map((m) => m.name)).toEqual(['CAFÉ DA MANHÃ', 'ALMOÇO', 'LANCHE DA TARDE', 'LANCHE ANTES DO JANTAR', 'JANTAR', 'CEIA']);
+      expect(checked.days[0].meals[0].groups[0].choices.map((c) => c.label)).toEqual(['Opção 1', 'Opção 2', 'Opção 3']);
+      const protein = checked.days[0].meals[1].groups[0];
+      expect(protein.label).toBe('Proteína');
+      expect(protein.choices[2].items.map((i) => [i.rawFood, i.quantity, i.unit, i.notes])).toEqual([['Carne magra', 75, 'g', 'patinho ou coxão mole']]);
+      const dinnerCarb = checked.days[0].meals[4].groups[1].choices[2].items;
+      expect(dinnerCarb.map((i) => [i.rawFood, i.quantity])).toEqual([
+        ['Macarrão cozido', 120],
+        ['molho de tomate caseiro', 60],
+      ]);
+      expect(checked.supplements.map((s) => [s.name, s.quantity, s.quantityMax])).toEqual([
+        ['Whey protein', 1, null],
+        ['Creatina', 3, 5],
+        ['Ômega-3', 2, 3],
+      ]);
+    }
+  });
+
+  it('a numeração criada pela IA só vale na ordem: "Opção 3" na 2ª escolha segue recusada', () => {
+    const organized = faithfulChooseOneLinesDiet();
+    organized.days[0].meals[0].groups[0].choices[1].label = 'Opção 3';
+    expect(rejection(organized, CHOOSE_ONE_LINES_DIET_UNNUMBERED)).toMatch(/a opção "Opção 3" não está no texto/);
+  });
+
+  it('a numeração criada pela IA não libera separar itens ligados por "+" em opções diferentes', () => {
+    // Ceia: "Danone natural (150 g)" sai da 1ª linha ("Fruta (100 g) + Danone natural (150 g) + …") e vai para a 2ª opção.
+    const organized = faithfulChooseOneLinesDiet();
+    const options = organized.days[0].meals[5].groups[0].choices;
+    options[1].items.push(options[0].items.splice(1, 1)[0]);
+    for (const text of [CHOOSE_ONE_LINES_DIET, CHOOSE_ONE_LINES_DIET_UNNUMBERED]) {
+      expect(rejection(organized, text)).toMatch(/aparecem juntos no texto, mas foram separados/);
+    }
+  });
+
+  it('quantidade trocada depois do parêntese é recusada (carne magra 75 g → 65 g)', () => {
+    const organized = faithfulChooseOneLinesDiet();
+    lunch(organized).groups[0].choices[2].items[0].quantity = 65;
+    expect(rejection(organized, CHOOSE_ONE_LINES_DIET_UNNUMBERED)).toMatch(/quantidade 65 não está escrita/);
   });
 });
 

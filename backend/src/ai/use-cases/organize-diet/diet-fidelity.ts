@@ -258,14 +258,34 @@ function matchAt(tokens: string[], at: number, phrase: string[]): boolean {
   return phrase.length > 0 && phrase.every((t, i) => tokens[at + i] === t);
 }
 
-/** Só unidade, conector ou número entre a quantidade e o alimento ("1 scoop (30 g) de whey"). */
-function bridges(tokens: string[], from: number, to: number, extraUnits: Set<string>): boolean {
-  if (to - from > 6) return false;
+/**
+ * Só unidade, conector ou número entre a quantidade e o alimento ("1 scoop (30 g) de whey"),
+ * ou um detalhe entre parênteses SEM número ("carne magra (patinho ou coxão mole) — 75 g").
+ * Quantidade que está ela mesma dentro de um parêntese não pula parêntese nenhum
+ * ("macarrão 120 g (com molho 60 g)": o 60 é do molho, nunca do macarrão).
+ */
+function bridges(tokens: string[], from: number, to: number, extraUnits: Set<string>, inParen: boolean[] = []): boolean {
+  let outside = 0;
   for (let j = from; j < to; j++) {
     const t = tokens[j];
-    if (!(CONNECTORS.has(t) || UNIT_WORDS.has(t) || extraUnits.has(t) || /^\d+(?:[./]\d+)?$/.test(t))) return false;
+    const isNumber = /^\d+(?:[./]\d+)?$/.test(t);
+    if (inParen[j] && !isNumber) continue;
+    outside += 1;
+    if (!(CONNECTORS.has(t) || UNIT_WORDS.has(t) || extraUnits.has(t) || isNumber)) return false;
   }
-  return true;
+  return outside <= 6;
+}
+
+/**
+ * Tokens do trecho e quais estão dentro de um parêntese fechado. Se a separação
+ * por parênteses não bater token a token com a forma normalizada, nenhum conta
+ * como parêntese (fica a regra estrita de sempre).
+ */
+function itemTokens(sourceText: string): { tokens: string[]; inParen: boolean[] } {
+  const tokens = normalizeDietText(sourceText).split(' ').filter(Boolean);
+  const pieces = lineChunks(sourceText).flatMap((chunk) => chunk.norm.split(' ').filter(Boolean).map((text) => ({ text, parenthetical: chunk.parenthetical })));
+  const aligned = pieces.length === tokens.length && pieces.every((piece, i) => piece.text === tokens[i]);
+  return { tokens, inParen: aligned ? pieces.map((piece) => piece.parenthetical) : tokens.map(() => false) };
 }
 
 function skipUnits(tokens: string[], from: number, extraUnits: Set<string>): number {
@@ -323,7 +343,7 @@ interface LocatedCore {
 }
 
 function locateItemCore(item: Pick<AiDietItem, 'sourceText' | 'food' | 'quantity' | 'quantityMax' | 'unit' | 'freeQuantity'>): LocatedCore | null {
-  const tokens = normalizeDietText(item.sourceText).split(' ').filter(Boolean);
+  const { tokens, inParen } = itemTokens(item.sourceText);
   const spans = foodSpans(tokens, item.food);
   if (spans.length === 0) return null;
   if (item.quantity === null) {
@@ -347,12 +367,14 @@ function locateItemCore(item: Pick<AiDietItem, 'sourceText' | 'food' | 'quantity
       // "3 a 5 g de creatina" não é "5 g": o máximo sem o mínimo altera a prescrição.
       if (item.quantityMax === null && isRangeMaximum(tokens, p)) continue;
       // "10 g de aveia": quantidade antes do alimento.
-      if (qEnd <= span.start && bridges(tokens, qEnd, span.start, extraUnits)) return { core: tokens.slice(p, span.end + 1).join(' '), insideName: false };
+      const parens = inParen[p] ? [] : inParen;
+      if (qEnd <= span.start && bridges(tokens, qEnd, span.start, extraUnits, parens)) return { core: tokens.slice(p, span.end + 1).join(' '), insideName: false };
       // "arroz 150 g": depois do alimento, só se nada além de unidade vier colado depois ("ovos 3 claras" não vale).
-      if (p > span.end && bridges(tokens, span.end + 1, p, extraUnits)) {
+      // Um parêntese logo depois ("120 g (com molho de tomate 60 g)") é outro trecho: não gruda na quantidade.
+      if (p > span.end && bridges(tokens, span.end + 1, p, extraUnits, parens)) {
         const after = skipUnits(tokens, qEnd, extraUnits);
         const next = tokens[after];
-        if (next === undefined || next === 'e' || next === 'mais') return { core: tokens.slice(span.start, after).join(' '), insideName: false };
+        if (next === undefined || next === 'e' || next === 'mais' || (inParen[after] && !inParen[after - 1])) return { core: tokens.slice(span.start, after).join(' '), insideName: false };
       }
       if (quantityInsideName(tokens, span, p, qEnd, item.food, extraUnits)) return { core: tokens.slice(span.start, span.end + 1).join(' '), insideName: true };
     }
@@ -553,6 +575,7 @@ const COVERAGE_IGNORED = new Set(['e', 'de', 'da', 'do', 'com', 'ou', 'a', 'o', 
 /** Ignorados só numa linha que já teve conteúdo organizado (numeração, "(escolher 1)", títulos de seção). */
 const STRUCTURE_WORDS = new Set([
   'escolher', 'escolha', 'opcao', 'opcoes', 'bloco', 'cada', 'refeicao', 'um', 'uma', 'suplementacao', 'suplementos', 'orientacoes',
+  'itens', 'fixos', 'fixo', 'consumir', 'todos', 'todas',
 ]);
 const SECTION_TITLES = new Set(['suplementacao', 'suplementos', 'orientacoes', 'orientacao', 'orientacoes gerais', 'observacoes', 'dicas']);
 
@@ -599,6 +622,15 @@ function uncoveredLines(input: string, covered: string[]): string[] {
 }
 
 // --- Conferência ----------------------------------------------------------------------
+
+/**
+ * "Opção 2" na 2ª escolha de um bloco: é só a numeração da lista, não prescrição.
+ * O texto pode listar as opções uma por linha, sem escrever "Opção N".
+ */
+function isListNumbering(label: string | null, index: number): boolean {
+  const match = label ? /^(?:opcao )?(\d+)$/.exec(normalizeDietText(label)) : null;
+  return !!match && Number(match[1]) === index + 1;
+}
 
 function itemLabel(item: AiDietItem): string {
   return `"${item.sourceText}"`;
@@ -733,10 +765,12 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
 
     // Itens que o texto junta ("frango + azeite") separados em escolhas diferentes.
     // Item presente nas duas escolhas ("2 ovos" na Opção 1 e na 3) não serve de prova.
+    // Só vale a "Opção N" escrita no texto como opção; numeração criada pela IA não prova nada.
     const choiceOption = (choiceIndex: number): number | null => {
       const label = group.choices[choiceIndex].label;
       const match = label ? OPTION_PATTERN.exec(normalizeDietText(label)) : null;
-      return match ? Number(match[1]) : null;
+      const number = match ? Number(match[1]) : null;
+      return number !== null && lines.some((line) => line.option === number) ? number : null;
     };
     // Onde este bloco está escrito: as linhas com mais alimentos dele. O mesmo par
     // pode vir junto em outra refeição ("35 g de aveia + … 150 g de banana" no café)
@@ -845,7 +879,7 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
         requireLabel(group.label, `${where}: o bloco`);
         const cores: Array<Array<string | null>> = [];
         const choices: CheckedChoice[] = group.choices.map((choice, c) => {
-          requireLabel(choice.label, `${where}: a opção`);
+          if (!isListNumbering(choice.label, c)) requireLabel(choice.label, `${where}: a opção`);
           const results = choice.items.map((item, i) => checkItem(item, `${where}, bloco ${g + 1}, escolha ${c + 1}, alimento ${i + 1}`));
           cores.push(results.map((r) => r.core));
           return { label: choice.label, items: results.map((r) => r.checked) };
