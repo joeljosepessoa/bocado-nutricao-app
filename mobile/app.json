@@ -29,6 +29,12 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
+      "output": "single",
+      "name": "Bocado de Nutrição",
+      "shortName": "Bocado",
+      "lang": "pt-BR",
+      "themeColor": "#F97316",
+      "backgroundColor": "#F9FAFB",
       "favicon": "./assets/favicon.png"
     },
     "plugins": [

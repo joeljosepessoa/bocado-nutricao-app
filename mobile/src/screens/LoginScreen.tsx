@@ -3,7 +3,8 @@ import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-na
 import { useAuth } from '../auth/AuthContext';
 import { Button } from '../components/Button';
 import { TextField } from '../components/TextField';
-import { spacing, typography } from '../theme/tokens';
+import { browserInstallHint } from '../platform/installHint';
+import { radius, spacing, typography } from '../theme/tokens';
 import { useStyles, type ThemeColors } from '../theme/theme';
 
 export function LoginScreen() {
@@ -13,6 +14,7 @@ export function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showInstallHint] = useState(() => browserInstallHint(Platform.OS));
 
   async function handleSubmit() {
     if (!email || !password) {
@@ -58,6 +60,16 @@ export function LoginScreen() {
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Button title="Entrar" onPress={handleSubmit} loading={loading} />
+
+        {showInstallHint ? (
+          <View style={styles.hint} accessibilityRole="summary">
+            <Text style={styles.hintTitle}>Salve o app no seu iPhone</Text>
+            <Text style={styles.hintText}>
+              No Safari, toque em Compartilhar (o quadrado com a seta para cima) e depois em “Adicionar à Tela de Início”. O
+              Bocado vai aparecer junto com os outros apps.
+            </Text>
+          </View>
+        ) : null}
       </View>
     </KeyboardAvoidingView>
   );
@@ -69,4 +81,7 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   title: { ...typography.title, color: colors.primaryDark, textAlign: 'center' },
   subtitle: { ...typography.body, color: colors.textSecondary, textAlign: 'center', marginBottom: spacing.md },
   error: { color: colors.danger, ...typography.body },
+  hint: { marginTop: spacing.md, padding: spacing.md, borderRadius: radius.md, backgroundColor: colors.primarySoft, gap: spacing.xs },
+  hintTitle: { ...typography.body, fontWeight: '600', color: colors.primaryDark },
+  hintText: { ...typography.caption, color: colors.textSecondary },
 });

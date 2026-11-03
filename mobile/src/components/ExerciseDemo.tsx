@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as api from '../api/endpoints';
 import { API_BASE_URL, getAccessToken } from '../api/client';
 import { resolveExerciseMediaSource } from '../media/exerciseMedia';
@@ -66,23 +66,54 @@ function DemoImage({ imageUrl, exerciseName }: { imageUrl: string | null; exerci
     setAttempt((n) => n + 1);
   }
 
+  // No navegador o <Image> não manda cabeçalho: a mídia da nossa API (rota com login)
+  // é baixada com o token e exibida a partir de uma cópia local (blob:).
+  const needsFetch = Platform.OS === 'web' && !!source?.headers;
+  const [blobUri, setBlobUri] = useState<string | null>(null);
+  useEffect(() => {
+    if (!needsFetch || !source) return;
+    let cancelled = false;
+    let url: string | null = null;
+    setBlobUri(null);
+    fetch(source.uri, { headers: source.headers })
+      .then((response) => {
+        if (!response.ok) throw new Error(String(response.status));
+        return response.blob();
+      })
+      .then((blob) => {
+        if (cancelled) return;
+        url = URL.createObjectURL(blob);
+        setBlobUri(url);
+      })
+      .catch(() => {
+        if (!cancelled) setStatus('error');
+      });
+    return () => {
+      cancelled = true;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [source, needsFetch]);
+
   if (!source) return null;
+  const imageSource = needsFetch ? (blobUri ? { uri: blobUri } : null) : source;
 
   return (
     <View style={styles.frame}>
       {status !== 'error' ? (
-        <Image
-          key={attempt}
-          source={source}
-          style={styles.image}
-          resizeMode="contain"
-          resizeMethod="resize"
-          accessible
-          accessibilityLabel={`Demonstração do exercício ${exerciseName}`}
-          onLoadStart={() => setStatus('loading')}
-          onLoad={() => setStatus('ready')}
-          onError={() => setStatus('error')}
-        />
+        imageSource ? (
+          <Image
+            key={attempt}
+            source={imageSource}
+            style={styles.image}
+            resizeMode="contain"
+            resizeMethod="resize"
+            accessible
+            accessibilityLabel={`Demonstração do exercício ${exerciseName}`}
+            onLoadStart={() => setStatus('loading')}
+            onLoad={() => setStatus('ready')}
+            onError={() => setStatus('error')}
+          />
+        ) : null
       ) : (
         <View style={styles.center}>
           <Text style={styles.errorText}>Não foi possível carregar a demonstração.</Text>

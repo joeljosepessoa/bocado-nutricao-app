@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { apiClient } from './client';
 import type {
   Appointment,
@@ -323,12 +324,21 @@ export async function listProgressPhotos(): Promise<ProgressPhoto[]> {
 
 export async function uploadProgressPhoto(file: { uri: string; mimeType: string; name: string }, takenAt?: string): Promise<ProgressPhoto> {
   const form = new FormData();
-  // React Native aceita { uri, type, name } como arquivo no FormData.
-  form.append('file', { uri: file.uri, type: file.mimeType, name: file.name } as unknown as Blob);
+  if (Platform.OS === 'web') {
+    // No navegador a foto escolhida é um endereço blob:/data: — vira arquivo de verdade,
+    // e o próprio navegador monta o cabeçalho multipart (com o boundary).
+    const blob = await (await fetch(file.uri)).blob();
+    form.append('file', new File([blob], file.name, { type: file.mimeType }));
+  } else {
+    // React Native aceita { uri, type, name } como arquivo no FormData.
+    form.append('file', { uri: file.uri, type: file.mimeType, name: file.name } as unknown as Blob);
+  }
   if (takenAt) form.append('takenAt', takenAt);
-  const res = await apiClient.post<ProgressPhoto>('/client/progress-photos', form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const res = await apiClient.post<ProgressPhoto>(
+    '/client/progress-photos',
+    form,
+    Platform.OS === 'web' ? undefined : { headers: { 'Content-Type': 'multipart/form-data' } },
+  );
   return res.data;
 }
 

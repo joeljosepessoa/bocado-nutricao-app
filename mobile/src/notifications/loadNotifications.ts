@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 
 type NotificationsModule = typeof import('expo-notifications');
@@ -12,7 +13,9 @@ let cached: NotificationsModule | null | undefined;
  */
 export function loadNotifications(): NotificationsModule | null {
   if (cached !== undefined) return cached;
-  if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) {
+  // Na versão web não há notificação local nem push: o fim do descanso é avisado
+  // só com o app aberto (contador na tela + som).
+  if (Platform.OS === 'web' || Constants.executionEnvironment === ExecutionEnvironment.StoreClient) {
     cached = null;
     return cached;
   }

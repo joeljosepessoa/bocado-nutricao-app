@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <!-- viewport-fit=cover: a tela vai até as bordas do iPhone e o app usa as margens seguras (entalhe, barra de baixo).
+         maximum-scale=1: o Safari não dá zoom sozinho ao tocar num campo de texto. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+    <title>Bocado de Nutrição</title>
+    <meta name="description" content="Sua dieta, seus treinos e sua evolução com o seu nutricionista." />
+    <meta name="theme-color" content="#F97316" />
+
+    <!-- Instalação: Android/Chrome lê o manifest; o iPhone lê as marcações apple-* ("Adicionar à Tela de Início"). -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Bocado" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- Reset recomendado pelo react-native-web: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      html,
+      body {
+        height: 100%;
+        background-color: #f9fafb;
+      }
+      body {
+        overflow: hidden;
+        /* Sem o "puxar e recarregar" do Safari nem o realce cinza ao tocar. */
+        overscroll-behavior: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript>Para usar o Bocado de Nutrição, ative o JavaScript do navegador.</noscript>
+    <div id="root"></div>
+  </body>
+</html>

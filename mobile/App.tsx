@@ -16,7 +16,8 @@ function ThemedApp() {
   };
   return (
     <>
-      <NavigationContainer theme={navigationTheme}>
+      {/* Na versão web o título da aba fica fixo (sem o nome interno das telas). */}
+      <NavigationContainer theme={navigationTheme} documentTitle={{ formatter: () => 'Bocado de Nutrição' }}>
         <RootNavigator />
       </NavigationContainer>
       <StatusBar style={isDark ? 'light' : 'dark'} />
