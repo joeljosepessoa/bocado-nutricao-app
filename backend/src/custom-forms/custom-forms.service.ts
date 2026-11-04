@@ -37,7 +37,7 @@ export class CustomFormsService {
     const forms = await this.prisma.customForm.findMany({
       where: { professionalId, deletedAt: trash ? { not: null } : null },
       orderBy: [{ updatedAt: 'desc' }],
-      include: { _count: { select: { responses: true } } },
+      include: { _count: { select: { responses: { where: { deletedAt: null } } } } },
     });
     return forms.map(({ _count, questions, ...form }) => ({
       ...form,
@@ -88,12 +88,28 @@ export class CustomFormsService {
     return this.prisma.customForm.update({ where: { id }, data: { deletedAt: null } });
   }
 
+  /**
+   * Apagar de vez (só da lixeira). Formulário com respostas de pacientes — mesmo as que
+   * estão na lixeira — fica guardado: as respostas dependem dele.
+   */
+  async purge(professionalId: string, id: string) {
+    const form = await this.ownedForm(professionalId, id, true);
+    if (!form.deletedAt) throw new BadRequestException('Mande o formulário para a lixeira antes de apagar de vez.');
+    const responses = await this.prisma.customFormResponse.count({ where: { formId: id } });
+    if (responses > 0) {
+      throw new BadRequestException(
+        'Este formulário tem respostas de pacientes e por isso fica guardado. Apague as respostas antes, se quiser apagá-lo de vez.',
+      );
+    }
+    await this.prisma.customForm.delete({ where: { id } });
+  }
+
   // --- Respostas por paciente -------------------------------------------------
 
   async listResponses(professionalId: string, clientId: string) {
     await this.assertOwnedClient(professionalId, clientId);
     const rows = await this.prisma.customFormResponse.findMany({
-      where: { clientId, professionalId },
+      where: { clientId, professionalId, deletedAt: null },
       orderBy: [{ filledAt: 'desc' }, { createdAt: 'desc' }],
     });
     return rows.map(({ questions, answers, ...row }) => {
@@ -102,8 +118,11 @@ export class CustomFormsService {
     });
   }
 
-  private async ownedResponse(professionalId: string, clientId: string, id: string) {
-    const row = await this.prisma.customFormResponse.findFirst({ where: { id, clientId, professionalId } });
+  /** Por padrão resposta na lixeira conta como inexistente; `trashed` busca só as da lixeira. */
+  private async ownedResponse(professionalId: string, clientId: string, id: string, trashed = false) {
+    const row = await this.prisma.customFormResponse.findFirst({
+      where: { id, clientId, professionalId, deletedAt: trashed ? { not: null } : null },
+    });
     if (!row) throw new NotFoundException('Resposta não encontrada.');
     return row;
   }
@@ -148,9 +167,23 @@ export class CustomFormsService {
     });
   }
 
+  /** "Excluir" = mandar para a lixeira; dá para restaurar. */
   async removeResponse(professionalId: string, clientId: string, id: string) {
     await this.assertOwnedClient(professionalId, clientId);
     await this.ownedResponse(professionalId, clientId, id);
+    await this.prisma.customFormResponse.update({ where: { id }, data: { deletedAt: new Date() } });
+  }
+
+  async restoreResponse(professionalId: string, clientId: string, id: string) {
+    await this.assertOwnedClient(professionalId, clientId);
+    await this.ownedResponse(professionalId, clientId, id, true);
+    await this.prisma.customFormResponse.update({ where: { id }, data: { deletedAt: null } });
+  }
+
+  /** Apagar de vez (só da lixeira). */
+  async purgeResponse(professionalId: string, clientId: string, id: string) {
+    await this.assertOwnedClient(professionalId, clientId);
+    await this.ownedResponse(professionalId, clientId, id, true);
     await this.prisma.customFormResponse.delete({ where: { id } });
   }
 

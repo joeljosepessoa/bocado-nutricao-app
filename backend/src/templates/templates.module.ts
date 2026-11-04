@@ -10,5 +10,6 @@ import { TemplatesService } from './templates.service';
   imports: [DietsModule, WorkoutsModule, FoodsModule, ExercisesModule],
   controllers: [DietTemplatesController, WorkoutTemplatesController, ClientContentController],
   providers: [TemplatesService],
+  exports: [TemplatesService],
 })
 export class TemplatesModule {}

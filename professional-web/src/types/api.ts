@@ -1318,3 +1318,20 @@ export interface TrackingPhotos {
   sharedAt: string | null;
   items: Array<{ id: string; contentType: string; takenAt: string; createdAt: string }>;
 }
+
+// --- Lixeira -----------------------------------------------------------------
+
+export type TrashKind = 'diet' | 'workout' | 'diet_template' | 'workout_template' | 'form' | 'report' | 'form_response';
+
+export interface TrashItem {
+  kind: TrashKind;
+  id: string;
+  title: string;
+  clientId: string | null;
+  clientName: string | null;
+  deletedAt: string;
+  /** Dieta e treino nunca são apagados de vez; formulário com respostas também não. */
+  canPurge: boolean;
+  audience?: ReportAudience;
+  evaluatedAt?: string;
+}

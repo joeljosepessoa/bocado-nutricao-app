@@ -205,7 +205,7 @@ export function WorkoutTab() {
       {confirmDelete ? (
         <ConfirmDialog
           title="Excluir este treino?"
-          description="Esta ação removerá o treino desta cliente. Os demais dados da cliente não serão alterados."
+          description="O treino sai do painel e do aplicativo do paciente e vai para a Lixeira, de onde dá para restaurar. Os demais dados do paciente não mudam."
           confirmLabel="Excluir treino"
           danger
           onConfirm={deleteWorkout}

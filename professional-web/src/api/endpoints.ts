@@ -85,6 +85,8 @@ import type {
   WorkoutExercise,
   WorkoutSet,
   WorkoutVersion,
+  TrashItem,
+  TrashKind,
 } from '../types/api';
 
 // --- Autenticação ---------------------------------------------------------
@@ -1215,4 +1217,19 @@ export async function publicSignup(code: string, input: PublicSignupInput): Prom
 export async function getLegalDocuments(): Promise<LegalDocuments> {
   const res = await apiClient.get<LegalDocuments>('/legal/documents');
   return res.data;
+}
+
+// --- Lixeira -----------------------------------------------------------------
+
+export async function listTrash(): Promise<TrashItem[]> {
+  const res = await apiClient.get<{ items: TrashItem[] }>('/trash');
+  return res.data.items;
+}
+
+export async function restoreTrashItem(kind: TrashKind, id: string): Promise<void> {
+  await apiClient.post(`/trash/${kind}/${id}/restore`);
+}
+
+export async function purgeTrashItem(kind: TrashKind, id: string): Promise<void> {
+  await apiClient.delete(`/trash/${kind}/${id}`);
 }

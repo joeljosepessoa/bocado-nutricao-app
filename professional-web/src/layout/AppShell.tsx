@@ -26,6 +26,7 @@ const PROFESSIONAL_NAV_ITEMS: NavItem[] = [
   { to: '/modelos', label: 'Modelos', icon: 'clipboardCheck' },
   { to: '/alimentos', label: 'Alimentos', icon: 'apple' },
   { to: '/exercicios', label: 'Exercícios', icon: 'dumbbell' },
+  { to: '/lixeira', label: 'Lixeira', icon: 'trash' },
   { to: '/plano', label: 'Plano', icon: 'card' },
   { to: '/configuracoes', label: 'Configurações', icon: 'settings' },
 ];

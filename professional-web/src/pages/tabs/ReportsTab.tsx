@@ -184,7 +184,7 @@ export function ReportsTab() {
       {toDelete ? (
         <ConfirmDialog
           title="Excluir relatório"
-          description="O arquivo será removido permanentemente. Esta ação não pode ser desfeita."
+          description="O relatório sai do painel e do aplicativo do paciente e vai para a Lixeira, de onde dá para restaurar."
           danger
           confirmLabel="Excluir"
           onConfirm={() => deleteMutation.mutateAsync(toDelete.id)}

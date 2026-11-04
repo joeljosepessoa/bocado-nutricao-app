@@ -111,6 +111,13 @@ export class TemplatesService {
     return this.summary(row);
   }
 
+  /** Apagar de vez (só da lixeira). Nada aponta para o modelo: dietas e treinos atribuídos são cópias. */
+  async purge(professionalId: string, kind: TemplateKind, id: string) {
+    const row = await this.owned(professionalId, kind, id);
+    if (!row.deletedAt) throw new BadRequestException('Mande o modelo para a lixeira antes de apagar de vez.');
+    await this.prisma.template.delete({ where: { id } });
+  }
+
   /** Atribuir a um paciente: o modelo vira RASCUNHO na ficha dele (as regras do paciente valem como sempre). */
   async apply(professionalId: string, kind: TemplateKind, id: string, clientId: string, replaceDraft: boolean, meta: RequestMeta = {}) {
     const row = await this.owned(professionalId, kind, id);

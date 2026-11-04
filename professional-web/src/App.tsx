@@ -37,6 +37,7 @@ import { PatientDietAiPage, PatientWorkoutAiPage } from './patientAi/PatientAiPa
 import { DietTemplateEditorPage, WorkoutTemplateEditorPage } from './templates/TemplateEditorPages';
 import { AnamnesisPage } from './pages/AnamnesisPage';
 import { PlanPage } from './pages/PlanPage';
+import { TrashPage } from './pages/TrashPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { AdminProfessionalsPage } from './pages/admin/AdminProfessionalsPage';
@@ -82,6 +83,7 @@ function App() {
               <Route path="/modelos/dietas/:templateId" element={<DietTemplateEditorPage />} />
               <Route path="/modelos/treinos/novo" element={<WorkoutTemplateEditorPage />} />
               <Route path="/modelos/treinos/:templateId" element={<WorkoutTemplateEditorPage />} />
+              <Route path="/lixeira" element={<TrashPage />} />
               <Route path="/plano" element={<PlanPage />} />
               <Route path="/configuracoes" element={<SettingsPage />} />
               <Route path="/clients/:clientId" element={<ClientProfilePage />}>

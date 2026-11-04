@@ -230,7 +230,7 @@ export function DietTab() {
       {confirmDelete ? (
         <ConfirmDialog
           title="Excluir esta dieta?"
-          description="Essa ação removerá esta dieta do painel e do aplicativo do paciente. O histórico de versões é preservado. Deseja continuar?"
+          description="A dieta sai do painel e do aplicativo do paciente e vai para a Lixeira, de onde dá para restaurar. O histórico de versões é preservado."
           confirmLabel="Excluir dieta"
           danger
           onConfirm={deleteDiet}

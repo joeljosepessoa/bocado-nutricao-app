@@ -212,7 +212,7 @@ describe('WorkoutTab — excluir treino', () => {
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText('Excluir este treino?')).toBeInTheDocument();
     expect(
-      within(dialog).getByText('Esta ação removerá o treino desta cliente. Os demais dados da cliente não serão alterados.'),
+      within(dialog).getByText('O treino sai do painel e do aplicativo do paciente e vai para a Lixeira, de onde dá para restaurar. Os demais dados do paciente não mudam.'),
     ).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
     expect(api.archiveWorkout).not.toHaveBeenCalled();

@@ -73,9 +73,12 @@ export class ReportsService {
     return client;
   }
 
-  private async assertOwnedReport(professionalId: string, clientId: string, reportId: string) {
+  /** Por padrão relatório na lixeira conta como inexistente; `trashed` busca só os da lixeira. */
+  private async assertOwnedReport(professionalId: string, clientId: string, reportId: string, trashed = false) {
     await this.assertOwnedClient(professionalId, clientId);
-    const report = await this.prisma.report.findFirst({ where: { id: reportId, clientId } });
+    const report = await this.prisma.report.findFirst({
+      where: { id: reportId, clientId, deletedAt: trashed ? { not: null } : null },
+    });
     if (!report) {
       throw new NotFoundException('Relatório não encontrado.');
     }
@@ -92,7 +95,7 @@ export class ReportsService {
     await this.assertOwnedClient(professionalId, clientId);
     const safePage = page > 0 ? page : 1;
     const safePageSize = pageSize > 0 ? pageSize : 20;
-    const where = { clientId, evaluationId: filters.evaluationId, audience: filters.audience };
+    const where = { clientId, evaluationId: filters.evaluationId, audience: filters.audience, deletedAt: null };
 
     const [items, total] = await this.prisma.$transaction([
       this.prisma.report.findMany({
@@ -112,7 +115,7 @@ export class ReportsService {
   async listAll(professionalId: string, page = 1, pageSize = 50) {
     const safePage = page > 0 ? page : 1;
     const safePageSize = pageSize > 0 && pageSize <= 100 ? pageSize : 50;
-    const where = { professionalId, client: { professionalId } };
+    const where = { professionalId, client: { professionalId }, deletedAt: null };
 
     const [items, total] = await this.prisma.$transaction([
       this.prisma.report.findMany({
@@ -462,19 +465,28 @@ export class ReportsService {
     return ReportSummaryDto.fromEntity(updated);
   }
 
+  /** "Excluir" = mandar para a lixeira: some do painel e do app do paciente, o PDF continua guardado. */
   async remove(professionalId: string, clientId: string, reportId: string, meta: RequestMeta = {}): Promise<void> {
-    const report = await this.assertOwnedReport(professionalId, clientId, reportId);
+    await this.assertOwnedReport(professionalId, clientId, reportId);
+    await this.prisma.report.update({ where: { id: reportId }, data: { deletedAt: new Date() } });
+    await this.auditLog.record({ professionalId, clientId, reportId, action: ReportAuditAction.deleted, ipAddress: meta.ipAddress });
+  }
+
+  /** Volta da lixeira como estava (inclusive liberado ou não para o paciente). */
+  async restore(professionalId: string, clientId: string, reportId: string, meta: RequestMeta = {}): Promise<void> {
+    await this.assertOwnedReport(professionalId, clientId, reportId, true);
+    await this.prisma.report.update({ where: { id: reportId }, data: { deletedAt: null } });
+    await this.auditLog.record({ professionalId, clientId, reportId, action: ReportAuditAction.restored, ipAddress: meta.ipAddress });
+  }
+
+  /** Apagar de vez (só a partir da lixeira): remove o PDF e o registro. */
+  async purge(professionalId: string, clientId: string, reportId: string, meta: RequestMeta = {}): Promise<void> {
+    const report = await this.assertOwnedReport(professionalId, clientId, reportId, true);
     if (report.storageKey) {
       await this.storage.delete(report.storageKey);
     }
     await this.prisma.report.delete({ where: { id: reportId } });
-    await this.auditLog.record({
-      professionalId,
-      clientId,
-      reportId: undefined,
-      action: ReportAuditAction.deleted,
-      ipAddress: meta.ipAddress,
-    });
+    await this.auditLog.record({ professionalId, clientId, reportId: undefined, action: ReportAuditAction.purged, ipAddress: meta.ipAddress });
   }
 
   // --- Fase 9: acesso client-facing -----------------------------------
@@ -487,6 +499,7 @@ export class ReportsService {
       audience: ReportAudience.client,
       releasedToClientAt: { not: null } as const,
       status: ReportStatus.ready,
+      deletedAt: null,
     };
 
     const [items, total] = await this.prisma.$transaction([
@@ -528,6 +541,7 @@ export class ReportsService {
         audience: ReportAudience.client,
         releasedToClientAt: { not: null },
         status: ReportStatus.ready,
+        deletedAt: null,
       },
     });
     if (!report || !report.storageKey) {

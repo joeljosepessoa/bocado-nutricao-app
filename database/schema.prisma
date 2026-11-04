@@ -1334,7 +1334,12 @@ enum ReportAuditAction {
   downloaded
   released
   revoked
+  /// Foi para a lixeira (o PDF continua guardado).
   deleted
+  /// Voltou da lixeira.
+  restored
+  /// Apagado de vez pela lixeira (PDF e registro).
+  purged
 }
 
 model Report {
@@ -1352,6 +1357,8 @@ model Report {
   failureReason      String?        @map("failure_reason")
   generatedAt        DateTime?      @map("generated_at")
   createdAt          DateTime       @default(now()) @map("created_at")
+  /// Lixeira: preenchido = some do painel e do app; restaurar volta como estava.
+  deletedAt          DateTime?      @map("deleted_at")
 
   evaluation   PhysicalEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Restrict)
   client       Client             @relation(fields: [clientId], references: [id], onDelete: Restrict)
@@ -1692,6 +1699,8 @@ model CustomFormResponse {
   filledAt       DateTime @default(now()) @map("filled_at")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
+  /// Lixeira: preenchido = some da ficha do paciente; restaurar volta como estava.
+  deletedAt      DateTime? @map("deleted_at")
 
   form         CustomForm   @relation(fields: [formId], references: [id], onDelete: Restrict)
   client       Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)

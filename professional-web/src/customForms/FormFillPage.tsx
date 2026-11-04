@@ -182,7 +182,7 @@ export function FormFillPage() {
       {confirmDelete ? (
         <ConfirmDialog
           title="Excluir formulário preenchido"
-          description={`As respostas de “${title}” deste paciente serão apagadas. Não dá para desfazer.`}
+          description={`As respostas de “${title}” vão para a Lixeira, de onde dá para restaurar.`}
           confirmLabel="Excluir"
           danger
           onConfirm={async () => {
