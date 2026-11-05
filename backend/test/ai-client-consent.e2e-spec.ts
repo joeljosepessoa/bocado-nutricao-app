@@ -202,4 +202,33 @@ describe('Consentimento de IA do cliente — política por recurso (e2e)', () =>
     expect((await prisma.client.findUniqueOrThrow({ where: { id: ctx.client.id } })).aiDataProcessingConsentAt).toBeNull();
     await draftNote(ctx).expect(403);
   });
+  it('profissional registra no painel a autorização que o paciente deu fora do app (com a forma), e o paciente ainda pode desligar', async () => {
+    const ctx = await setup();
+    const record = (auth: Record<string, string>, body: object) => http().post(`/clients/${ctx.client.id}/ai/consent`).set(auth).send(body);
+
+    // Precisa dizer como o paciente autorizou e confirmar.
+    await record(ctx.proAuth, { method: 'whatsapp' }).expect(400);
+    await record(ctx.proAuth, { method: 'whatsapp', confirmed: false }).expect(400);
+    await record(ctx.proAuth, { method: 'email', confirmed: true }).expect(400);
+    // Outro profissional e o próprio paciente não usam esta rota.
+    const other = await registerProfessional(app);
+    await record({ Authorization: `Bearer ${other.accessToken}` }, { method: 'whatsapp', confirmed: true }).expect(404);
+    await record(ctx.clientAuth, { method: 'whatsapp', confirmed: true }).expect(403);
+    await draftNote(ctx).expect(403);
+
+    const granted = (await record(ctx.proAuth, { method: 'whatsapp', confirmed: true }).expect(201)).body.aiDataProcessingConsentAt;
+    expect(granted).toEqual(expect.any(String));
+    await draftNote(ctx).expect(201);
+    const audit = await prisma.aiAuditLog.findMany({ where: { clientId: ctx.client.id, action: 'consent_recorded_by_professional' } });
+    expect(audit).toEqual([expect.objectContaining({ professionalId: ctx.professional.user.id, consentMethod: 'whatsapp' })]);
+
+    // Registrar de novo não muda a data nem duplica a auditoria.
+    expect((await record(ctx.proAuth, { method: 'paper', confirmed: true }).expect(201)).body.aiDataProcessingConsentAt).toBe(granted);
+    expect(await prisma.aiAuditLog.count({ where: { clientId: ctx.client.id, action: 'consent_recorded_by_professional' } })).toBe(1);
+
+    // O app do paciente vê a autorização e pode desligar.
+    expect((await http().get('/client/ai/consent').set(ctx.clientAuth).expect(200)).body.aiDataProcessingConsentAt).toBe(granted);
+    await http().delete('/client/ai/consent').set(ctx.clientAuth).expect(200);
+    await draftNote(ctx).expect(403);
+  });
 });

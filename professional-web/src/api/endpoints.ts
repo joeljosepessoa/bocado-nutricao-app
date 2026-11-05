@@ -879,6 +879,11 @@ export async function acceptProfessionalAiConsent(): Promise<void> {
   await apiClient.post('/professionals/me/ai/consent');
 }
 
+/** Registra a autorização de IA que o paciente deu fora do app (WhatsApp, papel ou pessoalmente). */
+export async function recordPatientAiConsent(clientId: string, method: 'whatsapp' | 'paper' | 'in_person'): Promise<void> {
+  await apiClient.post(`/clients/${clientId}/ai/consent`, { method, confirmed: true });
+}
+
 export async function generateDraftNote(
   clientId: string,
   input: { instructions: string; entityType: 'evaluation' | 'diet' | 'workout' },

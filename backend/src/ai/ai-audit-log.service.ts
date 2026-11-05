@@ -8,6 +8,8 @@ export interface RecordAiAuditEntry {
   feature?: AiFeatureKey;
   action: AiAuditAction;
   ipAddress?: string;
+  /** Só em consent_recorded_by_professional. */
+  consentMethod?: string;
 }
 
 /**
@@ -27,6 +29,7 @@ export class AiAuditLogService {
         feature: entry.feature,
         action: entry.action,
         ipAddress: entry.ipAddress,
+        consentMethod: entry.consentMethod,
       },
     });
   }

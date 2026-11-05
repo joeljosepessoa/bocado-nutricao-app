@@ -1603,6 +1603,8 @@ enum AiAuditAction {
   consent_granted_professional
   consent_granted_client
   consent_revoked_client
+  // Autorização que o paciente deu fora do app (WhatsApp, papel, pessoalmente), registrada pelo profissional.
+  consent_recorded_by_professional
   generation_requested
   generation_succeeded
   generation_failed
@@ -1720,6 +1722,8 @@ model AiAuditLog {
   feature        AiFeatureKey?
   action         AiAuditAction
   ipAddress      String?       @map("ip_address")
+  // Só em consent_recorded_by_professional: como o paciente autorizou (whatsapp, paper, in_person).
+  consentMethod  String?       @map("consent_method")
   createdAt      DateTime      @default(now()) @map("created_at")
 
   professional Professional @relation(fields: [professionalId], references: [id], onDelete: Restrict)

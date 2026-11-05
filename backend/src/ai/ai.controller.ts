@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Query, Req } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AiFeatureKey, Role } from '@prisma/client';
 import { Request } from 'express';
@@ -8,6 +8,7 @@ import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { AiService, RequestMeta } from './ai.service';
 import { GenerateAiContentDto } from './dto/generate-ai-content.dto';
 import { GenerateClientAiContentDto } from './dto/generate-client-ai-content.dto';
+import { RecordClientConsentDto } from './dto/record-client-consent.dto';
 import { TemplateDietChatDto, TemplateWorkoutChatDto } from './dto/template-chat.dto';
 
 // Mesmo padrão de AUTH_THROTTLE_LIMIT (auth-http.util.ts): baixo por padrão
@@ -121,6 +122,12 @@ export class ProfessionalClientAiController {
       input: dto,
       meta: meta(req),
     });
+  }
+
+  /** Registra a autorização que o paciente deu fora do app (só para quem ainda não autorizou). */
+  @Post('consent')
+  recordConsent(@CurrentUser() user: AuthenticatedUser, @Param('clientId', ParseUUIDPipe) clientId: string, @Body() dto: RecordClientConsentDto, @Req() req: Request) {
+    return this.aiService.recordClientConsentByProfessional(user.id, clientId, dto.method, meta(req));
   }
 
   @Get('interactions')

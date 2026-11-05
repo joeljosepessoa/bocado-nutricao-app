@@ -14,6 +14,7 @@ import { TemplateAiChat } from '../templates/TemplateAiChat';
 import chatStyles from '../templates/TemplateAiChat.module.css';
 import type { ClientDetail, TemplateChatMessage } from '../types/api';
 import { WorkoutProposalEditor } from '../workoutAssistant/WorkoutProposalEditor';
+import { RecordAiConsentDialog } from './RecordAiConsentDialog';
 import {
   draftProblems as workoutProblems,
   draftToPayload as workoutToPayload,
@@ -62,8 +63,15 @@ function PatientAiShell({
   children: ReactNode;
 }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [recording, setRecording] = useState(false);
   const noun = kind === 'diet' ? 'dieta' : 'treino';
   const back = () => navigate(`/clients/${client.id}/${kind}`);
+  const consentRecorded = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['client-diet-content', client.id] }),
+      queryClient.invalidateQueries({ queryKey: ['client-workout-content', client.id] }),
+    ]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -75,9 +83,18 @@ function PatientAiShell({
       </div>
 
       {!consent ? (
-        <div role="alert" style={{ fontSize: 13, padding: '10px 14px', borderRadius: 12, background: 'var(--color-warning-light, #fef3c7)', color: 'var(--color-text)' }}>
-          <strong>{client.user.fullName} ainda não autorizou a IA.</strong> Sem a autorização dele, a IA não pode usar os dados do paciente. Peça para ele
-          <strong> atualizar o app</strong>: a versão nova pede essa autorização assim que ele abrir (também dá para autorizar em Privacidade e dados).
+        <div
+          role="alert"
+          style={{ fontSize: 13, padding: '10px 14px', borderRadius: 12, background: 'var(--color-warning-light, #fef3c7)', color: 'var(--color-text)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}
+        >
+          <span style={{ flex: '1 1 320px', minWidth: 0 }}>
+            <strong>{client.user.fullName} ainda não autorizou a IA.</strong> Sem a autorização dele, a IA não pode usar os dados do paciente. Peça para ele
+            <strong> atualizar o app</strong>: a versão nova pede essa autorização assim que ele abrir. Se ele já te autorizou por mensagem, papel ou
+            pessoalmente, registre aqui.
+          </span>
+          <Button size="small" variant="secondary" onClick={() => setRecording(true)}>
+            Registrar autorização do paciente
+          </Button>
         </div>
       ) : null}
 
@@ -116,6 +133,9 @@ function PatientAiShell({
           </div>
         </div>
       </div>
+      {recording ? (
+        <RecordAiConsentDialog clientId={client.id} clientName={client.user.fullName} onDone={consentRecorded} onClose={() => setRecording(false)} />
+      ) : null}
     </div>
   );
 }

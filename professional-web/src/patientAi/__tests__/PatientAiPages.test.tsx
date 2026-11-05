@@ -15,6 +15,7 @@ vi.mock('../../api/endpoints', () => ({
   createDietFromProposal: vi.fn(),
   createWorkoutFromProposal: vi.fn(),
   acceptProfessionalAiConsent: vi.fn(),
+  recordPatientAiConsent: vi.fn(),
   searchFoods: vi.fn().mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 }),
 }));
 
@@ -106,6 +107,26 @@ describe('Montar a dieta do paciente com a IA', () => {
     renderAt('/clients/c1/diet/ia');
     expect(await screen.findByText(/Paciente Teste ainda não autorizou a IA/)).toBeInTheDocument();
     expect(screen.getByText('atualizar o app')).toBeInTheDocument();
+  });
+
+  it('registrar a autorização dada fora do app: exige a forma e a confirmação, depois o aviso some', async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.getClientDietContent).mockResolvedValueOnce({ content: null, foods: [], patientAiConsent: false });
+    vi.mocked(api.getClientDietContent).mockResolvedValue({ content: null, foods: [], patientAiConsent: true });
+    vi.mocked(api.recordPatientAiConsent).mockResolvedValue(undefined);
+    renderAt('/clients/c1/diet/ia');
+
+    await user.click(await screen.findByRole('button', { name: 'Registrar autorização do paciente' }));
+    const save = screen.getByRole('button', { name: 'Registrar autorização' });
+    expect(save).toBeDisabled();
+    await user.click(screen.getByLabelText('Por WhatsApp ou mensagem'));
+    expect(save).toBeDisabled();
+    await user.click(screen.getByLabelText(/Confirmo que o paciente me autorizou/));
+    await user.click(save);
+
+    expect(api.recordPatientAiConsent).toHaveBeenCalledWith('c1', 'whatsapp');
+    await waitFor(() => expect(screen.queryByText(/ainda não autorizou a IA/)).not.toBeInTheDocument());
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
 

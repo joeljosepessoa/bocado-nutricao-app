@@ -395,6 +395,31 @@ export class AiService {
     return { aiDataProcessingConsentAt };
   }
 
+  /**
+   * Autorização que o paciente deu fora do app (WhatsApp, papel, pessoalmente), registrada pelo
+   * profissional dele. Fica na auditoria como registrada pelo profissional, com a forma; o paciente
+   * continua podendo desligar no app (Privacidade e dados).
+   */
+  async recordClientConsentByProfessional(
+    professionalId: string,
+    clientId: string,
+    method: string,
+    meta: RequestMeta,
+  ): Promise<{ aiDataProcessingConsentAt: Date }> {
+    const client = await this.assertOwnedClient(professionalId, clientId);
+    if (client.aiDataProcessingConsentAt) return { aiDataProcessingConsentAt: client.aiDataProcessingConsentAt };
+    const aiDataProcessingConsentAt = new Date();
+    await this.prisma.client.update({ where: { id: clientId }, data: { aiDataProcessingConsentAt } });
+    await this.auditLog.record({
+      professionalId,
+      clientId,
+      action: AiAuditAction.consent_recorded_by_professional,
+      consentMethod: method,
+      ipAddress: meta.ipAddress,
+    });
+    return { aiDataProcessingConsentAt };
+  }
+
   /** Estado atual do consentimento do próprio cliente (null = não autorizado). */
   async getClientConsent(clientId: string): Promise<{ aiDataProcessingConsentAt: Date | null }> {
     return this.prisma.client.findUniqueOrThrow({
