@@ -5,6 +5,7 @@ import { faithfulUserDiet, it_ as item, USER_EXAMPLE_DIET, wholeLineUserDiet } f
 import { faithfulOptionsDiet, leanMeat, OPTIONS_EXAMPLE_DIET } from '../../../../test/fixtures/options-example-diet';
 import { hardWrap } from '../../../../test/fixtures/hard-wrap';
 import { CHOOSE_ONE_LINES_DIET, CHOOSE_ONE_LINES_DIET_UNNUMBERED, faithfulChooseOneLinesDiet } from '../../../../test/fixtures/choose-one-lines-diet';
+import { ESCOLHER_FRUTA_DIET, faithfulEscolherFrutaDiet } from '../../../../test/fixtures/escolher-fruta-diet';
 
 const TEXT = [
   'CAFÉ DA MANHÃ',
@@ -935,5 +936,50 @@ describe('auxiliares de fidelidade', () => {
     expect(parseMealTime('7h')).toBe('07:00');
     expect(parseMealTime('12:30')).toBe('12:30');
     expect(parseMealTime('depois do treino')).toBeNull();
+  });
+  describe('quarta dieta real: "fruta (100 g) a escolher", "Danone/iogurte", "cozidos ou refogados" e "igual ao almoço"', () => {
+    const meals = (organized: AiOrganizedDiet) => organized.days[0].meals;
+
+    it('aceita a organização fiel, com o jantar repetindo o almoço como escrito', () => {
+      const checked = checkDietFidelity(ESCOLHER_FRUTA_DIET, faithfulEscolherFrutaDiet(true));
+      expect(checked.days[0].meals.map((m) => m.name)).toEqual(['Café da Manhã', 'Almoço', 'Lanche da Tarde', 'Jantar']);
+      const fruit = checked.days[0].meals[0].groups[0].choices[0].items[2];
+      expect([fruit.rawFood, fruit.quantity, fruit.unit, fruit.notes]).toEqual(['fruta', 100, 'g', 'a escolher']);
+      expect(checked.days[0].meals[3].warnings).toEqual([DIET_WARNINGS.copiedFromMeal('Almoço')]);
+      expect(checked.warnings).toEqual([]);
+    });
+
+    it('sem o jantar, a linha "igual ao almoço" vira aviso de revisão (não recusa)', () => {
+      const checked = checkDietFidelity(ESCOLHER_FRUTA_DIET, faithfulEscolherFrutaDiet(false));
+      expect(checked.warnings).toEqual([DIET_WARNINGS.uncovered('Jantar — igual ao almoço (mesma proteína e carboidrato à escolha, e mesmos fixos)')]);
+    });
+
+    it('"fruta (100 g) a escolher" continua conferindo a quantidade', () => {
+      const changed = faithfulEscolherFrutaDiet(true);
+      meals(changed)[0].groups[0].choices[0].items[2] = item('fruta (100 g) a escolher', 'fruta', 200, 'g');
+      expect(rejection(changed, ESCOLHER_FRUTA_DIET)).toMatch(/quantidade 200 não está escrita/);
+    });
+
+    it('a barra continua separando quando a IA divide "Danone" e "iogurte grego light" em dois alimentos da mesma opção', () => {
+      const split = faithfulEscolherFrutaDiet(true);
+      const option2 = meals(split)[0].groups[0].choices[1];
+      option2.items = [item('Danone', 'Danone', null, null), item('iogurte grego light (100 g)', 'iogurte grego light', 100, 'g'), ...option2.items.slice(1)];
+      expect(rejection(split, ESCOLHER_FRUTA_DIET)).toMatch(/"danone" e "iogurte grego light 100 g" são alternativas no texto/);
+    });
+
+    it('só a refeição escrita como cópia pode repetir alimentos; as outras continuam travadas', () => {
+      const lunchCopiedToSnack = faithfulEscolherFrutaDiet(true);
+      meals(lunchCopiedToSnack)[2].groups.push(meals(lunchCopiedToSnack)[1].groups[0]);
+      expect(rejection(lunchCopiedToSnack, ESCOLHER_FRUTA_DIET)).toMatch(/foi usado mais vezes do que aparece no texto/);
+
+      const withoutCopyLine = ESCOLHER_FRUTA_DIET.replace('Jantar — igual ao almoço (mesma proteína e carboidrato à escolha, e mesmos fixos)', 'Jantar');
+      expect(rejection(faithfulEscolherFrutaDiet(true), withoutCopyLine)).toMatch(/foi usado mais vezes do que aparece no texto/);
+    });
+
+    it('a cópia não pode trazer alimento que não está na refeição de origem', () => {
+      const extra = faithfulEscolherFrutaDiet(true);
+      meals(extra)[3].groups[2].choices[0].items.push(item('Pão integral (50 g)', 'Pão integral', 50, 'g'));
+      expect(rejection(extra, ESCOLHER_FRUTA_DIET)).toMatch(/"pao integral 50 g" foi usado mais vezes/);
+    });
   });
 });

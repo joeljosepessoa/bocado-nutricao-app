@@ -34,6 +34,7 @@ export const DIET_WARNINGS = {
   dayLabelDiscarded: (label: string) => `O título "${label}" não está escrito no texto — foi criado pela IA e descartado. Confira o nome do dia.`,
   optionsWithOtherBlocks:
     'As opções desta refeição vieram junto com outro bloco "escolher 1" (ex.: acréscimo) — ficaram como um bloco "escolher 1", com as mesmas opções. Confira.',
+  copiedFromMeal: (name: string) => `Refeição montada a partir de "${name}", como escrito no texto ("igual ao ${name.toLowerCase()}"). Confira.`,
 } as const;
 
 export interface CheckedDietItem {
@@ -412,7 +413,11 @@ function locateItemCore(item: Pick<AiDietItem, 'sourceText' | 'food' | 'quantity
       if (p > span.end && bridges(tokens, span.end + 1, p, extraUnits, parens)) {
         const after = skipUnits(tokens, qEnd, extraUnits);
         const next = tokens[after];
-        if (next === undefined || next === 'e' || next === 'mais' || (inParen[after] && !inParen[after - 1])) return { core: tokens.slice(span.start, after).join(' '), insideName: false };
+        // "fruta (100 g) a escolher": o parêntese só com a quantidade fecha o item; o que vem depois dele é complemento.
+        const closedQuantity = inParen[p] && !inParen[p - 1] && !inParen[after] && inParen.slice(p, after).every(Boolean) && !NUMBER_TOKEN.test(next ?? '');
+        if (next === undefined || next === 'e' || next === 'mais' || closedQuantity || (inParen[after] && !inParen[after - 1])) {
+          return { core: tokens.slice(span.start, after).join(' '), insideName: false };
+        }
       }
       if (quantityInsideName(tokens, span, p, qEnd, item.food, extraUnits)) return { core: tokens.slice(span.start, span.end + 1).join(' '), insideName: true };
     }
@@ -451,7 +456,7 @@ interface SourceLine {
 
 const OPTION_PATTERN = /\bopcao (\d+)\b/;
 const SLASH_SEPARATOR = /(?<!\d)\/|\/(?!\d)/;
-const ALTERNATIVE_SEPARATOR = /(?<!\d)\/|\/(?!\d)|\s+ou\s+/i;
+const ALTERNATIVE_SEPARATOR_CAPTURED = /((?<!\d)\/|\/(?!\d)|\s+ou\s+)/i;
 
 /** Posição do ")" que fecha o "(" em `open`; -1 se a linha não o fecha. */
 function closingParenthesis(text: string, open: number): number {
@@ -497,14 +502,33 @@ function isDetail(chunk: LineChunk, phrases: string[]): boolean {
   return chunk.parenthetical && !phrases.some((phrase) => containsPhrase(chunk.norm, phrase));
 }
 
-/** Partes da linha que são alternativas entre si, do ponto de vista dos trechos conferidos. */
+/**
+ * Partes da linha que são alternativas entre si, do ponto de vista dos trechos conferidos.
+ * "/" ou "ou" DENTRO de um trecho conferido não separa nada: "Danone/iogurte grego light
+ * (100 g)" é um alimento só (duas marcas), e "Legumes cozidos ou refogados à vontade"
+ * também — o "/" e o "ou" ficam com o alimento.
+ */
 function alternativeSegments(line: SourceLine, phrases: string[]): string[] {
   const segments = [''];
-  for (const chunk of line.chunks) {
-    const parts = isDetail(chunk, phrases) ? [chunk.text] : chunk.text.split(ALTERNATIVE_SEPARATOR);
-    segments[segments.length - 1] += ` ${parts[0]}`;
-    segments.push(...parts.slice(1));
-  }
+  const insidePhrase = (left: string, separator: string, right: string) => {
+    const joined = normalizeDietText(`${left}${separator}${right}`);
+    const l = normalizeDietText(left);
+    const r = normalizeDietText(right);
+    return phrases.some((phrase) => containsPhrase(joined, phrase) && !containsPhrase(l, phrase) && !containsPhrase(r, phrase));
+  };
+  line.chunks.forEach((chunk, k) => {
+    // Com o separador capturado: [parte, separador, parte, separador, parte…].
+    const pieces = isDetail(chunk, phrases) ? [chunk.text] : chunk.text.split(ALTERNATIVE_SEPARATOR_CAPTURED);
+    const laterChunks = line.chunks.slice(k + 1).map((next) => next.text).join(' ');
+    segments[segments.length - 1] += ` ${pieces[0]}`;
+    for (let i = 1; i + 1 < pieces.length; i += 2) {
+      const [separator, part] = [pieces[i], pieces[i + 1]];
+      // O trecho pode continuar depois desta parte ("Danone/iogurte grego light" + "(100 g)").
+      const rest = `${pieces.slice(i + 1).join('')} ${laterChunks}`;
+      if (insidePhrase(segments[segments.length - 1], separator, rest)) segments[segments.length - 1] += `${separator}${part}`;
+      else segments.push(part);
+    }
+  });
   return segments.map(normalizeDietText).filter(Boolean);
 }
 
@@ -705,7 +729,42 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
     if (label && !literal(label)) problems.push(`${what} "${label}" não está no texto informado.`);
   };
 
-  const checkItem = (item: AiDietItem, at: string): { checked: CheckedDietItem; core: string | null } => {
+  // Onde cada refeição está escrita: do seu título até o título da próxima (na ordem do texto).
+  const allMeals = organized.days.flatMap((day) => day.meals);
+  const mealStarts: Array<number | null> = [];
+  let cursor = 0;
+  for (const meal of allMeals) {
+    const name = meal.name ? normalizeDietText(meal.name) : '';
+    const findFrom = (match: (line: SourceLine) => boolean) => {
+      for (let i = cursor; i < written.length; i++) if (match(written[i])) return i;
+      return -1;
+    };
+    let at = name ? findFrom((line) => line.norm === name || line.norm.startsWith(`${name} `)) : -1;
+    if (at < 0 && name) at = findFrom((line) => containsPhrase(line.norm, name));
+    mealStarts.push(at < 0 ? null : at);
+    if (at >= 0) cursor = at + 1;
+  }
+  const mealRegion = (index: number): SourceLine[] | null => {
+    const start = mealStarts[index];
+    if (start === null) return null;
+    const next = mealStarts.slice(index + 1).find((s): s is number => s !== null);
+    return written.slice(start, next ?? written.length);
+  };
+  // "Jantar — igual ao almoço": a refeição pode repetir os alimentos de uma refeição anterior.
+  const COPY_MARKER = /\b(igual|iguais|mesm[oa]s?|repet\w*)\b/;
+  const copiedMeal = (index: number): number | null => {
+    const start = mealStarts[index];
+    if (start === null || !COPY_MARKER.test(written[start].norm)) return null;
+    const own = allMeals[index].name ? normalizeDietText(allMeals[index].name!) : '';
+    for (let j = 0; j < index; j++) {
+      const name = allMeals[j].name ? normalizeDietText(allMeals[j].name!) : '';
+      if (name && name !== own && containsPhrase(written[start].norm, name)) return j;
+    }
+    return null;
+  };
+  const mealCores: Array<Set<string>> = [];
+
+  const checkItem = (item: AiDietItem, at: string, reusable: Set<string> | null = null): { checked: CheckedDietItem; core: string | null } => {
     const warnings: string[] = [];
     const normalizedSource = normalizeDietText(item.sourceText);
     if (!containsPhrase(source, normalizedSource)) {
@@ -734,7 +793,9 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
         problems.push(`${at}: a quantidade ${item.quantity} não está junto de "${item.food}" em ${itemLabel(item)}.`);
       }
     }
-    if (core) {
+    if (core && reusable?.has(core)) {
+      covered.push(core);
+    } else if (core) {
       covered.push(core);
       const used = (coreUse.get(core) ?? 0) + 1;
       coreUse.set(core, used);
@@ -781,7 +842,7 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
   };
 
   /** Regras da estrutura contra o texto: opções/alternativas não podem ser misturadas nem viradas obrigatórias. */
-  const checkGroupStructure = (group: AiGroup, cores: Array<Array<string | null>>, where: string, mealName: string | null) => {
+  const checkGroupStructure = (group: AiGroup, cores: Array<Array<string | null>>, where: string, mealName: string | null, region: SourceLine[] | null) => {
     const groupName = group.label ? `bloco "${group.label}"` : group.kind === 'meal_options' ? 'opções' : 'itens fixos';
     if (group.kind === 'fixed' && group.choices.length !== 1) problems.push(`${where}: itens fixos devem formar uma única lista.`);
     if (group.kind !== 'fixed' && group.choices.length === 0) problems.push(`${where}: ${groupName} sem nenhuma opção.`);
@@ -818,8 +879,11 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
     // a prova de "juntos" só vale na linha do próprio bloco.
     const blockCores = [...new Set(cores.flat().filter((x): x is string => !!x))];
     const hits = (line: SourceLine) => blockCores.filter((core) => containsPhrase(line.norm, core)).length;
-    const best = Math.max(0, ...written.map(hits));
-    const groupLines = best >= 2 ? written.filter((line) => hits(line) === best) : written;
+    // Com a refeição localizada no texto, só as linhas dela contam ("whey + aveia" juntos no
+    // café não provam nada sobre o lanche, que os traz em opções diferentes).
+    const pool = region && region.some((line) => hits(line) > 0) ? region : written;
+    const best = Math.max(0, ...pool.map(hits));
+    const groupLines = best >= 2 ? pool.filter((line) => hits(line) === best) : pool;
     for (let c1 = 0; c1 < cores.length; c1++) {
       for (let c2 = c1 + 1; c2 < cores.length; c2++) {
         const option1 = choiceOption(c1);
@@ -915,20 +979,39 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
       if (mixesOptions) warnings.push(DIET_WARNINGS.optionsWithOtherBlocks);
       const mealGroups = mixesOptions ? meal.groups.map((g) => (g.kind === 'meal_options' ? { ...g, kind: 'alternatives' as const } : g)) : meal.groups;
 
+      const mealIndex = mealNumber - 1;
+      const copyOf = copiedMeal(mealIndex);
+      const reusable = copyOf !== null ? (mealCores[copyOf] ?? null) : null;
+      const ownCores = new Set<string>();
+      mealCores[mealIndex] = ownCores;
+      const region = mealRegion(mealIndex);
+      let reused = false;
+
       const groups: CheckedGroup[] = mealGroups.map((group, g) => {
         requireLabel(group.label, `${where}: o bloco`);
         const cores: Array<Array<string | null>> = [];
         const choices: CheckedChoice[] = group.choices.map((choice, c) => {
           if (!isListNumbering(choice.label, c)) requireLabel(choice.label, `${where}: a opção`);
-          const results = choice.items.map((item, i) => checkItem(item, `${where}, bloco ${g + 1}, escolha ${c + 1}, alimento ${i + 1}`));
+          const results = choice.items.map((item, i) => checkItem(item, `${where}, bloco ${g + 1}, escolha ${c + 1}, alimento ${i + 1}`, reusable));
+          for (const r of results) {
+            if (!r.core) continue;
+            ownCores.add(r.core);
+            if (reusable?.has(r.core)) reused = true;
+          }
           cores.push(results.map((r) => r.core));
           return { label: choice.label, items: results.map((r) => r.checked) };
         });
-        checkGroupStructure(group, cores, where, meal.name);
+        // Refeição copiada ("igual ao almoço"): a estrutura é conferida nas linhas da refeição de origem.
+        checkGroupStructure(group, cores, where, meal.name, reused && copyOf !== null ? mealRegion(copyOf) : region);
         if (group.kind === 'alternatives' && group.choices.length === 1) warnings.push(DIET_WARNINGS.singleChoice);
         return { kind: group.kind, label: group.label, choices };
       });
 
+      if (reused && copyOf !== null && allMeals[copyOf].name) {
+        warnings.push(DIET_WARNINGS.copiedFromMeal(allMeals[copyOf].name!));
+        // A linha "Jantar — igual ao almoço (…)" foi atendida pela cópia.
+        covered.push(written[mealStarts[mealIndex]!].norm);
+      }
       if (groups.every((g) => g.choices.every((c) => c.items.length === 0))) warnings.push(DIET_WARNINGS.mealWithoutItems);
       return { name: meal.name, time, notes, groups, warnings };
     });

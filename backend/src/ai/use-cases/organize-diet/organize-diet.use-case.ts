@@ -20,7 +20,7 @@ const SYSTEM_PROMPT = [
   '',
   'Estrutura (days → meals → groups → choices → items):',
   '1. DIAS: se o texto separa tipos de dia ("DIA DE TREINO", "DIA DE DESCANSO"), cada um vira um item de "days" com "label" copiado como escrito e "kind": "training", "rest" ou "other". Sem separação → um único dia com "label": null e "kind": "other". "usageNotes": a frase de uso do dia copiada do texto, ou null.',
-  '2. REFEIÇÕES: cabeçalho de refeição ("CAFÉ DA MANHÃ", "Almoço:") vira "name" como escrito (sem o número da lista e sem o "— ESCOLHER 1 OPÇÃO"). Sem cabeçalho → "name": null. Nunca crie refeição que não esteja no texto. Horário só se estiver escrito ("7h") → "time", senão null.',
+  '2. REFEIÇÕES: cabeçalho de refeição ("CAFÉ DA MANHÃ", "Almoço:") vira "name" como escrito (sem o número da lista e sem o "— ESCOLHER 1 OPÇÃO"). Sem cabeçalho → "name": null. Nunca crie refeição que não esteja no texto. Horário só se estiver escrito ("7h") → "time", senão null. Refeição escrita como cópia de outra ("Jantar — igual ao almoço") vira uma refeição com os MESMOS grupos e itens daquela, com os mesmos "sourceText" copiados de lá.',
   '3. GRUPOS de cada refeição ("kind"):',
   '   - "fixed": itens que são TODOS consumidos juntos (ligados por "+" ou um por linha). Tem exatamente UMA escolha com "label": null.',
   '   - "meal_options": a refeição tem opções completas ("Opção 1: ... / Opção 2: ..."). Cada opção é uma escolha com "label" copiado ("Opção 1") e TODOS os itens dela. Se a refeição tem, além das opções, outro bloco "escolher 1" escrito à parte ("Acréscimo (escolher 1): 150 g de banana / 35 g de aveia"), devolva as opções em "meal_options" e esse bloco em "alternatives", na mesma refeição.',
