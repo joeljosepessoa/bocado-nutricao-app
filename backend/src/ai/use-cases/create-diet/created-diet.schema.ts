@@ -14,6 +14,7 @@ import {
   requiredString,
   SchemaError,
   stringList,
+  warningList,
   strictObject,
   type AiDayKind,
   type AiGroupKind,
@@ -159,7 +160,7 @@ export function parseCreatedDiet(text: string): AiCreatedDiet {
     return {
       days: asArray(root.days, 'days', DIET_LIMITS.maxDays).map((day, i) => parseDay(day, `days[${i}]`)),
       guidelines: stringList(root.guidelines, 'guidelines', DIET_LIMITS.maxGuidelines, DIET_LIMITS.maxGuidelineLength),
-      warnings: stringList(root.warnings, 'warnings', DIET_LIMITS.maxWarnings, DIET_LIMITS.maxWarningLength),
+      warnings: warningList(root.warnings, 'warnings', DIET_LIMITS.maxWarnings, DIET_LIMITS.maxWarningLength),
     };
   } catch (error) {
     if (error instanceof SchemaError) {

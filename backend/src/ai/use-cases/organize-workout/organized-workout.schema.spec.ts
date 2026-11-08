@@ -46,6 +46,14 @@ describe('parseOrganizedWorkout', () => {
     expect(result.days[0].exercises[0].setGroups[0]).toMatchObject({ count: 4, reps: null, repsMin: 6, repsMax: 10, restSeconds: 90 });
   });
 
+  it('aviso longo demais da IA é encurtado e o excesso é cortado — o treino não é recusado', () => {
+    const long = 'a'.repeat(450);
+    const result = parseOrganizedWorkout(JSON.stringify({ ...payload(), warnings: [long, ...Array.from({ length: 15 }, (_, i) => `aviso ${i}`)] }));
+    expect(result.warnings).toHaveLength(10);
+    expect(result.warnings[0]).toHaveLength(300);
+    expect(result.warnings[0].endsWith('…')).toBe(true);
+  });
+
   it('tolera cerca de markdown e texto em volta do JSON (só formatação)', () => {
     const fenced = '```json\n' + JSON.stringify(payload()) + '\n```';
     expect(parseOrganizedWorkout(fenced).days).toHaveLength(1);

@@ -16,6 +16,7 @@ import {
   requiredString,
   SchemaError,
   stringList,
+  warningList,
   strictObject,
   type AiDayKind,
   type AiGroupKind,
@@ -201,7 +202,7 @@ export function parseChatDiet(text: string): ChatDietOutput {
       targets: targets(root.metas),
       days,
       guidelines: stringList(root.guidelines, 'guidelines', D.maxGuidelines, D.maxGuidelineLength),
-      warnings: stringList(root.warnings, 'warnings', D.maxWarnings, D.maxWarningLength),
+      warnings: warningList(root.warnings, 'warnings', D.maxWarnings, D.maxWarningLength),
     };
   } catch (error) {
     invalid(error);
@@ -305,7 +306,7 @@ export function parseChatWorkout(text: string): ChatWorkoutOutput {
         }),
       };
     });
-    return { reply, changed, days, warnings: stringList(root.warnings, 'warnings', D.maxWarnings, D.maxWarningLength) };
+    return { reply, changed, days, warnings: warningList(root.warnings, 'warnings', D.maxWarnings, D.maxWarningLength) };
   } catch (error) {
     invalid(error);
   }

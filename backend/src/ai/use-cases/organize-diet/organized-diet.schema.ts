@@ -205,6 +205,21 @@ export function stringList(value: unknown, path: string, max: number, maxLength:
   return asArray(value, path, max).map((item, i) => requiredString(item, `${path}[${i}]`, maxLength));
 }
 
+/**
+ * Avisos da IA são só informativos: um aviso longo demais é encurtado e o excesso de avisos é cortado,
+ * em vez de recusar a dieta inteira por causa deles.
+ */
+export function warningList(value: unknown, path: string, max: number, maxLength: number): string[] {
+  if (value === undefined || value === null) return [];
+  if (!Array.isArray(value)) fail(path, 'deve ser uma lista');
+  return value.slice(0, max).flatMap((item, i) => {
+    if (typeof item !== 'string') fail(`${path}[${i}]`, 'deve ser texto');
+    const trimmed = item.trim();
+    if (trimmed.length === 0) return [];
+    return [trimmed.length > maxLength ? `${trimmed.slice(0, maxLength - 1).trimEnd()}…` : trimmed];
+  });
+}
+
 function parseItem(value: unknown, path: string): AiDietItem {
   const obj = asObject(value, path, ['sourceText', 'food', 'quantity', 'quantityMax', 'unit', 'freeQuantity', 'notes']);
   if (obj.freeQuantity !== undefined && obj.freeQuantity !== null && typeof obj.freeQuantity !== 'boolean') fail(`${path}.freeQuantity`, 'deve ser true/false');
@@ -296,7 +311,7 @@ export function parseOrganizedDiet(text: string): AiOrganizedDiet {
       days: asArray(root.days, 'days', DIET_LIMITS.maxDays).map((day, i) => parseDay(day, `days[${i}]`)),
       supplements: asArray(root.supplements ?? [], 'supplements', DIET_LIMITS.maxSupplements).map((s, i) => parseSupplement(s, `supplements[${i}]`)),
       guidelines: stringList(root.guidelines, 'guidelines', DIET_LIMITS.maxGuidelines, DIET_LIMITS.maxGuidelineLength),
-      warnings: stringList(root.warnings, 'warnings', DIET_LIMITS.maxWarnings, DIET_LIMITS.maxWarningLength),
+      warnings: warningList(root.warnings, 'warnings', DIET_LIMITS.maxWarnings, DIET_LIMITS.maxWarningLength),
     };
   } catch (error) {
     if (error instanceof SchemaError) {

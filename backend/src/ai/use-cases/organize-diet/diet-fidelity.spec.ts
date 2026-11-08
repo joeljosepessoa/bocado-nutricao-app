@@ -6,6 +6,7 @@ import { faithfulOptionsDiet, leanMeat, OPTIONS_EXAMPLE_DIET } from '../../../..
 import { hardWrap } from '../../../../test/fixtures/hard-wrap';
 import { CHOOSE_ONE_LINES_DIET, CHOOSE_ONE_LINES_DIET_UNNUMBERED, faithfulChooseOneLinesDiet } from '../../../../test/fixtures/choose-one-lines-diet';
 import { ESCOLHER_FRUTA_DIET, faithfulEscolherFrutaDiet } from '../../../../test/fixtures/escolher-fruta-diet';
+import { faithfulPenseZeroDiet, PENSE_ZERO_DIET } from '../../../../test/fixtures/pense-zero-diet';
 
 const TEXT = [
   'CAFÉ DA MANHÃ',
@@ -981,5 +982,21 @@ describe('auxiliares de fidelidade', () => {
       meals(extra)[3].groups[2].choices[0].items.push(item('Pão integral (50 g)', 'Pão integral', 50, 'g'));
       expect(rejection(extra, ESCOLHER_FRUTA_DIET)).toMatch(/"pao integral 50 g" foi usado mais vezes/);
     });
+  });
+});
+
+describe('quinta dieta real (08/11/2026): Pense Zero, "1 torrada (ou 1 fatia de pão)", suplementos "conforme embalagem"', () => {
+  it('a organização fiel é aceita sem nada descoberto — só os avisos de unidade para conferir', () => {
+    const checked = checkDietFidelity(PENSE_ZERO_DIET, faithfulPenseZeroDiet());
+    expect(checked.warnings).toEqual([]);
+    const itemWarnings = checked.days[0].meals.flatMap((meal) =>
+      meal.groups.flatMap((group) => group.choices.flatMap((choice) => choice.items.flatMap((it) => it.warnings.map((w) => `${it.sourceText}: ${w}`)))),
+    );
+    expect(itemWarnings).toEqual([
+      `1 copo de Danone Pense Zero: ${DIET_WARNINGS.unitUnsupported('copo')}`,
+      `1 copo de Danone Pense Zero: ${DIET_WARNINGS.unitUnsupported('copo')}`,
+      `1 torrada (ou 1 fatia de pão): ${DIET_WARNINGS.unitAssumed}`,
+    ]);
+    expect(checked.supplements.map((s) => s.warnings)).toEqual([[], [], []]);
   });
 });

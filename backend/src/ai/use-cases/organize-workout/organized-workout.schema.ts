@@ -169,12 +169,24 @@ function optionalNumber(value: unknown, path: string, min: number, max: number):
   return value;
 }
 
+/** Avisos da IA são só informativos: aviso longo é encurtado e o excesso é cortado, sem recusar o treino. */
 function warningList(value: unknown, path: string): string[] {
   if (value === undefined || value === null) {
     return [];
   }
-  const items = asArray(value, path, MAX_WARNINGS);
-  return items.map((item, i) => requiredString(item, `${path}[${i}]`, MAX_WARNING_LENGTH));
+  if (!Array.isArray(value)) {
+    fail(path, 'deve ser uma lista');
+  }
+  return value.slice(0, MAX_WARNINGS).flatMap((item, i) => {
+    if (typeof item !== 'string') {
+      fail(`${path}[${i}]`, 'deve ser texto');
+    }
+    const trimmed = item.trim();
+    if (trimmed.length === 0) {
+      return [];
+    }
+    return [trimmed.length > MAX_WARNING_LENGTH ? `${trimmed.slice(0, MAX_WARNING_LENGTH - 1).trimEnd()}…` : trimmed];
+  });
 }
 
 function parseSetGroup(value: unknown, path: string): AiSetGroup {
