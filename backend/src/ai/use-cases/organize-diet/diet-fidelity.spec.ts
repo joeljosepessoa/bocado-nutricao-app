@@ -7,6 +7,7 @@ import { hardWrap } from '../../../../test/fixtures/hard-wrap';
 import { CHOOSE_ONE_LINES_DIET, CHOOSE_ONE_LINES_DIET_UNNUMBERED, faithfulChooseOneLinesDiet } from '../../../../test/fixtures/choose-one-lines-diet';
 import { ESCOLHER_FRUTA_DIET, faithfulEscolherFrutaDiet } from '../../../../test/fixtures/escolher-fruta-diet';
 import { faithfulPenseZeroDiet, PENSE_ZERO_DIET } from '../../../../test/fixtures/pense-zero-diet';
+import { faithfulPosTreinoDiet, POS_TREINO_DIET } from '../../../../test/fixtures/pos-treino-diet';
 
 const TEXT = [
   'CAFÉ DA MANHÃ',
@@ -998,5 +999,33 @@ describe('quinta dieta real (08/11/2026): Pense Zero, "1 torrada (ou 1 fatia de 
       `1 torrada (ou 1 fatia de pão): ${DIET_WARNINGS.unitAssumed}`,
     ]);
     expect(checked.supplements.map((s) => s.warnings)).toEqual([[], [], []]);
+  });
+});
+
+describe('sexta dieta real (09/11/2026): "ESCOLHA 1 OPÇÃO" numa linha só, "1.000 UI" e "½ comprimido"', () => {
+  it('a organização fiel é aceita, sem trecho descoberto', () => {
+    const checked = checkDietFidelity(POS_TREINO_DIET, faithfulPosTreinoDiet());
+    expect(checked.warnings).toEqual([]);
+    expect(checked.supplements.map((s) => [s.name, s.quantity, s.unitText])).toEqual([
+      ['Nattokinase', null, null],
+      ['Ioimbina', 5, 'mg'],
+      ['Ômega-3', null, null],
+      ['Vitamina D3', 1000, 'UI'],
+      ['Tadalafila', 5, 'mg'],
+      ['AAS', 0.5, 'comprimido'],
+    ]);
+  });
+
+  it('sem o "ESCOLHA 1 OPÇÃO" no café, as opções inventadas continuam recusadas', () => {
+    const text = POS_TREINO_DIET.replace('Café da Manhã\nESCOLHA 1 OPÇÃO\n1. ', 'Café da Manhã\n').replace('\n2. 80 g de tapioca', '\n80 g de tapioca');
+    expect(() => checkDietFidelity(text, faithfulPosTreinoDiet())).toThrow(/Café da Manhã\): opções foi marcado como "escolha 1"/);
+  });
+
+  it('"½", "1½" e o ponto de milhar valem como a quantidade escrita', () => {
+    expect(normalizeDietText('AAS — ½ comprimido')).toBe('aas 1/2 comprimido');
+    expect(normalizeDietText('1½ colher')).toBe('1 1/2 colher');
+    expect(quantitySpellings(1000)).toContain('1.000');
+    expect(quantitySpellings(10000)).toContain('10.000');
+    expect(quantitySpellings(500)).not.toContain('500.');
   });
 });

@@ -98,8 +98,13 @@ export interface CheckedDiet {
  * Forma comparável: sem acento/caixa, pontuação vira espaço, decimal com
  * ponto, número separado de letra ("150g" ≡ "150 g"). Nada além de forma.
  */
+/** "½ comprimido" é "1/2 comprimido"; "1½" é "1 1/2". */
+const VULGAR_FRACTIONS: Record<string, string> = { '½': '1/2', '¼': '1/4', '¾': '3/4', '⅓': '1/3', '⅔': '2/3' };
+
 export function normalizeDietText(text: string): string {
   return text
+    .replace(/[½¼¾⅓⅔]/g, (fraction) => ` ${VULGAR_FRACTIONS[fraction]} `)
+    .replace(/(\d)⁄(\d)/g, '$1/$2')
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
@@ -158,6 +163,8 @@ export function quantitySpellings(quantity: number): string[] {
   spellings.add(String(quantity));
   if (Number.isInteger(quantity)) {
     for (const word of NUMBER_WORDS[quantity] ?? []) spellings.add(word);
+    // "1.000 UI" (ou "1,000"): ponto de milhar — a normalização deixa os dois como "1.000".
+    if (quantity >= 1000) spellings.add(String(quantity).replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
   }
   for (const [value, forms] of FRACTIONS) {
     if (Math.abs(value - quantity) < 1e-9) forms.forEach((form) => spellings.add(form));
@@ -600,6 +607,13 @@ function hasChoiceMarker(line: SourceLine, cores: string[]): boolean {
   return line.chunks.some((chunk) => !isDetail(chunk, cores) && (/\bou\b/.test(chunk.norm) || SLASH_SEPARATOR.test(chunk.text)));
 }
 
+/** Linha que só diz para escolher ("ESCOLHA 1 OPÇÃO", "Escolha uma opção:"), sem alimento nenhum. */
+function isChoiceHeader(line: SourceLine): boolean {
+  if (!CHOICE_MARKER.test(line.norm)) return false;
+  return line.norm.split(' ').every((token) => /^\d{1,2}$/.test(token) || HEADER_WORDS.has(token));
+}
+const HEADER_WORDS = new Set(['escolha', 'escolher', 'escolhe', 'opcao', 'opcoes', 'uma', 'um', 'das', 'dos', 'de', 'entre', 'as', 'os', 'seguintes', 'abaixo', 'alternativa', 'alternativas']);
+
 /** together: há segmento com os dois; apart: aparecem juntos só em linhas que os separam por "/"/"ou". */
 function relation(lines: SourceLine[], a: string, b: string, onlyOnce = false): 'together' | 'apart' | 'unknown' {
   let together = false;
@@ -639,7 +653,7 @@ const STRUCTURE_WORDS = new Set([
   'escolher', 'escolha', 'opcao', 'opcoes', 'bloco', 'cada', 'refeicao', 'um', 'uma', 'suplementacao', 'suplementos', 'orientacoes',
   'itens', 'fixos', 'fixo', 'consumir', 'todos', 'todas',
 ]);
-const SECTION_TITLES = new Set(['suplementacao', 'suplementos', 'orientacoes', 'orientacao', 'orientacoes gerais', 'observacoes', 'dicas']);
+const SECTION_TITLES = new Set(['suplementacao', 'suplementos', 'medicamentos', 'suplementacao e medicamentos', 'suplementos e medicamentos', 'orientacoes', 'orientacao', 'orientacoes gerais', 'observacoes', 'dicas']);
 
 /**
  * Linhas com texto que nenhum item/rótulo/orientação cobriu. A conferência é
@@ -924,7 +938,10 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
         (mealName && containsPhrase(line.norm, normalizeDietText(mealName))),
     );
     const groupCores = cores.flat().filter((core): core is string => !!core);
-    if (!evidence.some((line) => hasChoiceMarker(line, groupCores))) {
+    // "ESCOLHA 1 OPÇÃO" numa linha só, logo abaixo do nome da refeição, vale para as opções dela.
+    const header = (region ?? []).find((line) => isChoiceHeader(line));
+    if (header) covered.push(header.norm);
+    if (!header && !evidence.some((line) => hasChoiceMarker(line, groupCores))) {
       problems.push(`${where}: ${groupName} foi marcado como "escolha 1", mas o texto não indica escolha (escolher, opção, "ou" ou "/").`);
     }
   };
