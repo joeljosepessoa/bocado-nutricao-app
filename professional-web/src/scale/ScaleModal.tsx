@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
 import type { ScaleReadingInput } from '../types/api';
-import { FAT_FREE_MASS_REFERENCE, bodyComposition, type BodyComposition } from './bodyComposition';
+import { FAT_FREE_MASS_CALIBRATION, FAT_FREE_MASS_REFERENCE, SKELETAL_MUSCLE_REFERENCE, bodyComposition, type BodyComposition } from './bodyComposition';
 import type { ScaleProfile, ScaleResult } from './icomonProtocol';
 import { ScaleSession } from './scaleSession';
 
@@ -133,7 +133,7 @@ export function ScaleModal({ heightCm, age, sex, onSubmit, onClose, confirmLabel
                   wholeBodyResistance50kHz: composition.wholeBodyResistance50kHz,
                   profile: profileRef.current,
                   derived: { proteinKg: composition.proteinKg, proteinPercent: composition.proteinPercent, muscleRatePercent: composition.muscleRatePercent, idealWeightKg: composition.idealWeightKg, bodyWaterKg: composition.bodyWaterKg },
-                  equations: { fatFreeMass: FAT_FREE_MASS_REFERENCE, skeletalMuscle: 'Janssen et al. 2000', water: '73,2% da massa magra', bmr: 'Katch-McArdle', bone: '6,7% da massa magra' },
+                  equations: { fatFreeMass: FAT_FREE_MASS_REFERENCE, fatFreeMassCalibration: FAT_FREE_MASS_CALIBRATION, skeletalMuscle: SKELETAL_MUSCLE_REFERENCE, water: '73,2% da massa magra', bmr: 'Katch-McArdle', bone: '6,7% da massa magra' },
                 },
               }
             : {}),
@@ -269,7 +269,7 @@ function ResultView({ result, composition }: { result: ScaleResult; composition:
       </table>
       {composition ? (
         <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-          Calculado a partir da bioimpedância medida pela balança: massa magra por Sun et al. (2003), músculo esquelético por Janssen et al. (2000),
+          Calculado a partir da bioimpedância medida pela balança: massa magra por Sun et al. (2003) ajustada ao app da balança, músculo esquelético como 57% da massa magra,
           água como 73,2% da massa magra e metabolismo basal por Katch-McArdle. Os valores podem diferir um pouco do app da balança.
         </div>
       ) : (

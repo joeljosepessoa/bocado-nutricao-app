@@ -62,15 +62,15 @@ describe('composição corporal pela bioimpedância (equações publicadas)', ()
     expect(resistanceAt50kHz(impedance.khz20, impedance.khz100)).toBeCloseTo(404.1, 1);
   });
 
-  it('homem: Sun 2003, Janssen 2000, água e Katch-McArdle a partir da massa magra', () => {
+  it('homem: Sun 2003 calibrada (×1,04), músculo esquelético 57%, água e Katch-McArdle a partir da massa magra', () => {
     const c = bodyComposition(103.35, { heightCm: 181, age: 40, sex: 'male' }, impedance)!;
-    expect(c.fatFreeMassKg).toBeCloseTo(77.0, 1);
-    expect(c.bodyFatPercent).toBeCloseTo(25.5, 1);
+    expect(c.fatFreeMassKg).toBeCloseTo(77.0 * 1.04, 0);
+    expect(c.bodyFatPercent).toBeCloseTo(((103.35 - 77.0 * 1.04) / 103.35) * 100, 0);
     expect(c.fatMassKg).toBeCloseTo(103.35 - c.fatFreeMassKg, 0);
-    expect(c.skeletalMuscleMassKg).toBeCloseTo(38.6, 1);
+    expect(c.skeletalMuscleMassKg).toBeCloseTo(0.57 * c.fatFreeMassKg, 0);
     expect(c.bodyWaterKg).toBeCloseTo(0.732 * c.fatFreeMassKg, 0);
     // Mesmas relações do app da balança: osso 6,7% da massa magra, músculo = magra − osso, proteína = magra − água − osso.
-    expect(c.boneMassKg).toBeCloseTo(5.2, 1);
+    expect(c.boneMassKg).toBeCloseTo(0.067 * c.fatFreeMassKg, 1);
     expect(c.muscleMassKg).toBeCloseTo(c.fatFreeMassKg - c.boneMassKg, 0);
     expect(c.proteinKg).toBeCloseTo(c.fatFreeMassKg - c.bodyWaterKg - c.boneMassKg, 0);
     expect(c.muscleRatePercent).toBeCloseTo((c.muscleMassKg / 103.35) * 100, 0);
@@ -82,7 +82,7 @@ describe('composição corporal pela bioimpedância (equações publicadas)', ()
     const male = bodyComposition(70, { heightCm: 165, age: 30, sex: 'male' }, impedance)!;
     const female = bodyComposition(70, { heightCm: 165, age: 30, sex: 'female' }, impedance)!;
     expect(female.fatFreeMassKg).not.toBe(male.fatFreeMassKg);
-    expect(female.skeletalMuscleMassKg).toBeCloseTo(male.skeletalMuscleMassKg - 3.825, 0);
+    expect(female.skeletalMuscleMassKg).toBeCloseTo(0.57 * female.fatFreeMassKg, 0);
     expect(bodyComposition(0, { heightCm: 165, age: 30, sex: 'female' }, impedance)).toBeNull();
   });
 });

@@ -6,8 +6,12 @@ import type { ScaleProfile, SegmentImpedances } from './icomonProtocol';
  *
  * - Resistência do corpo inteiro = braço + tronco + perna (média dos dois lados),
  *   a 50 kHz por interpolação logarítmica entre 20 e 100 kHz.
- * - Massa livre de gordura: Sun SS et al., Am J Clin Nutr 2003;77:331–40 (NHANES III).
- * - Músculo esquelético: Janssen I et al., J Appl Physiol 2000;89:465–71.
+ * - Massa livre de gordura: Sun SS et al., Am J Clin Nutr 2003;77:331–40 (NHANES III),
+ *   × 1,04 — calibração contra o app da balança (pesagens comparadas de 3 pessoas,
+ *   homens e mulher: a Sun sozinha dava 3–5% menos massa magra que o app).
+ * - Músculo esquelético: 57% da massa livre de gordura — razão que o app da balança
+ *   mantém em todas as pesagens comparadas (55,9–57,8%). Janssen 2000 errava até 7 kg
+ *   em mulher.
  * - Água corporal: 73,2% da massa livre de gordura (Wang Z et al., Am J Clin Nutr 1999;69:833–41).
  * - Metabolismo basal: Katch-McArdle (370 + 21,6 × massa livre de gordura).
  * - Massa óssea: 6,7% da massa livre de gordura; massa muscular = massa livre de
@@ -21,7 +25,8 @@ import type { ScaleProfile, SegmentImpedances } from './icomonProtocol';
 
 export const FAT_FREE_MASS_REFERENCE = 'Sun et al. 2003';
 /** Ajuste fino da massa livre de gordura, calibrado contra o app da balança (1 = sem ajuste). */
-export const FAT_FREE_MASS_CALIBRATION = 1;
+export const FAT_FREE_MASS_CALIBRATION = 1.04;
+export const SKELETAL_MUSCLE_REFERENCE = '57% da massa magra (calibrado com o app da balança)';
 
 export interface BodyComposition {
   wholeBodyResistance50kHz: number;
@@ -41,6 +46,7 @@ export interface BodyComposition {
 }
 
 const BONE_SHARE_OF_FAT_FREE_MASS = 0.067;
+const SKELETAL_MUSCLE_SHARE_OF_FAT_FREE_MASS = 0.57;
 const WATER_SHARE_OF_FAT_FREE_MASS = 0.732;
 const IDEAL_BMI = 22;
 
@@ -69,7 +75,7 @@ export function bodyComposition(
   const sun = male ? -10.68 + 0.65 * index + 0.26 * weightKg + 0.02 * r : -9.53 + 0.69 * index + 0.17 * weightKg + 0.02 * r;
   const fatFree = Math.min(weightKg, Math.max(0, sun * FAT_FREE_MASS_CALIBRATION));
   const fat = weightKg - fatFree;
-  const muscle = 0.401 * index + (male ? 3.825 : 0) - 0.071 * profile.age + 5.102;
+  const muscle = SKELETAL_MUSCLE_SHARE_OF_FAT_FREE_MASS * fatFree;
   const water = WATER_SHARE_OF_FAT_FREE_MASS * fatFree;
   const bone = BONE_SHARE_OF_FAT_FREE_MASS * fatFree;
   const muscleMass = fatFree - bone;
