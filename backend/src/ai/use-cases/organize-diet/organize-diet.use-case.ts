@@ -1,7 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { AiFeatureKey, NutritionUnit } from '@prisma/client';
 import { FoodsService } from '../../../foods/foods.service';
-import { buildFoodAliasIndex, buildFoodCatalogIndex, CatalogFoodRef, FoodAliasIndex, FoodCatalogIndex, FoodMatchStatus, matchFoodName } from '../../../foods/food-name-matching';
+import {
+  buildFoodAliasIndex,
+  buildFoodCatalogIndex,
+  buildLearnedLinkIndex,
+  CatalogFoodRef,
+  FoodAliasIndex,
+  FoodCatalogIndex,
+  FoodMatchStatus,
+  LearnedLinkIndex,
+  matchFoodName,
+} from '../../../foods/food-name-matching';
 import { AiOutputValidationError } from '../../ai-errors';
 import type { AiGenerationResult } from '../../providers/ai-provider.interface';
 import type { GenerateAiContentDto } from '../../dto/generate-ai-content.dto';
@@ -98,8 +108,8 @@ export interface OrganizedDietProposal {
   warnings: string[];
 }
 
-function toProposalItem(item: CheckedDietItem, index: FoodCatalogIndex, aliases: FoodAliasIndex): ProposalDietItem {
-  const match = matchFoodName(item.rawFood, index, aliases);
+function toProposalItem(item: CheckedDietItem, index: FoodCatalogIndex, aliases: FoodAliasIndex, learned: LearnedLinkIndex): ProposalDietItem {
+  const match = matchFoodName(item.rawFood, index, aliases, learned);
   const warnings = [...item.warnings];
   if (match.status === 'not_found') warnings.unshift(FOOD_WARNINGS.notFound);
   if (match.status === 'ambiguous') warnings.unshift(FOOD_WARNINGS.ambiguous);
@@ -144,8 +154,15 @@ export class OrganizeDietUseCase implements AiUseCase {
     }
 
     const checked = checkDietFidelity((input as GenerateAiContentDto).dietText ?? '', organized);
-    const index = buildFoodCatalogIndex(await this.foodsService.listVisibleRefs(professionalId));
-    const aliases = buildFoodAliasIndex(await this.foodsService.listAutoLinkAliases(professionalId));
+    const [visibleRefs, aliasRows, savedLinks] = await Promise.all([
+      this.foodsService.listVisibleRefs(professionalId),
+      this.foodsService.listAutoLinkAliases(professionalId),
+      this.foodsService.listSavedFoodLinks(professionalId),
+    ]);
+    const index = buildFoodCatalogIndex(visibleRefs);
+    const aliases = buildFoodAliasIndex(aliasRows);
+    // O que o profissional já ligou nas dietas salvas liga sozinho de novo.
+    const learned = buildLearnedLinkIndex(savedLinks, new Map(visibleRefs.map((ref) => [ref.id, ref])));
     const proposal: OrganizedDietProposal = {
       days: checked.days.map((day) => ({
         ...day,
@@ -153,7 +170,7 @@ export class OrganizeDietUseCase implements AiUseCase {
           ...meal,
           groups: meal.groups.map((group) => ({
             ...group,
-            choices: group.choices.map((choice) => ({ ...choice, items: choice.items.map((item) => toProposalItem(item, index, aliases)) })),
+            choices: group.choices.map((choice) => ({ ...choice, items: choice.items.map((item) => toProposalItem(item, index, aliases, learned)) })),
           })),
         })),
       })),

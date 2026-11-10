@@ -33,6 +33,7 @@ const itemsOf = (proposal: OrganizedDietProposal) => proposal.days[0].meals[0].g
 const foodsService = {
   listVisibleRefs: jest.fn().mockResolvedValue([{ id: 'f5', name: 'Pão integral' }, { id: 'f4', name: 'Banana prata' }]),
   listAutoLinkAliases: jest.fn().mockResolvedValue([]),
+  listSavedFoodLinks: jest.fn().mockResolvedValue([]),
 };
 const useCase = new OrganizeDietUseCase(foodsService as unknown as FoodsService);
 const params = (dietText = DIET_TEXT) => ({ professionalId: 'p1', clientId: 'c1', input: { feature: 'organize_diet', dietText } });
@@ -62,6 +63,20 @@ describe('OrganizeDietUseCase', () => {
     expect(fruit).toMatchObject({ matchStatus: 'matched', matchedFood: { id: 'f4' }, rawFood: expect.stringMatching(/fruta/i) });
     expect(fruit.warnings).not.toContain(FOOD_WARNINGS.notFound);
     expect(foodsService.listAutoLinkAliases).toHaveBeenCalledWith('p1');
+  });
+
+  it('nome que o profissional já ligou numa dieta salva liga sozinho de novo — só com alimento ainda visível', async () => {
+    foodsService.listSavedFoodLinks.mockResolvedValueOnce([
+      { writtenName: 'fruta', foodId: 'f4', dietVersionId: 'v2' },
+      { writtenName: 'pão integral', foodId: 'sumiu', dietVersionId: 'v2' },
+    ]);
+    const out = await useCase.processOutput({ text: JSON.stringify(AI_JSON), model: 'x' }, params());
+    const [bread, fruit] = itemsOf(out.structuredData as unknown as OrganizedDietProposal);
+    expect(fruit).toMatchObject({ matchStatus: 'matched', matchedFood: { id: 'f4', name: 'Banana prata' } });
+    expect(fruit.warnings).not.toContain(FOOD_WARNINGS.notFound);
+    // Alimento que saiu do catálogo não é aprendido: vale o nome igual de sempre.
+    expect(bread).toMatchObject({ matchStatus: 'matched', matchedFood: { id: 'f5' } });
+    expect(foodsService.listSavedFoodLinks).toHaveBeenCalledWith('p1');
   });
 
   it('resposta que altera a prescrição ou não é JSON é recusada', async () => {

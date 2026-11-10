@@ -123,6 +123,36 @@ describe('IA — organizar dieta existente (e2e)', () => {
     expect(log.status).toBe('invalid_output');
   });
 
+  it('nome que o profissional ligou numa dieta salva liga sozinho na próxima — e só para ele', async () => {
+    const { professional, client, tag } = await setup();
+    const rice = await createFood(app, professional.accessToken, { name: `Arroz tipo 1 cozido ${tag}`, kcalPer100: 128, scope: 'private' });
+    const written = `arroz ${tag}`;
+    await request(app.getHttpServer())
+      .post(`/clients/${client.id}/diets/from-proposal`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .send({
+        days: [
+          {
+            label: null,
+            meals: [{ name: 'ALMOÇO', groups: [{ kind: 'fixed', choices: [{ foods: [{ customFoodName: written, foodId: rice.id, quantity: 100, unit: 'g' }] }] }] }],
+          },
+        ],
+      })
+      .expect(201);
+
+    const text = `ALMOÇO
+150 g de ${written}`;
+    reply(v2([fixedMeal('ALMOÇO', [item(`150 g de ${written}`, written, 150, 'g')])]));
+    const res = await organize(professional.accessToken, client.id, text).expect(201);
+    expect(itemsOf(res.body.structuredData)[0]).toMatchObject({ matchStatus: 'matched', matchedFood: { id: rice.id }, quantity: 150 });
+
+    // Outro profissional escrevendo o mesmo nome não herda a escolha.
+    const other = await setup();
+    reply(v2([fixedMeal('ALMOÇO', [item(`150 g de ${written}`, written, 150, 'g')])]));
+    const otherRes = await organize(other.professional.accessToken, other.client.id, text).expect(201);
+    expect(itemsOf(otherRes.body.structuredData)[0]).toMatchObject({ matchedFood: null });
+  });
+
   it('refeição acrescentada pela IA é recusada; alimento omitido vira aviso de revisão', async () => {
     const { professional, client } = await setup();
     reply(v2([fixedMeal('ALMOÇO', [item('150 g de fruta', 'fruta', 150, 'g')]), fixedMeal('CEIA', [item('150 g de fruta', 'fruta', 150, 'g')])]));

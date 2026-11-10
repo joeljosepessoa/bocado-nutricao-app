@@ -1,4 +1,4 @@
-import { buildFoodAliasIndex, buildFoodCatalogIndex, matchFoodName } from './food-name-matching';
+import { buildFoodAliasIndex, buildFoodCatalogIndex, buildLearnedLinkIndex, matchFoodName, SavedFoodLinkRow } from './food-name-matching';
 
 const catalog = buildFoodCatalogIndex([
   { id: 'f1', name: 'Arroz, tipo 1, cozido' },
@@ -48,5 +48,56 @@ describe('matchFoodName — apelidos aprovados pelo nutricionista', () => {
 
   it('sem apelidos, o comportamento antigo não muda', () => {
     expect(matchFoodName('Arroz branco', taco).status).toBe('ambiguous');
+  });
+});
+
+describe('matchFoodName — o que o profissional já ligou nas dietas salvas', () => {
+  const refs = [
+    { id: 't3', name: 'Arroz, tipo 1, cozido' },
+    { id: 't4', name: 'Arroz integral, cozido' },
+    { id: 't90', name: 'Ovo de galinha inteiro, cozido' },
+    { id: 't182', name: 'Banana prata' },
+    { id: 't183', name: 'Maçã fuji' },
+    { id: 't410', name: 'Frango, peito, sem pele, grelhado' },
+    { id: 't411', name: 'Frango, peito, com pele, assado' },
+  ];
+  const taco = buildFoodCatalogIndex(refs);
+  const visible = new Map(refs.map((r) => [r.id, r]));
+  const row = (writtenName: string, foodId: string | null, dietVersionId = 'v1'): SavedFoodLinkRow => ({ writtenName, foodId, dietVersionId });
+
+  it('nome já ligado liga sozinho (acento, caixa e plural não importam)', () => {
+    const learned = buildLearnedLinkIndex([row('arroz', 't3'), row('Ovos inteiros', 't90')], visible);
+    expect(matchFoodName('Arroz', taco, undefined, learned)).toEqual({ status: 'matched', food: refs[0], candidates: [] });
+    expect(matchFoodName('ovo inteiro', taco, undefined, learned).food?.id).toBe('t90');
+  });
+
+  it('vale a escolha mais recente: dieta nova com outro alimento substitui a antiga', () => {
+    const learned = buildLearnedLinkIndex([row('arroz', 't4', 'v-nova'), row('arroz', 't3', 'v-antiga')], visible);
+    expect(matchFoodName('arroz', taco, undefined, learned).food?.id).toBe('t4');
+  });
+
+  it('nome ligado a alimentos diferentes na mesma dieta ("fruta") não é aprendido', () => {
+    const learned = buildLearnedLinkIndex([row('fruta', 't182'), row('fruta', 't183'), row('fruta', 't182', 'v-antiga')], visible);
+    expect(matchFoodName('fruta', taco, undefined, learned).status).toBe('not_found');
+  });
+
+  it('na dieta mais recente sem ligação, nada é aprendido; ocorrência sem ligação ao lado de uma ligada não atrapalha', () => {
+    expect(buildLearnedLinkIndex([row('arroz', null, 'v-nova'), row('arroz', 't3', 'v-antiga')], visible).size).toBe(0);
+    expect(buildLearnedLinkIndex([row('arroz', null), row('arroz', 't3')], visible).get('arroz')?.id).toBe('t3');
+  });
+
+  it('"sem pele" nunca vira "com pele"', () => {
+    const learned = buildLearnedLinkIndex([row('frango sem pele', 't410')], visible);
+    expect(matchFoodName('frango com pele', taco, undefined, learned).food).toBeNull();
+  });
+
+  it('a escolha do profissional vale mais que o apelido da lista do Bocado', () => {
+    const aliases = buildFoodAliasIndex([{ alias: 'arroz', food: refs[0] }]);
+    const learned = buildLearnedLinkIndex([row('arroz', 't4')], visible);
+    expect(matchFoodName('arroz', taco, aliases, learned).food?.id).toBe('t4');
+  });
+
+  it('alimento que não está mais visível é ignorado', () => {
+    expect(buildLearnedLinkIndex([row('arroz', 'apagado')], visible).size).toBe(0);
   });
 });

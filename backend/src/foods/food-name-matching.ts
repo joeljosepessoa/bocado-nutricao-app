@@ -56,17 +56,72 @@ export function buildFoodAliasIndex(aliases: { alias: string; food: CatalogFoodR
   return new Map(aliases.map((a) => [normalizeFoodName(a.alias), a.food]));
 }
 
+/** Nome escrito → alimento que o PRÓPRIO profissional ligou numa dieta salva. */
+export type LearnedLinkIndex = ReadonlyMap<string, CatalogFoodRef>;
+
+/**
+ * Chave do que o profissional já ligou: ignora acento, caixa, pontuação e
+ * plural ("Ovos inteiros" ≡ "ovo inteiro"), mas mantém "com"/"sem" —
+ * "frango sem pele" nunca vira "frango com pele".
+ */
+export function learnedLinkKey(name: string): string {
+  return normalizeFoodName(name).split(' ').filter(Boolean).map(stem).join(' ');
+}
+
+export interface SavedFoodLinkRow {
+  /** Nome como escrito na dieta (o que o paciente vê). */
+  writtenName: string;
+  /** Alimento do catálogo ligado, ou null quando o item ficou sem cálculo. */
+  foodId: string | null;
+  dietVersionId: string;
+}
+
+/**
+ * Aprende com as dietas que o profissional já salvou. `rows` vem da versão
+ * mais recente para a mais antiga; para cada nome só vale a versão mais
+ * recente em que ele aparece. Ali, se o nome foi ligado sempre ao mesmo
+ * alimento, ele passa a ligar sozinho. Se foi ligado a alimentos diferentes
+ * ("fruta" → banana numa opção, maçã noutra) ou não foi ligado, nada é
+ * aprendido. Alimento que não está mais visível ao profissional é ignorado.
+ */
+export function buildLearnedLinkIndex(rows: SavedFoodLinkRow[], visible: ReadonlyMap<string, CatalogFoodRef>): LearnedLinkIndex {
+  const latest = new Map<string, { versionId: string; foodIds: Set<string> }>();
+  for (const row of rows) {
+    const key = learnedLinkKey(row.writtenName);
+    if (!key) continue;
+    let entry = latest.get(key);
+    if (!entry) {
+      entry = { versionId: row.dietVersionId, foodIds: new Set() };
+      latest.set(key, entry);
+    }
+    if (entry.versionId !== row.dietVersionId) continue;
+    if (row.foodId && visible.has(row.foodId)) entry.foodIds.add(row.foodId);
+  }
+  const learned = new Map<string, CatalogFoodRef>();
+  for (const [key, { foodIds }] of latest) {
+    if (foodIds.size === 1) learned.set(key, visible.get([...foodIds][0])!);
+  }
+  return learned;
+}
+
 export function buildFoodCatalogIndex(catalog: CatalogFoodRef[]): FoodCatalogIndex {
   return catalog.map((ref) => ({ ref, normalized: normalizeFoodName(ref.name), stems: new Set(significantStems(ref.name)) }));
 }
 
 /**
- * Associação só por nome IGUAL (ignorando acento/caixa/pontuação) ou por um
- * apelido aprovado pelo nutricionista (lista do Bocado × TACO). Qualquer
- * outra semelhança vira apenas sugestão — o profissional escolhe. Nunca
- * inventa correspondência: "fruta" não vira "banana".
+ * Associação só por uma escolha do próprio profissional numa dieta salva
+ * (mesmo nome escrito), por nome IGUAL ao do catálogo (ignorando
+ * acento/caixa/pontuação) ou por um apelido aprovado pelo nutricionista
+ * (lista do Bocado × TACO). Qualquer outra semelhança vira apenas sugestão —
+ * o profissional escolhe. Nunca inventa correspondência: "fruta" não vira
+ * "banana".
  */
-export function matchFoodName(rawName: string, index: FoodCatalogIndex, aliases?: FoodAliasIndex): FoodMatch {
+export function matchFoodName(rawName: string, index: FoodCatalogIndex, aliases?: FoodAliasIndex, learned?: LearnedLinkIndex): FoodMatch {
+  // O que o profissional já escolheu para este mesmo nome vale mais que qualquer regra.
+  const viaLearned = learned?.get(learnedLinkKey(rawName));
+  if (viaLearned) {
+    return { status: 'matched', food: viaLearned, candidates: [] };
+  }
   const target = normalizeFoodName(rawName);
   const exact = index.filter((entry) => entry.normalized === target);
   if (exact.length === 1) {

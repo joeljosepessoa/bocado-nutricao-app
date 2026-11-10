@@ -3,7 +3,7 @@ import { DietVersionStatus, Food, FoodScope, NutritionUnit, Role } from '@prisma
 import { PrismaService } from '../common/prisma/prisma.service';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { NutritionCalculationService } from './nutrition-calculation.service';
-import { normalizeFoodName } from './food-name-matching';
+import { normalizeFoodName, SavedFoodLinkRow } from './food-name-matching';
 import { CreateFoodDto } from './dto/create-food.dto';
 import { UpdateFoodDto } from './dto/update-food.dto';
 import { CreateSubstitutionDto } from './dto/create-substitution.dto';
@@ -19,6 +19,9 @@ import {
 import { ownNutrientSections, tacoNutrientSections } from './food-nutrients';
 
 const FOOD_INCLUDE = { unitConversions: true } as const;
+
+/** Teto de itens lidos das dietas salvas para aprender as ligações (os mais recentes primeiro). */
+const SAVED_FOOD_LINKS_LIMIT = 20_000;
 
 const NUTRITIONAL_FIELDS = ['baseUnit', 'kcalPer100', 'proteinGPer100', 'carbGPer100', 'fatGPer100', 'fiberGPer100'] as const;
 
@@ -124,6 +127,21 @@ export class FoodsService {
       select: { alias: true, food: { select: { id: true, name: true } } },
     });
     return rows.flatMap((r) => (r.food ? [{ alias: r.alias, food: r.food }] : []));
+  }
+
+  /**
+   * Itens das dietas do próprio profissional com nome escrito, da versão mais
+   * recente para a mais antiga — base para o Assistente ligar sozinho o que
+   * ele já ligou antes (ver buildLearnedLinkIndex).
+   */
+  async listSavedFoodLinks(professionalId: string): Promise<SavedFoodLinkRow[]> {
+    const rows = await this.prisma.mealFood.findMany({
+      where: { customFoodName: { not: null }, meal: { dietVersion: { diet: { professionalId } } } },
+      select: { customFoodName: true, foodId: true, meal: { select: { dietVersionId: true } } },
+      orderBy: [{ meal: { dietVersion: { createdAt: 'desc' } } }, { meal: { dietVersionId: 'asc' } }],
+      take: SAVED_FOOD_LINKS_LIMIT,
+    });
+    return rows.map((r) => ({ writtenName: r.customFoodName as string, foodId: r.foodId, dietVersionId: r.meal.dietVersionId }));
   }
 
   /**
