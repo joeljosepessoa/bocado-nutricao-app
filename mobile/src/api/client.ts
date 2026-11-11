@@ -50,7 +50,15 @@ export function configureAuthHandlers(handlers: {
   onTermsRequired = handlers.onTermsRequired ?? null;
 }
 
-export const apiClient = axios.create({ baseURL: API_BASE_URL });
+/**
+ * Sem tempo limite, uma conexão que a rede do celular deixa pendurada nunca
+ * responde — e a abertura do app ficava presa no carregamento para sempre.
+ */
+export const REQUEST_TIMEOUT_MS = 20_000;
+/** Envio de foto em rede móvel fraca pode demorar mais. */
+export const UPLOAD_TIMEOUT_MS = 120_000;
+
+export const apiClient = axios.create({ baseURL: API_BASE_URL, timeout: REQUEST_TIMEOUT_MS });
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (accessToken) {

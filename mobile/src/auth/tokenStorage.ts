@@ -10,7 +10,15 @@ const REFRESH_TOKEN_KEY = 'bocado.refreshToken';
 
 export const tokenStorage = {
   async getRefreshToken(): Promise<string | null> {
-    return SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+    try {
+      return await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+    } catch {
+      // O Android às vezes não consegue mais decifrar o item (chave do cofre trocada
+      // após restaurar backup/atualizar). Sem isso o app travava no carregamento até
+      // limpar os dados: descarta o item ilegível e a pessoa só entra de novo.
+      await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY).catch(() => undefined);
+      return null;
+    }
   },
   async setRefreshToken(token: string): Promise<void> {
     await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, token);

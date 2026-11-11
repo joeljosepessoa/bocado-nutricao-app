@@ -119,15 +119,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       setDeviceTermsAccepted(await legalStorage.isDeviceAccepted());
-      const stored = await tokenStorage.getRefreshToken();
-      if (!stored) {
-        dispatch({ type: 'BOOT_NO_SESSION' });
-        return;
-      }
-      refreshTokenRef.current = stored;
-      const newAccessToken = await doRefresh();
-      if (!newAccessToken) {
-        await tokenStorage.clear();
+      try {
+        const stored = await tokenStorage.getRefreshToken();
+        if (!stored) {
+          dispatch({ type: 'BOOT_NO_SESSION' });
+          return;
+        }
+        refreshTokenRef.current = stored;
+        const newAccessToken = await doRefresh();
+        if (!newAccessToken) {
+          refreshTokenRef.current = null;
+          await tokenStorage.clear().catch(() => undefined);
+          dispatch({ type: 'BOOT_RESTORE_FAILED' });
+        }
+      } catch {
+        // Login guardado ilegível (o cofre do Android às vezes corrompe) ou outra falha
+        // inesperada: descarta e vai para a tela de login — nunca fica preso no carregamento.
+        refreshTokenRef.current = null;
+        await tokenStorage.clear().catch(() => undefined);
         dispatch({ type: 'BOOT_RESTORE_FAILED' });
       }
     })();

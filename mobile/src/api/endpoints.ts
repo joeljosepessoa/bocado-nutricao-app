@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import { apiClient } from './client';
+import { apiClient, UPLOAD_TIMEOUT_MS } from './client';
 import type {
   Appointment,
   AuthTokenPair,
@@ -337,7 +337,9 @@ export async function uploadProgressPhoto(file: { uri: string; mimeType: string;
   const res = await apiClient.post<ProgressPhoto>(
     '/client/progress-photos',
     form,
-    Platform.OS === 'web' ? undefined : { headers: { 'Content-Type': 'multipart/form-data' } },
+    Platform.OS === 'web'
+      ? { timeout: UPLOAD_TIMEOUT_MS }
+      : { timeout: UPLOAD_TIMEOUT_MS, headers: { 'Content-Type': 'multipart/form-data' } },
   );
   return res.data;
 }
