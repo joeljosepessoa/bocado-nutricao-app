@@ -19,14 +19,40 @@ import type { ScaleProfile, SegmentImpedances } from './icomonProtocol';
  *   relações que o app da balança mostra entre esses números).
  * - Peso ideal: IMC 22 para a altura.
  *
- * Gordura visceral, subcutânea, idade corporal e a análise por segmento ficam de
- * fora até a calibração com pesagens comparadas ao app da balança.
+ * - Músculo por parte do corpo: o app da balança não mede cada lado — divide a massa
+ *   muscular em frações fixas (esquerdo = direito sempre). Frações tiradas de 3 pessoas
+ *   comparadas: tronco 46,6–46,7%, cada perna 17,5–17,8%, cada braço 5,6–6,2%.
+ *
+ * Gordura visceral, subcutânea, idade corporal e a gordura por segmento ficam de
+ * fora até a calibração com mais pesagens comparadas ao app da balança.
  */
 
 export const FAT_FREE_MASS_REFERENCE = 'Sun et al. 2003';
 /** Ajuste fino da massa livre de gordura, calibrado contra o app da balança (1 = sem ajuste). */
 export const FAT_FREE_MASS_CALIBRATION = 1.04;
 export const SKELETAL_MUSCLE_REFERENCE = '57% da massa magra (calibrado com o app da balança)';
+
+export interface MuscleBySegment {
+  /** Cada braço. */
+  armKg: number;
+  /** Cada perna. */
+  legKg: number;
+  trunkKg: number;
+}
+
+const ARM_SHARE_OF_MUSCLE = 0.059;
+const LEG_SHARE_OF_MUSCLE = 0.176;
+const TRUNK_SHARE_OF_MUSCLE = 0.467;
+
+/** Divisão da massa muscular por parte do corpo, nas mesmas frações do app da balança. */
+export function muscleBySegment(muscleMassKg: number): MuscleBySegment | null {
+  if (!(muscleMassKg > 0)) return null;
+  return {
+    armKg: round1(ARM_SHARE_OF_MUSCLE * muscleMassKg),
+    legKg: round1(LEG_SHARE_OF_MUSCLE * muscleMassKg),
+    trunkKg: round1(TRUNK_SHARE_OF_MUSCLE * muscleMassKg),
+  };
+}
 
 export interface BodyComposition {
   wholeBodyResistance50kHz: number;
@@ -40,6 +66,7 @@ export interface BodyComposition {
   boneMassKg: number;
   muscleMassKg: number;
   muscleRatePercent: number;
+  muscleBySegment: MuscleBySegment | null;
   proteinKg: number;
   proteinPercent: number;
   idealWeightKg: number;
@@ -93,6 +120,7 @@ export function bodyComposition(
     boneMassKg: round1(bone),
     muscleMassKg: round1(muscleMass),
     muscleRatePercent: round1((muscleMass / weightKg) * 100),
+    muscleBySegment: muscleBySegment(muscleMass),
     proteinKg: round1(protein),
     proteinPercent: round1((protein / weightKg) * 100),
     idealWeightKg: round1(IDEAL_BMI * (profile.heightCm / 100) ** 2),

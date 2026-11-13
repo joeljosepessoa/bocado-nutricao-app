@@ -132,7 +132,7 @@ export function ScaleModal({ heightCm, age, sex, onSubmit, onClose, confirmLabel
                   khz100: result.impedance!.khz100,
                   wholeBodyResistance50kHz: composition.wholeBodyResistance50kHz,
                   profile: profileRef.current,
-                  derived: { proteinKg: composition.proteinKg, proteinPercent: composition.proteinPercent, muscleRatePercent: composition.muscleRatePercent, idealWeightKg: composition.idealWeightKg, bodyWaterKg: composition.bodyWaterKg },
+                  derived: { proteinKg: composition.proteinKg, proteinPercent: composition.proteinPercent, muscleRatePercent: composition.muscleRatePercent, idealWeightKg: composition.idealWeightKg, bodyWaterKg: composition.bodyWaterKg, muscleBySegment: composition.muscleBySegment },
                   equations: { fatFreeMass: FAT_FREE_MASS_REFERENCE, fatFreeMassCalibration: FAT_FREE_MASS_CALIBRATION, skeletalMuscle: SKELETAL_MUSCLE_REFERENCE, water: '73,2% da massa magra', bmr: 'Katch-McArdle', bone: '6,7% da massa magra' },
                 },
               }
@@ -248,6 +248,13 @@ function ResultView({ result, composition }: { result: ScaleResult; composition:
       ['Massa magra', `${fmt(composition.fatFreeMassKg)} kg`],
       ['Músculo esquelético', `${fmt(composition.skeletalMuscleMassKg)} kg`],
       ['Massa muscular', `${fmt(composition.muscleMassKg)} kg (${fmt(composition.muscleRatePercent)}%)`],
+      ...(composition.muscleBySegment
+        ? ([
+            ['Músculo — cada braço', `${fmt(composition.muscleBySegment.armKg)} kg`],
+            ['Músculo — cada perna', `${fmt(composition.muscleBySegment.legKg)} kg`],
+            ['Músculo — tronco', `${fmt(composition.muscleBySegment.trunkKg)} kg`],
+          ] as Array<[string, string]>)
+        : []),
       ['Massa óssea', `${fmt(composition.boneMassKg)} kg`],
       ['Proteína', `${fmt(composition.proteinPercent)}% (${fmt(composition.proteinKg)} kg)`],
       ['Água corporal', `${fmt(composition.bodyWaterPercent)}% (${fmt(composition.bodyWaterKg)} kg)`],

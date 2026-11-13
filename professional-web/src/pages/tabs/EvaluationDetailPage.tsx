@@ -10,6 +10,7 @@ import { AiAssistPanel } from '../../components/AiAssistPanel';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { formatDate, formatNumber } from '../../lib/format';
 import { EvaluationPhotosCard } from './EvaluationPhotosCard';
+import { muscleBySegment } from '../../scale/bodyComposition';
 
 const MEASUREMENT_LABELS: Record<keyof Measurements, string> = {
   chestCm: 'Tórax', waistCm: 'Cintura', abdomenCm: 'Abdômen', hipCm: 'Quadril',
@@ -58,6 +59,12 @@ function derivedBioimpedance(b: Bioimpedance, evaluationWeight: number | null, h
     if (protein > 0) out.push(['Proteína', `${one((protein / weight) * 100)}% (${one(protein)} kg)`]);
   }
   if (b.muscleMassKg != null && weight) out.push(['Taxa muscular', `${one((b.muscleMassKg / weight) * 100)}%`]);
+  const segments = b.muscleMassKg != null ? muscleBySegment(b.muscleMassKg) : null;
+  if (segments) {
+    out.push(['Músculo — cada braço', formatNumber(segments.armKg, ' kg')]);
+    out.push(['Músculo — cada perna', formatNumber(segments.legKg, ' kg')]);
+    out.push(['Músculo — tronco', formatNumber(segments.trunkKg, ' kg')]);
+  }
   if (heightCm > 0) out.push(['Peso ideal (IMC 22)', `${one(22 * (heightCm / 100) ** 2)} kg`]);
   return out;
 }

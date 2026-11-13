@@ -149,5 +149,10 @@ describe('EvaluationDetailPage — bioimpedância da balança conectada', () => 
     expect(screen.getByText('15.3% (15.8 kg)')).toBeInTheDocument();
     expect(screen.getByText('71.5%')).toBeInTheDocument();
     expect(screen.getByText('72.1 kg')).toBeInTheDocument();
+    // Músculo por parte (frações do app da balança sobre a massa muscular de 73,9 kg).
+    expect(screen.getByText('Músculo — cada braço')).toBeInTheDocument();
+    expect(screen.getByText('4.4 kg')).toBeInTheDocument();
+    expect(screen.getByText('13 kg')).toBeInTheDocument();
+    expect(screen.getByText('34.5 kg')).toBeInTheDocument();
   });
 });

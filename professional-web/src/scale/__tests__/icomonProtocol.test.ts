@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ackFrame, parseFrame, profileFrame, readyFrame, toHex } from '../icomonProtocol';
-import { bodyComposition, resistanceAt50kHz } from '../bodyComposition';
+import { bodyComposition, muscleBySegment, resistanceAt50kHz } from '../bodyComposition';
 
 const hex = (text: string) => new Uint8Array(text.split(' ').map((b) => parseInt(b, 16)));
 
@@ -84,5 +84,33 @@ describe('composição corporal pela bioimpedância (equações publicadas)', ()
     expect(female.fatFreeMassKg).not.toBe(male.fatFreeMassKg);
     expect(female.skeletalMuscleMassKg).toBeCloseTo(0.57 * female.fatFreeMassKg, 0);
     expect(bodyComposition(0, { heightCm: 165, age: 30, sex: 'female' }, impedance)).toBeNull();
+  });
+});
+
+describe('músculo por parte do corpo (frações do app da balança)', () => {
+  // Massa muscular e segmentos que o app da balança mostrou em 3 pessoas comparadas (sem nomes).
+  const casos: Array<[number, { arm: number; leg: number; trunk: number }]> = [
+    [45.8, { arm: 2.7, leg: 8.0, trunk: 21.4 }],
+    [62.5, { arm: 3.9, leg: 11.1, trunk: 29.2 }],
+    [53.9, { arm: 3.0, leg: 9.5, trunk: 25.1 }],
+  ];
+
+  it.each(casos)('massa muscular %s kg fica a até 0,3 kg do app em cada parte', (muscle, app) => {
+    const s = muscleBySegment(muscle)!;
+    expect(Math.abs(s.armKg - app.arm)).toBeLessThanOrEqual(0.3);
+    expect(Math.abs(s.legKg - app.leg)).toBeLessThanOrEqual(0.3);
+    expect(Math.abs(s.trunkKg - app.trunk)).toBeLessThanOrEqual(0.3);
+  });
+
+  it('vem junto na composição e não aparece sem massa muscular', () => {
+    const c = bodyComposition(103.35, { heightCm: 181, age: 40, sex: 'male' }, {
+      khz20: { arms: [218.7, 219.1], legs: [224.1, 183.3], trunk: 19.1 },
+      khz100: { arms: [187.4, 185.5], legs: [164.3, 178.0], trunk: 18.1 },
+    })!;
+    const esperado = muscleBySegment(c.muscleMassKg)!;
+    expect(c.muscleBySegment!.armKg).toBeCloseTo(esperado.armKg, 0);
+    expect(c.muscleBySegment!.legKg).toBeCloseTo(esperado.legKg, 0);
+    expect(c.muscleBySegment!.trunkKg).toBeCloseTo(esperado.trunkKg, 0);
+    expect(muscleBySegment(0)).toBeNull();
   });
 });
