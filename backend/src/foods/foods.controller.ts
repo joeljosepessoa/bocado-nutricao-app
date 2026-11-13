@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from '@nestjs/common';
-import { Role } from '@prisma/client';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseEnumPipe, Patch, Post, Put, Query } from '@nestjs/common';
+import { NutritionUnit, Role } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
@@ -7,6 +7,7 @@ import { FoodsService } from './foods.service';
 import { CreateFoodDto } from './dto/create-food.dto';
 import { UpdateFoodDto } from './dto/update-food.dto';
 import { CreateSubstitutionDto } from './dto/create-substitution.dto';
+import { SetUnitConversionDto } from './dto/set-unit-conversion.dto';
 
 @Controller('foods')
 @Roles(Role.professional)
@@ -56,6 +57,17 @@ export class FoodsController {
   @Patch(':id')
   update(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Body() dto: UpdateFoodDto) {
     return this.foodsService.update(user, id, dto);
+  }
+
+  /** Medida caseira: quanto pesa 1 unidade/fatia/colher (também em alimento da TACO). */
+  @Put(':id/unit-conversions/:unit')
+  setUnitConversion(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Param('unit', new ParseEnumPipe(NutritionUnit)) unit: NutritionUnit,
+    @Body() dto: SetUnitConversionDto,
+  ) {
+    return this.foodsService.setUnitConversion(user, id, unit, dto.gramsEquivalent);
   }
 
   /** Exclui alimento próprio que ainda não foi usado em dieta nem modelo. */

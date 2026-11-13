@@ -254,6 +254,59 @@ export class FoodsService {
     });
   }
 
+  /**
+   * Medida caseira ("1 fatia = 25 g") informada pelo profissional. Vale também
+   * para alimento da TACO — não mexe nos valores da tabela, só diz quanto pesa
+   * a unidade. Os itens dos rascunhos do profissional com esse alimento nessa
+   * unidade são recalculados na hora; dieta publicada nunca muda.
+   */
+  async setUnitConversion(user: AuthenticatedUser, foodId: string, unit: NutritionUnit, gramsEquivalent: number) {
+    const food = await this.findVisible(user.id, foodId);
+    if (unit === food.baseUnit) {
+      throw new BadRequestException(`O alimento já é calculado em ${food.baseUnit}; não precisa de peso por unidade.`);
+    }
+    if (food.source !== FOOD_LIBRARY_TACO_SOURCE) {
+      const isOwner = food.scope === FoodScope.private && food.ownerProfessionalId === user.id;
+      const isAuthorizedForGlobal =
+        food.scope === FoodScope.global && (food.createdByProfessionalId === user.id || user.role === Role.admin);
+      if (!isOwner && !isAuthorizedForGlobal) {
+        throw new ForbiddenException('Você não tem permissão para mudar as medidas deste alimento.');
+      }
+    }
+
+    await this.prisma.foodUnitConversion.upsert({
+      where: { foodId_unit: { foodId, unit } },
+      create: { foodId, unit, gramsEquivalent },
+      update: { gramsEquivalent },
+    });
+
+    const items = await this.prisma.mealFood.findMany({
+      where: {
+        foodId,
+        unit,
+        isFreeQuantity: false,
+        quantity: { not: null },
+        meal: { dietVersion: { status: DietVersionStatus.draft, diet: { professionalId: user.id } } },
+      },
+      select: { id: true, quantity: true },
+    });
+    for (const item of items) {
+      const snapshot = await this.calculation.calculate(food, item.quantity!, unit);
+      await this.prisma.mealFood.update({
+        where: { id: item.id },
+        data: {
+          gramsEquivalent: snapshot?.gramsEquivalent ?? null,
+          kcal: snapshot?.kcal ?? null,
+          proteinG: snapshot?.proteinG ?? null,
+          carbG: snapshot?.carbG ?? null,
+          fatG: snapshot?.fatG ?? null,
+          fiberG: snapshot?.fiberG ?? null,
+        },
+      });
+    }
+    return { foodId, unit, gramsEquivalent, recalculatedItems: items.length };
+  }
+
   private originOf(professionalId: string, food: { source: string; scope: FoodScope; ownerProfessionalId: string | null; createdByProfessionalId: string }): FoodOrigin {
     if (food.source === FOOD_LIBRARY_TACO_SOURCE) return 'taco';
     const mine =

@@ -106,4 +106,57 @@ describe('Tela Alimentos (e2e)', () => {
     await request(app.getHttpServer()).delete(`/foods/${unused.id}`).set('Authorization', `Bearer ${me.accessToken}`).expect(204);
     await get(me.accessToken, `/foods/${unused.id}`).expect(404);
   });
+
+  it('peso por unidade: grava "1 fatia = 25 g" até em alimento da TACO e recalcula o rascunho', async () => {
+    const tag = Date.now();
+    const me = await registerProfessional(app);
+    const other = await registerProfessional(app);
+    const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
+    const mine = await createFood(app, me.accessToken, { name: `Pão caseiro ${tag}`, scope: 'private' });
+    // Linha "da TACO" própria do teste (não mexe na TACO importada no banco de teste).
+    const taco = await prisma.food.create({
+      data: {
+        name: `Pão, trigo, forma, integral ${tag}`,
+        scope: 'global',
+        baseUnit: 'g',
+        kcalPer100: 250,
+        proteinGPer100: 9,
+        carbGPer100: 50,
+        fatGPer100: 3,
+        source: 'taco4',
+        sourceKey: `taco4:teste-${tag}`,
+        approvedAt: new Date(),
+        createdByProfessionalId: mine.createdByProfessionalId,
+      },
+    });
+
+    const { client } = await createClient(app, me.accessToken);
+    const diet = await createDiet(app, me.accessToken, client.id);
+    const base = `/clients/${client.id}/diets/${diet.id}/versions/${diet.currentVersion.id}`;
+    const meal = (await request(app.getHttpServer()).post(`${base}/meals`).set(auth(me.accessToken)).send({ name: 'Café' }).expect(201)).body;
+    const item = (
+      await request(app.getHttpServer()).post(`${base}/meals/${meal.id}/foods`).set(auth(me.accessToken)).send({ foodId: taco.id, quantity: 2, unit: 'slice' }).expect(201)
+    ).body;
+    expect(item.kcal).toBeNull();
+
+    const saved = (
+      await request(app.getHttpServer()).put(`/foods/${taco.id}/unit-conversions/slice`).set(auth(me.accessToken)).send({ gramsEquivalent: 25 }).expect(200)
+    ).body;
+    expect(saved).toMatchObject({ unit: 'slice', gramsEquivalent: 25, recalculatedItems: 1 });
+    expect(await prisma.mealFood.findUniqueOrThrow({ where: { id: item.id } })).toMatchObject({ gramsEquivalent: 50, kcal: 125, proteinG: 4.5, carbG: 25, fatG: 1.5 });
+    expect((await get(me.accessToken, `/foods/${taco.id}/details`).expect(200)).body.unitConversions).toEqual([{ unit: 'slice', gramsEquivalent: 25 }]);
+
+    // Corrigir o peso substitui o anterior e recalcula de novo.
+    await request(app.getHttpServer()).put(`/foods/${taco.id}/unit-conversions/slice`).set(auth(me.accessToken)).send({ gramsEquivalent: 30 }).expect(200);
+    expect((await prisma.mealFood.findUniqueOrThrow({ where: { id: item.id } })).kcal).toBe(150);
+
+    // O rascunho de outro profissional não é tocado; ele também pode informar peso na TACO.
+    await request(app.getHttpServer()).put(`/foods/${taco.id}/unit-conversions/unit`).set(auth(other.accessToken)).send({ gramsEquivalent: 50 }).expect(200);
+    // Alimento particular de outro profissional: invisível.
+    await request(app.getHttpServer()).put(`/foods/${mine.id}/unit-conversions/slice`).set(auth(other.accessToken)).send({ gramsEquivalent: 20 }).expect(404);
+    // Unidade base, unidade inexistente e peso inválido.
+    await request(app.getHttpServer()).put(`/foods/${taco.id}/unit-conversions/g`).set(auth(me.accessToken)).send({ gramsEquivalent: 1 }).expect(400);
+    await request(app.getHttpServer()).put(`/foods/${taco.id}/unit-conversions/banana`).set(auth(me.accessToken)).send({ gramsEquivalent: 20 }).expect(400);
+    await request(app.getHttpServer()).put(`/foods/${taco.id}/unit-conversions/slice`).set(auth(me.accessToken)).send({ gramsEquivalent: 0 }).expect(400);
+  });
 });

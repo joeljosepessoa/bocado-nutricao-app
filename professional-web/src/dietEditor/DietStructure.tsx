@@ -4,11 +4,13 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EmptyState } from '../components/EmptyState';
-import type { DietChoiceNode, DietDayNode, DietGroupNode, DietMealNode, MealFood, NutritionRange } from '../types/api';
+import type { DietChoiceNode, DietDayNode, DietGroupNode, DietMealNode, MealFood, NutritionRange, NutritionUnit } from '../types/api';
 import styles from './DietStructure.module.css';
 import { useDraftEdit, type DraftEdit } from './draftEdit';
 import { DayFormModal, FoodItemModal, LabelModal } from './StructureModals';
 import { MealMacroChart } from './MealMacroChart';
+import { UnitWeightModal } from '../foods/UnitWeightModal';
+import { ONE_UNIT_LABELS } from '../dietAssistant/draft';
 import {
   CHOICE_KCAL_TOLERANCE,
   DAY_KIND_LABELS,
@@ -22,6 +24,7 @@ import {
   formatKcal,
   formatMacros,
   isRange,
+  needsUnitWeight,
   quantityText,
   reorderPatches,
   showDayTabs,
@@ -698,9 +701,11 @@ function FoodList({ mealId, foods }: { mealId: string; foods: MealFood[] }) {
 function FoodLine({ mealId, food }: { mealId: string; food: MealFood }) {
   const edit = useDraftEdit();
   const [editing, setEditing] = useState(false);
+  const [weighing, setWeighing] = useState(false);
   const name = foodName(food);
   const qty = quantityText(food);
   const status = foodCalcStatus(food);
+  const missingWeight = edit != null && needsUnitWeight(food);
 
   return (
     <div className={styles.foodLine}>
@@ -725,6 +730,17 @@ function FoodLine({ mealId, food }: { mealId: string; food: MealFood }) {
       )}
       {edit ? (
         <span className={styles.actions}>
+          {missingWeight ? (
+            <Button
+              size="small"
+              variant="secondary"
+              aria-label={`Informar peso de 1 ${ONE_UNIT_LABELS[food.unit as NutritionUnit] ?? food.unit} de ${name}`}
+              title={`Falta o peso de 1 ${ONE_UNIT_LABELS[food.unit as NutritionUnit] ?? food.unit} para calcular`}
+              onClick={() => setWeighing(true)}
+            >
+              Informar peso
+            </Button>
+          ) : null}
           <Button size="small" variant="ghost" aria-label={`Editar ${name}`} onClick={() => setEditing(true)}>
             Editar
           </Button>
@@ -737,6 +753,14 @@ function FoodLine({ mealId, food }: { mealId: string; food: MealFood }) {
             Remover
           </Button>
         </span>
+      ) : null}
+      {weighing && edit && food.foodId ? (
+        <UnitWeightModal
+          foodId={food.foodId}
+          unit={food.unit as NutritionUnit}
+          onClose={() => setWeighing(false)}
+          onSaved={() => edit.run(async () => undefined, 'Não foi possível atualizar a dieta.')}
+        />
       ) : null}
       {editing && edit ? (
         <FoodItemModal

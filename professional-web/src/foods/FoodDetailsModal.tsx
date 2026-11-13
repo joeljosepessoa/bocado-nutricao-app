@@ -6,6 +6,7 @@ import { Modal } from '../components/Modal';
 import { apiErrorMessage } from '../dietEditor/draftEdit';
 import type { FoodDetails } from '../types/api';
 import styles from './Foods.module.css';
+import { UnitWeightModal } from './UnitWeightModal';
 import { fmt, marksUsed, measureOptions, measureText, nutrientText, ORIGIN_LABELS, parseDecimal } from './foodFormat';
 
 function usageText(usage: FoodDetails['usage']): string {
@@ -36,6 +37,7 @@ export function FoodDetailsModal({
   const [quantity, setQuantity] = useState('100');
   const [measure, setMeasure] = useState(0);
   const [confirming, setConfirming] = useState(false);
+  const [addingMeasure, setAddingMeasure] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const remove = useMutation({
     mutationFn: () => api.deleteFood(foodId),
@@ -138,7 +140,7 @@ export function FoodDetailsModal({
           {macro('Fibra', food.fiberGPer100, 'g')}
         </div>
 
-        {food.unitConversions.length > 0 ? (
+        {food.unitConversions.length > 0 || food.origin === 'taco' ? (
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
             <strong>Medidas caseiras:</strong>
             {food.unitConversions.map((c) => (
@@ -146,8 +148,15 @@ export function FoodDetailsModal({
                 {measureText(c, food.baseUnit)}
               </span>
             ))}
+            {food.unitConversions.length === 0 ? <span style={{ color: 'var(--color-text-secondary)' }}>nenhuma ainda.</span> : null}
+            {food.origin === 'taco' ? (
+              <Button size="small" variant="ghost" onClick={() => setAddingMeasure(true)}>
+                + Peso por unidade
+              </Button>
+            ) : null}
           </div>
         ) : null}
+        {addingMeasure ? <UnitWeightModal foodId={food.id} onClose={() => setAddingMeasure(false)} onSaved={() => undefined} /> : null}
 
         <div className={styles.sections}>
           {food.sections.map((section) => (

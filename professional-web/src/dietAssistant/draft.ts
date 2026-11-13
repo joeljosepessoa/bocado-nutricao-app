@@ -22,6 +22,17 @@ export const UNIT_LABELS: Record<NutritionUnit, string> = {
 };
 export const UNITS = Object.keys(UNIT_LABELS) as NutritionUnit[];
 
+/** "1 fatia", "1 colher de sopa" — rótulo de UMA unidade (peso por unidade). */
+export const ONE_UNIT_LABELS: Record<NutritionUnit, string> = {
+  g: 'g',
+  ml: 'ml',
+  unit: 'unidade',
+  tablespoon: 'colher de sopa',
+  teaspoon: 'colher de chá',
+  cup: 'xícara',
+  slice: 'fatia',
+};
+
 export function unitLabel(unit: string): string {
   return UNIT_LABELS[unit as NutritionUnit] ?? unit;
 }

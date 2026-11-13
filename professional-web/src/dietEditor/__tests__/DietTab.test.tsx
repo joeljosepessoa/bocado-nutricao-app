@@ -37,6 +37,8 @@ vi.mock('../../api/endpoints', () => ({
   updateDietSupplement: vi.fn(),
   deleteDietSupplement: vi.fn(),
   listFoods: vi.fn(),
+  getFoodDetails: vi.fn(),
+  setFoodUnitConversion: vi.fn(),
 }));
 
 const REF = { clientId: 'c1', dietId: 'd1', versionId: 'v-draft' };
@@ -423,5 +425,56 @@ describe('Publicação', () => {
     await mealSection('Almoço');
     await user.click(screen.getByRole('button', { name: 'Publicar versão' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Corrija a estrutura antes de publicar: X.');
+  });
+});
+
+describe('Peso por unidade (item em fatia sem cálculo)', () => {
+  const daysWithSlice = () => [
+    day(
+      'day-1',
+      null,
+      'other',
+      [meal('m-cafe', 'Café da manhã', [fixed('g-cafe', [item('Pão de forma', 2, 'slice', null), item('Ovo', 2, 'unit', 156)], range(156))], range(156))],
+      range(156),
+    ),
+  ];
+
+  it('rascunho: "Informar peso" grava o peso de 1 fatia e recarrega a dieta', async () => {
+    vi.mocked(api.getFoodDetails).mockResolvedValue({ id: 'food-Pão de forma', name: 'Pão, trigo, forma, integral', baseUnit: 'g', unitConversions: [] } as never);
+    vi.mocked(api.setFoodUnitConversion).mockResolvedValue({ foodId: 'food-Pão de forma', unit: 'slice', gramsEquivalent: 25, recalculatedItems: 1 });
+    const user = renderTab(version('draft', daysWithSlice()));
+    const cafe = await mealSection('Café da manhã');
+    expect(within(cafe).getByText('Sem cálculo')).toBeInTheDocument();
+    // O ovo já tem cálculo: sem botão.
+    expect(within(cafe).queryByRole('button', { name: /Informar peso de 1 unidade/ })).not.toBeInTheDocument();
+    const calls = vi.mocked(api.getDiet).mock.calls.length;
+
+    await user.click(within(cafe).getByRole('button', { name: 'Informar peso de 1 fatia de Pão de forma' }));
+    const dialog = await screen.findByRole('dialog');
+    await user.type(await within(dialog).findByLabelText('Peso de 1 fatia'), '25');
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar peso' }));
+
+    await waitFor(() => expect(api.setFoodUnitConversion).toHaveBeenCalledWith('food-Pão de forma', 'slice', 25));
+    await waitFor(() => expect(vi.mocked(api.getDiet).mock.calls.length).toBeGreaterThan(calls));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('peso vazio ou absurdo não é enviado', async () => {
+    vi.mocked(api.getFoodDetails).mockResolvedValue({ id: 'food-Pão de forma', name: 'Pão de forma', baseUnit: 'g', unitConversions: [] } as never);
+    const user = renderTab(version('draft', daysWithSlice()));
+    const cafe = await mealSection('Café da manhã');
+    await user.click(within(cafe).getByRole('button', { name: 'Informar peso de 1 fatia de Pão de forma' }));
+    const dialog = await screen.findByRole('dialog');
+    await within(dialog).findByLabelText('Peso de 1 fatia');
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar peso' }));
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Informe quanto pesa 1 fatia, em g');
+    expect(api.setFoodUnitConversion).not.toHaveBeenCalled();
+  });
+
+  it('dieta publicada não mostra o botão', async () => {
+    renderTab(version('published', daysWithSlice()));
+    const cafe = await mealSection('Café da manhã');
+    expect(within(cafe).getByText('Sem cálculo')).toBeInTheDocument();
+    expect(within(cafe).queryByRole('button', { name: /Informar peso/ })).not.toBeInTheDocument();
   });
 });

@@ -66,6 +66,22 @@ export function foodCalcStatus(food: MealFood): 'À vontade' | 'Sem cálculo' | 
   return null;
 }
 
+/**
+ * Item do catálogo em fatia/unidade/colher que ficou sem cálculo só porque
+ * falta o peso daquela medida — o nutricionista pode informar.
+ */
+export function needsUnitWeight(food: MealFood): boolean {
+  return (
+    !!food.foodId &&
+    !food.isFreeQuantity &&
+    food.quantity != null &&
+    !!food.unit &&
+    food.unit !== 'g' &&
+    food.unit !== 'ml' &&
+    food.kcal == null
+  );
+}
+
 export function supplementQuantityText(s: Pick<DietSupplement, 'quantity' | 'quantityMax' | 'unitText'>): string {
   if (s.quantity == null) return s.unitText ?? '';
   const amount = s.quantityMax != null ? `${quantityFormat.format(s.quantity)}–${quantityFormat.format(s.quantityMax)}` : quantityFormat.format(s.quantity);

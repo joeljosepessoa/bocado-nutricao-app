@@ -378,6 +378,19 @@ export async function updateFood(id: string, input: Partial<FoodInput>): Promise
   return res.data;
 }
 
+/**
+ * Medida caseira ("1 fatia = 25 g"), também em alimento da TACO. O servidor
+ * recalcula na hora os itens dos seus rascunhos com esse alimento nessa unidade.
+ */
+export async function setFoodUnitConversion(
+  foodId: string,
+  unit: NutritionUnit,
+  gramsEquivalent: number,
+): Promise<{ foodId: string; unit: NutritionUnit; gramsEquivalent: number; recalculatedItems: number }> {
+  const res = await apiClient.put(`/foods/${foodId}/unit-conversions/${unit}`, { gramsEquivalent });
+  return res.data;
+}
+
 export async function deleteFood(id: string): Promise<void> {
   await apiClient.delete(`/foods/${id}`);
 }
