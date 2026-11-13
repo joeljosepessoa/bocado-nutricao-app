@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { INVALID_HEIGHT_MESSAGE, isValidHeightCm, normalizeHeightCm } from '../../utils/height';
+import { translateServerMessage } from '../../utils/serverErrors';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import * as api from '../../api/endpoints';
@@ -67,6 +69,8 @@ interface PendingScaleReading {
 }
 
 const PERCENT_NEEDS_WEIGHT = 'Para informar músculo em % é preciso preencher o peso em "Dados básicos".';
+/** Erros conferidos aqui mesmo, antes de enviar: aparecem como estão. */
+const LOCAL_ERRORS = new Set([PERCENT_NEEDS_WEIGHT, INVALID_HEIGHT_MESSAGE]);
 
 const BMR_REFERENCE_OPTIONS: Array<{ value: BmrReference; label: string }> = [
   { value: 'harris_benedict', label: 'Harris-Benedict' },
@@ -314,6 +318,8 @@ export function EvaluationFormPage() {
       // para não escorregar para o dia vizinho por causa do fuso.
       const dateChanged = isEdit ? evaluatedDate !== originalDate : evaluatedDate !== toDateInput(new Date());
       const ageNumber = toNumberOrUndefined(age);
+      const height = normalizeHeightCm(heightCm);
+      if (!isValidHeightCm(height)) throw new Error(INVALID_HEIGHT_MESSAGE);
 
       // Músculo esquelético e massa muscular são gravados sempre em kg; o que
       // foi digitado em % do peso é convertido aqui.
@@ -336,7 +342,7 @@ export function EvaluationFormPage() {
       const payload = {
         evaluatedAt: evaluatedDate && dateChanged ? new Date(`${evaluatedDate}T12:00:00`).toISOString() : undefined,
         ageAtEvaluation: ageNumber != null ? Math.trunc(ageNumber) : undefined,
-        heightCm: Number(heightCm),
+        heightCm: height,
         weightKg: toNumberOrUndefined(weightKg),
         biologicalSexForCalculation: biologicalSex || undefined,
         protocolCode: protocolCode || undefined,
@@ -397,13 +403,13 @@ export function EvaluationFormPage() {
       navigate(`/clients/${clientId}/evaluations/${result.id}`, { state: photosFailed ? { photosFailed } : undefined });
     },
     onError: (err) => {
-      if (err instanceof Error && err.message === PERCENT_NEEDS_WEIGHT) {
+      if (err instanceof Error && LOCAL_ERRORS.has(err.message)) {
         setError(err.message);
         return;
       }
       // O motivo que o servidor deu, quando deu — "confira os valores" sozinho não diz qual.
       const reason = (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
-      const detail = Array.isArray(reason) ? reason.join('; ') : reason;
+      const detail = (Array.isArray(reason) ? reason : reason ? [reason] : []).map(translateServerMessage).join('; ');
       setError(detail ? `Não foi possível salvar: ${detail}` : 'Não foi possível salvar. Confira os valores informados e tente de novo.');
     },
   });
@@ -469,7 +475,18 @@ export function EvaluationFormPage() {
             }}
           />
           <TextField label="Idade na avaliação (anos)" type="number" min={0} step={1} value={age} onChange={(e) => setAge(e.target.value)} />
-          <TextField label="Altura (cm)" type="number" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} required />
+          <TextField
+            label="Altura (cm)"
+            inputMode="decimal"
+            value={heightCm}
+            onChange={(e) => setHeightCm(e.target.value)}
+            onBlur={() => {
+              // Digitou em metros ("1,66"): mostra já convertido para centímetros.
+              const cm = normalizeHeightCm(heightCm);
+              if (cm != null && String(cm) !== heightCm.trim()) setHeightCm(String(cm));
+            }}
+            required
+          />
           <TextField label="Peso (kg)" type="number" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} />
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13 }}>
             <span style={{ color: 'var(--color-text-secondary)', fontWeight: 600 }}>Sexo biológico (cálculo)</span>
@@ -626,7 +643,7 @@ export function EvaluationFormPage() {
 
       {scaleOpen ? (
         <ScaleModal
-          heightCm={Number(heightCm) || 0}
+          heightCm={normalizeHeightCm(heightCm) ?? 0}
           age={filled(age) ? Math.trunc(Number(age)) : null}
           sex={biologicalSex || null}
           confirmLabel="Usar só o peso"

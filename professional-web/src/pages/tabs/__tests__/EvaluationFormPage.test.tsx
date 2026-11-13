@@ -92,11 +92,11 @@ describe('EvaluationFormPage — rascunho automático', () => {
 
     expect(await screen.findByText('Encontramos um rascunho não salvo desta avaliação.')).toBeInTheDocument();
     // Nunca aplica sozinho — o campo continua vazio até a confirmação.
-    expect(screen.getByLabelText('Altura (cm)')).toHaveValue(null);
+    expect(screen.getByLabelText('Altura (cm)')).toHaveValue('');
 
     fireEvent.click(screen.getByRole('button', { name: 'Restaurar rascunho' }));
 
-    expect(screen.getByLabelText('Altura (cm)')).toHaveValue(182);
+    expect(screen.getByLabelText('Altura (cm)')).toHaveValue('182');
     expect(screen.queryByText('Encontramos um rascunho não salvo desta avaliação.')).not.toBeInTheDocument();
   });
 
@@ -123,7 +123,7 @@ describe('EvaluationFormPage — rascunho automático', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Descartar' }));
 
     expect(screen.queryByText('Encontramos um rascunho não salvo desta avaliação.')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Altura (cm)')).toHaveValue(null);
+    expect(screen.getByLabelText('Altura (cm)')).toHaveValue('');
     expect(loadEvaluationDraft(draftKey)).toBeNull();
   });
 
@@ -336,6 +336,35 @@ describe('EvaluationFormPage — dados do modelo de avaliação (método, refer�
 
     expect(await screen.findByText('Para informar músculo em % é preciso preencher o peso em "Dados básicos".')).toBeInTheDocument();
     expect(api.createEvaluation).not.toHaveBeenCalled();
+  });
+  it('altura digitada em metros ("1,66") vira centímetros e salva 166', async () => {
+    renderNewEvaluationPage();
+    const field = screen.getByLabelText('Altura (cm)');
+    fireEvent.change(field, { target: { value: '1,66' } });
+    fireEvent.blur(field);
+    expect(field).toHaveValue('166');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(api.createEvaluation).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(api.createEvaluation).mock.calls[0][1]).toMatchObject({ heightCm: 166 });
+  });
+
+  it('altura impossível: não envia e explica em português', async () => {
+    renderNewEvaluationPage();
+    fireEvent.change(screen.getByLabelText('Altura (cm)'), { target: { value: '1660' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    expect(await screen.findByText('Altura inválida: informe em centímetros, por exemplo 166.')).toBeInTheDocument();
+    expect(api.createEvaluation).not.toHaveBeenCalled();
+  });
+
+  it('recusa do servidor aparece traduzida', async () => {
+    vi.mocked(api.createEvaluation).mockRejectedValueOnce({ response: { data: { message: ['weightKg must not be less than 1'] } } });
+    renderNewEvaluationPage();
+    fireEvent.change(screen.getByLabelText('Altura (cm)'), { target: { value: '170' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    expect(await screen.findByText('Não foi possível salvar: Peso não pode ser menor que 1')).toBeInTheDocument();
   });
 });
 
