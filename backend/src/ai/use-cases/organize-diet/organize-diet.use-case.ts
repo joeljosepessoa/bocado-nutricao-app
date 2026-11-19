@@ -16,7 +16,7 @@ import { AiOutputValidationError } from '../../ai-errors';
 import type { AiGenerationResult } from '../../providers/ai-provider.interface';
 import type { GenerateAiContentDto } from '../../dto/generate-ai-content.dto';
 import type { AiContextResult, AiUseCase, BuildContextParams, ProcessedAiOutput } from '../ai-use-case.interface';
-import { checkDietFidelity, CheckedDietItem, CheckedSupplement } from './diet-fidelity';
+import { checkDietFidelity, CheckedDietItem, CheckedSupplement, DietFidelityError } from './diet-fidelity';
 import { ORGANIZED_DIET_JSON_SCHEMA, parseOrganizedDiet, type AiDayKind, type AiGroupKind } from './organized-diet.schema';
 
 export const FOOD_WARNINGS = {
@@ -42,6 +42,7 @@ const SYSTEM_PROMPT = [
   '   "unit": a unidade como escrita ("g", "ml", "fatias", "colher de sopa", "unidades"), ou null. Nunca converta (kg continua kg).',
   '   "freeQuantity": true só quando o texto diz "à vontade" para aquele alimento (então "quantity": null).',
   '   "notes": observação escrita do item ("sem pele", "opcional") copiada, ou null.',
+  '   Cada trecho do texto vira item UMA ÚNICA vez, na refeição em que está escrito: nunca repita em outra refeição alimentos de outra refeição (exceto na refeição escrita como cópia, regra 2).',
   '   Escolha escrita DENTRO de um item ("fruta (escolher 1: 150 g de banana, 321 g de mamão ou 406 g de melão)") é UM item: "food": "fruta", "quantity": null, "sourceText" com o trecho inteiro, parênteses incluídos, e "notes" com o que está dentro dos parênteses copiado ("escolher 1: 150 g de banana, 321 g de mamão ou 406 g de melão"). Não crie bloco separado para ela.',
   '5. SUPLEMENTAÇÃO: cada suplemento em "supplements" com "sourceText" (o trecho do suplemento copiado), "name", "quantity"/"quantityMax"/"unit" como escritos, "timing" (o momento copiado do texto, ex.: "antes do café da manhã") e "notes" copiados, ou null.',
   '6. ORIENTAÇÕES ao paciente (água, sono, como escolher etc.): cada orientação em "guidelines" copiada LITERALMENTE do texto — nunca resuma nem reescreva.',
@@ -55,6 +56,18 @@ const SYSTEM_PROMPT = [
     '"supplements":[{"sourceText":string,"name":string,"quantity":number|null,"quantityMax":number|null,"unit":string|null,"timing":string|null,"notes":string|null}],' +
     '"guidelines":[string],"warnings":[string]}',
 ].join('\n');
+
+/** Nova tentativa depois da recusa da conferência: a IA recebe a lista do que errou. */
+const RETRY_PROMPT = [
+  '',
+  'ATENÇÃO — NOVA TENTATIVA: uma organização anterior deste mesmo texto foi RECUSADA pela conferência automática.',
+  'Os motivos estão em "previousAttemptProblems" (são mensagens do sistema, não parte da dieta).',
+  'Refaça a organização INTEIRA a partir do texto, seguindo todas as regras acima e sem repetir esses erros:',
+  'cada refeição só com os itens escritos nela, cada trecho usado uma única vez, quantidades e nomes copiados como escritos.',
+].join('\n');
+
+/** Entrada interna da nova tentativa (nunca vem da requisição). */
+type OrganizeDietInput = GenerateAiContentDto & { previousAttemptProblems?: string[] };
 
 export interface ProposalDietItem {
   sourceText: string;
@@ -126,7 +139,7 @@ function toProposalItem(item: CheckedDietItem, index: FoodCatalogIndex, aliases:
 @Injectable()
 export class OrganizeDietUseCase implements AiUseCase {
   readonly feature = AiFeatureKey.organize_diet;
-  readonly promptVersion = 'organize_diet@v2.2';
+  readonly promptVersion = 'organize_diet@v2.3';
   readonly maxOutputChars = 60000;
   readonly timeoutMs = 180_000;
   readonly requiresStructuredOutput = true;
@@ -136,8 +149,19 @@ export class OrganizeDietUseCase implements AiUseCase {
 
   /** Política `professional_material` (ai-consent-policy.ts): o provedor recebe SÓ o texto da dieta. */
   async buildContext({ input }: BuildContextParams): Promise<AiContextResult> {
-    const dto = input as GenerateAiContentDto;
+    const dto = input as OrganizeDietInput;
+    if (dto.previousAttemptProblems?.length) {
+      return { systemPrompt: SYSTEM_PROMPT + RETRY_PROMPT, context: { dietText: dto.dietText, previousAttemptProblems: dto.previousAttemptProblems } };
+    }
     return { systemPrompt: SYSTEM_PROMPT, context: { dietText: dto.dietText } };
+  }
+
+  /** Recusa da conferência → UMA nova tentativa com a lista dos problemas; a 2ª recusa é definitiva. */
+  retryOnInvalidOutput(error: Error, { input }: BuildContextParams): { input: unknown } | null {
+    const dto = input as OrganizeDietInput;
+    if (!(error instanceof DietFidelityError) || dto.previousAttemptProblems?.length) return null;
+    const retryInput: OrganizeDietInput = { ...dto, previousAttemptProblems: error.problems.slice(0, 20) };
+    return { input: retryInput };
   }
 
   async processOutput(result: AiGenerationResult, { professionalId, input }: BuildContextParams): Promise<ProcessedAiOutput> {

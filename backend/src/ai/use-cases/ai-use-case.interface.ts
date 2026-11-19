@@ -1,4 +1,5 @@
 import { AiFeatureKey } from '@prisma/client';
+import type { AiOutputValidationError } from '../ai-errors';
 import type { AiGenerationResult } from '../providers/ai-provider.interface';
 
 export interface AiContextResult {
@@ -56,6 +57,11 @@ export interface AiUseCase {
    * chama a IA de novo com ela) ou null quando o resultado já está bom.
    */
   revise?(processed: ProcessedAiOutput, params: BuildContextParams): { input: unknown } | null;
+  /**
+   * Saída recusada pelo processOutput (AiOutputValidationError): devolve uma nova entrada para UMA nova
+   * tentativa (o AiService chama a IA de novo, já dizendo o que estava errado) ou null para recusar de vez.
+   */
+  retryOnInvalidOutput?(error: AiOutputValidationError, params: BuildContextParams): { input: unknown } | null;
   /** Junta a 1ª resposta e a corrigida (obrigatório quando há revise). */
   combine?(first: ProcessedAiOutput, second: ProcessedAiOutput): ProcessedAiOutput;
 }

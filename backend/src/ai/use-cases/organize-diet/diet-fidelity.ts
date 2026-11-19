@@ -3,6 +3,16 @@ import { AiOutputValidationError } from '../../ai-errors';
 import { FOOD_NAME_STOPWORDS, stem } from '../../../foods/food-name-matching';
 import type { AiDayKind, AiDietItem, AiGroup, AiGroupKind, AiOrganizedDiet } from './organized-diet.schema';
 
+/** Recusa da conferência com a lista completa dos problemas (usada para a IA refazer, corrigindo-os). */
+export class DietFidelityError extends AiOutputValidationError {
+  constructor(
+    message: string,
+    readonly problems: string[],
+  ) {
+    super(message);
+  }
+}
+
 /**
  * Conferência DETERMINÍSTICA da saída da IA contra o texto que o profissional
  * colou. A IA só pode reorganizar: todo alimento, quantidade, unidade, dia,
@@ -1076,8 +1086,9 @@ export function checkDietFidelity(input: string, organized: AiOrganizedDiet): Ch
   if (problems.length > 0) {
     const shown = problems.slice(0, 3).join(' ');
     const more = problems.length > 3 ? ` (+${problems.length - 3} problema(s))` : '';
-    throw new AiOutputValidationError(
+    throw new DietFidelityError(
       `A organização foi recusada porque alteraria a dieta escrita: ${shown}${more} Nada foi salvo — tente organizar novamente.`,
+      problems,
     );
   }
 

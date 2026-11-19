@@ -18,7 +18,7 @@ import { CreateDietUseCase } from './use-cases/create-diet/create-diet.use-case'
 import { TemplateDietChatUseCase } from './use-cases/template-chat/template-diet-chat.use-case';
 import { TemplateWorkoutChatUseCase } from './use-cases/template-chat/template-workout-chat.use-case';
 import { PatientDietChatUseCase, PatientWorkoutChatUseCase } from './use-cases/template-chat/patient-chat.use-cases';
-import type { AiUseCase, BuildContextParams } from './use-cases/ai-use-case.interface';
+import type { AiUseCase, BuildContextParams, ProcessedAiOutput } from './use-cases/ai-use-case.interface';
 import { AiGenerationResponseDto } from './dto/ai-generation-response.dto';
 
 export interface RequestMeta {
@@ -34,6 +34,8 @@ export const CLIENT_AI_CONSENT_MISSING_MESSAGE =
 // mais pesados declaram o próprio timeoutMs (ex.: organize_workout).
 export const DEFAULT_AI_TIMEOUT_MS = 10_000;
 const AI_MAX_RETRIES = 1;
+/** Quanto da resposta recusada fica no AiInteractionLog para diagnóstico. */
+const REJECTED_OUTPUT_MAX_CHARS = 60_000;
 
 function interactionStatusFor(error: unknown): AiInteractionStatus {
   if (error instanceof AiTimeoutError || (error instanceof AiProviderError && error.kind === 'timeout')) {
@@ -227,6 +229,8 @@ export class AiService {
     let model = providerId;
     let errorMessage: string | undefined;
     let tokensUsed: AiGenerationResult['tokensUsed'];
+    // Resposta bruta da última tentativa: só é gravada quando a saída é recusada (diagnóstico).
+    let lastRawText: string | undefined;
     const startedAt = Date.now();
 
     try {
@@ -251,13 +255,49 @@ export class AiService {
         credentials,
       );
       tokensUsed = result.tokensUsed;
+      lastRawText = result.text;
 
       if (!isValidResult(result.text)) {
         status = AiInteractionStatus.invalid_output;
         errorMessage = 'O provedor devolveu uma resposta vazia ou inválida.';
       } else if (useCase.processOutput) {
         const baseParams = { professionalId: params.professionalId, clientId: params.clientId, input: params.input };
-        let processed = await this.runProcessOutput(useCase, result, baseParams);
+        let processed: ProcessedAiOutput;
+        try {
+          processed = await this.runProcessOutput(useCase, result, baseParams);
+        } catch (error) {
+          // Saída recusada pela conferência: UMA nova tentativa dizendo à IA o que ela errou.
+          const retry = error instanceof AiOutputValidationError ? useCase.retryOnInvalidOutput?.(error, baseParams) : null;
+          if (!retry) throw error;
+          const retryParams = { ...baseParams, input: retry.input };
+          let second: AiGenerationResult;
+          try {
+            const rebuilt = await useCase.buildContext(retryParams);
+            second = await callProviderWithResilience(
+              provider,
+              {
+                promptVersion: useCase.promptVersion,
+                systemPrompt: rebuilt.systemPrompt,
+                context: rebuilt.context,
+                maxOutputChars: useCase.maxOutputChars ?? MAX_OUTPUT_CHARS,
+                responseSchema: useCase.responseSchema,
+              },
+              { timeoutMs: useCase.timeoutMs ?? this.defaultTimeoutMs, maxRetries: 0 },
+              credentials,
+            );
+          } catch (retryError) {
+            // A nova tentativa nem chegou a responder: vale a recusa original.
+            this.logger.warn(`ai_retry feature=${params.feature} falhou; mantida a recusa original (${safeErrorMessage(retryError)})`);
+            throw error;
+          }
+          if (!isValidResult(second?.text)) throw error;
+          if (second.tokensUsed && tokensUsed) {
+            tokensUsed = { input: (tokensUsed.input ?? 0) + (second.tokensUsed.input ?? 0), output: (tokensUsed.output ?? 0) + (second.tokensUsed.output ?? 0) };
+          }
+          lastRawText = second.text;
+          this.logger.log(`ai_retry feature=${params.feature} nova tentativa após recusa da conferência`);
+          processed = await this.runProcessOutput(useCase, second, retryParams);
+        }
 
         // Conferência do sistema (ex.: dieta longe da meta): UMA rodada de correção. Se ela falhar,
         // fica a 1ª resposta — a correção nunca derruba um resultado que já estava pronto.
@@ -319,7 +359,8 @@ export class AiService {
         status,
         systemPrompt: built.systemPrompt,
         contextSummary: built.context as Prisma.InputJsonValue,
-        responseText,
+        // Recusada: guarda a resposta bruta (cortada) para diagnóstico — nunca vai ao usuário.
+        responseText: responseText ?? (status === AiInteractionStatus.invalid_output ? lastRawText?.slice(0, REJECTED_OUTPUT_MAX_CHARS) : undefined),
         errorMessage,
       },
     });

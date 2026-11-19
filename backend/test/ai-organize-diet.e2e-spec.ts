@@ -107,7 +107,7 @@ describe('IA — organizar dieta existente (e2e)', () => {
 
     expect(await prisma.diet.count({ where: { clientId: client.id } })).toBe(0);
     const log = await prisma.aiInteractionLog.findFirstOrThrow({ where: { clientId: client.id, feature: 'organize_diet' } });
-    expect(log).toMatchObject({ status: 'succeeded', processingPolicy: 'professional_material', promptVersion: 'organize_diet@v2.2' });
+    expect(log).toMatchObject({ status: 'succeeded', processingPolicy: 'professional_material', promptVersion: 'organize_diet@v2.3' });
   });
 
   it.each([
@@ -121,6 +121,45 @@ describe('IA — organizar dieta existente (e2e)', () => {
     expect(res.body.message).toMatch(message);
     const log = await prisma.aiInteractionLog.findFirstOrThrow({ where: { clientId: client.id, feature: 'organize_diet' } });
     expect(log.status).toBe('invalid_output');
+  });
+
+  it('recusa da conferência → UMA nova tentativa com os problemas; se ela vier certa, a proposta sai', async () => {
+    const { professional, client } = await setup();
+    const text = 'ALMOÇO\n150 g de fruta\nCEIA\n150 g de iogurte natural';
+    // 1ª resposta repete o iogurte da Ceia no Almoço (o erro visto em produção).
+    reply(v2([fixedMeal('ALMOÇO', [item('150 g de fruta', 'fruta', 150, 'g'), item('150 g de iogurte natural', 'iogurte natural', 150, 'g')]), fixedMeal('CEIA', [item('150 g de iogurte natural', 'iogurte natural', 150, 'g')])]));
+    reply(v2([fixedMeal('ALMOÇO', [item('150 g de fruta', 'fruta', 150, 'g')]), fixedMeal('CEIA', [item('150 g de iogurte natural', 'iogurte natural', 150, 'g')])]));
+    const res = await organize(professional.accessToken, client.id, text).expect(201);
+    expect(res.body.structuredData.days[0].meals.map((m: { name: string }) => m.name)).toEqual(['ALMOÇO', 'CEIA']);
+
+    expect(fakeProvider.generate).toHaveBeenCalledTimes(2);
+    expect(fakeProvider.generate.mock.calls[0][0].context).toEqual({ dietText: text });
+    const retried = fakeProvider.generate.mock.calls[1][0];
+    expect(retried.context.dietText).toBe(text);
+    expect((retried.context.previousAttemptProblems as string[]).join(' ')).toMatch(/iogurte natural.*mais vezes/);
+    expect(retried.systemPrompt).toMatch(/NOVA TENTATIVA/);
+    const log = await prisma.aiInteractionLog.findFirstOrThrow({ where: { clientId: client.id, feature: 'organize_diet' } });
+    expect(log.status).toBe('succeeded');
+  });
+
+  it('nova tentativa também recusada → 503, sem 3ª chamada; a resposta recusada fica no log para diagnóstico', async () => {
+    const { professional, client } = await setup();
+    const bad = v2([fixedMeal('ALMOÇO', [item('150 g de fruta', 'fruta', 200, 'g')])]);
+    reply(bad);
+    reply(bad);
+    const res = await organize(professional.accessToken, client.id, 'ALMOÇO\n150 g de fruta').expect(503);
+    expect(res.body.message).toMatch(/quantidade 200/);
+    expect(fakeProvider.generate).toHaveBeenCalledTimes(2);
+    const log = await prisma.aiInteractionLog.findFirstOrThrow({ where: { clientId: client.id, feature: 'organize_diet' } });
+    expect(log.status).toBe('invalid_output');
+    expect(JSON.parse(log.responseText!)).toEqual(bad);
+  });
+
+  it('resposta que não é JSON não ganha nova tentativa', async () => {
+    const { professional, client } = await setup();
+    reply('Claro! Sua dieta está ótima.');
+    await organize(professional.accessToken, client.id, 'ALMOÇO\n150 g de fruta').expect(503);
+    expect(fakeProvider.generate).toHaveBeenCalledTimes(1);
   });
 
   it('nome que o profissional ligou numa dieta salva liga sozinho na próxima — e só para ele', async () => {
