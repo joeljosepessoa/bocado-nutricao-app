@@ -1208,14 +1208,23 @@ export class WorkoutsService {
         orderBy: [{ executionLog: { performedAt: 'desc' } }, { setOrder: 'asc' }],
         take: 3000,
       });
-      const last = new Map<string, { logId: string; performedAt: Date; sets: Array<{ setOrder: number; repsPerformed: number | null; loadValue: number | null; loadUnit: string | null }> }>();
+      type LastEntry = { logId: string; performedAt: Date; sets: Array<{ setOrder: number; repsPerformed: number | null; loadValue: number | null; loadUnit: string | null }> };
+      // Por exercício: o treino mais recente e o mais recente que teve carga (um treino salvo sem peso não apaga a carga anterior).
+      const latest = new Map<string, LastEntry>();
+      const latestWithLoad = new Map<string, LastEntry>();
+      const byLog = new Map<string, LastEntry & { exerciseId: string }>();
       for (const row of done) {
-        const exerciseId = row.workoutExercise.exerciseId;
-        const entry = last.get(exerciseId) ?? { logId: row.executionLogId, performedAt: row.executionLog.performedAt, sets: [] };
-        if (entry.logId !== row.executionLogId) continue; // só o treino mais recente com esse exercício
+        const key = `${row.executionLogId}:${row.workoutExercise.exerciseId}`;
+        const entry = byLog.get(key) ?? { logId: row.executionLogId, exerciseId: row.workoutExercise.exerciseId, performedAt: row.executionLog.performedAt, sets: [] };
         entry.sets.push({ setOrder: row.setOrder, repsPerformed: row.repsPerformed, loadValue: row.loadValue, loadUnit: row.loadUnit });
-        last.set(exerciseId, entry);
+        byLog.set(key, entry);
       }
+      // `done` vem do mais recente para o mais antigo, e o Map guarda a ordem de inserção.
+      for (const { exerciseId, ...entry } of byLog.values()) {
+        if (!latest.has(exerciseId)) latest.set(exerciseId, entry);
+        if (!latestWithLoad.has(exerciseId) && entry.sets.some((set) => set.loadValue != null)) latestWithLoad.set(exerciseId, entry);
+      }
+      const last = new Map([...latest].map(([exerciseId, entry]) => [exerciseId, latestWithLoad.get(exerciseId) ?? entry]));
       for (const day of summary.days) {
         for (const exercise of day.exercises) {
           const found = last.get(exerciseIdByWorkoutExercise.get(exercise.workoutExerciseId) ?? '');

@@ -263,6 +263,23 @@ describe('Aplicativo do cliente (e2e)', () => {
     const afterNewVersion = await request(app.getHttpServer()).get('/client/workout').set(auth).expect(200);
     expect(afterNewVersion.body.workout.versionId).toBe(v2.body.id);
     expect(afterNewVersion.body.workout.days[0].exercises[0].lastPerformance.sets[1].loadValue).toBe(35);
+
+    // Treino mais novo salvo SEM peso: a última carga registrada (35 kg) continua vindo.
+    const newDay = afterNewVersion.body.workout.days[0];
+    await request(app.getHttpServer())
+      .post('/client/workout/execution-logs')
+      .set(auth)
+      .send({
+        workoutDayId: newDay.workoutDayId,
+        performedAt: '2026-10-24T22:00:00.000Z',
+        sets: [{ workoutExerciseId: newDay.exercises[0].workoutExerciseId, setOrder: 0, repsPerformed: 15 }],
+      })
+      .expect(201);
+    const afterNoLoad = await request(app.getHttpServer()).get('/client/workout').set(auth).expect(200);
+    expect(afterNoLoad.body.workout.days[0].exercises[0].lastPerformance).toMatchObject({
+      performedAt: '2026-10-17T22:00:00.000Z',
+      sets: [{ loadValue: 30 }, { loadValue: 35 }],
+    });
   });
 
   // 6b. O aluno recebe a prescrição inteira: faixa de repetições, técnica, observações e o "como fazer"
