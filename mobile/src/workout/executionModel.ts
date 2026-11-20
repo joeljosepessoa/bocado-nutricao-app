@@ -23,6 +23,8 @@ export interface ExecutionSet {
   done: boolean;
   reps: string;
   load: string;
+  /** O paciente mexeu na carga desta série (não é só a sugestão da última vez). */
+  loadEdited?: boolean;
   loadUnit: string | null;
   restSeconds: number;
   /** O que foi prescrito ("12" ou "8–12") — aparece como dica no campo de repetições. */
@@ -244,4 +246,48 @@ export function buildExecutionPayload(
     ...(trimmed ? { notes: trimmed } : {}),
     sets,
   };
+}
+
+/** Rascunho do treino em andamento guardado no aparelho (sair do app não apaga o que foi digitado). */
+export interface ExecutionDraft {
+  notes: string;
+  started: boolean;
+  sets: Record<string, { done: boolean; reps: string; load: string; loadEdited?: boolean }>;
+}
+
+export function toDraft(exercises: ExecutionExercise[], notes: string, started: boolean): ExecutionDraft {
+  const sets: ExecutionDraft['sets'] = {};
+  for (const set of exercises.flatMap((e) => e.sets)) {
+    sets[set.key] = { done: set.done, reps: set.reps, load: set.load, ...(set.loadEdited ? { loadEdited: true } : {}) };
+  }
+  return { notes, started, sets };
+}
+
+/** Prescrição atual com o que o paciente já tinha marcado/digitado por cima (série a série, pela chave). */
+export function applyDraft(exercises: ExecutionExercise[], draft: ExecutionDraft | undefined): ExecutionExercise[] {
+  if (!draft) return exercises;
+  return exercises.map((exercise) => ({
+    ...exercise,
+    sets: exercise.sets.map((set) => {
+      const saved = draft.sets[set.key];
+      if (!saved) return set;
+      return {
+        ...set,
+        done: saved.done === true,
+        reps: typeof saved.reps === 'string' ? saved.reps : set.reps,
+        load: typeof saved.load === 'string' ? saved.load : set.load,
+        loadEdited: saved.loadEdited === true,
+      };
+    }),
+  }));
+}
+
+/** Séries em que o paciente digitou a carga mas não marcou como feita (não seriam salvas). */
+export function unmarkedEditedSets(exercises: ExecutionExercise[]): ExecutionSet[] {
+  return exercises.flatMap((e) => e.sets).filter((s) => !s.done && s.loadEdited && parseDecimal(s.load) !== undefined);
+}
+
+/** Cargas diferentes por série ("30 · 35"), para não parecer vazio quando o campo único não tem um valor só. */
+export function loadsSummary(sets: ExecutionSet[]): string {
+  return [...new Set(sets.map((set) => set.load.trim()).filter(Boolean))].join(' · ');
 }

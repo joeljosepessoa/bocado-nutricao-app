@@ -16,19 +16,25 @@ import { useRestTimer } from '../hooks/useRestTimer';
 import * as api from '../api/endpoints';
 import { enqueueExecutionLogOffline } from '../offline/sync';
 import { readLocalLastPerformance, rememberLastPerformance } from '../workout/lastPerformanceStore';
+import { clearWorkoutDraft, readWorkoutDrafts, saveWorkoutDraft } from '../workout/sessionDraftStore';
 import type { WorkoutClientDay, WorkoutClientSummary } from '../types/api';
 import { nextWorkoutDay } from '../dashboard/dashboardModel';
 import {
   DEFAULT_REST_SECONDS,
   NOTES_MAX_LENGTH,
+  applyDraft,
   buildExecution,
   buildExecutionPayload,
   commonLoad,
   dayTabLabel,
   executionProgress,
   loadUnitOf,
+  loadsSummary,
   prescriptionSummary,
   restLabel,
+  toDraft,
+  unmarkedEditedSets,
+  type ExecutionDraft,
   type ExecutionExercise,
   type ExecutionSet,
   type LocalLastPerformance,
@@ -63,7 +69,12 @@ interface Session {
   started: boolean;
 }
 
-const freshSession = (day: WorkoutClientDay, localLast: LocalLastPerformance): Session => ({ exercises: buildExecution(day, localLast), notes: '', started: false });
+/** Prescrição do dia (com a carga da última vez) e, por cima, o que já tinha sido marcado/digitado antes de sair do app. */
+const freshSession = (day: WorkoutClientDay, localLast: LocalLastPerformance, draft?: ExecutionDraft): Session => ({
+  exercises: applyDraft(buildExecution(day, localLast), draft),
+  notes: typeof draft?.notes === 'string' ? draft.notes : '',
+  started: draft?.started === true,
+});
 
 /**
  * Meus Treinos: o treino publicado numa tela só. No topo, os dias em botões, o
@@ -92,21 +103,40 @@ export function WorkoutScreen() {
   const [timerOpen, setTimerOpen] = useState(false);
   const [restTotal, setRestTotal] = useState(DEFAULT_REST_SECONDS);
   const [submitting, setSubmitting] = useState(false);
+  const [drafts, setDrafts] = useState<Record<string, ExecutionDraft>>({});
   const alertedRef = useRef(false);
+  // Gravações do rascunho em fila: "apagar ao finalizar" nunca é atropelado por uma gravação atrasada.
+  const draftChain = useRef<Promise<void>>(Promise.resolve());
+  const userId = user?.id ?? null;
 
   const load = useCallback(async () => {
     try {
-      const [workout, executions, localLast] = await Promise.all([
+      const [workout, executions, localLast, savedDrafts] = await Promise.all([
         api.getCurrentWorkout(),
         api.listWorkoutExecutions(1, 1).catch(() => null),
         readLocalLastPerformance(),
+        userId ? readWorkoutDrafts(userId) : Promise.resolve({}),
       ]);
+      setDrafts(savedDrafts);
       setData({ workout, lastDayId: executions?.items[0]?.workoutDayId ?? null, localLast });
       setFailed(false);
     } catch {
       setFailed(true);
     }
-  }, []);
+  }, [userId]);
+
+  // Tudo o que o paciente marca ou digita fica guardado no aparelho até "Finalizar" — sair do app não apaga.
+  useEffect(() => {
+    if (!userId) return;
+    const entries = Object.entries(sessions);
+    if (entries.length === 0) return;
+    const timeout = setTimeout(() => {
+      draftChain.current = draftChain.current.then(async () => {
+        for (const [key, current] of entries) await saveWorkoutDraft(userId, key, toDraft(current.exercises, current.notes, current.started));
+      });
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [sessions, userId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -145,7 +175,8 @@ export function WorkoutScreen() {
   // Versão nova do treino = ids novos: o que foi marcado na versão antiga não é reaproveitado.
   const sessionKey = workout && day ? `${workout.versionId}:${day.workoutDayId}` : '';
   const localLast = data?.localLast;
-  const initial = useMemo(() => (day ? freshSession(day, localLast ?? {}) : null), [day, localLast]);
+  const draft = drafts[sessionKey];
+  const initial = useMemo(() => (day ? freshSession(day, localLast ?? {}, draft) : null), [day, localLast, draft]);
 
   const refresh = async () => {
     setRefreshing(true);
@@ -213,8 +244,28 @@ export function WorkoutScreen() {
     patchSets((s) => s.workoutExerciseId === exercise.workoutExerciseId, { done: !complete }, true);
   }
 
-  async function finish() {
-    const payload = buildExecutionPayload(day!.workoutDayId, exercises, session.notes, new Date());
+  function finish() {
+    const pending = unmarkedEditedSets(exercises);
+    if (pending.length === 0) {
+      submit(exercises);
+      return;
+    }
+    const names = [...new Set(exercises.filter((e) => e.sets.some((s) => pending.includes(s))).map((e) => e.name))];
+    const marked = exercises.map((e) => ({ ...e, sets: e.sets.map((s) => (pending.includes(s) ? { ...s, done: true } : s)) }));
+    Alert.alert(
+      'Séries com carga sem marcar',
+      `Você colocou a carga em ${pending.length} ${pending.length === 1 ? 'série que não foi marcada como feita' : 'séries que não foram marcadas como feitas'} (${names.join(', ')}). Só as séries marcadas são salvas.
+
+Marcar essas também e salvar?`,
+      [
+        { text: 'Não, só as marcadas', style: 'cancel', onPress: () => submit(exercises) },
+        { text: 'Sim, marcar e salvar', onPress: () => submit(marked) },
+      ],
+    );
+  }
+
+  async function submit(toSave: ExecutionExercise[]) {
+    const payload = buildExecutionPayload(day!.workoutDayId, toSave, session.notes, new Date());
     if (!payload) {
       Alert.alert('Nenhuma série marcada', 'Marque as séries que você fez antes de finalizar.');
       return;
@@ -225,6 +276,12 @@ export function WorkoutScreen() {
       // Treino salvo: o dia volta ao estado inicial (já com as cargas de hoje) e passa a ser o último treino feito.
       const remembered = await rememberLastPerformance(payload);
       setSessions((prev) => Object.fromEntries(Object.entries(prev).filter(([key]) => key !== finishedKey)));
+      setDrafts((prev) => Object.fromEntries(Object.entries(prev).filter(([key]) => key !== finishedKey)));
+      if (userId) {
+        const owner = userId;
+        draftChain.current = draftChain.current.then(() => clearWorkoutDraft(owner, finishedKey));
+        await draftChain.current;
+      }
       setData((current) => (current ? { ...current, lastDayId: finishedDayId, localLast: remembered } : current));
     };
     setSubmitting(true);
@@ -430,9 +487,16 @@ O que você marcou continua na tela. Se acontecer de novo, avise seu profissiona
                         style={styles.loadInput}
                         keyboardType="decimal-pad"
                         value={commonLoad(exercise.sets)}
-                        placeholder={unit ? `Carga (${unit})` : 'Carga'}
+                        // Cargas diferentes por série: mostra quais são (o campo único muda todas de uma vez).
+                        placeholder={
+                          !commonLoad(exercise.sets) && loadsSummary(exercise.sets)
+                            ? `${loadsSummary(exercise.sets)}${unit ? ` ${unit}` : ''} (por série)`
+                            : unit
+                              ? `Carga (${unit})`
+                              : 'Carga'
+                        }
                         placeholderTextColor={colors.textMuted}
-                        onChangeText={(value) => patchSets((s) => s.workoutExerciseId === exercise.workoutExerciseId, { load: value })}
+                        onChangeText={(value) => patchSets((s) => s.workoutExerciseId === exercise.workoutExerciseId, { load: value, loadEdited: true })}
                         accessibilityLabel={`Carga de ${exercise.name}`}
                       />
                     </View>
@@ -478,7 +542,7 @@ O que você marcou continua na tela. Se acontecer de novo, avise seu profissiona
                                 value={set.load}
                                 placeholder="—"
                                 placeholderTextColor={colors.textMuted}
-                                onChangeText={(value) => patchSets((s) => s.key === set.key, { load: value })}
+                                onChangeText={(value) => patchSets((s) => s.key === set.key, { load: value, loadEdited: true })}
                                 accessibilityLabel={`Carga da ${set.number}ª série de ${exercise.name}`}
                               />
                             </View>
