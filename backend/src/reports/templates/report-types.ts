@@ -71,6 +71,10 @@ export interface EvaluationReportCore {
   measurements: ReportMeasurements | null;
   composition: ReportComposition | null;
   comparison: ReportComparison | null;
+  /** De onde veio o % de gordura da página 1 (skinfolds | bioimpedance | manual) — mostrado como "Fonte". */
+  bodyFatPercentSource?: string | null;
+  /** Seção "Bioimpedância" — só quando a avaliação tem bioimpedância registrada. */
+  bioimpedanceAnalysis?: BioimpedanceAnalysis | null;
 }
 
 /**
@@ -108,7 +112,6 @@ export interface ReportPreviousSnapshot {
 
 /** Só o relatório profissional recebe isto — nunca serializado para o cliente. */
 export interface EvaluationReportTechnicalExtras {
-  bodyFatPercentSource: string | null;
   skinfolds: SkinfoldsMmFields | null;
   protocolLabel: string | null;
   /** Fonte da equação de dobras usada ("Guedes (3 dobras) com a equação de Siri"); null = padrão Jackson & Pollock 7. */
@@ -135,6 +138,4 @@ export interface ProfessionalEvaluationReportData extends EvaluationReportCore, 
 
 export interface ClientEvaluationReportData extends EvaluationReportCore {
   generatedAt: string;
-  /** Página "Análise de bioimpedância" — só quando a bioimpedância veio da balança conectada. */
-  bioimpedanceAnalysis?: BioimpedanceAnalysis | null;
 }

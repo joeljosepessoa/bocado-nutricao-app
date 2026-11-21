@@ -1,4 +1,4 @@
-import { buildBioimpedanceAnalysis, renderBioimpedancePage, type BioimpedanceAnalysisInput, type Evaluation } from './bioimpedance-analysis';
+import { buildBioimpedanceAnalysis, renderBioimpedancePages, type BioimpedanceAnalysisInput, type Evaluation } from './bioimpedance-analysis';
 
 interface Caso {
   input: BioimpedanceAnalysisInput;
@@ -14,7 +14,7 @@ interface Caso {
   avalMusculo: [Evaluation, Evaluation, Evaluation];
 }
 
-const base = { visceralFatLevel: null, basalMetabolicRateKcal: null, bodyAgeYears: null, waistHipRatio: null, impedanceData: null };
+const base = { origin: 'device' as const, equipment: null, visceralFatLevel: null, basalMetabolicRateKcal: null, bodyAgeYears: null, waistHipRatio: null, impedanceData: null };
 
 // 4 relatórios da balança (sem nomes): os valores do próprio app entram e as faixas/avaliações têm de sair iguais.
 const CASOS: Caso[] = [
@@ -77,29 +77,65 @@ describe('análise de bioimpedância no formato do relatório da balança', () =
     expect(a.composition.map((r) => r.evaluation)).toEqual(c.avaliacoes);
 
     // Por parte do corpo: o app também estima; a avaliação tem de bater e o % ficar perto.
-    const [bracoM, troncoM, pernaM] = a.muscleSegments;
+    const { arm: bracoM, trunk: troncoM, leg: pernaM } = a.muscleSegments!;
     expect(Math.abs(bracoM.percentOfStandard - c.musculoPct.braco)).toBeLessThanOrEqual(8);
     expect(Math.abs(troncoM.percentOfStandard - c.musculoPct.tronco)).toBeLessThanOrEqual(3);
     expect(Math.abs(pernaM.percentOfStandard - c.musculoPct.perna)).toBeLessThanOrEqual(3);
-    const [bracoG, troncoG, pernaG] = a.fatSegments;
+    const { arm: bracoG, trunk: troncoG, leg: pernaG } = a.fatSegments!;
     expect(Math.abs(bracoG.percentOfStandard / c.gorduraPct.braco - 1)).toBeLessThanOrEqual(0.2);
     expect(Math.abs(troncoG.percentOfStandard / c.gorduraPct.tronco - 1)).toBeLessThanOrEqual(0.1);
     expect(Math.abs(pernaG.percentOfStandard / c.gorduraPct.perna - 1)).toBeLessThanOrEqual(0.1);
 
-    const partes = (rows: typeof a.fatSegments) => rows.map((r) => r.evaluation);
-    expect(partes(a.fatSegments)).toEqual(c.avalGordura);
-    expect(partes(a.muscleSegments)).toEqual(c.avalMusculo);
+    const partes = (s: NonNullable<typeof a.fatSegments>) => [s.arm.evaluation, s.trunk.evaluation, s.leg.evaluation];
+    expect(partes(a.fatSegments!)).toEqual(c.avalGordura);
+    expect(partes(a.muscleSegments!)).toEqual(c.avalMusculo);
 
-    const smi = a.others.find((o) => o.label === 'SMI')!.value;
+    const smi = a.others.find((o) => o.label.startsWith('SMI'))!.value!;
     expect(Math.abs(parseFloat(smi.replace(',', '.')) - c.smi)).toBeLessThanOrEqual(0.3);
     expect(a.bodyType).toBe(c.tipo);
   });
 
-  it('sem sexo, peso ou massas não monta a análise', () => {
+  it('sem sexo ou peso não monta a análise', () => {
     const c = CASOS[0].input;
     expect(buildBioimpedanceAnalysis({ ...c, sex: null })).toBeNull();
-    expect(buildBioimpedanceAnalysis({ ...c, fatMassKg: null })).toBeNull();
     expect(buildBioimpedanceAnalysis({ ...c, weightKg: null })).toBeNull();
+  });
+
+  it('bioimpedância digitada (outro aparelho): só o que foi registrado, sem inventar nem dividir por parte do corpo', () => {
+    const a = buildBioimpedanceAnalysis({
+      ...base,
+      origin: 'manual',
+      sex: 'female',
+      heightCm: 160,
+      weightKg: 70,
+      bodyFatPercent: null,
+      fatMassKg: null,
+      leanMassKg: null,
+      skeletalMuscleMassKg: 22,
+      muscleMassKg: null,
+      bodyWaterPercent: 50,
+      boneMassKg: null,
+      visceralFatLevel: 7,
+    })!;
+    const valor = (label: string) => a.composition.find((r) => r.label === label)!.valueKg;
+    // Sem % de gordura na bioimpedância: nada de usar o das dobras.
+    expect(valor('Gordura corporal')).toBeNull();
+    expect(valor('Sal inorgânico')).toBeNull();
+    expect(valor('Proteína')).toBeNull();
+    expect(valor('Músculo')).toBeNull();
+    expect(valor('Água corporal')).toBe(35);
+    expect(valor('Músculo esquelético')).toBe(22);
+    expect(a.fatSegments).toBeNull();
+    expect(a.muscleSegments).toBeNull();
+    expect(a.impedance).toBeNull();
+    expect(a.bodyType).toBeNull();
+    expect(a.obesityBars.map((b) => b.label)).toEqual(['IMC']);
+    expect(a.others.find((o) => o.label === 'Gordura subcutânea')!.value).toBeNull();
+
+    const html = renderBioimpedancePages(a, '21/11/2026');
+    expect(html).toContain('Não informado');
+    expect(html).toContain('Valores de bioimpedância registrados');
+    expect(html).not.toContain('por parte do corpo</h1>');
   });
 
   it('monta a página com as impedâncias quando a balança mandou', () => {
@@ -112,13 +148,15 @@ describe('análise de bioimpedância no formato do relatório da balança', () =
         khz100: { arms: [212.3, 206.3], legs: [190.1, 188.5], trunk: 8.5 },
       },
     })!;
-    const html = renderBioimpedancePage(analysis);
-    expect(html).toContain('Análise de bioimpedância');
+    const html = renderBioimpedancePages(analysis, '20/11/2026');
+    expect(html).toContain('Medido pela balança de bioimpedância conectada');
+    expect(html).toContain('Análise segmentar de gordura');
+    expect(html).toContain('Equilíbrio muscular');
     expect(html).toContain('Impedância bioelétrica');
     expect(html).toContain('245,9 · 241,1');
     expect(html).not.toMatch(/direit|esquerd/);
     expect(html).toContain('Grau de gordura visceral');
     expect(html).toContain('Ligeiramente obeso');
-    expect(renderBioimpedancePage(buildBioimpedanceAnalysis(CASOS[0].input)!)).not.toContain('Impedância bioelétrica');
+    expect(renderBioimpedancePages(buildBioimpedanceAnalysis(CASOS[0].input)!, '20/11/2026')).not.toContain('Impedância bioelétrica');
   });
 });

@@ -165,8 +165,8 @@ describe('Relatórios (e2e)', () => {
     expect(withPhoto.sizeBytes).toBeGreaterThan(withoutPhoto.sizeBytes);
   }, 30_000);
 
-  // 1e. Geração — caminho completo: com todos os dados e fotos, o PDF tem exatamente 4 páginas
-  it('com todos os dados (histórico, dobras, sinais vitais, fotos), o PDF profissional tem exatamente 4 páginas', async () => {
+  // 1e. Geração — caminho completo: com todos os dados e fotos, o PDF tem exatamente 5 páginas
+  it('com todos os dados (histórico, dobras, bioimpedância digitada, sinais vitais, fotos), o PDF profissional tem exatamente 5 páginas', async () => {
     const professional = await registerProfessional(app);
     const { client } = await createClient(app, professional.accessToken);
 
@@ -218,7 +218,8 @@ describe('Relatórios (e2e)', () => {
     expect(report.status).toBe('ready');
 
     const pdf = await downloadReportPdf(app, professional.accessToken, client.id, report.id);
-    expect(countPdfPages(pdf)).toBe(4);
+    // Resumo, bioimpedância (digitada: sem a página por parte do corpo), gráficos, medidas e fotos.
+    expect(countPdfPages(pdf)).toBe(5);
   }, 30_000);
 
   // 2. Geração — relatório cliente, com avaliação liberada
@@ -235,7 +236,7 @@ describe('Relatórios (e2e)', () => {
   }, 30_000);
 
   // 2b. Relatório cliente ganha a página "Análise de bioimpedância" só com a balança conectada
-  it('relatório cliente traz a análise de bioimpedância quando a leitura veio da balança conectada', async () => {
+  it('relatório cliente traz a seção de bioimpedância: completa com a balança, parcial se digitada, nenhuma sem bioimpedância', async () => {
     const professional = await registerProfessional(app);
     const { client } = await createClient(app, professional.accessToken);
     const evaluation = await createEvaluation(app, professional.accessToken, client.id, {
@@ -282,9 +283,11 @@ describe('Relatórios (e2e)', () => {
     expect(analysis?.bodyType).toBe('Ligeiramente obeso');
     expect(analysis?.impedance).not.toBeNull();
     const pdf = await downloadReportPdf(app, professional.accessToken, client.id, report.id);
-    expect(countPdfPages(pdf)).toBe(2);
+    // Página 1 + bioimpedância (composição, barras e indicadores) + bioimpedância por parte do corpo.
+    expect(countPdfPages(pdf)).toBe(3);
 
-    // Bioimpedância digitada (outro aparelho): o relatório do cliente fica como antes, sem a página.
+    // Bioimpedância digitada (outro aparelho): a seção aparece só com o que foi digitado — sem divisão
+    // por parte do corpo nem impedâncias.
     const manual = await createEvaluation(app, professional.accessToken, client.id, {
       heightCm: 172,
       weightKg: 77.8,
@@ -294,7 +297,19 @@ describe('Relatórios (e2e)', () => {
     await releaseEvaluation(app, professional.accessToken, client.id, manual.id);
     const manualReport = await generateReport(app, professional.accessToken, client.id, manual.id, 'client');
     const manualSaved = await prisma.report.findUniqueOrThrow({ where: { id: manualReport.id } });
-    expect((manualSaved.dataSnapshot as { bioimpedanceAnalysis?: unknown }).bioimpedanceAnalysis).toBeNull();
+    const manualAnalysis = (manualSaved.dataSnapshot as { bioimpedanceAnalysis?: { origin: string; fatSegments: unknown; impedance: unknown } })
+      .bioimpedanceAnalysis;
+    expect(manualAnalysis?.origin).toBe('manual');
+    expect(manualAnalysis?.fatSegments).toBeNull();
+    expect(manualAnalysis?.impedance).toBeNull();
+
+    // Avaliação sem bioimpedância: nenhuma seção (nada de tabela vazia).
+    const plain = await createEvaluation(app, professional.accessToken, client.id, { heightCm: 172, weightKg: 77.8, biologicalSexForCalculation: 'male' });
+    await releaseEvaluation(app, professional.accessToken, client.id, plain.id);
+    const plainReport = await generateReport(app, professional.accessToken, client.id, plain.id, 'client');
+    const plainSaved = await prisma.report.findUniqueOrThrow({ where: { id: plainReport.id } });
+    expect((plainSaved.dataSnapshot as { bioimpedanceAnalysis?: unknown }).bioimpedanceAnalysis).toBeNull();
+    expect(countPdfPages(await downloadReportPdf(app, professional.accessToken, client.id, plainReport.id))).toBe(1);
   }, 60_000);
 
   // 3. Bloqueio — relatório cliente sem liberação

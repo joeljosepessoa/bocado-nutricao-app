@@ -219,6 +219,31 @@ export class ReportsService {
         biologicalSexForCalculation: fullEvaluation.biologicalSexForCalculation,
         waistHipRatio: fullEvaluation.calculatedMetrics?.waistHipRatio ?? null,
         bmrReference: fullEvaluation.bmrReference ?? null,
+        bodyFatPercentSource: fullEvaluation.calculatedMetrics?.bodyFatPercentSource ?? null,
+        // Seção "Bioimpedância" (nas duas audiências): só o que a bioimpedância registrou —
+        // nunca o % de gordura das dobras. Divisão por parte do corpo e impedâncias só com a
+        // balança conectada.
+        bioimpedanceAnalysis: fullEvaluation.bioimpedance
+          ? buildBioimpedanceAnalysis({
+              origin: fullEvaluation.bioimpedance.origin === BioimpedanceOrigin.device_confirmed ? 'device' : 'manual',
+              equipment: fullEvaluation.bioimpedance.equipment ?? null,
+              sex: fullEvaluation.biologicalSexForCalculation,
+              heightCm: fullEvaluation.heightCm,
+              weightKg: fullEvaluation.bioimpedance.weightKg ?? fullEvaluation.weightKg,
+              bodyFatPercent: fullEvaluation.bioimpedance.bodyFatPercent,
+              fatMassKg: fullEvaluation.bioimpedance.fatMassKg,
+              leanMassKg: fullEvaluation.bioimpedance.leanMassKg,
+              skeletalMuscleMassKg: fullEvaluation.bioimpedance.skeletalMuscleMassKg,
+              muscleMassKg: fullEvaluation.bioimpedance.muscleMassKg,
+              bodyWaterPercent: fullEvaluation.bioimpedance.bodyWaterPercent,
+              boneMassKg: fullEvaluation.bioimpedance.boneMassKg,
+              visceralFatLevel: fullEvaluation.bioimpedance.visceralFatLevel,
+              basalMetabolicRateKcal: fullEvaluation.bioimpedance.basalMetabolicRateKcal,
+              bodyAgeYears: fullEvaluation.bioimpedance.bodyAgeYears,
+              waistHipRatio: fullEvaluation.calculatedMetrics?.waistHipRatio ?? null,
+              impedanceData: fullEvaluation.bioimpedance.impedanceData,
+            })
+          : null,
       };
 
       if (dto.audience === ReportAudience.client) {
@@ -251,30 +276,7 @@ export class ReportsService {
           composition: summary.composition,
           comparison,
         };
-        // Análise completa no formato do relatório da balança — só com a balança conectada
-        // (as faixas e frações foram conferidas contra o app dela, não valem para outro aparelho).
-        const bio = fullEvaluation.bioimpedance;
-        const bioimpedanceAnalysis =
-          bio && bio.origin === BioimpedanceOrigin.device_confirmed
-            ? buildBioimpedanceAnalysis({
-                sex: fullEvaluation.biologicalSexForCalculation,
-                heightCm: fullEvaluation.heightCm,
-                weightKg: bio.weightKg ?? summary.weightKg,
-                bodyFatPercent: bio.bodyFatPercent,
-                fatMassKg: bio.fatMassKg,
-                leanMassKg: bio.leanMassKg,
-                skeletalMuscleMassKg: bio.skeletalMuscleMassKg,
-                muscleMassKg: bio.muscleMassKg,
-                bodyWaterPercent: bio.bodyWaterPercent,
-                boneMassKg: bio.boneMassKg,
-                visceralFatLevel: bio.visceralFatLevel,
-                basalMetabolicRateKcal: bio.basalMetabolicRateKcal,
-                bodyAgeYears: bio.bodyAgeYears,
-                waistHipRatio: sharedIdentity.waistHipRatio,
-                impedanceData: bio.impedanceData,
-              })
-            : null;
-        const data: ClientEvaluationReportData = { ...core, generatedAt, bioimpedanceAnalysis };
+        const data: ClientEvaluationReportData = { ...core, generatedAt };
         html = renderClientReportHtml(data);
         snapshot = { ...data };
       } else {
@@ -366,7 +368,6 @@ export class ReportsService {
         const data: ProfessionalEvaluationReportData = {
           ...core,
           generatedAt,
-          bodyFatPercentSource: fullEvaluation.calculatedMetrics?.bodyFatPercentSource ?? null,
           skinfolds: fullEvaluation.skinfolds,
           protocolLabel,
           protocolReference: skinfoldProtocol?.reference ?? null,

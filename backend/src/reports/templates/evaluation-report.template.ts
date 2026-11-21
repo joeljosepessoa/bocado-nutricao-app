@@ -1,5 +1,5 @@
 import { REPORT_CSS } from './report-styles';
-import { renderBioimpedancePage } from './bioimpedance-analysis';
+import { renderBioimpedancePages } from './bioimpedance-analysis';
 import { formatShortDate, renderBarChartSvg, renderChartCard, renderLineChartSvg, renderMetricChart, renderPieChartSvg } from './report-charts';
 import {
   assessBasalMetabolicRate,
@@ -243,13 +243,41 @@ interface MetricRow {
   classification: string | null;
   /** Faixa de referência, mostrada sob o nome do indicador; ausente = sem faixa conferida. */
   reference?: string | null;
+  /** De onde vem o número (bioimpedância, dobras, cálculo…). */
+  source?: string | null;
+}
+
+type Audience = 'professional' | 'client';
+
+/** Nome da origem do % de gordura — no relatório do cliente sem termos técnicos das dobras. */
+function fatSourceLabel(source: string | null | undefined): string | null {
+  if (source === 'bioimpedance') return 'BIA';
+  if (source === 'skinfolds') return 'DC';
+  if (source === 'manual') return 'INF';
+  return null;
+}
+
+/** Siglas da origem de cada número (curtas para não alongar a página 1) e a legenda delas. */
+const SOURCE_LEGEND: Record<Audience, Record<string, string>> = {
+  professional: { BIA: 'bioimpedância', DC: 'dobras cutâneas', FM: 'fita métrica', CALC: 'calculado com o % de gordura e a massa óssea', INF: 'informado pelo profissional' },
+  client: { BIA: 'bioimpedância', DC: 'avaliação física (medidas)', FM: 'fita métrica', CALC: 'calculado com o % de gordura e a massa óssea', INF: 'informado pelo profissional' },
+};
+
+function sourceLegend(rows: MetricRow[], audience: Audience): string {
+  const used = [...new Set(rows.map((r) => r.source).filter((s): s is string => !!s))];
+  if (!used.length) return '';
+  const items = used.map((code) => `<b>${code}</b> = ${escapeHtml(SOURCE_LEGEND[audience][code] ?? code)}`).join(' · ');
+  return `<div style="font-size:8.5px;color:#54635a;margin-top:3px;">Origem de cada resultado: ${items}.</div>`;
 }
 
 function metricTableHtml(rows: MetricRow[]): string {
   const body = rows
     .map((r) => {
       const reference = r.reference ? `<div style="font-size:9px;color:#8b988e;">Referência: ${escapeHtml(r.reference)}</div>` : '';
-      return `<tr><td>${escapeHtml(r.label)}${reference}</td><td class="num">${r.value}</td><td class="eval">${r.classification ? escapeHtml(r.classification) : '—'}</td></tr>`;
+      const source = r.source
+        ? ` <span style="font-size:7.5px;font-weight:700;color:#1f7a5c;border:1px solid #b9dcc9;border-radius:3px;padding:0 3px;">${escapeHtml(r.source)}</span>`
+        : '';
+      return `<tr><td>${escapeHtml(r.label)}${source}${reference}</td><td class="num">${r.value}</td><td class="eval">${r.classification ? escapeHtml(r.classification) : '—'}</td></tr>`;
     })
     .join('');
   return `<table class="metric-table"><thead><tr><th>Descrição</th><th class="num">Resultado</th><th class="eval">Avaliação</th></tr></thead><tbody>${body}</tbody></table>`;
@@ -260,7 +288,7 @@ function metricTableHtml(rows: MetricRow[]): string {
  * relatório de referência. Gordura corporal, massa muscular, água e massa óssea
  * ainda saem sem avaliação: as faixas delas não foram conferidas.
  */
-function compositionTables(core: EvaluationReportCore): string {
+function compositionTables(core: EvaluationReportCore, audience: Audience): string {
   const sex = core.biologicalSexForCalculation;
   const age = core.ageAtEvaluation;
   const derived = derivedOf(core);
@@ -273,22 +301,46 @@ function compositionTables(core: EvaluationReportCore): string {
   const basal = assessBasalMetabolicRate(composition?.basalMetabolicRateKcal ?? null, core.bmrReference, sex, age, core.heightCm);
   const waistHip = assessWaistHipRatio(core.waistHipRatio, sex, age);
 
+  const bio = 'BIA';
+  const fromBio = (value: number | null | undefined) => (value != null ? bio : null);
+  const muscleSource = (stored: number | null | undefined, derivedValue: number | null) =>
+    stored != null ? bio : derivedValue != null ? 'CALC' : null;
   const left: MetricRow[] = [
     { label: 'Peso', value: num(core.weightKg, ' kg'), ...weight },
-    { label: 'Músculo esquelético', value: percentAndKg(derived.skeletalMusclePercent, derived.skeletalMuscleMassKg), ...skeletal },
-    { label: 'Massa muscular', value: percentAndKg(derived.musclePercent, derived.muscleMassKg), classification: null },
-    { label: 'Água corporal', value: percentAndKg(composition?.bodyWaterPercent ?? null, derived.bodyWaterKg), classification: null },
-    { label: 'Massa óssea', value: num(composition?.boneMassKg ?? null, ' kg'), classification: null },
-    { label: 'Idade corporal', value: num(composition?.bodyAgeYears ?? null, ' anos'), classification: bodyAgeDifference(composition?.bodyAgeYears ?? null, age) },
+    {
+      label: 'Músculo esquelético',
+      value: percentAndKg(derived.skeletalMusclePercent, derived.skeletalMuscleMassKg),
+      ...skeletal,
+      source: muscleSource(composition?.skeletalMuscleMassKg, derived.skeletalMuscleMassKg),
+    },
+    {
+      label: 'Massa muscular',
+      value: percentAndKg(derived.musclePercent, derived.muscleMassKg),
+      classification: null,
+      source: muscleSource(composition?.muscleMassKg, derived.muscleMassKg),
+    },
+    { label: 'Água corporal', value: percentAndKg(composition?.bodyWaterPercent ?? null, derived.bodyWaterKg), classification: null, source: fromBio(composition?.bodyWaterPercent) },
+    { label: 'Massa óssea', value: num(composition?.boneMassKg ?? null, ' kg'), classification: null, source: fromBio(composition?.boneMassKg) },
+    {
+      label: 'Idade corporal',
+      value: num(composition?.bodyAgeYears ?? null, ' anos'),
+      classification: bodyAgeDifference(composition?.bodyAgeYears ?? null, age),
+      source: fromBio(composition?.bodyAgeYears),
+    },
   ];
   const right: MetricRow[] = [
     { label: 'IMC', value: num(core.bmi, ' kg/m²'), ...bmi },
-    { label: 'Gordura corporal', value: percentAndKg(core.bodyFatPercent, derived.fatMassKg), classification: null },
-    { label: 'Gordura visceral', value: num(composition?.visceralFatLevel ?? null, ''), ...visceral },
-    { label: 'Metabolismo basal', value: num(composition?.basalMetabolicRateKcal ?? null, ' kcal'), ...basal },
-    { label: 'Relação cintura/quadril', value: num(core.waistHipRatio, ''), ...waistHip },
+    {
+      label: 'Gordura corporal',
+      value: percentAndKg(core.bodyFatPercent, derived.fatMassKg),
+      classification: null,
+      source: core.bodyFatPercent != null ? fatSourceLabel(core.bodyFatPercentSource) : null,
+    },
+    { label: 'Gordura visceral', value: num(composition?.visceralFatLevel ?? null, ''), ...visceral, source: fromBio(composition?.visceralFatLevel) },
+    { label: 'Metabolismo basal', value: num(composition?.basalMetabolicRateKcal ?? null, ' kcal'), ...basal, source: fromBio(composition?.basalMetabolicRateKcal) },
+    { label: 'Relação cintura/quadril', value: num(core.waistHipRatio, ''), ...waistHip, source: core.waistHipRatio != null ? 'FM' : null },
   ];
-  return `<h2 class="section-title">Composição corporal</h2><div class="composition-tables">${metricTableHtml(left)}${metricTableHtml(right)}</div>`;
+  return `<h2 class="section-title">Composição corporal</h2><div class="composition-tables">${metricTableHtml(left)}${metricTableHtml(right)}</div>${sourceLegend([...left, ...right], audience)}`;
 }
 
 /** "Outros indicadores" da referência — só sinais vitais liberados pro profissional; só a pressão arterial tem classificação. */
@@ -350,13 +402,14 @@ function pageOne(
   // não tem página 3, esta é a única vez que elas aparecem.
   includeMeasurementsGrid: boolean,
   extraBody: string,
+  audience: Audience,
 ): string {
   return `
   ${headerBlock(kindLabel, core.professionalName, generatedAt)}
   <h1 class="page-title">Avaliação / Controle Corporal</h1>
   ${identityGrid(core, protocolMethodLabel)}
   ${resumoSection(core, last, overall)}
-  ${compositionTables(core)}
+  ${compositionTables(core, audience)}
   <div class="results-note">Estes resultados são um retrato desta avaliação. Use-os junto com o acompanhamento do seu nutricionista, do seu médico ou do profissional que cuida de você.</div>
   ${includeMeasurementsGrid ? measurementsGrid(core.measurements) : ''}
   ${extraBody}`;
@@ -636,7 +689,8 @@ export function renderProfessionalReportHtml(data: ProfessionalEvaluationReportD
   const overall = buildResumoPeriod(data.overallComparison, data.measurements, data.first?.measurements ?? null, data.evaluatedAt);
 
   const page1Extra = outrosIndicadoresTable(data);
-  const page1 = pageOne('Relatório profissional — uso interno', data, data.generatedAt, data.protocolLabel, last, overall, false, page1Extra);
+  const page1 = pageOne('Relatório profissional — uso interno', data, data.generatedAt, data.protocolLabel, last, overall, false, page1Extra, 'professional');
+  const bioimpedancePages = data.bioimpedanceAnalysis ? renderBioimpedancePages(data.bioimpedanceAnalysis, formatDate(data.evaluatedAt)) : '';
 
   const notesBlock = data.notes ? `<h2 class="section-title">Notas internas</h2><div class="notes-box">${escapeHtml(data.notes)}</div>` : '';
 
@@ -646,6 +700,7 @@ export function renderProfessionalReportHtml(data: ProfessionalEvaluationReportD
 <body>
   ${page1}
   ${notesBlock}
+  ${bioimpedancePages}
   ${evolutionChartsPage(data)}
   ${evolutionMeasuresPage(data)}
   ${photosPage(data)}
@@ -655,8 +710,8 @@ export function renderProfessionalReportHtml(data: ProfessionalEvaluationReportD
 
 export function renderClientReportHtml(data: ClientEvaluationReportData): string {
   const last = buildResumoPeriod(data.comparison, data.measurements, null, data.evaluatedAt);
-  const page1 = pageOne('Relatório de avaliação', data, data.generatedAt, null, last, null, true, '');
-  const bioimpedancePage = data.bioimpedanceAnalysis ? renderBioimpedancePage(data.bioimpedanceAnalysis) : '';
+  const page1 = pageOne('Relatório de avaliação', data, data.generatedAt, null, last, null, true, '', 'client');
+  const bioimpedancePage = data.bioimpedanceAnalysis ? renderBioimpedancePages(data.bioimpedanceAnalysis, formatDate(data.evaluatedAt)) : '';
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head><meta charset="utf-8"><style>${REPORT_CSS}</style></head>

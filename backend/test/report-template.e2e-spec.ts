@@ -339,21 +339,25 @@ describe('Templates de relatório', () => {
       bloodPressureDiastolic: 80,
     };
     const html = renderProfessionalReportHtml(data);
-    const row = (label: string, reference: string | null, value: string, classification: string) =>
-      `<tr><td>${label}${reference ? `<div style="font-size:9px;color:#8b988e;">Referência: ${reference}</div>` : ''}</td><td class="num">${value}</td><td class="eval">${classification}</td></tr>`;
+    // Etiqueta da origem de cada número (BIA, DC, FM, CALC), com legenda abaixo das tabelas.
+    const tag = (code: string | null) =>
+      code ? ` <span style="font-size:7.5px;font-weight:700;color:#1f7a5c;border:1px solid #b9dcc9;border-radius:3px;padding:0 3px;">${code}</span>` : '';
+    const row = (label: string, reference: string | null, value: string, classification: string, source: string | null = null) =>
+      `<tr><td>${label}${tag(source)}${reference ? `<div style="font-size:9px;color:#8b988e;">Referência: ${reference}</div>` : ''}</td><td class="num">${value}</td><td class="eval">${classification}</td></tr>`;
 
     expect(html).toContain(row('Peso', '70,3~95,1 kg', '107,7 kg', 'Acima 12,6 kg'));
     expect(html).toContain(row('IMC', '18,5~25,0 kg/m²', '28,3 kg/m²', 'Acima (sobrepeso)'));
-    expect(html).toContain(row('Músculo esquelético', '33,3~39,3 %', '46,7 % · 50,3 kg', 'Excelente'));
-    expect(html).toContain(row('Massa muscular', null, '70,8 % · 76,3 kg', '—'));
-    expect(html).toContain(row('Gordura corporal', null, '24,5 % · 26,4 kg', '—'));
-    expect(html).toContain(row('Água corporal', null, '57,9 % · 62,4 kg', '—'));
-    expect(html).toContain(row('Massa óssea', null, '5,03 kg', '—'));
-    expect(html).toContain(row('Idade corporal', null, '40 anos', '+1 ano(s)'));
-    expect(html).toContain(row('Gordura visceral', '1~9', '11', 'Acima'));
-    expect(html).toContain(row('Metabolismo basal', '1744~2085 kcal', '2075 kcal', 'Normal'));
-    expect(html).toContain(row('Relação cintura/quadril', '0,84~0,91', '0,97', 'Risco Muito Alto'));
+    expect(html).toContain(row('Músculo esquelético', '33,3~39,3 %', '46,7 % · 50,3 kg', 'Excelente', 'CALC'));
+    expect(html).toContain(row('Massa muscular', null, '70,8 % · 76,3 kg', '—', 'CALC'));
+    expect(html).toContain(row('Gordura corporal', null, '24,5 % · 26,4 kg', '—', 'DC'));
+    expect(html).toContain(row('Água corporal', null, '57,9 % · 62,4 kg', '—', 'BIA'));
+    expect(html).toContain(row('Massa óssea', null, '5,03 kg', '—', 'BIA'));
+    expect(html).toContain(row('Idade corporal', null, '40 anos', '+1 ano(s)', 'BIA'));
+    expect(html).toContain(row('Gordura visceral', '1~9', '11', 'Acima', 'BIA'));
+    expect(html).toContain(row('Metabolismo basal', '1744~2085 kcal', '2075 kcal', 'Normal', 'BIA'));
+    expect(html).toContain(row('Relação cintura/quadril', '0,84~0,91', '0,97', 'Risco Muito Alto', 'FM'));
     expect(html).toContain(row('Pressão arterial', '120/80 mmHg', '130/80 mmHg', 'Pré-hipertensão'));
+    expect(html).toContain('<b>DC</b> = dobras cutâneas');
     // Números do relatório saem com vírgula.
     expect(html).not.toContain('107.7 kg');
     expect(html).toContain('Massa gorda: 24,5%'); // legenda da pizza
