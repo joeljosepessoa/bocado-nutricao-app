@@ -314,7 +314,6 @@ export function buildBioimpedanceAnalysis(input: BioimpedanceAnalysisInput): Bio
 
 const NOT_INFORMED = 'Não informado';
 const EVAL_COLOR: Record<Evaluation, string> = { Baixo: '#b5651d', Saudável: '#1f7a5c', Alto: '#c2410c', Excelente: '#1f7a5c' };
-const SEGMENT_FILL: Record<Evaluation, string> = { Baixo: '#f3d9b8', Saudável: '#cfe8db', Alto: '#f6c7a8', Excelente: '#cfe8db' };
 
 function escapeHtml(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -376,29 +375,86 @@ function barTable(bars: Bar[]): string {
   </th><th class="r">Resultado</th><th class="r">Avaliação</th></tr></thead><tbody>${bars.map(barRow).join('')}</tbody></table>`;
 }
 
-/** Silhueta com braços, tronco e pernas pintados pela avaliação de cada parte. */
-function bodyFigure(segments: Segments, title: string, note: string): string {
-  const fill = (s: SegmentRow) => SEGMENT_FILL[s.evaluation];
-  const label = (s: SegmentRow, name: string, style: string) =>
-    `<div class="seg-label" style="${style}"><div class="seg-name">${name}</div><div class="seg-kg">${formatPlain(s.kg)} kg</div><div>${formatPlain(s.percentOfStandard)} % do padrão</div><div style="color:${EVAL_COLOR[s.evaluation]};font-weight:700;">${s.evaluation}</div></div>`;
+const SEGMENT_GRADIENT: Record<Evaluation, [string, string, string]> = {
+  Saudável: ['#bfe6d2', '#6fbf98', '#2f8a63'],
+  Excelente: ['#bfe6d2', '#6fbf98', '#2f8a63'],
+  Alto: ['#fcd9bd', '#f4a467', '#d2601f'],
+  Baixo: ['#f8e6b4', '#e8c066', '#b98a22'],
+};
+
+// Silhueta de frente desenhada para o relatório (eixo do corpo em x = 100, de 0 a 200 de largura).
+const BODY_HEAD = 'M100 14 C112 14 120 24 120 38 C120 52 112 62 100 62 C88 62 80 52 80 38 C80 24 88 14 100 14 Z';
+const BODY_NECK = 'M91 58 L109 58 L111 74 L89 74 Z';
+const BODY_TRUNK =
+  'M62 86 C62 77 74 72 90 71 L110 71 C126 72 138 77 138 86 L134 122 C131 142 125 158 124 172 C125 186 131 198 130 211 L100 216 L70 211 C69 198 75 186 76 172 C75 158 69 142 66 122 Z';
+const BODY_ARM =
+  'M63 82 C53 86 48 100 47 118 C45 140 42 160 40 178 C37 198 35 214 34 228 C32 240 34 250 39 253 C44 254 46 245 46 235 C48 219 52 201 55 183 C58 165 62 147 66 128 Z';
+const BODY_LEG =
+  'M70 203 C68 232 70 263 74 292 C76 316 74 340 78 364 C79 372 74 380 70 386 C76 391 88 391 90 385 C90 372 92 350 94 326 C96 300 98 262 100 214 Z';
+
+/**
+ * Silhueta com braços, tronco e pernas em degradê pela avaliação de cada parte, e linhas
+ * ligando cada resultado à parte do corpo — no arranjo do relatório da balança, com o
+ * desenho e as cores do Bocado de Nutrição.
+ */
+function bodyFigure(segments: Segments, title: string, note: string, id: string): string {
+  const ox = 80; // desloca o corpo para o centro do quadro (360 de largura)
+  const gradient = (key: string, evaluation: Evaluation) => {
+    const [light, mid, dark] = SEGMENT_GRADIENT[evaluation];
+    return `<linearGradient id="${id}-${key}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${light}"/><stop offset=".55" stop-color="${mid}"/><stop offset="1" stop-color="${dark}"/></linearGradient>`;
+  };
+  const label = (s: SegmentRow, x: number, y: number, anchor: 'start' | 'end', to: [number, number]) => {
+    const lineEnd = anchor === 'start' ? x + 74 : x - 74;
+    return `
+      <text x="${x}" y="${y}" text-anchor="${anchor}" class="sl-kg">${formatPlain(s.kg)} kg</text>
+      <text x="${x}" y="${y + 15}" text-anchor="${anchor}" class="sl-pct">${formatPlain(s.percentOfStandard)} %</text>
+      <text x="${x}" y="${y + 27}" text-anchor="${anchor}" class="sl-eval" fill="${EVAL_COLOR[s.evaluation]}">${s.evaluation}</text>
+      <polyline points="${x},${y + 32} ${lineEnd},${y + 32} ${to[0]},${to[1]}" fill="none" stroke="#7d8b82" stroke-width=".8"/>
+      <circle cx="${to[0]}" cy="${to[1]}" r="2.4" fill="#123c2e"/>`;
+  };
+  const stroke = 'stroke="#123c2e" stroke-opacity=".55" stroke-width="1"';
   return `<div class="seg-card">
     <h3 class="seg-title">${title}</h3>
-    <div class="seg-body">
-      ${label(segments.arm, 'Cada braço', 'top:6px;left:0;')}
-      ${label(segments.trunk, 'Tronco', 'top:84px;left:0;')}
-      ${label(segments.leg, 'Cada perna', 'top:162px;left:0;')}
-      ${label(segments.arm, 'Cada braço', 'top:6px;right:0;text-align:right;')}
-      ${label(segments.leg, 'Cada perna', 'top:162px;right:0;text-align:right;')}
-      <svg viewBox="0 0 120 230" class="seg-svg" aria-hidden="true">
-        <circle cx="60" cy="20" r="13" fill="#e9eee8" stroke="#123c2e" stroke-width="1.2"/>
-        <rect x="55" y="32" width="10" height="7" fill="#e9eee8" stroke="#123c2e" stroke-width="1.2"/>
-        <rect x="38" y="38" width="44" height="72" rx="11" fill="${fill(segments.trunk)}" stroke="#123c2e" stroke-width="1.2"/>
-        <rect x="21" y="42" width="14" height="70" rx="7" transform="rotate(8 28 42)" fill="${fill(segments.arm)}" stroke="#123c2e" stroke-width="1.2"/>
-        <rect x="85" y="42" width="14" height="70" rx="7" transform="rotate(-8 92 42)" fill="${fill(segments.arm)}" stroke="#123c2e" stroke-width="1.2"/>
-        <rect x="40" y="112" width="18" height="108" rx="8" fill="${fill(segments.leg)}" stroke="#123c2e" stroke-width="1.2"/>
-        <rect x="62" y="112" width="18" height="108" rx="8" fill="${fill(segments.leg)}" stroke="#123c2e" stroke-width="1.2"/>
-      </svg>
-    </div>
+    <svg viewBox="0 0 360 400" class="seg-figure" role="img" aria-label="${title}">
+      <defs>
+        ${gradient('arm', segments.arm.evaluation)}
+        ${gradient('trunk', segments.trunk.evaluation)}
+        ${gradient('leg', segments.leg.evaluation)}
+        <linearGradient id="${id}-skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f6f3"/><stop offset="1" stop-color="#d5ddd6"/></linearGradient>
+        <radialGradient id="${id}-shine" cx=".35" cy=".3" r=".7"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+      </defs>
+      <g transform="translate(${ox} 0)">
+        <path d="${BODY_ARM}" fill="url(#${id}-arm)" ${stroke}/>
+        <g transform="matrix(-1 0 0 1 200 0)"><path d="${BODY_ARM}" fill="url(#${id}-arm)" ${stroke}/></g>
+        <path d="${BODY_LEG}" fill="url(#${id}-leg)" ${stroke}/>
+        <g transform="matrix(-1 0 0 1 200 0)"><path d="${BODY_LEG}" fill="url(#${id}-leg)" ${stroke}/></g>
+        <path d="${BODY_NECK}" fill="url(#${id}-skin)" ${stroke}/>
+        <path d="${BODY_TRUNK}" fill="url(#${id}-trunk)" ${stroke}/>
+        <path d="${BODY_TRUNK}" fill="url(#${id}-shine)"/>
+        <path d="${BODY_HEAD}" fill="url(#${id}-skin)" ${stroke}/>
+        <g fill="none" stroke="#123c2e" stroke-opacity=".22" stroke-width=".9">
+          <path d="M100 92 L100 205"/>
+          <path d="M76 110 C86 121 96 121 100 115 C104 121 114 121 124 110"/>
+          <path d="M90 140 L110 140 M89 157 L111 157 M90 174 L110 174"/>
+          <path d="M80 196 C88 204 96 208 100 210 C104 208 112 204 120 196"/>
+          <path d="M77 296 C81 302 87 302 91 296"/>
+          <path d="M109 296 C113 302 119 302 123 296"/>
+          <path d="M44 168 C47 172 51 172 54 168"/>
+          <path d="M146 168 C149 172 153 172 156 168"/>
+        </g>
+      </g>
+      ${label(segments.arm, 6, 30, 'start', [ox + 50, 140])}
+      ${label(segments.arm, 354, 30, 'end', [ox + 150, 140])}
+      ${label(segments.trunk, 6, 150, 'start', [ox + 84, 150])}
+      ${label(segments.leg, 6, 262, 'start', [ox + 84, 300])}
+      ${label(segments.leg, 354, 262, 'end', [ox + 116, 300])}
+      <g transform="translate(262 330)">
+        <rect width="92" height="56" rx="5" fill="#f6f8f5" stroke="#dde4dc"/>
+        <text x="84" y="16" text-anchor="end" class="sl-legend">kg</text>
+        <text x="84" y="31" text-anchor="end" class="sl-legend">% do padrão</text>
+        <text x="84" y="46" text-anchor="end" class="sl-legend">avaliação</text>
+      </g>
+    </svg>
     <div class="seg-note">${note}</div>
   </div>`;
 }
@@ -433,11 +489,11 @@ const BIO_CSS = `
   .bio-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .seg-card { border: 1px solid #dde4dc; border-radius: 6px; padding: 6px 8px; }
   .seg-title { font-size: 11px; color: #123c2e; margin: 0 0 4px; }
-  .seg-body { position: relative; height: 236px; }
-  .seg-svg { position: absolute; left: 50%; top: 0; width: 104px; height: 200px; transform: translateX(-50%); }
-  .seg-label { position: absolute; width: 33%; font-size: 8px; color: #54635a; line-height: 1.3; }
-  .seg-name { font-size: 8px; text-transform: uppercase; letter-spacing: .04em; color: #8b988e; }
-  .seg-kg { font-size: 11.5px; font-weight: 700; color: #123c2e; }
+  .seg-figure { width: 100%; height: auto; display: block; }
+  .seg-figure .sl-kg { font-size: 15px; font-weight: 700; fill: #123c2e; }
+  .seg-figure .sl-pct { font-size: 11px; fill: #54635a; }
+  .seg-figure .sl-eval { font-size: 10px; font-weight: 700; }
+  .seg-figure .sl-legend { font-size: 9px; fill: #54635a; }
   .seg-note { font-size: 7.5px; color: #8b988e; }
   .body-type { font-size: 13px; font-weight: 700; color: #123c2e; }
 `;
@@ -476,8 +532,8 @@ export function renderBioimpedancePages(analysis: BioimpedanceAnalysis, evaluate
   <div class="page-break bio-page">
     <h1 class="page-title">Bioimpedância — por parte do corpo</h1>
     <div class="bio-two">
-      ${analysis.fatSegments ? bodyFigure(analysis.fatSegments, 'Análise segmentar de gordura', 'Faixa normal: 80% a 160% do padrão. Divisão por parte do corpo estimada, como no relatório da balança.') : ''}
-      ${analysis.muscleSegments ? bodyFigure(analysis.muscleSegments, 'Equilíbrio muscular', 'Faixa normal: 90% a 110% do padrão. Divisão por parte do corpo estimada, como no relatório da balança.') : ''}
+      ${analysis.fatSegments ? bodyFigure(analysis.fatSegments, 'Análise segmentar de gordura', 'Faixa normal: 80% a 160% do padrão. Divisão por parte do corpo estimada, como no relatório da balança.', 'fat') : ''}
+      ${analysis.muscleSegments ? bodyFigure(analysis.muscleSegments, 'Equilíbrio muscular', 'Faixa normal: 90% a 110% do padrão. Divisão por parte do corpo estimada, como no relatório da balança.', 'muscle') : ''}
     </div>
     ${analysis.impedance ? `<h2 class="section-title">Impedância bioelétrica</h2>${impedanceTable(analysis.impedance)}` : ''}
   </div>`
