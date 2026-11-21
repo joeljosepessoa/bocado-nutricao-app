@@ -234,6 +234,69 @@ describe('Relatórios (e2e)', () => {
     expect(report.releasedToClientAt).toBeNull(); // gerar != liberar (Fase 9, dois passos)
   }, 30_000);
 
+  // 2b. Relatório cliente ganha a página "Análise de bioimpedância" só com a balança conectada
+  it('relatório cliente traz a análise de bioimpedância quando a leitura veio da balança conectada', async () => {
+    const professional = await registerProfessional(app);
+    const { client } = await createClient(app, professional.accessToken);
+    const evaluation = await createEvaluation(app, professional.accessToken, client.id, {
+      heightCm: 172,
+      weightKg: 77.8,
+      biologicalSexForCalculation: 'male',
+    });
+    await request(app.getHttpServer())
+      .post(`/clients/${client.id}/evaluations/${evaluation.id}/scale-readings`)
+      .set('Authorization', `Bearer ${professional.accessToken}`)
+      .send({
+        status: 'confirmed',
+        driverId: 'icomon-ffb0',
+        deviceIdentifier: 'Relaxmedic-2419',
+        protocolVersion: '1',
+        recordedAt: new Date().toISOString(),
+        idempotencyKey: `report-bio.${Date.now()}.${Math.floor(Math.random() * 1_000_000)}`,
+        rawPayload: { resultFrameHex: 'aa bb' },
+        normalized: {
+          weightKg: 77.8,
+          bodyFatPercent: 17.8,
+          fatMassKg: 13.8,
+          leanMassKg: 63.9,
+          skeletalMuscleMassKg: 36.4,
+          muscleMassKg: 59.6,
+          boneMassKg: 4.3,
+          bodyWaterPercent: 60.2,
+          visceralFatLevel: 4,
+          basalMetabolicRateKcal: 1750,
+          bodyAgeYears: 34,
+          impedanceData: {
+            khz20: { arms: [245.9, 241.1], legs: [214.1, 210.3], trunk: 13.5 },
+            khz100: { arms: [212.3, 206.3], legs: [190.1, 188.5], trunk: 8.5 },
+          },
+        },
+      })
+      .expect(201);
+    await releaseEvaluation(app, professional.accessToken, client.id, evaluation.id);
+
+    const report = await generateReport(app, professional.accessToken, client.id, evaluation.id, 'client');
+    expect(report.status).toBe('ready');
+    const saved = await prisma.report.findUniqueOrThrow({ where: { id: report.id } });
+    const analysis = (saved.dataSnapshot as { bioimpedanceAnalysis?: { bodyType: string; impedance: unknown } }).bioimpedanceAnalysis;
+    expect(analysis?.bodyType).toBe('Ligeiramente obeso');
+    expect(analysis?.impedance).not.toBeNull();
+    const pdf = await downloadReportPdf(app, professional.accessToken, client.id, report.id);
+    expect(countPdfPages(pdf)).toBe(2);
+
+    // Bioimpedância digitada (outro aparelho): o relatório do cliente fica como antes, sem a página.
+    const manual = await createEvaluation(app, professional.accessToken, client.id, {
+      heightCm: 172,
+      weightKg: 77.8,
+      biologicalSexForCalculation: 'male',
+      bioimpedance: { weightKg: 77.8, bodyFatPercent: 17.8, fatMassKg: 13.8, leanMassKg: 63.9 },
+    });
+    await releaseEvaluation(app, professional.accessToken, client.id, manual.id);
+    const manualReport = await generateReport(app, professional.accessToken, client.id, manual.id, 'client');
+    const manualSaved = await prisma.report.findUniqueOrThrow({ where: { id: manualReport.id } });
+    expect((manualSaved.dataSnapshot as { bioimpedanceAnalysis?: unknown }).bioimpedanceAnalysis).toBeNull();
+  }, 60_000);
+
   // 3. Bloqueio — relatório cliente sem liberação
   it('bloqueia geração de relatório cliente quando a avaliação não está liberada', async () => {
     const professional = await registerProfessional(app);

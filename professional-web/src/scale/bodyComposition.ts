@@ -27,7 +27,9 @@ import type { ScaleProfile, SegmentImpedances } from './icomonProtocol';
  *   frações fixas (esquerdo = direito): tronco 46,7%; cada perna 17,8% (homem) ou
  *   17,3% (mulher); cada braço 6,2% (homem) ou 5,7% (mulher).
  * - Gordura por parte do corpo: o relatório do fabricante diz que é "valor inferido" —
- *   frações fixas da massa gorda (tronco 55%, cada perna 15,6%, cada braço 6%).
+ *   tronco 55% da massa gorda; cada braço −0,40 + 0,0796 × massa gorda; cada perna
+ *   0,44 + 0,1346 × massa gorda (7 pessoas, até 0,2 kg de diferença nos braços e pernas).
+ *   O relatório do cliente (backend, bioimpedance-analysis.ts) usa as mesmas contas.
  */
 
 export const FAT_FREE_MASS_REFERENCE = 'Regressão própria ajustada ao app da balança (7 pessoas, 100 kHz)';
@@ -49,8 +51,6 @@ const MUSCLE_SHARES: Record<Sex | 'unknown', { arm: number; leg: number; trunk: 
   unknown: { arm: 0.06, leg: 0.176, trunk: 0.467 },
 };
 
-const ARM_SHARE_OF_FAT = 0.06;
-const LEG_SHARE_OF_FAT = 0.156;
 const TRUNK_SHARE_OF_FAT = 0.55;
 
 const SUBCUTANEOUS_SHARE_OF_BODY_FAT = 0.715;
@@ -70,8 +70,8 @@ export function muscleBySegment(muscleMassKg: number, sex: Sex | null = null): M
 export function fatBySegment(fatMassKg: number): MuscleBySegment | null {
   if (!(fatMassKg > 0)) return null;
   return {
-    armKg: round1(ARM_SHARE_OF_FAT * fatMassKg),
-    legKg: round1(LEG_SHARE_OF_FAT * fatMassKg),
+    armKg: round1(Math.max(0.1, -0.401 + 0.0796 * fatMassKg)),
+    legKg: round1(Math.max(0.1, 0.437 + 0.1346 * fatMassKg)),
     trunkKg: round1(TRUNK_SHARE_OF_FAT * fatMassKg),
   };
 }

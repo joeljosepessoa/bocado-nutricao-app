@@ -1,4 +1,5 @@
 import { REPORT_CSS } from './report-styles';
+import { renderBioimpedancePage } from './bioimpedance-analysis';
 import { formatShortDate, renderBarChartSvg, renderChartCard, renderLineChartSvg, renderMetricChart, renderPieChartSvg } from './report-charts';
 import {
   assessBasalMetabolicRate,
@@ -655,11 +656,13 @@ export function renderProfessionalReportHtml(data: ProfessionalEvaluationReportD
 export function renderClientReportHtml(data: ClientEvaluationReportData): string {
   const last = buildResumoPeriod(data.comparison, data.measurements, null, data.evaluatedAt);
   const page1 = pageOne('Relatório de avaliação', data, data.generatedAt, null, last, null, true, '');
+  const bioimpedancePage = data.bioimpedanceAnalysis ? renderBioimpedancePage(data.bioimpedanceAnalysis) : '';
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head><meta charset="utf-8"><style>${REPORT_CSS}</style></head>
 <body>
   ${page1}
+  ${bioimpedancePage}
 </body>
 </html>`;
 }

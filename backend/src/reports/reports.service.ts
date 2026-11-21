@@ -1,6 +1,6 @@
 import { findSkinfoldProtocol } from '../physical-evaluations/skinfold-protocols';
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { NotificationEventType, Prisma, ReportAudience, ReportAuditAction, ReportStatus } from '@prisma/client';
+import { BioimpedanceOrigin, NotificationEventType, Prisma, ReportAudience, ReportAuditAction, ReportStatus } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { PhysicalEvaluationsService } from '../physical-evaluations/physical-evaluations.service';
@@ -11,6 +11,7 @@ import { ReportAuditLogService } from './report-audit-log.service';
 import { CreateReportDto } from './dto/create-report.dto';
 import { ClientReportSummaryDto, ReportSummaryDto } from './dto/report-summary.dto';
 import { renderClientReportHtml, renderProfessionalReportHtml } from './templates/evaluation-report.template';
+import { buildBioimpedanceAnalysis } from './templates/bioimpedance-analysis';
 import { CURRENT_TEMPLATE_VERSION } from './templates/report-types';
 import type {
   ClientEvaluationReportData,
@@ -250,7 +251,30 @@ export class ReportsService {
           composition: summary.composition,
           comparison,
         };
-        const data: ClientEvaluationReportData = { ...core, generatedAt };
+        // Análise completa no formato do relatório da balança — só com a balança conectada
+        // (as faixas e frações foram conferidas contra o app dela, não valem para outro aparelho).
+        const bio = fullEvaluation.bioimpedance;
+        const bioimpedanceAnalysis =
+          bio && bio.origin === BioimpedanceOrigin.device_confirmed
+            ? buildBioimpedanceAnalysis({
+                sex: fullEvaluation.biologicalSexForCalculation,
+                heightCm: fullEvaluation.heightCm,
+                weightKg: bio.weightKg ?? summary.weightKg,
+                bodyFatPercent: bio.bodyFatPercent,
+                fatMassKg: bio.fatMassKg,
+                leanMassKg: bio.leanMassKg,
+                skeletalMuscleMassKg: bio.skeletalMuscleMassKg,
+                muscleMassKg: bio.muscleMassKg,
+                bodyWaterPercent: bio.bodyWaterPercent,
+                boneMassKg: bio.boneMassKg,
+                visceralFatLevel: bio.visceralFatLevel,
+                basalMetabolicRateKcal: bio.basalMetabolicRateKcal,
+                bodyAgeYears: bio.bodyAgeYears,
+                waistHipRatio: sharedIdentity.waistHipRatio,
+                impedanceData: bio.impedanceData,
+              })
+            : null;
+        const data: ClientEvaluationReportData = { ...core, generatedAt, bioimpedanceAnalysis };
         html = renderClientReportHtml(data);
         snapshot = { ...data };
       } else {

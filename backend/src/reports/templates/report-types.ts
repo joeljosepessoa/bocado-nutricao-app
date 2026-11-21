@@ -1,4 +1,5 @@
 import type { SkinfoldsMmFields } from '../../physical-evaluations/dto/evolution-point.dto';
+import type { BioimpedanceAnalysis } from './bioimpedance-analysis';
 
 // v2 — redesenho completo do relatório profissional (4 páginas: resumo,
 // gráficos de evolução, medidas/dobras, fotos) + gráficos de linha e
@@ -134,4 +135,6 @@ export interface ProfessionalEvaluationReportData extends EvaluationReportCore, 
 
 export interface ClientEvaluationReportData extends EvaluationReportCore {
   generatedAt: string;
+  /** Página "Análise de bioimpedância" — só quando a bioimpedância veio da balança conectada. */
+  bioimpedanceAnalysis?: BioimpedanceAnalysis | null;
 }
