@@ -8,6 +8,7 @@ import { DataTable } from '../../components/DataTable';
 import { StatusBadge } from '../../components/StatusBadge';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Modal } from '../../components/Modal';
+import { ReportViewer } from '../../components/ReportViewer';
 import { formatBytes, formatDate, formatDateTime } from '../../lib/format';
 
 const AUDIENCE_LABEL: Record<string, string> = { professional: 'Profissional', client: 'Cliente' };
@@ -80,6 +81,7 @@ export function ReportsTab() {
   const [showGenerate, setShowGenerate] = useState(false);
   const [toDelete, setToDelete] = useState<ReportSummary | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [viewing, setViewing] = useState<ReportSummary | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['reports', clientId],
@@ -156,9 +158,14 @@ export function ReportsTab() {
             render: (row) => (
               <div style={{ display: 'flex', gap: 6 }}>
                 {row.status === 'ready' ? (
-                  <Button size="small" variant="ghost" onClick={() => handleDownload(row.id)}>
-                    Baixar
-                  </Button>
+                  <>
+                    <Button size="small" onClick={() => setViewing(row)}>
+                      Visualizar
+                    </Button>
+                    <Button size="small" variant="ghost" onClick={() => handleDownload(row.id)}>
+                      Baixar
+                    </Button>
+                  </>
                 ) : null}
                 {row.audience === 'client' ? (
                   <Button
@@ -178,6 +185,15 @@ export function ReportsTab() {
           },
         ]}
       />
+
+      {viewing ? (
+        <ReportViewer
+          clientId={clientId!}
+          reportId={viewing.id}
+          title={`Relatório ${AUDIENCE_LABEL[viewing.audience].toLowerCase()} — ${formatDateTime(viewing.generatedAt)}`}
+          onClose={() => setViewing(null)}
+        />
+      ) : null}
 
       {showGenerate ? <GenerateReportModal clientId={clientId!} onClose={() => setShowGenerate(false)} onDone={invalidate} /> : null}
 

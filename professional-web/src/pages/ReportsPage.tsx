@@ -6,6 +6,7 @@ import { Button } from '../components/Button';
 import { DataTable } from '../components/DataTable';
 import { Icon } from '../components/Icon';
 import { Modal } from '../components/Modal';
+import { ReportViewer } from '../components/ReportViewer';
 import { StatusBadge } from '../components/StatusBadge';
 import { formatDate, formatDateTime } from '../lib/format';
 import type { ReportOverviewItem } from '../types/api';
@@ -66,6 +67,7 @@ export function ReportsPage() {
   const [choosing, setChoosing] = useState(false);
   const [generateFor, setGenerateFor] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [viewing, setViewing] = useState<ReportOverviewItem | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['reports-all'],
@@ -160,9 +162,14 @@ export function ReportsPage() {
             render: (row) => (
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {row.status === 'ready' ? (
-                  <Button size="small" variant="ghost" onClick={() => handleDownload(row)}>
-                    Baixar
-                  </Button>
+                  <>
+                    <Button size="small" onClick={() => setViewing(row)}>
+                      Visualizar
+                    </Button>
+                    <Button size="small" variant="ghost" onClick={() => handleDownload(row)}>
+                      Baixar
+                    </Button>
+                  </>
                 ) : null}
                 {row.audience === 'client' && row.status === 'ready' ? (
                   <Button
@@ -179,6 +186,15 @@ export function ReportsPage() {
           },
         ]}
       />
+
+      {viewing ? (
+        <ReportViewer
+          clientId={viewing.clientId}
+          reportId={viewing.id}
+          title={`${viewing.clientName} — ${AUDIENCE_LABEL[viewing.audience]}`}
+          onClose={() => setViewing(null)}
+        />
+      ) : null}
 
       {choosing ? (
         <ChoosePatientModal
