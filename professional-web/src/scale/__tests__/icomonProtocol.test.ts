@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ackFrame, parseFrame, profileFrame, readyFrame, toHex } from '../icomonProtocol';
-import { bodyComposition, muscleBySegment, resistanceAt50kHz } from '../bodyComposition';
+import { bodyComposition, fatBySegment, muscleBySegment, resistanceAt50kHz, visceralFatLevel } from '../bodyComposition';
 
 const hex = (text: string) => new Uint8Array(text.split(' ').map((b) => parseInt(b, 16)));
 
@@ -62,10 +62,10 @@ describe('composição corporal pela bioimpedância (equações publicadas)', ()
     expect(resistanceAt50kHz(impedance.khz20, impedance.khz100)).toBeCloseTo(404.1, 1);
   });
 
-  it('homem: Sun 2003 calibrada (×1,04), músculo esquelético 57%, água e Katch-McArdle a partir da massa magra', () => {
+  it('homem: Sun 2003 calibrada (+2,1 kg), músculo esquelético 57%, água e Katch-McArdle a partir da massa magra', () => {
     const c = bodyComposition(103.35, { heightCm: 181, age: 40, sex: 'male' }, impedance)!;
-    expect(c.fatFreeMassKg).toBeCloseTo(77.0 * 1.04, 0);
-    expect(c.bodyFatPercent).toBeCloseTo(((103.35 - 77.0 * 1.04) / 103.35) * 100, 0);
+    expect(c.fatFreeMassKg).toBeCloseTo(77.0 + 2.1, 0);
+    expect(c.bodyFatPercent).toBeCloseTo(((103.35 - 77.0 - 2.1) / 103.35) * 100, 0);
     expect(c.fatMassKg).toBeCloseTo(103.35 - c.fatFreeMassKg, 0);
     expect(c.skeletalMuscleMassKg).toBeCloseTo(0.57 * c.fatFreeMassKg, 0);
     expect(c.bodyWaterKg).toBeCloseTo(0.732 * c.fatFreeMassKg, 0);
@@ -76,6 +76,22 @@ describe('composição corporal pela bioimpedância (equações publicadas)', ()
     expect(c.muscleRatePercent).toBeCloseTo((c.muscleMassKg / 103.35) * 100, 0);
     expect(c.idealWeightKg).toBe(72.1);
     expect(c.basalMetabolicRateKcal).toBeCloseTo(370 + 21.6 * c.fatFreeMassKg, -1);
+    // App da balança nessa pesagem: visceral 9, subcutânea 16,7%.
+    expect(c.visceralFatLevel).toBe(9);
+    expect(c.subcutaneousFatPercent!).toBeCloseTo(0.715 * c.bodyFatPercent, 1);
+  });
+
+  it('relatório do fabricante com as impedâncias por parte do corpo (homem, 172 cm, 36 anos): fica perto do app', () => {
+    // Impedâncias impressas no relatório: braço D/E, perna D/E e tronco, a 20 e 100 kHz.
+    const c = bodyComposition(77.8, { heightCm: 172, age: 36, sex: 'male' }, {
+      khz20: { arms: [245.9, 241.1], legs: [214.1, 210.3], trunk: 13.5 },
+      khz100: { arms: [212.3, 206.3], legs: [190.1, 188.5], trunk: 8.5 },
+    })!;
+    // App: massa magra 63,9 kg, gordura 17,8%, visceral 4, gordura braço 0,6 / perna 2,3 / tronco 7,8 kg.
+    expect(Math.abs(c.fatFreeMassKg - 63.9)).toBeLessThanOrEqual(1);
+    expect(Math.abs(c.bodyFatPercent - 17.8)).toBeLessThanOrEqual(1.2);
+    expect(c.visceralFatLevel).toBe(4);
+    expect(Math.abs(c.fatBySegment!.trunkKg - 7.8)).toBeLessThanOrEqual(0.6);
   });
 
   it('mulher usa os coeficientes femininos; dados impossíveis não geram números', () => {
@@ -87,12 +103,41 @@ describe('composição corporal pela bioimpedância (equações publicadas)', ()
   });
 });
 
+describe('gordura visceral e gordura por parte do corpo (como o app da balança)', () => {
+  // Massa gorda e nível visceral que o app mostrou em pesagens comparadas (sem nomes).
+  it.each([
+    [9.2, 2],
+    [13.1, 4],
+    [13.8, 4],
+    [18.6, 6],
+    [24.1, 9],
+  ])('massa gorda %s kg → visceral %s', (fat, level) => {
+    expect(visceralFatLevel(fat)).toBe(level);
+  });
+
+  const casos: Array<[number, { arm: number; leg: number; trunk: number }]> = [
+    [24.1, { arm: 1.4, leg: 3.65, trunk: 13.5 }],
+    [22.9, { arm: 1.5, leg: 3.6, trunk: 12.5 }],
+    [18.6, { arm: 1.0, leg: 2.9, trunk: 10.4 }],
+    [13.8, { arm: 0.6, leg: 2.3, trunk: 7.8 }],
+  ];
+  it.each(casos)('massa gorda %s kg fica a até 0,3 kg do app em cada parte', (fat, app) => {
+    const s = fatBySegment(fat)!;
+    expect(Math.abs(s.armKg - app.arm)).toBeLessThanOrEqual(0.3 + 1e-9);
+    expect(Math.abs(s.legKg - app.leg)).toBeLessThanOrEqual(0.3 + 1e-9);
+    expect(Math.abs(s.trunkKg - app.trunk)).toBeLessThanOrEqual(0.3 + 1e-9);
+    expect(fatBySegment(0)).toBeNull();
+  });
+});
+
 describe('músculo por parte do corpo (frações do app da balança)', () => {
   // Massa muscular e segmentos que o app da balança mostrou em 3 pessoas comparadas (sem nomes).
   const casos: Array<[number, { arm: number; leg: number; trunk: number }]> = [
     [45.8, { arm: 2.7, leg: 8.0, trunk: 21.4 }],
     [62.5, { arm: 3.9, leg: 11.1, trunk: 29.2 }],
     [53.9, { arm: 3.0, leg: 9.5, trunk: 25.1 }],
+    [59.6, { arm: 3.8, leg: 10.6, trunk: 27.9 }],
+    [73.9, { arm: 4.75, leg: 13.2, trunk: 34.7 }],
   ];
 
   it.each(casos)('massa muscular %s kg fica a até 0,3 kg do app em cada parte', (muscle, app) => {

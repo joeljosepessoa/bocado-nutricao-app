@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
 import type { ScaleReadingInput } from '../types/api';
-import { FAT_FREE_MASS_CALIBRATION, FAT_FREE_MASS_REFERENCE, SKELETAL_MUSCLE_REFERENCE, bodyComposition, type BodyComposition } from './bodyComposition';
+import { FAT_FREE_MASS_OFFSET_KG, FAT_FREE_MASS_REFERENCE, SKELETAL_MUSCLE_REFERENCE, bodyComposition, type BodyComposition } from './bodyComposition';
 import type { ScaleProfile, ScaleResult } from './icomonProtocol';
 import { ScaleSession } from './scaleSession';
 
@@ -127,13 +127,14 @@ export function ScaleModal({ heightCm, age, sex, onSubmit, onClose, confirmLabel
                 boneMassKg: composition.boneMassKg,
                 bodyWaterPercent: composition.bodyWaterPercent,
                 basalMetabolicRateKcal: composition.basalMetabolicRateKcal,
+                ...(composition.visceralFatLevel != null ? { visceralFatLevel: composition.visceralFatLevel } : {}),
                 impedanceData: {
                   khz20: result.impedance!.khz20,
                   khz100: result.impedance!.khz100,
                   wholeBodyResistance50kHz: composition.wholeBodyResistance50kHz,
                   profile: profileRef.current,
-                  derived: { proteinKg: composition.proteinKg, proteinPercent: composition.proteinPercent, muscleRatePercent: composition.muscleRatePercent, idealWeightKg: composition.idealWeightKg, bodyWaterKg: composition.bodyWaterKg, muscleBySegment: composition.muscleBySegment },
-                  equations: { fatFreeMass: FAT_FREE_MASS_REFERENCE, fatFreeMassCalibration: FAT_FREE_MASS_CALIBRATION, skeletalMuscle: SKELETAL_MUSCLE_REFERENCE, water: '73,2% da massa magra', bmr: 'Katch-McArdle', bone: '6,7% da massa magra' },
+                  derived: { proteinKg: composition.proteinKg, proteinPercent: composition.proteinPercent, muscleRatePercent: composition.muscleRatePercent, idealWeightKg: composition.idealWeightKg, bodyWaterKg: composition.bodyWaterKg, muscleBySegment: composition.muscleBySegment, fatBySegment: composition.fatBySegment, subcutaneousFatPercent: composition.subcutaneousFatPercent },
+                  equations: { fatFreeMass: FAT_FREE_MASS_REFERENCE, fatFreeMassOffsetKg: FAT_FREE_MASS_OFFSET_KG, skeletalMuscle: SKELETAL_MUSCLE_REFERENCE, water: '73,2% da massa magra', bmr: 'Katch-McArdle', bone: '6,7% da massa magra' },
                 },
               }
             : {}),
@@ -245,6 +246,19 @@ function ResultView({ result, composition }: { result: ScaleResult; composition:
     rows.push(
       ['Gordura corporal', `${fmt(composition.bodyFatPercent)}%`],
       ['Massa gorda', `${fmt(composition.fatMassKg)} kg`],
+      ...(composition.fatBySegment
+        ? ([
+            ['Gordura — cada braço', `${fmt(composition.fatBySegment.armKg)} kg`],
+            ['Gordura — cada perna', `${fmt(composition.fatBySegment.legKg)} kg`],
+            ['Gordura — tronco', `${fmt(composition.fatBySegment.trunkKg)} kg`],
+          ] as Array<[string, string]>)
+        : []),
+      ...(composition.subcutaneousFatPercent != null
+        ? ([['Gordura subcutânea', `${fmt(composition.subcutaneousFatPercent)}%`]] as Array<[string, string]>)
+        : []),
+      ...(composition.visceralFatLevel != null
+        ? ([['Gordura visceral (nível)', String(composition.visceralFatLevel)]] as Array<[string, string]>)
+        : []),
       ['Massa magra', `${fmt(composition.fatFreeMassKg)} kg`],
       ['Músculo esquelético', `${fmt(composition.skeletalMuscleMassKg)} kg`],
       ['Massa muscular', `${fmt(composition.muscleMassKg)} kg (${fmt(composition.muscleRatePercent)}%)`],
@@ -277,7 +291,8 @@ function ResultView({ result, composition }: { result: ScaleResult; composition:
       {composition ? (
         <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
           Calculado a partir da bioimpedância medida pela balança: massa magra por Sun et al. (2003) ajustada ao app da balança, músculo esquelético como 57% da massa magra,
-          água como 73,2% da massa magra e metabolismo basal por Katch-McArdle. Os valores podem diferir um pouco do app da balança.
+          água como 73,2% da massa magra e metabolismo basal por Katch-McArdle; gordura visceral, subcutânea e por parte do corpo estimadas
+          como o app da balança faz. Os valores podem diferir um pouco do app da balança.
         </div>
       ) : (
         <div role="alert" style={{ fontSize: 13, color: 'var(--color-warning, #b45309)' }}>

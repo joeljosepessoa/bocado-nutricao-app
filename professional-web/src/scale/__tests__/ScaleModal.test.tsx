@@ -70,7 +70,7 @@ describe('Balança na avaliação', () => {
     expect(input.normalized.weightKg).toBe(104.05);
     expect(input.normalized.bodyFatPercent).toBeGreaterThan(0);
     expect(input.normalized.impedanceData.khz20).toEqual(impedance.khz20);
-    expect(input.normalized.visceralFatLevel).toBeUndefined();
+    expect(input.normalized.visceralFatLevel).toBeGreaterThanOrEqual(1);
     expect(input.normalized.muscleMassKg).toBeGreaterThan(0);
     expect(input.normalized.boneMassKg).toBeGreaterThan(0);
     expect(input.normalized.impedanceData.derived.proteinKg).toBeGreaterThan(0);

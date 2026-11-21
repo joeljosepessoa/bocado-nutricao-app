@@ -151,8 +151,12 @@ describe('EvaluationDetailPage — bioimpedância da balança conectada', () => 
     expect(screen.getByText('72.1 kg')).toBeInTheDocument();
     // Músculo por parte (frações do app da balança sobre a massa muscular de 73,9 kg).
     expect(screen.getByText('Músculo — cada braço')).toBeInTheDocument();
-    expect(screen.getByText('4.4 kg')).toBeInTheDocument();
-    expect(screen.getByText('13 kg')).toBeInTheDocument();
+    expect(screen.getByText('4.5 kg')).toBeInTheDocument();
+    expect(screen.getByText('13.1 kg')).toBeInTheDocument();
     expect(screen.getByText('34.5 kg')).toBeInTheDocument();
+    // Gordura subcutânea (71,5% da gordura) e gordura por parte (frações da massa gorda de 24,1 kg).
+    expect(screen.getByText('16.7%')).toBeInTheDocument();
+    expect(screen.getByText('Gordura — tronco')).toBeInTheDocument();
+    expect(screen.getByText('13.4 kg')).toBeInTheDocument();
   });
 });

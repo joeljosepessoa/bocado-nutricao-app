@@ -10,7 +10,7 @@ import { AiAssistPanel } from '../../components/AiAssistPanel';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { formatDate, formatNumber } from '../../lib/format';
 import { EvaluationPhotosCard } from './EvaluationPhotosCard';
-import { muscleBySegment } from '../../scale/bodyComposition';
+import { fatBySegment, muscleBySegment, subcutaneousFatPercent } from '../../scale/bodyComposition';
 
 const MEASUREMENT_LABELS: Record<keyof Measurements, string> = {
   chestCm: 'Tórax', waistCm: 'Cintura', abdomenCm: 'Abdômen', hipCm: 'Quadril',
@@ -29,7 +29,7 @@ const SKINFOLD_LABELS: Record<keyof Skinfolds, string> = {
 
 const SEX_LABELS = { male: 'Masculino', female: 'Feminino' } as const;
 
-/** Só o que o aparelho mediu aparece (a balança conectada não manda osso, visceral nem idade corporal). */
+/** Só o que foi medido ou informado aparece (a balança conectada não calcula idade corporal). */
 const BIOIMPEDANCE_TILES: Array<[BioimpedanceNumberKey, string, string?]> = [
   ['weightKg', 'Peso', ' kg'],
   ['bodyFatPercent', 'Gordura corporal', '%'],
@@ -57,6 +57,14 @@ function derivedBioimpedance(b: Bioimpedance, evaluationWeight: number | null, h
   if (b.leanMassKg != null && waterKg != null && b.boneMassKg != null && weight) {
     const protein = b.leanMassKg - waterKg - b.boneMassKg;
     if (protein > 0) out.push(['Proteína', `${one((protein / weight) * 100)}% (${one(protein)} kg)`]);
+  }
+  const subcutaneous = b.bodyFatPercent != null ? subcutaneousFatPercent(b.bodyFatPercent) : null;
+  if (subcutaneous != null) out.push(['Gordura subcutânea', `${one(subcutaneous)}%`]);
+  const fatSegments = b.fatMassKg != null ? fatBySegment(b.fatMassKg) : null;
+  if (fatSegments) {
+    out.push(['Gordura — cada braço', formatNumber(fatSegments.armKg, ' kg')]);
+    out.push(['Gordura — cada perna', formatNumber(fatSegments.legKg, ' kg')]);
+    out.push(['Gordura — tronco', formatNumber(fatSegments.trunkKg, ' kg')]);
   }
   if (b.muscleMassKg != null && weight) out.push(['Taxa muscular', `${one((b.muscleMassKg / weight) * 100)}%`]);
   const segments = b.muscleMassKg != null ? muscleBySegment(b.muscleMassKg) : null;
