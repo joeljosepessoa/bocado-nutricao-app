@@ -1,43 +1,39 @@
 import type { ScaleProfile, SegmentImpedances } from './icomonProtocol';
 
 /**
- * Composição corporal a partir da bioimpedância da balança — só equações
- * publicadas, nunca a conta (secreta) do app do fabricante.
+ * Composição corporal a partir da bioimpedância da balança.
  *
- * - Resistência do corpo inteiro = braço + tronco + perna (média dos dois lados),
- *   a 50 kHz por interpolação logarítmica entre 20 e 100 kHz.
- * - Massa livre de gordura: Sun SS et al., Am J Clin Nutr 2003;77:331–40 (NHANES III),
- *   + 2,1 kg — calibração contra o app da balança (4 pesagens comparadas, homens e
- *   mulher: a Sun sozinha dava 1,4–2,6 kg menos massa magra que o app; somar um valor
- *   fixo acerta melhor que multiplicar).
- * - Músculo esquelético: 57% da massa livre de gordura — razão que o app da balança
- *   mantém em todas as pesagens comparadas (55,9–57,8%). Janssen 2000 errava até 7 kg
- *   em mulher.
- * - Água corporal: 73,2% da massa livre de gordura (Wang Z et al., Am J Clin Nutr 1999;69:833–41).
- * - Metabolismo basal: Katch-McArdle (370 + 21,6 × massa livre de gordura).
- * - Massa óssea: 6,7% da massa livre de gordura; massa muscular = massa livre de
- *   gordura − osso; proteína = massa livre de gordura − água − osso (mesmas
- *   relações que o app da balança mostra entre esses números).
- * - Peso ideal: IMC 22 para a altura.
+ * As contas foram AJUSTADAS aos números do app da balança (relatórios da Relaxmedic,
+ * que imprimem as impedâncias por parte do corpo, e uma pesagem gravada do app):
+ * 7 pessoas, homens e mulheres, de 36 a 59 anos e de 66 a 103 kg. Não é o código do
+ * fabricante — é uma regressão própria sobre o que o app mostra.
  *
- * - Músculo por parte do corpo: o app da balança não mede cada lado — divide a massa
- *   muscular em frações fixas (esquerdo = direito sempre). Frações tiradas de 5 pessoas
- *   comparadas: tronco 46,6–47,0%, cada perna 17,5–17,9%, cada braço 5,6–6,4%.
- * - Gordura por parte do corpo: o próprio relatório do fabricante diz que é "valor
- *   inferido" — também frações fixas da massa gorda (4 pessoas: tronco 54,6–56,5%,
- *   cada perna 15,1–16,7%, cada braço 4,3–6,6%).
- * - Gordura visceral (nível): 0,47 × massa gorda − 2,3 — acertou o nível do app nas 5
- *   pesagens de homens comparadas (2 a 9) e errou por 1 na mulher.
- * - Gordura subcutânea: 71,5% do percentual de gordura (igual nas 6 pesagens comparadas).
- *
- * Idade corporal fica de fora: o app usa uma conta que as pesagens comparadas ainda
- * não permitem reproduzir.
+ * - Resistência do corpo inteiro = braço + tronco + perna (média dos dois lados).
+ * - Massa livre de gordura: −1,52 + 0,962 × altura²/R(100 kHz) + 0,052 × peso − 8,49
+ *   (homem). Nas 6 pesagens com impedância conhecida, errou no máximo 0,7 kg mesmo
+ *   calculando cada pessoa sem ela entrar no ajuste. A Sun 2003 (equação publicada
+ *   usada antes) errava até 4,8 kg.
+ * - Músculo esquelético: 57,2% da massa magra no homem e 55,7% na mulher.
+ * - Água corporal: 73,2% da massa magra. Metabolismo basal: Katch-McArdle
+ *   (370 + 21,6 × massa magra). Massa óssea: 6,7% da massa magra; massa muscular =
+ *   massa magra − osso; proteína = massa magra − água − osso. Peso ideal: IMC 22.
+ *   (Mesmas relações em todas as pesagens comparadas.)
+ * - Gordura visceral (nível): −2,28 + 0,502 × massa gorda − 0,57 (homem) — acertou o
+ *   nível das 9 pessoas comparadas (2 a 16).
+ * - Gordura subcutânea: 71,5% do percentual de gordura (igual em todas).
+ * - Idade corporal: −7,6 + 0,904 × idade + 0,37 × % de gordura + 3,9 (homem) — até
+ *   1,4 ano de diferença nas 8 pessoas com idade conhecida.
+ * - Músculo por parte do corpo: o app não mede cada lado — divide a massa muscular em
+ *   frações fixas (esquerdo = direito): tronco 46,7%; cada perna 17,8% (homem) ou
+ *   17,3% (mulher); cada braço 6,2% (homem) ou 5,7% (mulher).
+ * - Gordura por parte do corpo: o relatório do fabricante diz que é "valor inferido" —
+ *   frações fixas da massa gorda (tronco 55%, cada perna 15,6%, cada braço 6%).
  */
 
-export const FAT_FREE_MASS_REFERENCE = 'Sun et al. 2003';
-/** Ajuste fino da massa livre de gordura (kg somados à Sun), calibrado contra o app da balança. */
-export const FAT_FREE_MASS_OFFSET_KG = 2.1;
-export const SKELETAL_MUSCLE_REFERENCE = '57% da massa magra (calibrado com o app da balança)';
+export const FAT_FREE_MASS_REFERENCE = 'Regressão própria ajustada ao app da balança (7 pessoas, 100 kHz)';
+export const SKELETAL_MUSCLE_REFERENCE = '57,2% (homem) / 55,7% (mulher) da massa magra';
+
+type Sex = 'male' | 'female';
 
 export interface MuscleBySegment {
   /** Cada braço. */
@@ -47,23 +43,26 @@ export interface MuscleBySegment {
   trunkKg: number;
 }
 
-const ARM_SHARE_OF_MUSCLE = 0.061;
-const LEG_SHARE_OF_MUSCLE = 0.177;
-const TRUNK_SHARE_OF_MUSCLE = 0.467;
+const MUSCLE_SHARES: Record<Sex | 'unknown', { arm: number; leg: number; trunk: number }> = {
+  male: { arm: 0.062, leg: 0.178, trunk: 0.467 },
+  female: { arm: 0.057, leg: 0.173, trunk: 0.467 },
+  unknown: { arm: 0.06, leg: 0.176, trunk: 0.467 },
+};
 
-const ARM_SHARE_OF_FAT = 0.055;
-const LEG_SHARE_OF_FAT = 0.158;
-const TRUNK_SHARE_OF_FAT = 0.557;
+const ARM_SHARE_OF_FAT = 0.06;
+const LEG_SHARE_OF_FAT = 0.156;
+const TRUNK_SHARE_OF_FAT = 0.55;
 
 const SUBCUTANEOUS_SHARE_OF_BODY_FAT = 0.715;
 
 /** Divisão da massa muscular por parte do corpo, nas mesmas frações do app da balança. */
-export function muscleBySegment(muscleMassKg: number): MuscleBySegment | null {
+export function muscleBySegment(muscleMassKg: number, sex: Sex | null = null): MuscleBySegment | null {
   if (!(muscleMassKg > 0)) return null;
+  const share = MUSCLE_SHARES[sex ?? 'unknown'];
   return {
-    armKg: round1(ARM_SHARE_OF_MUSCLE * muscleMassKg),
-    legKg: round1(LEG_SHARE_OF_MUSCLE * muscleMassKg),
-    trunkKg: round1(TRUNK_SHARE_OF_MUSCLE * muscleMassKg),
+    armKg: round1(share.arm * muscleMassKg),
+    legKg: round1(share.leg * muscleMassKg),
+    trunkKg: round1(share.trunk * muscleMassKg),
   };
 }
 
@@ -78,9 +77,10 @@ export function fatBySegment(fatMassKg: number): MuscleBySegment | null {
 }
 
 /** Nível de gordura visceral (1 a 59, como nas balanças), a partir da massa gorda. */
-export function visceralFatLevel(fatMassKg: number): number | null {
+export function visceralFatLevel(fatMassKg: number, sex: Sex): number | null {
   if (!(fatMassKg >= 0)) return null;
-  return Math.min(59, Math.max(1, Math.round(0.47 * fatMassKg - 2.3)));
+  const level = -2.282 + 0.502 * fatMassKg - (sex === 'male' ? 0.572 : 0);
+  return Math.min(59, Math.max(1, Math.round(level)));
 }
 
 /** Gordura subcutânea (% do peso), como o app da balança mostra. */
@@ -89,8 +89,15 @@ export function subcutaneousFatPercent(bodyFatPercent: number): number | null {
   return round1(SUBCUTANEOUS_SHARE_OF_BODY_FAT * bodyFatPercent);
 }
 
+/** Idade corporal (anos), como o app da balança mostra. */
+export function bodyAgeYears(age: number, bodyFatPercent: number, sex: Sex): number | null {
+  if (!(age > 0) || !(bodyFatPercent > 0)) return null;
+  return Math.max(10, Math.round(-7.577 + 0.904 * age + 0.37 * bodyFatPercent + (sex === 'male' ? 3.875 : 0)));
+}
+
 export interface BodyComposition {
   wholeBodyResistance50kHz: number;
+  wholeBodyResistance100kHz: number;
   fatFreeMassKg: number;
   fatMassKg: number;
   bodyFatPercent: number;
@@ -105,13 +112,14 @@ export interface BodyComposition {
   fatBySegment: MuscleBySegment | null;
   visceralFatLevel: number | null;
   subcutaneousFatPercent: number | null;
+  bodyAgeYears: number | null;
   proteinKg: number;
   proteinPercent: number;
   idealWeightKg: number;
 }
 
 const BONE_SHARE_OF_FAT_FREE_MASS = 0.067;
-const SKELETAL_MUSCLE_SHARE_OF_FAT_FREE_MASS = 0.57;
+const SKELETAL_MUSCLE_SHARE_OF_FAT_FREE_MASS: Record<Sex, number> = { male: 0.572, female: 0.557 };
 const WATER_SHARE_OF_FAT_FREE_MASS = 0.732;
 const IDEAL_BMI = 22;
 
@@ -132,15 +140,16 @@ export function bodyComposition(
   profile: ScaleProfile,
   impedance: { khz20: SegmentImpedances; khz100: SegmentImpedances },
 ): BodyComposition | null {
-  const r = resistanceAt50kHz(impedance.khz20, impedance.khz100);
-  if (!(r > 0) || !(weightKg > 0) || !(profile.heightCm > 0)) return null;
-  const index = (profile.heightCm * profile.heightCm) / r;
+  const r50 = resistanceAt50kHz(impedance.khz20, impedance.khz100);
+  const r100 = wholeBody(impedance.khz100);
+  if (!(r100 > 0) || !(weightKg > 0) || !(profile.heightCm > 0)) return null;
+  const index = (profile.heightCm * profile.heightCm) / r100;
   const male = profile.sex === 'male';
 
-  const sun = male ? -10.68 + 0.65 * index + 0.26 * weightKg + 0.02 * r : -9.53 + 0.69 * index + 0.17 * weightKg + 0.02 * r;
-  const fatFree = Math.min(weightKg, Math.max(0, sun + FAT_FREE_MASS_OFFSET_KG));
+  const estimate = -1.518 + 0.962 * index + 0.052 * weightKg - (male ? 8.492 : 0);
+  const fatFree = Math.min(weightKg, Math.max(0, estimate));
   const fat = weightKg - fatFree;
-  const muscle = SKELETAL_MUSCLE_SHARE_OF_FAT_FREE_MASS * fatFree;
+  const muscle = SKELETAL_MUSCLE_SHARE_OF_FAT_FREE_MASS[profile.sex] * fatFree;
   const water = WATER_SHARE_OF_FAT_FREE_MASS * fatFree;
   const bone = BONE_SHARE_OF_FAT_FREE_MASS * fatFree;
   const muscleMass = fatFree - bone;
@@ -149,7 +158,8 @@ export function bodyComposition(
   const bodyFat = round1((fat / weightKg) * 100);
 
   return {
-    wholeBodyResistance50kHz: round1(r),
+    wholeBodyResistance50kHz: round1(r50),
+    wholeBodyResistance100kHz: round1(r100),
     fatFreeMassKg: round1(fatFree),
     fatMassKg: round1(fat),
     bodyFatPercent: bodyFat,
@@ -160,10 +170,11 @@ export function bodyComposition(
     boneMassKg: round1(bone),
     muscleMassKg: round1(muscleMass),
     muscleRatePercent: round1((muscleMass / weightKg) * 100),
-    muscleBySegment: muscleBySegment(muscleMass),
+    muscleBySegment: muscleBySegment(muscleMass, profile.sex),
     fatBySegment: fatBySegment(fat),
-    visceralFatLevel: visceralFatLevel(fat),
+    visceralFatLevel: visceralFatLevel(fat, profile.sex),
     subcutaneousFatPercent: subcutaneousFatPercent(bodyFat),
+    bodyAgeYears: bodyAgeYears(profile.age, bodyFat, profile.sex),
     proteinKg: round1(protein),
     proteinPercent: round1((protein / weightKg) * 100),
     idealWeightKg: round1(IDEAL_BMI * (profile.heightCm / 100) ** 2),

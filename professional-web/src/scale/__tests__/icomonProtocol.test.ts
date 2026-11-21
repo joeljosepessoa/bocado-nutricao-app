@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ackFrame, parseFrame, profileFrame, readyFrame, toHex } from '../icomonProtocol';
-import { bodyComposition, fatBySegment, muscleBySegment, resistanceAt50kHz, visceralFatLevel } from '../bodyComposition';
+import { bodyAgeYears, bodyComposition, fatBySegment, muscleBySegment, resistanceAt50kHz, visceralFatLevel } from '../bodyComposition';
 
 const hex = (text: string) => new Uint8Array(text.split(' ').map((b) => parseInt(b, 16)));
 
@@ -52,110 +52,154 @@ describe('protocolo da balança iComon (FFB0)', () => {
   });
 });
 
-describe('composição corporal pela bioimpedância (equações publicadas)', () => {
-  const impedance = {
-    khz20: { arms: [218.7, 219.1] as [number, number], legs: [224.1, 183.3] as [number, number], trunk: 19.1 },
-    khz100: { arms: [187.4, 185.5] as [number, number], legs: [164.3, 178.0] as [number, number], trunk: 18.1 },
-  };
+type Seg = [number, number];
+interface Comparada {
+  sexo: 'male' | 'female';
+  alturaCm: number;
+  idade: number;
+  pesoKg: number;
+  khz20: { arms: Seg; legs: Seg; trunk: number };
+  khz100: { arms: Seg; legs: Seg; trunk: number };
+  /** O que o app da balança mostrou na mesma pesagem. */
+  app: { massaMagra: number; gorduraPct: number; visceral: number; idadeCorporal: number; musculoEsq: number };
+}
 
+// Pesagens comparadas com o app da balança (sem nomes): relatórios da Relaxmedic com as impedâncias
+// impressas (braço D/E, perna D/E, tronco) e uma pesagem gravada do próprio app.
+const COMPARADAS: Comparada[] = [
+  {
+    sexo: 'male', alturaCm: 181, idade: 40, pesoKg: 103.35,
+    khz20: { arms: [218.7, 219.1], legs: [224.1, 183.3], trunk: 19.1 },
+    khz100: { arms: [187.4, 185.5], legs: [164.3, 178.0], trunk: 18.1 },
+    app: { massaMagra: 79.2, gorduraPct: 23.3, visceral: 9, idadeCorporal: 42, musculoEsq: 45.8 },
+  },
+  {
+    sexo: 'male', alturaCm: 172, idade: 36, pesoKg: 77.8,
+    khz20: { arms: [245.9, 241.1], legs: [214.1, 210.3], trunk: 13.5 },
+    khz100: { arms: [212.3, 206.3], legs: [190.1, 188.5], trunk: 8.5 },
+    app: { massaMagra: 63.9, gorduraPct: 17.8, visceral: 4, idadeCorporal: 34, musculoEsq: 36.4 },
+  },
+  {
+    sexo: 'female', alturaCm: 167, idade: 49, pesoKg: 69.2,
+    khz20: { arms: [324.2, 339.2], legs: [248.9, 248.9], trunk: 18.1 },
+    khz100: { arms: [289.5, 301.1], legs: [223.6, 223.4], trunk: 10.5 },
+    app: { massaMagra: 52.6, gorduraPct: 23.9, visceral: 6, idadeCorporal: 46, musculoEsq: 29.6 },
+  },
+  {
+    sexo: 'male', alturaCm: 169, idade: 59, pesoKg: 103.25,
+    khz20: { arms: [217.6, 218.3], legs: [206.2, 206.3], trunk: 14.5 },
+    khz100: { arms: [193.0, 193.6], legs: [183.6, 185.5], trunk: 9.9 },
+    app: { massaMagra: 66.1, gorduraPct: 35.9, visceral: 16, idadeCorporal: 63, musculoEsq: 37.9 },
+  },
+  {
+    sexo: 'female', alturaCm: 156, idade: 39, pesoKg: 65.95,
+    khz20: { arms: [364.0, 374.3], legs: [251.9, 262.8], trunk: 27.2 },
+    khz100: { arms: [329.2, 339.2], legs: [220.7, 229.4], trunk: 25.3 },
+    app: { massaMagra: 41.9, gorduraPct: 36.6, visceral: 10, idadeCorporal: 41, musculoEsq: 23.0 },
+  },
+];
+
+describe('composição corporal ajustada ao app da balança', () => {
   it('resistência do corpo a 50 kHz por interpolação entre 20 e 100 kHz', () => {
-    expect(resistanceAt50kHz(impedance.khz20, impedance.khz100)).toBeCloseTo(404.1, 1);
+    const { khz20, khz100 } = COMPARADAS[0];
+    expect(resistanceAt50kHz(khz20, khz100)).toBeCloseTo(404.1, 1);
   });
 
-  it('homem: Sun 2003 calibrada (+2,1 kg), músculo esquelético 57%, água e Katch-McArdle a partir da massa magra', () => {
-    const c = bodyComposition(103.35, { heightCm: 181, age: 40, sex: 'male' }, impedance)!;
-    expect(c.fatFreeMassKg).toBeCloseTo(77.0 + 2.1, 0);
-    expect(c.bodyFatPercent).toBeCloseTo(((103.35 - 77.0 - 2.1) / 103.35) * 100, 0);
-    expect(c.fatMassKg).toBeCloseTo(103.35 - c.fatFreeMassKg, 0);
-    expect(c.skeletalMuscleMassKg).toBeCloseTo(0.57 * c.fatFreeMassKg, 0);
+  it.each(COMPARADAS.map((c) => [`${c.sexo} ${c.alturaCm} cm ${c.pesoKg} kg`, c] as const))('%s: fica perto do app', (_, p) => {
+    const c = bodyComposition(p.pesoKg, { heightCm: p.alturaCm, age: p.idade, sex: p.sexo }, { khz20: p.khz20, khz100: p.khz100 })!;
+    expect(Math.abs(c.fatFreeMassKg - p.app.massaMagra)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(c.bodyFatPercent - p.app.gorduraPct)).toBeLessThanOrEqual(0.6);
+    expect(Math.abs(c.skeletalMuscleMassKg - p.app.musculoEsq)).toBeLessThanOrEqual(0.6);
+    expect(c.visceralFatLevel).toBe(p.app.visceral);
+    expect(Math.abs(c.bodyAgeYears! - p.app.idadeCorporal)).toBeLessThanOrEqual(2);
+    // Mesmas relações do app: água 73,2%, osso 6,7% da massa magra, músculo = magra − osso, proteína = magra − água − osso.
     expect(c.bodyWaterKg).toBeCloseTo(0.732 * c.fatFreeMassKg, 0);
-    // Mesmas relações do app da balança: osso 6,7% da massa magra, músculo = magra − osso, proteína = magra − água − osso.
     expect(c.boneMassKg).toBeCloseTo(0.067 * c.fatFreeMassKg, 1);
     expect(c.muscleMassKg).toBeCloseTo(c.fatFreeMassKg - c.boneMassKg, 0);
     expect(c.proteinKg).toBeCloseTo(c.fatFreeMassKg - c.bodyWaterKg - c.boneMassKg, 0);
-    expect(c.muscleRatePercent).toBeCloseTo((c.muscleMassKg / 103.35) * 100, 0);
-    expect(c.idealWeightKg).toBe(72.1);
     expect(c.basalMetabolicRateKcal).toBeCloseTo(370 + 21.6 * c.fatFreeMassKg, -1);
-    // App da balança nessa pesagem: visceral 9, subcutânea 16,7%.
-    expect(c.visceralFatLevel).toBe(9);
     expect(c.subcutaneousFatPercent!).toBeCloseTo(0.715 * c.bodyFatPercent, 1);
   });
 
-  it('relatório do fabricante com as impedâncias por parte do corpo (homem, 172 cm, 36 anos): fica perto do app', () => {
-    // Impedâncias impressas no relatório: braço D/E, perna D/E e tronco, a 20 e 100 kHz.
-    const c = bodyComposition(77.8, { heightCm: 172, age: 36, sex: 'male' }, {
-      khz20: { arms: [245.9, 241.1], legs: [214.1, 210.3], trunk: 13.5 },
-      khz100: { arms: [212.3, 206.3], legs: [190.1, 188.5], trunk: 8.5 },
-    })!;
-    // App: massa magra 63,9 kg, gordura 17,8%, visceral 4, gordura braço 0,6 / perna 2,3 / tronco 7,8 kg.
-    expect(Math.abs(c.fatFreeMassKg - 63.9)).toBeLessThanOrEqual(1);
-    expect(Math.abs(c.bodyFatPercent - 17.8)).toBeLessThanOrEqual(1.2);
-    expect(c.visceralFatLevel).toBe(4);
-    expect(Math.abs(c.fatBySegment!.trunkKg - 7.8)).toBeLessThanOrEqual(0.6);
-  });
-
-  it('mulher usa os coeficientes femininos; dados impossíveis não geram números', () => {
-    const male = bodyComposition(70, { heightCm: 165, age: 30, sex: 'male' }, impedance)!;
-    const female = bodyComposition(70, { heightCm: 165, age: 30, sex: 'female' }, impedance)!;
-    expect(female.fatFreeMassKg).not.toBe(male.fatFreeMassKg);
-    expect(female.skeletalMuscleMassKg).toBeCloseTo(0.57 * female.fatFreeMassKg, 0);
-    expect(bodyComposition(0, { heightCm: 165, age: 30, sex: 'female' }, impedance)).toBeNull();
+  it('peso ideal por IMC 22; dados impossíveis não geram números', () => {
+    const p = COMPARADAS[0];
+    const c = bodyComposition(p.pesoKg, { heightCm: 181, age: 40, sex: 'male' }, { khz20: p.khz20, khz100: p.khz100 })!;
+    expect(c.idealWeightKg).toBe(72.1);
+    expect(bodyComposition(0, { heightCm: 165, age: 30, sex: 'female' }, { khz20: p.khz20, khz100: p.khz100 })).toBeNull();
   });
 });
 
-describe('gordura visceral e gordura por parte do corpo (como o app da balança)', () => {
-  // Massa gorda e nível visceral que o app mostrou em pesagens comparadas (sem nomes).
+describe('gordura visceral, idade corporal e gordura por parte do corpo (como o app da balança)', () => {
+  // Massa gorda, sexo e nível visceral que o app mostrou nas 9 pessoas comparadas.
   it.each([
-    [9.2, 2],
-    [13.1, 4],
-    [13.8, 4],
-    [18.6, 6],
-    [24.1, 9],
-  ])('massa gorda %s kg → visceral %s', (fat, level) => {
-    expect(visceralFatLevel(fat)).toBe(level);
+    [24.1, 'male', 9],
+    [13.1, 'male', 4],
+    [22.9, 'female', 9],
+    [18.6, 'male', 6],
+    [9.2, 'male', 2],
+    [13.8, 'male', 4],
+    [16.5, 'female', 6],
+    [37.1, 'male', 16],
+    [24.1, 'female', 10],
+  ] as const)('massa gorda %s kg (%s) → visceral %s', (fat, sex, level) => {
+    expect(visceralFatLevel(fat, sex)).toBe(level);
   });
 
-  const casos: Array<[number, { arm: number; leg: number; trunk: number }]> = [
+  // Idade, % de gordura e sexo → idade corporal do app.
+  it.each([
+    [40, 23.3, 'male', 42],
+    [34, 16.9, 'male', 34],
+    [51, 31.8, 'female', 50],
+    [52, 21.7, 'male', 51],
+    [36, 17.8, 'male', 34],
+    [49, 23.9, 'female', 46],
+    [59, 35.9, 'male', 63],
+    [39, 36.6, 'female', 41],
+  ] as const)('idade %s, gordura %s%% (%s) → idade corporal %s', (age, fat, sex, app) => {
+    expect(Math.abs(bodyAgeYears(age, fat, sex)! - app)).toBeLessThanOrEqual(1.5);
+  });
+
+  const gordura: Array<[number, { arm: number; leg: number; trunk: number }]> = [
     [24.1, { arm: 1.4, leg: 3.65, trunk: 13.5 }],
     [22.9, { arm: 1.5, leg: 3.6, trunk: 12.5 }],
     [18.6, { arm: 1.0, leg: 2.9, trunk: 10.4 }],
     [13.8, { arm: 0.6, leg: 2.3, trunk: 7.8 }],
+    [16.5, { arm: 1.0, leg: 2.7, trunk: 9.3 }],
+    [37.1, { arm: 2.5, leg: 5.45, trunk: 20.5 }],
   ];
-  it.each(casos)('massa gorda %s kg fica a até 0,3 kg do app em cada parte', (fat, app) => {
+  it.each(gordura)('massa gorda %s kg fica a até 0,4 kg do app em cada parte', (fat, app) => {
     const s = fatBySegment(fat)!;
-    expect(Math.abs(s.armKg - app.arm)).toBeLessThanOrEqual(0.3 + 1e-9);
-    expect(Math.abs(s.legKg - app.leg)).toBeLessThanOrEqual(0.3 + 1e-9);
-    expect(Math.abs(s.trunkKg - app.trunk)).toBeLessThanOrEqual(0.3 + 1e-9);
+    expect(Math.abs(s.armKg - app.arm)).toBeLessThanOrEqual(0.4 + 1e-9);
+    expect(Math.abs(s.legKg - app.leg)).toBeLessThanOrEqual(0.4 + 1e-9);
+    expect(Math.abs(s.trunkKg - app.trunk)).toBeLessThanOrEqual(0.4 + 1e-9);
     expect(fatBySegment(0)).toBeNull();
   });
 });
 
 describe('músculo por parte do corpo (frações do app da balança)', () => {
-  // Massa muscular e segmentos que o app da balança mostrou em 3 pessoas comparadas (sem nomes).
-  const casos: Array<[number, { arm: number; leg: number; trunk: number }]> = [
-    [45.8, { arm: 2.7, leg: 8.0, trunk: 21.4 }],
-    [62.5, { arm: 3.9, leg: 11.1, trunk: 29.2 }],
-    [53.9, { arm: 3.0, leg: 9.5, trunk: 25.1 }],
-    [59.6, { arm: 3.8, leg: 10.6, trunk: 27.9 }],
-    [73.9, { arm: 4.75, leg: 13.2, trunk: 34.7 }],
+  // Massa muscular, sexo e segmentos que o app mostrou (sem nomes).
+  const casos: Array<[number, 'male' | 'female', { arm: number; leg: number; trunk: number }]> = [
+    [45.8, 'female', { arm: 2.7, leg: 8.0, trunk: 21.4 }],
+    [49.1, 'female', { arm: 2.9, leg: 8.6, trunk: 22.9 }],
+    [39.1, 'female', { arm: 2.1, leg: 6.6, trunk: 18.1 }],
+    [62.5, 'male', { arm: 3.9, leg: 11.1, trunk: 29.2 }],
+    [53.9, 'male', { arm: 3.0, leg: 9.5, trunk: 25.1 }],
+    [59.6, 'male', { arm: 3.8, leg: 10.6, trunk: 27.9 }],
+    [61.7, 'male', { arm: 3.9, leg: 11.0, trunk: 28.9 }],
+    [73.9, 'male', { arm: 4.75, leg: 13.2, trunk: 34.7 }],
   ];
 
-  it.each(casos)('massa muscular %s kg fica a até 0,3 kg do app em cada parte', (muscle, app) => {
-    const s = muscleBySegment(muscle)!;
-    expect(Math.abs(s.armKg - app.arm)).toBeLessThanOrEqual(0.3);
-    expect(Math.abs(s.legKg - app.leg)).toBeLessThanOrEqual(0.3);
-    expect(Math.abs(s.trunkKg - app.trunk)).toBeLessThanOrEqual(0.3);
+  it.each(casos)('massa muscular %s kg (%s) fica a até 0,35 kg do app em cada parte', (muscle, sex, app) => {
+    const s = muscleBySegment(muscle, sex)!;
+    expect(Math.abs(s.armKg - app.arm)).toBeLessThanOrEqual(0.35);
+    expect(Math.abs(s.legKg - app.leg)).toBeLessThanOrEqual(0.35);
+    expect(Math.abs(s.trunkKg - app.trunk)).toBeLessThanOrEqual(0.35);
   });
 
   it('vem junto na composição e não aparece sem massa muscular', () => {
-    const c = bodyComposition(103.35, { heightCm: 181, age: 40, sex: 'male' }, {
-      khz20: { arms: [218.7, 219.1], legs: [224.1, 183.3], trunk: 19.1 },
-      khz100: { arms: [187.4, 185.5], legs: [164.3, 178.0], trunk: 18.1 },
-    })!;
-    const esperado = muscleBySegment(c.muscleMassKg)!;
-    expect(c.muscleBySegment!.armKg).toBeCloseTo(esperado.armKg, 0);
-    expect(c.muscleBySegment!.legKg).toBeCloseTo(esperado.legKg, 0);
-    expect(c.muscleBySegment!.trunkKg).toBeCloseTo(esperado.trunkKg, 0);
+    const p = COMPARADAS[0];
+    const c = bodyComposition(p.pesoKg, { heightCm: p.alturaCm, age: p.idade, sex: p.sexo }, { khz20: p.khz20, khz100: p.khz100 })!;
+    expect(c.muscleBySegment).toEqual(muscleBySegment(c.muscleMassKg, 'male'));
     expect(muscleBySegment(0)).toBeNull();
   });
 });

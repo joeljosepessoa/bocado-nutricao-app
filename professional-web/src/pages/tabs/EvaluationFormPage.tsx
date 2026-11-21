@@ -59,7 +59,16 @@ const BIOIMPEDANCE_FIELDS: Array<{ key: BioimpedanceNumberKey; label: string; un
 type MassUnit = 'kg' | 'percent';
 
 /** Campos da bioimpedância que a balança conectada preenche. */
-const SCALE_FIELDS: BioimpedanceNumberKey[] = ['bodyFatPercent', 'skeletalMuscleMassKg', 'muscleMassKg', 'boneMassKg', 'bodyWaterPercent', 'visceralFatLevel', 'basalMetabolicRateKcal'];
+const SCALE_FIELDS: BioimpedanceNumberKey[] = [
+  'bodyFatPercent',
+  'skeletalMuscleMassKg',
+  'muscleMassKg',
+  'boneMassKg',
+  'bodyWaterPercent',
+  'visceralFatLevel',
+  'basalMetabolicRateKcal',
+  'bodyAgeYears',
+];
 
 /** Leitura da balança usada no formulário: vai junto ao salvar, se os campos continuarem como ela preencheu. */
 interface PendingScaleReading {

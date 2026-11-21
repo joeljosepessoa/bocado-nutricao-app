@@ -49,7 +49,12 @@ const BODY_FAT_SOURCE_LABELS = { skinfolds: 'dobras cutâneas', bioimpedance: 'b
 const one = (n: number) => Math.round(n * 10) / 10;
 
 /** Contas a partir do que a bioimpedância gravou (só aparecem quando os dados existem). */
-function derivedBioimpedance(b: Bioimpedance, evaluationWeight: number | null, heightCm: number): Array<[string, string]> {
+function derivedBioimpedance(
+  b: Bioimpedance,
+  evaluationWeight: number | null,
+  heightCm: number,
+  sex: 'male' | 'female' | null,
+): Array<[string, string]> {
   const weight = b.weightKg ?? evaluationWeight;
   const out: Array<[string, string]> = [];
   const waterKg = weight != null && b.bodyWaterPercent != null ? (b.bodyWaterPercent / 100) * weight : null;
@@ -67,7 +72,7 @@ function derivedBioimpedance(b: Bioimpedance, evaluationWeight: number | null, h
     out.push(['Gordura — tronco', formatNumber(fatSegments.trunkKg, ' kg')]);
   }
   if (b.muscleMassKg != null && weight) out.push(['Taxa muscular', `${one((b.muscleMassKg / weight) * 100)}%`]);
-  const segments = b.muscleMassKg != null ? muscleBySegment(b.muscleMassKg) : null;
+  const segments = b.muscleMassKg != null ? muscleBySegment(b.muscleMassKg, sex) : null;
   if (segments) {
     out.push(['Músculo — cada braço', formatNumber(segments.armKg, ' kg')]);
     out.push(['Músculo — cada perna', formatNumber(segments.legKg, ' kg')]);
@@ -204,7 +209,7 @@ export function EvaluationDetailPage() {
             {BIOIMPEDANCE_TILES.filter(([key]) => evaluation.bioimpedance![key] != null).map(([key, label, unit]) => (
               <Tile key={key} label={label} value={formatNumber(evaluation.bioimpedance![key], unit)} />
             ))}
-            {derivedBioimpedance(evaluation.bioimpedance, evaluation.weightKg, evaluation.heightCm).map(([label, value]) => (
+            {derivedBioimpedance(evaluation.bioimpedance, evaluation.weightKg, evaluation.heightCm, evaluation.biologicalSexForCalculation ?? null).map(([label, value]) => (
               <Tile key={label} label={label} value={value} />
             ))}
           </div>
