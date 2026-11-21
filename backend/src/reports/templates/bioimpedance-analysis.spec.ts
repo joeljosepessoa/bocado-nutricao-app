@@ -77,16 +77,16 @@ describe('análise de bioimpedância no formato do relatório da balança', () =
     expect(a.composition.map((r) => r.evaluation)).toEqual(c.avaliacoes);
 
     // Por parte do corpo: o app também estima; a avaliação tem de bater e o % ficar perto.
-    const [bracoM, , troncoM, pernaM] = a.muscleSegments;
+    const [bracoM, troncoM, pernaM] = a.muscleSegments;
     expect(Math.abs(bracoM.percentOfStandard - c.musculoPct.braco)).toBeLessThanOrEqual(8);
     expect(Math.abs(troncoM.percentOfStandard - c.musculoPct.tronco)).toBeLessThanOrEqual(3);
     expect(Math.abs(pernaM.percentOfStandard - c.musculoPct.perna)).toBeLessThanOrEqual(3);
-    const [bracoG, , troncoG, pernaG] = a.fatSegments;
+    const [bracoG, troncoG, pernaG] = a.fatSegments;
     expect(Math.abs(bracoG.percentOfStandard / c.gorduraPct.braco - 1)).toBeLessThanOrEqual(0.2);
     expect(Math.abs(troncoG.percentOfStandard / c.gorduraPct.tronco - 1)).toBeLessThanOrEqual(0.1);
     expect(Math.abs(pernaG.percentOfStandard / c.gorduraPct.perna - 1)).toBeLessThanOrEqual(0.1);
 
-    const partes = (rows: typeof a.fatSegments) => [rows[0].evaluation, rows[2].evaluation, rows[3].evaluation];
+    const partes = (rows: typeof a.fatSegments) => rows.map((r) => r.evaluation);
     expect(partes(a.fatSegments)).toEqual(c.avalGordura);
     expect(partes(a.muscleSegments)).toEqual(c.avalMusculo);
 
@@ -115,7 +115,8 @@ describe('análise de bioimpedância no formato do relatório da balança', () =
     const html = renderBioimpedancePage(analysis);
     expect(html).toContain('Análise de bioimpedância');
     expect(html).toContain('Impedância bioelétrica');
-    expect(html).toContain('245,9');
+    expect(html).toContain('245,9 · 241,1');
+    expect(html).not.toMatch(/direit|esquerd/);
     expect(html).toContain('Grau de gordura visceral');
     expect(html).toContain('Ligeiramente obeso');
     expect(renderBioimpedancePage(buildBioimpedanceAnalysis(CASOS[0].input)!)).not.toContain('Impedância bioelétrica');

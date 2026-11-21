@@ -220,11 +220,9 @@ export function buildBioimpedanceAnalysis(input: BioimpedanceAnalysisInput): Bio
   const armMuscle = share.arm * muscle;
   const legMuscle = share.leg * muscle;
   const muscleSegments = [
-    muscleSegment('Braço esquerdo', armMuscle, stdMuscleShare.arm * standardMuscleTotal),
-    muscleSegment('Braço direito', armMuscle, stdMuscleShare.arm * standardMuscleTotal),
+    muscleSegment('Cada braço', armMuscle, stdMuscleShare.arm * standardMuscleTotal),
     muscleSegment('Tronco', share.trunk * muscle, stdMuscleShare.trunk * standardMuscleTotal),
-    muscleSegment('Perna esquerda', legMuscle, stdMuscleShare.leg * standardMuscleTotal),
-    muscleSegment('Perna direita', legMuscle, stdMuscleShare.leg * standardMuscleTotal),
+    muscleSegment('Cada perna', legMuscle, stdMuscleShare.leg * standardMuscleTotal),
   ];
 
   const stdFatShare = STANDARD_FAT_SEGMENT_OF_STANDARD_WEIGHT[sex];
@@ -233,11 +231,9 @@ export function buildBioimpedanceAnalysis(input: BioimpedanceAnalysisInput): Bio
     return { label, kg: round1(kg), percentOfStandard: round1(percent), evaluation: segmentEvaluation(percent, [80, 160]) };
   };
   const fatSegments = [
-    fatSegment('Braço esquerdo', armFat(fat), stdFatShare.arm * standardWeight),
-    fatSegment('Braço direito', armFat(fat), stdFatShare.arm * standardWeight),
+    fatSegment('Cada braço', armFat(fat), stdFatShare.arm * standardWeight),
     fatSegment('Tronco', TRUNK_FAT_SHARE * fat, stdFatShare.trunk * standardWeight),
-    fatSegment('Perna esquerda', legFat(fat), stdFatShare.leg * standardWeight),
-    fatSegment('Perna direita', legFat(fat), stdFatShare.leg * standardWeight),
+    fatSegment('Cada perna', legFat(fat), stdFatShare.leg * standardWeight),
   ];
 
   const others: Array<{ label: string; value: string }> = [];
@@ -315,10 +311,13 @@ function segmentTable(title: string, rows: SegmentRow[], note: string): string {
 }
 
 function impedanceTable(impedance: NonNullable<BioimpedanceAnalysis['impedance']>): string {
+  // Os dois braços e as duas pernas lado a lado, sem dizer qual é o direito: a ordem que a
+  // balança manda ainda não foi confirmada contra o relatório do fabricante.
+  const pair = ([a, b]: [number, number]) => `${formatPlain(round1(a))} · ${formatPlain(round1(b))}`;
   const cells = (z: SegmentImpedances) =>
-    [z.arms[0], z.arms[1], z.trunk, z.legs[0], z.legs[1]].map((v) => `<td class="num">${formatPlain(round1(v))}</td>`).join('');
+    [pair(z.arms), formatPlain(round1(z.trunk)), pair(z.legs)].map((v) => `<td class="num">${v}</td>`).join('');
   return `<h2 class="section-title">Impedância bioelétrica</h2>
-  <table class="metric-table"><thead><tr><th>Z (Ω)</th><th class="r">Braço direito</th><th class="r">Braço esquerdo</th><th class="r">Tronco</th><th class="r">Perna direita</th><th class="r">Perna esquerda</th></tr></thead>
+  <table class="metric-table"><thead><tr><th>Z (Ω)</th><th class="r">Braços</th><th class="r">Tronco</th><th class="r">Pernas</th></tr></thead>
   <tbody><tr><td>20 kHz</td>${cells(impedance.khz20)}</tr><tr><td>100 kHz</td>${cells(impedance.khz100)}</tr></tbody></table>`;
 }
 
