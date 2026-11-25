@@ -76,8 +76,12 @@ apiClient.interceptors.response.use(
   async (error) => {
     const original = error.config as RetriableConfig | undefined;
     const status = error.response?.status;
+    // As próprias chamadas de login/renovação nunca disparam uma renovação: um 401 no
+    // /auth/refresh (login guardado vencido) chamava a renovação de novo, que esperava por
+    // ela mesma — a abertura do app ficava girando para sempre até limpar os dados.
+    const isAuthCall = typeof original?.url === 'string' && original.url.startsWith('/auth/');
 
-    if (status === 401 && original && !original._retry && refreshHandler) {
+    if (status === 401 && original && !original._retry && !isAuthCall && refreshHandler) {
       original._retry = true;
 
       if (!refreshInFlight) {
