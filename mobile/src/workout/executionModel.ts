@@ -58,7 +58,28 @@ export function pickLastPerformance(
 ): WorkoutClientLastPerformance | null {
   if (!server) return local ?? null;
   if (!local) return server;
+  // Uma vez sem carga anotada não apaga a carga da vez anterior.
+  const hasLoad = (p: WorkoutClientLastPerformance) => p.sets.some((s) => s.loadValue != null);
+  if (hasLoad(local) !== hasLoad(server)) return hasLoad(local) ? local : server;
   return new Date(local.performedAt).getTime() > new Date(server.performedAt).getTime() ? local : server;
+}
+
+/**
+ * Cargas que o paciente digitou, guardadas no aparelho SEM prazo — mesmo que ele não
+ * aperte "Finalizar", na próxima vez (semana que vem) o peso já vem preenchido.
+ * Só entram os exercícios em que ele mexeu na carga.
+ */
+export function typedLoadsMemory(exercises: ExecutionExercise[], at: Date): LocalLastPerformance {
+  const result: LocalLastPerformance = {};
+  for (const exercise of exercises) {
+    if (!exercise.sets.some((s) => s.loadEdited)) continue;
+    const sets = exercise.sets
+      .map((s) => ({ set: s, value: parseDecimal(s.load) }))
+      .filter((x): x is { set: ExecutionSet; value: number } => x.value !== undefined)
+      .map(({ set, value }) => ({ setOrder: set.setOrder, repsPerformed: null, loadValue: value, loadUnit: set.loadUnit && LOAD_UNITS.includes(set.loadUnit) ? set.loadUnit : 'kg' }));
+    if (sets.length > 0) result[exercise.workoutExerciseId] = { performedAt: at.toISOString(), sets };
+  }
+  return result;
 }
 
 const UNIT_TEXT: Record<string, string> = { kg: 'kg', lb: 'lb', band_level: '(nível)', bodyweight: '', other: '' };

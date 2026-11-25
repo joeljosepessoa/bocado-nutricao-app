@@ -15,7 +15,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useRestTimer } from '../hooks/useRestTimer';
 import * as api from '../api/endpoints';
 import { enqueueExecutionLogOffline } from '../offline/sync';
-import { readLocalLastPerformance, rememberLastPerformance } from '../workout/lastPerformanceStore';
+import { readLocalLastPerformance, rememberLastPerformance, rememberTypedLoads } from '../workout/lastPerformanceStore';
 import { clearWorkoutDraft, readWorkoutDrafts, saveWorkoutDraft } from '../workout/sessionDraftStore';
 import type { WorkoutClientDay, WorkoutClientSummary } from '../types/api';
 import { nextWorkoutDay } from '../dashboard/dashboardModel';
@@ -33,6 +33,7 @@ import {
   prescriptionSummary,
   restLabel,
   toDraft,
+  typedLoadsMemory,
   unmarkedEditedSets,
   type ExecutionDraft,
   type ExecutionExercise,
@@ -133,6 +134,8 @@ export function WorkoutScreen() {
     const timeout = setTimeout(() => {
       draftChain.current = draftChain.current.then(async () => {
         for (const [key, current] of entries) await saveWorkoutDraft(userId, key, toDraft(current.exercises, current.notes, current.started));
+        // Peso digitado também fica guardado sem prazo, para a próxima semana (mesmo sem "Finalizar").
+        await rememberTypedLoads(typedLoadsMemory(entries.flatMap(([, current]) => current.exercises), new Date()));
       });
     }, 300);
     return () => clearTimeout(timeout);

@@ -13,6 +13,7 @@ import {
   repsText,
   localLastFromPayload,
   pickLastPerformance,
+  typedLoadsMemory,
 } from '../executionModel';
 
 const set = (order: number, extra: Record<string, unknown> = {}) => ({
@@ -226,6 +227,27 @@ describe('carga da última vez', () => {
     // Mais velho que o do servidor: fica o do servidor.
     const old = { 'we-1': { ...local['we-1'], performedAt: '2026-10-10T22:00:00.000Z' } };
     expect(buildExecution(flexora(server), old)[0].sets[0].load).toBe('30');
+  });
+
+  it('uma vez feita sem carga não apaga a carga anterior', () => {
+    const semCarga = { 'we-1': { performedAt: '2026-10-24T22:00:00.000Z', sets: [{ setOrder: 0, repsPerformed: 15, loadValue: null, loadUnit: null }] } };
+    expect(buildExecution(flexora(server), semCarga)[0].sets[0].load).toBe('30');
+    expect(pickLastPerformance(server, semCarga['we-1'])).toBe(server);
+  });
+
+  it('peso digitado e não finalizado volta na semana seguinte', () => {
+    const hoje = buildExecution(flexora(null)).map((e) => ({
+      ...e,
+      sets: e.sets.map((s, i) => (i < 2 ? { ...s, load: i === 0 ? '40' : '42,5', loadEdited: true } : s)),
+    }));
+    const memoria = typedLoadsMemory(hoje, new Date('2026-11-18T12:00:00.000Z'));
+    expect(memoria['we-1'].sets.map((s) => s.loadValue)).toEqual([40, 42.5]);
+    // Semana que vem: sem nada no servidor, o peso digitado vem preenchido.
+    const [proxima] = buildExecution(flexora(null), memoria);
+    expect(proxima.sets.map((s) => s.load)).toEqual(['40', '42,5', '42,5', '42,5']);
+    expect(proxima.lastTime).toBe('Última vez (18/11): 40 · 42,5 kg');
+    // Exercício em que o paciente não mexeu na carga não entra.
+    expect(typedLoadsMemory(buildExecution(flexora(server)), new Date())).toEqual({});
   });
 
   it('o que acabou de ser feito vira a "última vez" de cada exercício', () => {
