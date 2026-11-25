@@ -1,0 +1,55 @@
+# Caddyfile do app do paciente na web (iPhone/PWA), usado pelo Railpack no lugar do padrão.
+# Igual ao padrão do Railpack, mais o controle de cache que faltava:
+# - a página (index.html) é sempre conferida com o servidor ("no-cache"), para o iPhone
+#   nunca abrir uma página antiga apontando para um arquivo de app que não existe mais
+#   (ficava parado em "Carregando..." depois de cada publicação);
+# - os arquivos do app (/_expo/static, com o código no nome) ficam guardados por 1 ano e,
+#   se não existirem, dão 404 — nunca a página no lugar de um script.
+{
+	admin off
+	persist_config off
+	auto_https off
+
+	log {
+		format json
+	}
+
+	servers {
+		trusted_proxies static private_ranges 100.0.0.0/8
+	}
+}
+
+:{$PORT:80} {
+	log {
+		format json
+	}
+
+	respond /health 200
+
+	header {
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+
+	encode {
+		gzip
+		zstd
+	}
+
+	handle /_expo/static/* {
+		root * {{.DIST_DIR}}
+		@found file
+		header @found Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	handle {
+		root * {{.DIST_DIR}}
+		header Cache-Control "no-cache"
+		file_server {
+			hide .git
+			hide .env*
+		}
+		try_files {path} {path}.html {path}/index.html{{if .IndexFallback}} /index.html{{end}}
+	}
+}
