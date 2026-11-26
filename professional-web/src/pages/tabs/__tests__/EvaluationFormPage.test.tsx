@@ -11,6 +11,7 @@ vi.mock('../../../api/endpoints', () => ({
   createEvaluation: vi.fn(),
   updateEvaluation: vi.fn(),
   getEvaluation: vi.fn(),
+  listEvaluations: vi.fn(async () => ({ items: [], total: 0, page: 1, pageSize: 1 })),
   generateDraftNote: vi.fn(),
   acceptProfessionalAiConsent: vi.fn(),
   uploadEvaluationPhoto: vi.fn(),
@@ -424,5 +425,35 @@ describe('EvaluationFormPage — fotos', () => {
     await waitFor(() => expect(api.uploadEvaluationPhoto).toHaveBeenCalledTimes(1));
     expect(api.createEvaluation).toHaveBeenCalledTimes(1);
     expect(screen.queryByText(/Não foi possível salvar/)).not.toBeInTheDocument();
+  });
+});
+
+describe('EvaluationFormPage — altura da última avaliação', () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+    vi.clearAllMocks();
+  });
+  afterEach(() => cleanup());
+
+  it('avaliação nova já vem com a altura da última avaliação do paciente', async () => {
+    vi.mocked(api.listEvaluations).mockResolvedValueOnce({
+      items: [{ id: 'eval-anterior', evaluatedAt: '2026-10-01T12:00:00.000Z', weightKg: 90, createdAt: '2026-10-01T12:00:00.000Z', calculatedMetrics: null }],
+      total: 1,
+      page: 1,
+      pageSize: 1,
+    });
+    vi.mocked(api.getEvaluation).mockResolvedValueOnce({ id: 'eval-anterior', heightCm: 178, biologicalSexForCalculation: 'male' } as EvaluationDetail);
+
+    renderInsideClientPage('/clients/client-1/evaluations/new', { birthDate: birthDate40, gender: null } as Partial<ClientDetail>);
+
+    await waitFor(() => expect(screen.getByLabelText('Altura (cm)')).toHaveValue('178'));
+    expect(api.listEvaluations).toHaveBeenCalledWith('client-1', 1, 1);
+    expect(screen.getByLabelText('Peso (kg)')).toHaveValue(null);
+  });
+
+  it('primeira avaliação do paciente: a altura continua em branco', async () => {
+    renderNewEvaluationPage();
+    await waitFor(() => expect(api.listEvaluations).toHaveBeenCalled());
+    expect(screen.getByLabelText('Altura (cm)')).toHaveValue('');
   });
 });

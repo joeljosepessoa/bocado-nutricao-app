@@ -29,6 +29,10 @@ interface Props {
   recordDiscard?: boolean;
   /** Leitura completa (com bioimpedância) segue direto para `onSubmit`, sem clique. */
   autoConfirm?: boolean;
+  /** Peso estável na balança — chega antes da bioimpedância terminar (e mesmo se ela não vier). */
+  onWeight?: (weightKg: number) => void;
+  /** "Descartar" com `recordDiscard` false: a leitura foi recusada pelo profissional. */
+  onDiscard?: () => void;
 }
 
 interface ResultData {
@@ -51,7 +55,7 @@ function recordedAt(result: ScaleResult): string {
   return (drift < 24 * 3600 * 1000 ? result.measuredAt : new Date()).toISOString();
 }
 
-export function ScaleModal({ heightCm, age, sex, onSubmit, onClose, confirmLabel = 'Salvar na avaliação', recordDiscard = true, autoConfirm = false }: Props) {
+export function ScaleModal({ heightCm, age, sex, onSubmit, onClose, confirmLabel = 'Salvar na avaliação', recordDiscard = true, autoConfirm = false, onWeight, onDiscard }: Props) {
   const [step, setStep] = useState<Step>({ kind: 'intro' });
   const [ageInput, setAgeInput] = useState(age != null ? String(age) : '');
   const [sexInput, setSexInput] = useState<'male' | 'female' | ''>(sex ?? '');
@@ -80,8 +84,12 @@ export function ScaleModal({ heightCm, age, sex, onSubmit, onClose, confirmLabel
     setStep({ kind: 'connecting' });
     const current = new ScaleSession(profile, {
       onConnected: () => setStep({ kind: 'waiting' }),
-      onLive: (reading) => setStep((prev) => (prev.kind === 'result' ? prev : { kind: 'weighing', weightKg: reading.weightKg, stable: reading.stable })),
+      onLive: (reading) => {
+        setStep((prev) => (prev.kind === 'result' ? prev : { kind: 'weighing', weightKg: reading.weightKg, stable: reading.stable }));
+        if (reading.stable) onWeight?.(reading.weightKg);
+      },
       onResult: (result, rawHex) => {
+        onWeight?.(result.weightKg);
         const composition = result.impedance ? bodyComposition(result.weightKg, profile, result.impedance) : null;
         setStep({ kind: 'result', result, rawHex, composition });
         if (autoConfirm && composition) void submit('confirmed', { result, rawHex, composition });
@@ -97,6 +105,7 @@ export function ScaleModal({ heightCm, age, sex, onSubmit, onClose, confirmLabel
     const current = data ?? (step.kind === 'result' ? step : null);
     if (!current || !session.current) return;
     if (status === 'discarded' && !recordDiscard) {
+      onDiscard?.();
       session.current.close();
       onClose();
       return;

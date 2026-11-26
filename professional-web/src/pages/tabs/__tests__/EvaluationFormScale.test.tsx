@@ -11,6 +11,7 @@ vi.mock('../../../api/endpoints', () => ({
   createEvaluation: vi.fn(),
   updateEvaluation: vi.fn(),
   getEvaluation: vi.fn(),
+  listEvaluations: vi.fn(async () => ({ items: [], total: 0, page: 1, pageSize: 1 })),
   generateDraftNote: vi.fn(),
   acceptProfessionalAiConsent: vi.fn(),
   uploadEvaluationPhoto: vi.fn(),
@@ -133,11 +134,25 @@ describe('Avaliação — balança no quadro Bioimpedância', () => {
     expect(api.submitScaleReading).not.toHaveBeenCalled();
   });
 
-  it('sem bioimpedância, a janela avisa e só preenche o peso se o profissional escolher', async () => {
+  it('o peso entra no campo assim que fica estável na balança, antes da bioimpedância terminar', async () => {
+    renderNew();
+    fireEvent.change(screen.getByLabelText('Altura (cm)'), { target: { value: '181' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Conectar balança' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Conectar' }));
+    await screen.findByText(/Balança conectada/);
+
+    await act(async () => sessions[0].events.onLive({ kind: 'live', weightKg: 103.6, stable: false }));
+    expect(valueOf('Peso (kg)')).toBe('');
+    await act(async () => sessions[0].events.onLive({ kind: 'live', weightKg: 104.05, stable: true }));
+    expect(valueOf('Peso (kg)')).toBe('104.05');
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('sem bioimpedância, a janela avisa; o peso já está no campo e "Usar só o peso" guarda a leitura', async () => {
     renderNew();
     await weigh(false);
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(valueOf('Peso (kg)')).toBe('');
+    expect(valueOf('Peso (kg)')).toBe('104.05');
 
     fireEvent.click(screen.getByRole('button', { name: 'Usar só o peso' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -146,9 +161,10 @@ describe('Avaliação — balança no quadro Bioimpedância', () => {
     expect(screen.getByRole('status').textContent).toMatch(/sem bioimpedância/);
   });
 
-  it('"Descartar" na avaliação nova só fecha a janela, sem gravar nada', async () => {
+  it('"Descartar" na avaliação nova fecha a janela, sem gravar nada, e devolve o peso que estava', async () => {
     renderNew();
     await weigh(false);
+    expect(valueOf('Peso (kg)')).toBe('104.05');
     fireEvent.click(screen.getByRole('button', { name: 'Descartar' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(api.submitScaleReading).not.toHaveBeenCalled();

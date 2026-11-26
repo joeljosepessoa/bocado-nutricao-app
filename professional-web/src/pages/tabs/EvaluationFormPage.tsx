@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { INVALID_HEIGHT_MESSAGE, isValidHeightCm, normalizeHeightCm } from '../../utils/height';
 import { translateServerMessage } from '../../utils/serverErrors';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -145,6 +145,17 @@ export function EvaluationFormPage() {
     enabled: isEdit,
   });
 
+  // Avaliação nova: a altura (e o sexo, se o cadastro não tiver) vem da última avaliação do paciente.
+  const { data: latest } = useQuery({
+    queryKey: ['latest-evaluation', clientId],
+    queryFn: async () => {
+      const list = await api.listEvaluations(clientId!, 1, 1);
+      const first = list.items[0];
+      return first ? api.getEvaluation(clientId!, first.id) : null;
+    },
+    enabled: !isEdit,
+  });
+
   const [evaluatedDate, setEvaluatedDate] = useState(() => toDateInput(new Date()));
   // Data como veio do servidor: a edição só reenvia a data se o profissional a trocar (senão perderia a hora original).
   const [originalDate, setOriginalDate] = useState<string | null>(null);
@@ -173,6 +184,8 @@ export function EvaluationFormPage() {
   const [error, setError] = useState<string | null>(null);
   const [scaleOpen, setScaleOpen] = useState(false);
   const [pendingScale, setPendingScale] = useState<PendingScaleReading | null>(null);
+  // Peso que estava no campo antes de pesar — volta se a leitura for descartada.
+  const weightBeforeScale = useRef('');
 
   // Isolado por cliente + avaliação — o rascunho de um nunca aparece pro outro.
   const draftKey = useMemo(() => evaluationDraftKey(clientId!, evaluationId), [clientId, evaluationId]);
@@ -217,6 +230,12 @@ export function EvaluationFormPage() {
     setPendingDraft(null);
     setDraftDecided(true);
   }
+
+  useEffect(() => {
+    if (!latest) return;
+    if (latest.heightCm) setHeightCm((current) => (current.trim() === '' ? String(latest.heightCm) : current));
+    if (latest.biologicalSexForCalculation) setBiologicalSex((current) => current || latest.biologicalSexForCalculation || '');
+  }, [latest]);
 
   useEffect(() => {
     if (!existing) return;
@@ -602,7 +621,13 @@ export function EvaluationFormPage() {
             <TextField label="Equipamento" placeholder="Ex.: Omron" maxLength={60} value={equipment} onChange={(e) => setEquipment(e.target.value)} />
           </div>
           {bluetoothAvailable() ? (
-            <Button variant="secondary" onClick={() => setScaleOpen(true)}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                weightBeforeScale.current = weightKg;
+                setScaleOpen(true);
+              }}
+            >
               Conectar balança
             </Button>
           ) : null}
@@ -658,6 +683,8 @@ export function EvaluationFormPage() {
           confirmLabel="Usar só o peso"
           recordDiscard={false}
           autoConfirm
+          onWeight={(kg) => setWeightKg(String(kg))}
+          onDiscard={() => setWeightKg(weightBeforeScale.current)}
           onSubmit={fillFromScale}
           onClose={() => setScaleOpen(false)}
         />
